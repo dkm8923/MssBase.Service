@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Shared.Logic\Shared.Logic.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Models\Shared.Models.csproj" />
+    <ProjectReference Include="..\Contract.Security\Contract.Security.csproj" />
+    <ProjectReference Include="..\Data.Security\Data.Security.csproj" />
+    <ProjectReference Include="..\Dto.Security\Dto.Security.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Validators/Application/" />
+  </ItemGroup>
+
+</Project>

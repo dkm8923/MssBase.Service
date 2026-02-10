@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="MicroElements.Swashbuckle.FluentValidation" Version="7.0.1" />
+	<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+	<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="SharpGrip.FluentValidation.AutoValidation.Mvc" Version="1.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="9.0.6" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.6" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.6" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Services\Security\Contract.Security\Contract.Security.csproj" />
+    <ProjectReference Include="..\Services\Security\Dto.Security\Dto.Security.csproj" />
+    <ProjectReference Include="..\Services\Security\Service.Security\Service.Security.csproj" />
+    <ProjectReference Include="..\Services\Common\Contract.Common\Contract.Common.csproj" />
+    <ProjectReference Include="..\Services\Common\Dto.Common\Dto.Common.csproj" />
+    <ProjectReference Include="..\Services\Common\Service.Common\Service.Common.csproj" />
+    <ProjectReference Include="..\Services\Logger\Service.Logger\Service.Logger.csproj" />
+    <ProjectReference Include="..\Shared\Shared.Contracts\Shared.Contracts.csproj" />
+    <ProjectReference Include="..\Shared\Shared.Service\Shared.Service.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers/Common/" />
+    <Folder Include="Controllers/Security/" />
+  </ItemGroup>
+
+</Project>

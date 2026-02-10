@@ -1,0 +1,6 @@
+@MssBase.Service_HostAddress = http://localhost:5217
+
+GET {{MssBase.Service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

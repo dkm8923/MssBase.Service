@@ -1,0 +1,301 @@
+using Contract.Security;
+using Dto.Security.Application;
+using Dto.Security.Application.Service;
+using FluentAssertions;
+using IntegrationTests.Security.Shared;
+using IntegrationTests.Shared;
+using IntegrationTests.Shared.Utilities;
+using Microsoft.Extensions.DependencyInjection;
+using Shared.Logic.Common;
+using Shared.Models;
+
+namespace IntegrationTests.Security.Service
+{
+    [Collection("SecurityIntegrationTests")]
+    public class ApplicationServiceTests : SecurityTestBase
+    {
+        //TODO: Add tests for include related logic
+
+        private readonly ISecurityServiceManager _SecurityService;
+        private readonly ICacheTestUtilities _cacheTestUtilities;
+
+        public ApplicationServiceTests()
+        {
+            //_cacheTestUtilities = new MemcachedTestUtilities();
+            _cacheTestUtilities = _serviceProvider.GetService<ICacheTestUtilities>();
+            _SecurityService = _serviceProvider.GetService<ISecurityServiceManager>();
+        }
+
+        #region utils
+
+        private async Task CreateApplicationCacheKeys()
+        {
+            var result = await _SecurityService.Application.GetAll(new BaseServiceGet { DeleteCache = false, IncludeInactive = true });
+
+            foreach (var record in result.Response)
+            {
+                await _SecurityService.Application.GetById(record.ApplicationId, new BaseServiceGet());
+                await _SecurityService.Application.Filter(new FilterApplicationServiceRequest { Name = record.Name });
+                await _SecurityService.Application.Filter(new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.Parse(record.CreatedOn.ToString()) });
+                await _SecurityService.Application.Filter(new FilterApplicationServiceRequest { CreatedBy = record.CreatedBy });
+                await _SecurityService.Application.Filter(new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.Parse(record.UpdatedOn.ToString()) });
+            }
+        }
+
+        #endregion
+
+        #region GetAll
+
+        [Fact]
+        public async Task Application_GetAll_Active_Should_Cache()
+        {
+            // Arrange
+            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = $"ApplicationService_GetAll_0_0";
+
+            // Act
+            var result = await _SecurityService.Application.GetAll(new BaseServiceGet());
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+            var cacheKeyData = await _cacheTestUtilities.GetKeyData<List<ApplicationDto>>(expectedCacheKey);
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().HaveCount(5);
+        }
+
+        [Fact]
+        public async Task Application_GetAll_IncludeInactive_Should_Cache()
+        {
+            // Arrange
+            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = "ApplicationService_GetAll_1_0";
+
+            // Act
+            var result = await _SecurityService.Application.GetAll(new BaseServiceGet { IncludeInactive = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+            var cacheKeyData = await _cacheTestUtilities.GetKeyData<List<ApplicationDto>>(expectedCacheKey);
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().HaveCount(5);
+        }
+
+        [Fact]
+        public async Task Application_GetAll_Should_Not_Cache_And_Return_Zero_Records()
+        {
+            // Arrange
+            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = "ApplicationService_GetAll_0";
+
+            // Act
+            var result = await _SecurityService.Application.GetAll(new BaseServiceGet());
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().NotContain(expectedCacheKey);
+            result.Response.Should().HaveCount(0);
+        }
+
+        #endregion
+
+        #region GetById
+
+        [Fact]
+        public async Task Application_GetById_Should_Cache()
+        {
+            // Arrange
+            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _cacheTestUtilities.DeleteAllKeyData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var expectedCacheKey = $"ApplicationService_GetById_{testRecord.ApplicationId}_0_0";
+
+            // Act
+            var result = await _SecurityService.Application.GetById(testRecord.ApplicationId, new BaseServiceGet());
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task Application_GetById_IncludeInactive_Should_Cache()
+        {
+            // Arrange
+            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
+            var expectedCacheKey = $"ApplicationService_GetById_{testRecord.ApplicationId}_1_0";
+
+            // Act
+            var result = await _SecurityService.Application.GetById(testRecord.ApplicationId, new BaseServiceGet { IncludeInactive = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task Application_GetById_Unused_Id_Should_Not_Cache()
+        {
+            // Arrange
+            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var id = -1;
+
+            // Act
+            var result = await _SecurityService.Application.GetById(id, new BaseServiceGet { IncludeInactive = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            result.Response.Should().BeNull();
+            availableCacheKeys.Should().HaveCount(0);
+        }
+
+        #endregion
+
+        #region Filter
+
+        [Fact]
+        public async Task Application_Filter_Should_Cache()
+        {
+           // Arrange
+           await _SecurityTestUtilities.Application.DeleteAllRecords();
+           await _SecurityTestUtilities.Application.CreateTestRecords();
+           await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecordWithSpecificValues();
+           await _cacheTestUtilities.DeleteAllKeyData();
+
+           var postReqCreatedBy = new FilterApplicationServiceRequest { CreatedBy = "IntegrationTest" };
+           var postReqCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.Now) };
+           var postReqUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = "IntegrationTest" };
+           var postReqUpdatedOnDate = new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.Now) };
+           var postReqName = new FilterApplicationServiceRequest { Name = "Test Application Name" };
+           
+           var expectedCacheKeyCreatedBy = $"ApplicationService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0";
+           var expectedCacheKeyCreatedOnDate = $"ApplicationService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0";
+           var expectedCacheKeyUpdatedBy = $"ApplicationService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0";
+           var expectedCacheKeyUpdatedOnDate = $"ApplicationService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0";
+           var expectedCacheKeyName = $"ApplicationService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqName.Name)}_0";
+
+           // Act
+           var filterCreatedByResult = await _SecurityService.Application.Filter(postReqCreatedBy);
+           var filterCreatedOnDateResult = await _SecurityService.Application.Filter(postReqCreatedOnDate);
+           var filterUpdatedByResult = await _SecurityService.Application.Filter(postReqUpdatedBy);
+           var filterUpdatedOnDateResult = await _SecurityService.Application.Filter(postReqUpdatedOnDate);
+           var filterNameResult = await _SecurityService.Application.Filter(postReqName);
+           var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+           // Assert
+           availableCacheKeys.Should().Contain(expectedCacheKeyCreatedBy);
+           filterCreatedByResult.Response.Should().HaveCountGreaterThan(0);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyCreatedOnDate);
+           filterCreatedOnDateResult.Response.Should().HaveCountGreaterThan(0);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyUpdatedBy);
+           filterUpdatedByResult.Response.Should().HaveCountGreaterThan(0);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyUpdatedOnDate);
+           filterUpdatedOnDateResult.Response.Should().HaveCountGreaterThan(0);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyName);
+           filterNameResult.Response.Should().HaveCount(1);
+        }
+
+        #endregion
+
+        #region Insert
+
+        [Fact]
+        public async Task Application_Insert_Should_Delete_Cache()
+        {
+            // Arrange
+            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _cacheTestUtilities.DeleteAllKeyData();
+            await CreateApplicationCacheKeys();
+
+            var insertReq = new InsertUpdateApplicationRequest
+            {
+                Name = "Test Application Name 1",
+                Description = "Test Application Desc 1",
+                Active = true,
+                CurrentUser = "IntegrationTest"
+            };
+
+            // Act
+            await _SecurityService.Application.Insert(insertReq);
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            //Assert
+            availableCacheKeys.Should().HaveCount(0);
+        }
+
+        #endregion
+
+        #region Update
+
+        [Fact]
+        public async Task Application_Update_Should_Delete_Cache()
+        {
+            // Arrange
+            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _cacheTestUtilities.DeleteAllKeyData();
+            await CreateApplicationCacheKeys();
+
+            var record = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+            var updateReq = new InsertUpdateApplicationRequest
+            {
+                Name = "Updated Application Name",
+                Description = "Updated ApplicationDescription",
+                Active = false,
+                CurrentUser = "IntegrationTest"
+            };
+
+            // Act
+            await _SecurityService.Application.Update(record.ApplicationId, updateReq);
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            //Assert
+            availableCacheKeys.Should().HaveCount(0);
+        }
+
+        #endregion
+
+        #region Delete
+
+        [Fact]
+        public async Task Application_Delete_Should_Delete_Cache()
+        {
+            // Arrange
+            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _cacheTestUtilities.DeleteAllKeyData();
+            await CreateApplicationCacheKeys();
+
+            var record = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+            // Act
+            await _SecurityService.Application.Delete(record.ApplicationId);
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            //Assert
+            availableCacheKeys.Should().HaveCount(0);
+        }
+
+        #endregion
+    }
+}
