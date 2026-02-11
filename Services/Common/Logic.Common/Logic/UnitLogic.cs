@@ -9,12 +9,13 @@ using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 using Shared.Contracts.Logic.Validators;
 using Shared.Models;
+using Shared.Contracts; 
 
 namespace Logic.Common.Logic
 {
     public class UnitLogic : IUnitLogic
     {
-        private readonly ICommonConnectionStrings _connectionStrings;
+        private readonly IDatabaseConnectionStrings _connectionStrings;
         private readonly CommonDBContextFactory _dbContextFactory;
 
         private IValidatorUtilities _validatorUtilities;
@@ -23,7 +24,7 @@ namespace Logic.Common.Logic
         private IValidator<InsertUpdateUnitRequest> _insertUpdateUnitRequestValidator;
 
         public UnitLogic(
-                            ICommonConnectionStrings connectionStrings,
+                            IDatabaseConnectionStrings connectionStrings,
                             IValidatorUtilities validatorUtilities,
                             IValidator<FilterUnitLogicRequest> filterUnitLogicRequestValidator,
                             IValidator<InsertUpdateUnitRequest> insertUpdateUnitRequestValidator

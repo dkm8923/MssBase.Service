@@ -2,26 +2,27 @@
 using Data.Security.Models;
 using Microsoft.EntityFrameworkCore;
 using Shared.Logic.Common;
+using Shared.Contracts;
 
 namespace Data.Security
 {
     public class SecurityDBContextFactory
     {
-        private readonly ISecurityConnectionStrings _connectionStrings;
+        private readonly IDatabaseConnectionStrings _connectionStrings;
 
-        public SecurityDBContextFactory(ISecurityConnectionStrings connectionStrings)
+        public SecurityDBContextFactory(IDatabaseConnectionStrings connectionStrings)
         {
             _connectionStrings = connectionStrings;
         }
 
         public SecurityDBContext CreateContextReadWrite()
         {
-            return this.CreateSqlServerContext(_connectionStrings.SecurityConnectionStringReadWrite);
+            return this.CreateSqlServerContext(_connectionStrings.ReadWrite);
         }
 
         public SecurityDBContext CreateContextReadOnly()
         {
-            return this.CreateSqlServerContext(_connectionStrings.SecurityConnectionStringReadOnly);
+            return this.CreateSqlServerContext(_connectionStrings.ReadOnly);
         }
 
         public SecurityDBContext CreateSqlServerContext(string connectionString)

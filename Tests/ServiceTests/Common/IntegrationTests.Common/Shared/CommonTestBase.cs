@@ -1,16 +1,11 @@
 ﻿using MssBase.Service.Shared;
 using Contract.Common;
-using Contract.Common.Unit;
-using Dto.Common.Unit;
-using Dto.Common.Unit.Logic;
 using FluentValidation;
 using IntegrationTests.Common.Shared.Utilities;
 using IntegrationTests.Common.Shared.Utilities.Contracts;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities;
 using Logic.Common;
-using Logic.Common.Logic;
-using Logic.Common.Validators.Unit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Service.Common;
@@ -19,6 +14,7 @@ using Service.Logger.Contracts;
 using Shared.Contracts.Logic.Validators;
 using Shared.Logic.Validators;
 using Tests.Shared;
+using Shared.Contracts;
 
 namespace IntegrationTests.Common.Shared
 {
@@ -78,10 +74,10 @@ namespace IntegrationTests.Common.Shared
 
         private ServiceCollection ConfigureCommonService(ServiceCollection services)
         {
-            services.Configure<CommonConnectionStrings>(_configHelper.Configuration.GetSection("CommonConnectionStrings"));
+            services.Configure<DatabaseConnectionStrings>(_configHelper.Configuration.GetSection("CommonConnectionStrings"));
 
-            services.AddSingleton<ICommonConnectionStrings>(sp =>
-             sp.GetRequiredService<IOptionsMonitor<CommonConnectionStrings>>().CurrentValue);
+            services.AddSingleton<IDatabaseConnectionStrings>(sp =>
+             sp.GetRequiredService<IOptionsMonitor<DatabaseConnectionStrings>>().CurrentValue);
 
             #region Unit
 

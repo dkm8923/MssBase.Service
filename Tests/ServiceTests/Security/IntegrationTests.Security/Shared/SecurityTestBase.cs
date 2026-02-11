@@ -19,6 +19,7 @@ using Service.Logger.Contracts;
 using Shared.Contracts.Logic.Validators;
 using Shared.Logic.Validators;
 using Tests.Shared;
+using Shared.Contracts;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -78,10 +79,10 @@ public class SecurityTestBase
 
         private ServiceCollection ConfigureSecurityService(ServiceCollection services)
         {
-            services.Configure<SecurityConnectionStrings>(_configHelper.Configuration.GetSection("SecurityConnectionStrings"));
+            services.Configure<DatabaseConnectionStrings>(_configHelper.Configuration.GetSection("SecurityConnectionStrings"));
 
-            services.AddSingleton<ISecurityConnectionStrings>(sp =>
-                sp.GetRequiredService<IOptionsMonitor<SecurityConnectionStrings>>().CurrentValue);
+            services.AddSingleton<IDatabaseConnectionStrings>(sp =>
+                sp.GetRequiredService<IOptionsMonitor<DatabaseConnectionStrings>>().CurrentValue);
 
             #region Application
 

@@ -9,12 +9,13 @@ using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 using Shared.Contracts.Logic.Validators;
 using Shared.Models;
+using Shared.Contracts;
 
 namespace Logic.Security.Logic
 {
     public class ApplicationLogic : IApplicationLogic
     {
-        private readonly ISecurityConnectionStrings _connectionStrings;
+        private readonly IDatabaseConnectionStrings _connectionStrings;
         private readonly SecurityDBContextFactory _dbContextFactory;
 
         private IValidatorUtilities _validatorUtilities;
@@ -23,7 +24,7 @@ namespace Logic.Security.Logic
         private IValidator<InsertUpdateApplicationRequest> _insertUpdateApplicationRequestValidator;
 
         public ApplicationLogic(
-                            ISecurityConnectionStrings connectionStrings,
+                            IDatabaseConnectionStrings connectionStrings,
                             IValidatorUtilities validatorUtilities,
                             IValidator<FilterApplicationLogicRequest> filterApplicationLogicRequestValidator,
                             IValidator<InsertUpdateApplicationRequest> insertUpdateApplicationRequestValidator

@@ -2,34 +2,17 @@
 using Contract.Security;
 using Contract.Security.Application;
 using Contract.Common;
-using Contract.Common.CommonType;
-using Contract.Common.Rate;
-using Contract.Common.Unit;     
-using Contract.Common.UnitDefinition;
-using Contract.Common.UnitGroupColumn;
 using Dto.Security.Application;
 using Dto.Security.Application.Logic;
-using Dto.Common.Rate;
-using Dto.Common.Rate.Logic;
-using Dto.Common.Unit;
-using Dto.Common.Unit.Logic;
-using Dto.Common.UnitDefinition;
-using Dto.Common.UnitGroupColumn;
 using FluentValidation;
 using Logic.Security;
 using Logic.Security.Logic;
 using Logic.Security.Validators.Application;
 using Logic.Common;
-using Logic.Common.Logic;
-using Logic.Common.Validators.Rate;
-using Logic.Common.Validators.Unit;
-using Logic.Common.Validators.UnitDefinition;
-using Logic.Common.Validators.UnitGroupColumn;
 using Microsoft.Extensions.Options;
 using Service.Security;
 using Service.Security.Service;
 using Service.Common;
-using Service.Common.Service;
 using Service.Logger;
 using Service.Logger.Contracts;
 using Service.Logger.Models;
@@ -121,10 +104,10 @@ namespace MssBase.Service
 
         public static void ConfigureCommonService(this IServiceCollection services, WebApplicationBuilder builder)
         {
-            services.Configure<CommonConnectionStrings>(builder.Configuration.GetSection("CommonConnectionStrings"));
+            services.Configure<DatabaseConnectionStrings>(builder.Configuration.GetSection("CommonConnectionStrings"));
 
-            services.AddSingleton<ICommonConnectionStrings>(sp =>
-             sp.GetRequiredService<IOptionsMonitor<CommonConnectionStrings>>().CurrentValue);
+            services.AddSingleton<IDatabaseConnectionStrings>(sp =>
+             sp.GetRequiredService<IOptionsMonitor<DatabaseConnectionStrings>>().CurrentValue);
 
             // #region CommonType
 
@@ -139,10 +122,10 @@ namespace MssBase.Service
 
         public static void ConfigureSecurityService(this IServiceCollection services, WebApplicationBuilder builder)
         {
-            services.Configure<SecurityConnectionStrings>(builder.Configuration.GetSection("SecurityConnectionStrings"));
+            services.Configure<DatabaseConnectionStrings>(builder.Configuration.GetSection("SecurityConnectionStrings"));
 
-            services.AddSingleton<ISecurityConnectionStrings>(sp =>
-             sp.GetRequiredService<IOptionsMonitor<SecurityConnectionStrings>>().CurrentValue);
+            services.AddSingleton<IDatabaseConnectionStrings>(sp =>
+             sp.GetRequiredService<IOptionsMonitor<DatabaseConnectionStrings>>().CurrentValue);
 
             #region Application
 
