@@ -1,7 +1,5 @@
 using System.Text.Json;
-using Enyim.Caching.Memcached;
 using Moq;
-using Shared.Service.Cache.Memcached;
 using Shared.Models;
 using Xunit;
 

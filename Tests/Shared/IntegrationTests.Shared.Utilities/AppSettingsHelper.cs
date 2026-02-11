@@ -25,10 +25,5 @@ namespace Tests.Shared
         {
             return Configuration.GetSection("RedisConfiguration")["ConnectionString"];
         }
-
-        public string GetMemcachedEndpointsString()
-        { 
-            return Configuration.GetSection("MemcachedConfiguration")["Endpoints"];
-        }
     }
 }

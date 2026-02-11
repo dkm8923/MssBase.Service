@@ -21,7 +21,6 @@ namespace IntegrationTests.Security.Service
 
         public ApplicationServiceTests()
         {
-            //_cacheTestUtilities = new MemcachedTestUtilities();
             _cacheTestUtilities = _serviceProvider.GetService<ICacheTestUtilities>();
             _SecurityService = _serviceProvider.GetService<ISecurityServiceManager>();
         }

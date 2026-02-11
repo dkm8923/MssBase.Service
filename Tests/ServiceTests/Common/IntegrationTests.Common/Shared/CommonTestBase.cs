@@ -55,8 +55,7 @@ namespace IntegrationTests.Common.Shared
         {
             // ICacheService Setup
             new RedisTestUtilities().ConfigureCache(services);
-            //new MemcachedTestUtilities().Configure(services);
-
+            
             services.AddTransient<ICacheTestUtilities, RedisTestUtilities>();
 
             //configure logger service

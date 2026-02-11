@@ -49,26 +49,12 @@ namespace MssBase.Service
             services.AddScoped<ICacheService, RedisExtensions>();
         }
 
-        //private static void ConfigureMemcached(this IServiceCollection services, WebApplicationBuilder builder)
-        //{
-        //    var memcachedEndpoints = builder.Configuration.GetSection("MemcachedConfiguration").GetSection("Endpoints").Value;
-        //    var memcachedCluster = new MemcachedCluster(memcachedEndpoints);
-        //    memcachedCluster.Start();
-        //    services.AddSingleton(memcachedCluster.GetClient());
-
-        //    services.AddScoped<ICacheService, MemcachedService>();
-        //}
-
         public static void ConfigureCache(this IServiceCollection services, WebApplicationBuilder builder)
         {
             if (builder.Configuration.GetSection("RedisConfiguration")?.GetSection("ConnectionString")?.Exists() is true)
             {
                 ConfigureRedis(services, builder);
             }
-            //else if (builder.Configuration.GetSection("MemcachedConfiguration")?.GetSection("Endpoints")?.Exists() is true)
-            //{
-            //    //ConfigureMemcached(services, builder);
-            //}
             else
             {
                 throw new Exception("Cache Configuration not found");

@@ -60,8 +60,7 @@ public class SecurityTestBase
         {
             // ICacheService Setup
             new RedisTestUtilities().ConfigureCache(services);
-            //new MemcachedTestUtilities().Configure(services);
-
+            
             services.AddTransient<ICacheTestUtilities, RedisTestUtilities>();
 
             //configure logger service
