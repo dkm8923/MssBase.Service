@@ -1,4 +1,4 @@
-﻿using Dto.Common.UnitGroupColumn;
+﻿//using Dto.Common.UnitGroupColumn;
 using Shared.Models.Contracts;
 
 namespace Dto.Common.Unit
@@ -22,6 +22,6 @@ namespace Dto.Common.Unit
         public string? UnitHeaderQuery { get; set; }
         public string? UnitUpdateQuery { get; set; }
         public string? ChargeCode { get; set; }
-        public List<UnitGroupColumnDto>? UnitGroupColumns { get; set; }
+        //public List<UnitGroupColumnDto>? UnitGroupColumns { get; set; }
     }
 }

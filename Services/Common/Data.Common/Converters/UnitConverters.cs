@@ -1,6 +1,6 @@
 ﻿using Data.Common.Models;
 using Dto.Common.Unit;
-using Dto.Common.UnitGroupColumn;
+//using Dto.Common.UnitGroupColumn;
 using Shared.Logic.Common;
 
 namespace Data.Common.Converters
@@ -44,7 +44,7 @@ namespace Data.Common.Converters
             //     target.UnitGroupColumns = new List<UnitGroupColumnDto>();
             // }
 
-            target.UnitGroupColumns = new List<UnitGroupColumnDto>();
+            //target.UnitGroupColumns = new List<UnitGroupColumnDto>();
 
             return target;
         }

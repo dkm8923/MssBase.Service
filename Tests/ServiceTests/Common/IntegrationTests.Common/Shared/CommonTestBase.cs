@@ -1,5 +1,5 @@
 ﻿using MssBase.Service.Shared;
-using Contract.Common;
+//using Contract.Common;
 using FluentValidation;
 using IntegrationTests.Common.Shared.Utilities;
 using IntegrationTests.Common.Shared.Utilities.Contracts;
@@ -8,8 +8,8 @@ using IntegrationTests.Shared.Utilities;
 using Logic.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Service.Common;
-using Service.Common.Service;
+//using Service.Common;
+//using Service.Common.Service;
 using Service.Logger.Contracts;
 using Shared.Contracts.Logic.Validators;
 using Shared.Logic.Validators;
@@ -23,7 +23,7 @@ namespace IntegrationTests.Common.Shared
         private readonly AppSettingsHelper _configHelper;
         protected readonly ServiceProvider _serviceProvider;
         protected readonly ILoggerService _loggerSvc;
-        protected readonly ICommonLogicManager _CommonLogic;
+        //protected readonly ICommonLogicManager _CommonLogic;
         protected readonly ICommonTestUtilitiesManager _CommonTestUtilities;
         protected readonly IValidatorUtilities _validatorUtilities;
 
@@ -36,7 +36,7 @@ namespace IntegrationTests.Common.Shared
             _serviceProvider = ConfigureServices();
             
             _loggerSvc = _serviceProvider.GetService<ILoggerService>();
-            _CommonLogic = _serviceProvider.GetService<ICommonLogicManager>();
+            //_CommonLogic = _serviceProvider.GetService<ICommonLogicManager>();
             _CommonTestUtilities = _serviceProvider.GetService<ICommonTestUtilitiesManager>();
             _validatorUtilities = _serviceProvider.GetService<IValidatorUtilities>();
         }
@@ -91,8 +91,8 @@ namespace IntegrationTests.Common.Shared
             #endregion
 
             //service dependencies
-            services.AddTransient<ICommonLogicManager, CommonLogicManager>();
-            services.AddTransient<ICommonServiceManager, CommonServiceManager>();
+            // services.AddTransient<ICommonLogicManager, CommonLogicManager>();
+            // services.AddTransient<ICommonServiceManager, CommonServiceManager>();
 
             return services;
         }

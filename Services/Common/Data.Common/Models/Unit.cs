@@ -39,5 +39,5 @@ public partial class Unit
 
     public string? ChargeCode { get; set; }
 
-    public virtual ICollection<UnitGroupColumn> UnitGroupColumns { get; set; } = new List<UnitGroupColumn>();
+    //public virtual ICollection<UnitGroupColumn> UnitGroupColumns { get; set; } = new List<UnitGroupColumn>();
 }

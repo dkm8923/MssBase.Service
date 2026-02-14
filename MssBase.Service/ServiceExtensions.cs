@@ -1,7 +1,7 @@
 ﻿using MssBase.Service.Shared;
 using Contract.Security;
 using Contract.Security.Application;
-using Contract.Common;
+//using Contract.Common;
 using Dto.Security.Application;
 using Dto.Security.Application.Logic;
 using FluentValidation;
@@ -12,7 +12,7 @@ using Logic.Common;
 using Microsoft.Extensions.Options;
 using Service.Security;
 using Service.Security.Service;
-using Service.Common;
+//using Service.Common;
 using Service.Logger;
 using Service.Logger.Contracts;
 using Service.Logger.Models;
@@ -101,9 +101,6 @@ namespace MssBase.Service
             // services.AddScoped<ICommonTypeLogic, CommonTypeLogic>();
 
             // #endregion
-
-            services.AddScoped<ICommonServiceManager, CommonServiceManager>();
-            services.AddScoped<ICommonLogicManager, CommonLogicManager>();
         }
 
         public static void ConfigureSecurityService(this IServiceCollection services, WebApplicationBuilder builder)
