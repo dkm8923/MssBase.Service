@@ -22,7 +22,7 @@ namespace IntegrationTests.Security.Logic.Application
             await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
-            var result = await _SecurityLogic.Application.GetAll(new BaseLogicGet());
+            var result = await _applicationLogic.GetAll(new BaseLogicGet());
 
             // Assert
             result.Response.Should().HaveCount(5);
@@ -37,7 +37,7 @@ namespace IntegrationTests.Security.Logic.Application
             await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
-            var result = await _SecurityLogic.Application.GetAll(new BaseLogicGet { IncludeInactive = true });
+            var result = await _applicationLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
 
             // Assert
             result.Response.Should().HaveCount(6);
@@ -50,7 +50,7 @@ namespace IntegrationTests.Security.Logic.Application
             await _SecurityTestUtilities.Application.DeleteAllRecords();
 
             // Act
-            var result = await _SecurityLogic.Application.GetAll(new BaseLogicGet());
+            var result = await _applicationLogic.GetAll(new BaseLogicGet());
 
             // Assert
             result.Response.Should().HaveCount(0);
@@ -68,7 +68,7 @@ namespace IntegrationTests.Security.Logic.Application
             var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
             // Act
-            var result = await _SecurityLogic.Application.GetById(testRecord.ApplicationId, new BaseLogicGet());
+            var result = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet());
 
             // Assert
             _SecurityTestUtilities.Application.VerifyTestRecordValuesMatch(result.Response, testRecord);
@@ -82,7 +82,7 @@ namespace IntegrationTests.Security.Logic.Application
             var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
-            var result = await _SecurityLogic.Application.GetById(testRecord.ApplicationId, new BaseLogicGet());
+            var result = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet());
 
             // Assert
             result.Response.Should().BeNull();
@@ -96,7 +96,7 @@ namespace IntegrationTests.Security.Logic.Application
             var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
-            var result = await _SecurityLogic.Application.GetById(testRecord.ApplicationId, new BaseLogicGet { IncludeInactive = true });
+            var result = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet { IncludeInactive = true });
 
             // Assert
             result.Response.Should().NotBeNull();
@@ -111,7 +111,7 @@ namespace IntegrationTests.Security.Logic.Application
             var id = -1;
 
             // Act
-            var result = await _SecurityLogic.Application.GetById(id, new BaseLogicGet { IncludeInactive = true });
+            var result = await _applicationLogic.GetById(id, new BaseLogicGet { IncludeInactive = true });
 
             // Assert
             result.Response.Should().BeNull();
@@ -131,7 +131,7 @@ namespace IntegrationTests.Security.Logic.Application
             var postReq = new FilterApplicationLogicRequest { };
 
             // Act
-            var result = await _SecurityLogic.Application.Filter(postReq);
+            var result = await _applicationLogic.Filter(postReq);
 
             // Assert
             result.Errors.Should().HaveCount(0);
@@ -154,7 +154,7 @@ namespace IntegrationTests.Security.Logic.Application
             var postReq = new FilterApplicationLogicRequest { IncludeInactive = true };
 
             // Act
-            var result = await _SecurityLogic.Application.Filter(postReq);
+            var result = await _applicationLogic.Filter(postReq);
 
             // Assert
             result.Errors.Should().HaveCount(0);
@@ -181,11 +181,11 @@ namespace IntegrationTests.Security.Logic.Application
             var postReqName = new FilterApplicationServiceRequest { Name = testRecord.Name };
             
             // Act
-            var filterCreatedByResult = await _SecurityLogic.Application.Filter(postReqCreatedBy);
-            var filterCreatedOnDateResult = await _SecurityLogic.Application.Filter(postReqCreatedOnDate);
-            var filterUpdatedByResult = await _SecurityLogic.Application.Filter(postReqUpdatedBy);
-            var filterUpdatedOnDateResult = await _SecurityLogic.Application.Filter(postReqUpdatedOnDate);
-            var filterNameResult = await _SecurityLogic.Application.Filter(postReqName);
+            var filterCreatedByResult = await _applicationLogic.Filter(postReqCreatedBy);
+            var filterCreatedOnDateResult = await _applicationLogic.Filter(postReqCreatedOnDate);
+            var filterUpdatedByResult = await _applicationLogic.Filter(postReqUpdatedBy);
+            var filterUpdatedOnDateResult = await _applicationLogic.Filter(postReqUpdatedOnDate);
+            var filterNameResult = await _applicationLogic.Filter(postReqName);
             
             // Assert
             filterCreatedByResult.Response.Should().HaveCountGreaterThan(0);
@@ -235,11 +235,11 @@ namespace IntegrationTests.Security.Logic.Application
             var postReqInvalidName = new FilterApplicationServiceRequest { Name = "TestApplicationName" };
             
             // Act
-            var invalidCreatedByResult = await _SecurityLogic.Application.Filter(postReqInvalidCreatedBy);
-            var invalidCreatedOnDateResult = await _SecurityLogic.Application.Filter(postReqInvalidCreatedOnDate);
-            var invalidUpdatedByResult = await _SecurityLogic.Application.Filter(postReqInvalidUpdatedBy);
-            var invalidUpdatedOnDateResult = await _SecurityLogic.Application.Filter(postReqInvalidUpdatedOnDate);
-            var invalidNameResult = await _SecurityLogic.Application.Filter(postReqInvalidName);
+            var invalidCreatedByResult = await _applicationLogic.Filter(postReqInvalidCreatedBy);
+            var invalidCreatedOnDateResult = await _applicationLogic.Filter(postReqInvalidCreatedOnDate);
+            var invalidUpdatedByResult = await _applicationLogic.Filter(postReqInvalidUpdatedBy);
+            var invalidUpdatedOnDateResult = await _applicationLogic.Filter(postReqInvalidUpdatedOnDate);
+            var invalidNameResult = await _applicationLogic.Filter(postReqInvalidName);
             
             // Assert
             invalidCreatedByResult.Response.Should().HaveCount(0);
@@ -262,7 +262,7 @@ namespace IntegrationTests.Security.Logic.Application
             // Act
             var insertedRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
-            var insertCheck = await _SecurityLogic.Application.GetById(insertedRecord.ApplicationId, new BaseLogicGet());
+            var insertCheck = await _applicationLogic.GetById(insertedRecord.ApplicationId, new BaseLogicGet());
 
             //Assert
             _SecurityTestUtilities.Application.VerifyTestRecordValuesMatch(insertedRecord, insertCheck.Response);
@@ -280,7 +280,7 @@ namespace IntegrationTests.Security.Logic.Application
             var expectedUniqueApplicationNameError = _SecurityTestUtilities.Application.GetExpectedUniqueFieldErrors();
 
             // Act
-            var result = await _SecurityLogic.Application.Insert(recordToCreate);
+            var result = await _applicationLogic.Insert(recordToCreate);
 
             //Assert
             result.Errors.Should().HaveCount(1);
@@ -297,7 +297,7 @@ namespace IntegrationTests.Security.Logic.Application
             var expectedFieldErrors = _SecurityTestUtilities.Application.GetExpectedRequiredFieldErrors();
 
             // Act
-            var result = await _SecurityLogic.Application.Insert(recordToCreate);
+            var result = await _applicationLogic.Insert(recordToCreate);
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -315,7 +315,7 @@ namespace IntegrationTests.Security.Logic.Application
             var expectedFieldErrors = _SecurityTestUtilities.Application.GetExpectedMaxLengthFieldErrors();
 
             // Act
-            var result = await _SecurityLogic.Application.Insert(recordToCreate);
+            var result = await _applicationLogic.Insert(recordToCreate);
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -343,7 +343,7 @@ namespace IntegrationTests.Security.Logic.Application
             };
 
             // Act
-            var updateResult = await _SecurityLogic.Application.Update(insertedRecord.ApplicationId, updateReq);
+            var updateResult = await _applicationLogic.Update(insertedRecord.ApplicationId, updateReq);
 
             //Assert
             updateResult.Response.ApplicationId.Should().Be(insertedRecord.ApplicationId);
@@ -366,7 +366,7 @@ namespace IntegrationTests.Security.Logic.Application
             updateReq.Name = dupeApplicationName;
 
             // Act
-            var updateResult = await _SecurityLogic.Application.Update(recordToUpdate.ApplicationId, updateReq);
+            var updateResult = await _applicationLogic.Update(recordToUpdate.ApplicationId, updateReq);
 
             //Assert
             var expectedUniqueUserFriendlyDescriptionError = _SecurityTestUtilities.Application.GetExpectedUniqueFieldErrors();
@@ -382,13 +382,13 @@ namespace IntegrationTests.Security.Logic.Application
             // Arrange
             await _SecurityTestUtilities.Application.DeleteAllRecords();
             await _SecurityTestUtilities.Application.CreateTestRecords();
-            var testRecords = await _SecurityLogic.Application.GetAll(new BaseLogicGet());
+            var testRecords = await _applicationLogic.GetAll(new BaseLogicGet());
             var recordToUpdate = testRecords.Response.FirstOrDefault();
 
             var expectedFieldErrors = _SecurityTestUtilities.Application.GetExpectedRequiredFieldErrors();
 
             // Act
-            var result = await _SecurityLogic.Application.Update(recordToUpdate.ApplicationId, new InsertUpdateApplicationRequest());
+            var result = await _applicationLogic.Update(recordToUpdate.ApplicationId, new InsertUpdateApplicationRequest());
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -402,7 +402,7 @@ namespace IntegrationTests.Security.Logic.Application
             // Arrange
             await _SecurityTestUtilities.Application.DeleteAllRecords();
             await _SecurityTestUtilities.Application.CreateTestRecords();
-            var testRecords = await _SecurityLogic.Application.GetAll(new BaseLogicGet());
+            var testRecords = await _applicationLogic.GetAll(new BaseLogicGet());
             var recordToUpdate = testRecords.Response.FirstOrDefault();
 
             var updateReq = _SecurityTestUtilities.Application.CreateInsertUpdateRequestWithMaxLengthErrors();
@@ -410,7 +410,7 @@ namespace IntegrationTests.Security.Logic.Application
             var expectedFieldErrors = _SecurityTestUtilities.Application.GetExpectedMaxLengthFieldErrors();
 
             // Act
-            var result = await _SecurityLogic.Application.Update(recordToUpdate.ApplicationId, updateReq);
+            var result = await _applicationLogic.Update(recordToUpdate.ApplicationId, updateReq);
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -430,8 +430,8 @@ namespace IntegrationTests.Security.Logic.Application
             var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
-            await _SecurityLogic.Application.Delete(testRecord.ApplicationId);
-            var getResult = await _SecurityLogic.Application.GetById(testRecord.ApplicationId, new BaseLogicGet());
+            await _applicationLogic.Delete(testRecord.ApplicationId);
+            var getResult = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet());
 
             // Assert
             getResult.Response.Should().BeNull();
@@ -446,7 +446,7 @@ namespace IntegrationTests.Security.Logic.Application
             var expectedFieldErrors = _SecurityTestUtilities.Application.GetExpectedRecordDoesNotExistErrors();
 
             // Act
-            var result = await _SecurityLogic.Application.Delete(-1);
+            var result = await _applicationLogic.Delete(-1);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);
