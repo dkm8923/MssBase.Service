@@ -1,12 +1,12 @@
 using MssBase.Service.Controllers.Shared;
 using MssBase.Service.Shared;
-using Contract.Security;
 using Dto.Security.Application;
 using Dto.Security.Application.Service;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 using Swashbuckle.AspNetCore.Annotations;
+using Contract.Security.Application;
 
 namespace MssBase.Service.Controllers.Security
 {
@@ -18,11 +18,11 @@ namespace MssBase.Service.Controllers.Security
     public class ApplicationController : ApiBaseController
     {
         //TODO: Global exception handling?
-        private readonly ISecurityServiceManager _svc;
+        private readonly IApplicationService _applicationSvc;
 
-        public ApplicationController(ISecurityServiceManager svc)
+        public ApplicationController(IApplicationService applicationSvc)
         {
-            _svc = svc;
+            _applicationSvc = applicationSvc;
         }
 
         // GET: api/Security/Application
@@ -47,7 +47,7 @@ namespace MssBase.Service.Controllers.Security
         {
             try
             {
-                var records = await _svc.Application.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, includeRelated);
+                var records = await _applicationSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, includeRelated);
                 return Ok(records);
             }
             catch (Exception ex)
@@ -78,7 +78,7 @@ namespace MssBase.Service.Controllers.Security
         {
             try
             {
-                var record = await _svc.Application.GetById(applicationId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, includeRelated);
+                var record = await _applicationSvc.GetById(applicationId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, includeRelated);
 
                 if (record.Response == null)
                 {
@@ -110,7 +110,7 @@ namespace MssBase.Service.Controllers.Security
         {
             try
             {
-                var records = await _svc.Application.Filter(req);
+                var records = await _applicationSvc.Filter(req);
                 return Ok(records);
             }
             catch (Exception ex)
@@ -136,7 +136,7 @@ namespace MssBase.Service.Controllers.Security
         {
             try
             {
-                var result = await _svc.Application.Insert(req);
+                var result = await _applicationSvc.Insert(req);
 
                 if (result.Errors.Count > 0)
                 {
@@ -168,7 +168,7 @@ namespace MssBase.Service.Controllers.Security
         {
             try
             {
-                var result = await _svc.Application.Update(applicationId, req);
+                var result = await _applicationSvc.Update(applicationId, req);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -194,7 +194,7 @@ namespace MssBase.Service.Controllers.Security
         {
             try
             {
-                var result = await _svc.Application.Delete(applicationId);
+                var result = await _applicationSvc.Delete(applicationId);
                 if (result.Errors.Count > 0)
                 {
                     return BadRequest(result);

@@ -1,4 +1,4 @@
-using Contract.Security;
+using Contract.Security.Application;
 using Dto.Security.Application;
 using FluentAssertions;
 using IntegrationTests.Security.Shared.Utilities.Contracts;
@@ -9,10 +9,10 @@ namespace IntegrationTests.Security.Shared.Utilities;
 
 public class ApplicationUtilities : IApplicationUtilities
 {
-    protected readonly ISecurityLogicManager _SecurityLogic;
-    public ApplicationUtilities(ISecurityLogicManager SecurityLogic) 
+    protected readonly IApplicationLogic _applicationLogic;
+    public ApplicationUtilities(IApplicationLogic applicationLogic) 
     {
-        _SecurityLogic = SecurityLogic;
+        _applicationLogic = applicationLogic;
     }
 
     public InsertUpdateApplicationRequest ConvertApplicationDtoToInsertUpdateRequest(ApplicationDto req)
@@ -62,7 +62,7 @@ public class ApplicationUtilities : IApplicationUtilities
         //create test record
         var insertReq = CreateInsertUpdateRequestWithRandomValues(active);
 
-        var ret = await _SecurityLogic.Application.Insert(insertReq);
+        var ret = await _applicationLogic.Insert(insertReq);
 
         ret.Errors.Should().BeNullOrEmpty("Insert of application test record failed when it should have succeeded.");
 
@@ -88,14 +88,14 @@ public class ApplicationUtilities : IApplicationUtilities
                 CurrentUser = "IntegrationTest"
             };
 
-            ret = await _SecurityLogic.Application.Insert(insertReq);
+            ret = await _applicationLogic.Insert(insertReq);
         }
         else
         {
             req.Name = req.Name ?? "Test Application Name";
             req.Description = req.Description ?? "Test Application Description";
             req.CurrentUser = req.CurrentUser ?? "IntegrationTest"; 
-            ret = await _SecurityLogic.Application.Insert(req);
+            ret = await _applicationLogic.Insert(req);
         }
 
         return ret.Response;
@@ -131,11 +131,11 @@ public class ApplicationUtilities : IApplicationUtilities
     /// <returns>A task that represents the asynchronous delete operation.</returns>
     public async Task DeleteAllRecords()
     {
-        var recordsToDelete = await _SecurityLogic.Application.GetAll(new BaseLogicGet { IncludeInactive = true });
+        var recordsToDelete = await _applicationLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
 
         foreach (var record in recordsToDelete.Response)
         {
-            await _SecurityLogic.Application.Delete(record.ApplicationId);
+            await _applicationLogic.Delete(record.ApplicationId);
         }
     }
 

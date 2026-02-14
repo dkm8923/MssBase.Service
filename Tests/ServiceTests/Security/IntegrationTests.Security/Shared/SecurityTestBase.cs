@@ -1,5 +1,4 @@
 using MssBase.Service.Shared;
-using Contract.Security;
 using Contract.Security.Application;
 using Dto.Security.Application;
 using Dto.Security.Application.Logic;
@@ -8,12 +7,10 @@ using IntegrationTests.Security.Shared.Utilities;
 using IntegrationTests.Security.Shared.Utilities.Contracts;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities;
-using Logic.Security;
 using Logic.Security.Logic;
 using Logic.Security.Validators.Application;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Service.Security;
 using Service.Security.Service;
 using Service.Logger.Contracts;
 using Shared.Contracts.Logic.Validators;
@@ -28,7 +25,7 @@ public class SecurityTestBase
         private readonly AppSettingsHelper _configHelper;
         protected readonly ServiceProvider _serviceProvider;
         protected readonly ILoggerService _loggerSvc;
-        protected readonly ISecurityLogicManager _SecurityLogic;
+        protected readonly IApplicationLogic _applicationLogic;
         protected readonly ISecurityTestUtilitiesManager _SecurityTestUtilities;
         protected readonly IValidatorUtilities _validatorUtilities;
 
@@ -41,7 +38,7 @@ public class SecurityTestBase
             _serviceProvider = ConfigureServices();
             
             _loggerSvc = _serviceProvider.GetService<ILoggerService>();
-            _SecurityLogic = _serviceProvider.GetService<ISecurityLogicManager>();
+            _applicationLogic = _serviceProvider.GetService<IApplicationLogic>();
             _SecurityTestUtilities = _serviceProvider.GetService<ISecurityTestUtilitiesManager>();
             _validatorUtilities = _serviceProvider.GetService<IValidatorUtilities>();
         }
@@ -96,9 +93,7 @@ public class SecurityTestBase
             #endregion
 
             //service dependencies
-            services.AddTransient<ISecurityLogicManager, SecurityLogicManager>();
-            services.AddTransient<ISecurityServiceManager, SecurityServiceManager>();
-
+            
             return services;
         }
     }

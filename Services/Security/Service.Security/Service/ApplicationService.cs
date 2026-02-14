@@ -1,4 +1,3 @@
-using Contract.Security;
 using Contract.Security.Application;
 using Dto.Security.Application;
 using Dto.Security.Application.Service;
@@ -11,13 +10,12 @@ namespace Service.Security.Service
     public class ApplicationService : IApplicationService
     {
         private readonly string cacheKeySectionName = ICacheService.ApplicationService;
-
-        private readonly ISecurityLogicManager _logic;
+        private readonly IApplicationLogic _applicationLogic;
         private readonly ICacheService _cacheService;
 
-        public ApplicationService(ISecurityLogicManager logic, ICacheService cacheService)
+        public ApplicationService(IApplicationLogic applicationLogic, ICacheService cacheService)
         {
-            _logic = logic;
+            _applicationLogic = applicationLogic;
             _cacheService = cacheService;
         }
 
@@ -26,15 +24,15 @@ namespace Service.Security.Service
         public async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> GetAll(BaseServiceGet req, bool includeRelated = false)
         {
             var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, includeRelated);
-            //return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _logic.Application.GetAll(req, includeRelated));
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _logic.Application.GetAll(req));
+            //return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationLogic.GetAll(req, includeRelated));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationLogic.GetAll(req));
         }
 
         public async Task<ErrorValidationResult<ApplicationDto>> GetById(int unitId, BaseServiceGet req, bool includeRelated = false)
         {
             var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, unitId, req.IncludeInactive, includeRelated);
-            //return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _logic.Application.GetById(unitId, req, includeRelated));
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _logic.Application.GetById(unitId, req));
+            //return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationLogic.GetById(unitId, req, includeRelated));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationLogic.GetById(unitId, req));
         }
 
         public async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> Filter(FilterApplicationServiceRequest req)
@@ -59,7 +57,7 @@ namespace Service.Security.Service
                 //,includeRelatedKey
             });
 
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _logic.Application.Filter(req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationLogic.Filter(req));
         }
 
         #endregion
@@ -70,7 +68,7 @@ namespace Service.Security.Service
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _logic.Application.Insert(req);
+            return await _applicationLogic.Insert(req);
         }
 
         #endregion
@@ -81,7 +79,7 @@ namespace Service.Security.Service
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _logic.Application.Update(ApplicationId, req);
+            return await _applicationLogic.Update(ApplicationId, req);
         }
 
         #endregion
@@ -92,7 +90,7 @@ namespace Service.Security.Service
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _logic.Application.Delete(unitId);
+            return await _applicationLogic.Delete(unitId);
         }
 
         #endregion

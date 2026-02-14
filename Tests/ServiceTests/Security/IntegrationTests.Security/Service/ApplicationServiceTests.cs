@@ -1,4 +1,5 @@
 using Contract.Security;
+using Contract.Security.Application;
 using Dto.Security.Application;
 using Dto.Security.Application.Service;
 using FluentAssertions;
@@ -15,29 +16,28 @@ namespace IntegrationTests.Security.Service
     public class ApplicationServiceTests : SecurityTestBase
     {
         //TODO: Add tests for include related logic
-
-        private readonly ISecurityServiceManager _SecurityService;
+        private readonly IApplicationService _applicationService;
         private readonly ICacheTestUtilities _cacheTestUtilities;
 
         public ApplicationServiceTests()
         {
             _cacheTestUtilities = _serviceProvider.GetService<ICacheTestUtilities>();
-            _SecurityService = _serviceProvider.GetService<ISecurityServiceManager>();
+            _applicationService = _serviceProvider.GetService<IApplicationService>();
         }
 
         #region utils
 
         private async Task CreateApplicationCacheKeys()
         {
-            var result = await _SecurityService.Application.GetAll(new BaseServiceGet { DeleteCache = false, IncludeInactive = true });
+            var result = await _applicationService.GetAll(new BaseServiceGet { DeleteCache = false, IncludeInactive = true });
 
             foreach (var record in result.Response)
             {
-                await _SecurityService.Application.GetById(record.ApplicationId, new BaseServiceGet());
-                await _SecurityService.Application.Filter(new FilterApplicationServiceRequest { Name = record.Name });
-                await _SecurityService.Application.Filter(new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.Parse(record.CreatedOn.ToString()) });
-                await _SecurityService.Application.Filter(new FilterApplicationServiceRequest { CreatedBy = record.CreatedBy });
-                await _SecurityService.Application.Filter(new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.Parse(record.UpdatedOn.ToString()) });
+                await _applicationService.GetById(record.ApplicationId, new BaseServiceGet());
+                await _applicationService.Filter(new FilterApplicationServiceRequest { Name = record.Name });
+                await _applicationService.Filter(new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.Parse(record.CreatedOn.ToString()) });
+                await _applicationService.Filter(new FilterApplicationServiceRequest { CreatedBy = record.CreatedBy });
+                await _applicationService.Filter(new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.Parse(record.UpdatedOn.ToString()) });
             }
         }
 
@@ -56,7 +56,7 @@ namespace IntegrationTests.Security.Service
             var expectedCacheKey = $"ApplicationService_GetAll_0_0";
 
             // Act
-            var result = await _SecurityService.Application.GetAll(new BaseServiceGet());
+            var result = await _applicationService.GetAll(new BaseServiceGet());
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
             var cacheKeyData = await _cacheTestUtilities.GetKeyData<List<ApplicationDto>>(expectedCacheKey);
 
@@ -76,7 +76,7 @@ namespace IntegrationTests.Security.Service
             var expectedCacheKey = "ApplicationService_GetAll_1_0";
 
             // Act
-            var result = await _SecurityService.Application.GetAll(new BaseServiceGet { IncludeInactive = true });
+            var result = await _applicationService.GetAll(new BaseServiceGet { IncludeInactive = true });
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
             var cacheKeyData = await _cacheTestUtilities.GetKeyData<List<ApplicationDto>>(expectedCacheKey);
 
@@ -95,7 +95,7 @@ namespace IntegrationTests.Security.Service
             var expectedCacheKey = "ApplicationService_GetAll_0";
 
             // Act
-            var result = await _SecurityService.Application.GetAll(new BaseServiceGet());
+            var result = await _applicationService.GetAll(new BaseServiceGet());
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert
@@ -119,7 +119,7 @@ namespace IntegrationTests.Security.Service
             var expectedCacheKey = $"ApplicationService_GetById_{testRecord.ApplicationId}_0_0";
 
             // Act
-            var result = await _SecurityService.Application.GetById(testRecord.ApplicationId, new BaseServiceGet());
+            var result = await _applicationService.GetById(testRecord.ApplicationId, new BaseServiceGet());
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert
@@ -138,7 +138,7 @@ namespace IntegrationTests.Security.Service
             var expectedCacheKey = $"ApplicationService_GetById_{testRecord.ApplicationId}_1_0";
 
             // Act
-            var result = await _SecurityService.Application.GetById(testRecord.ApplicationId, new BaseServiceGet { IncludeInactive = true });
+            var result = await _applicationService.GetById(testRecord.ApplicationId, new BaseServiceGet { IncludeInactive = true });
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert
@@ -157,7 +157,7 @@ namespace IntegrationTests.Security.Service
             var id = -1;
 
             // Act
-            var result = await _SecurityService.Application.GetById(id, new BaseServiceGet { IncludeInactive = true });
+            var result = await _applicationService.GetById(id, new BaseServiceGet { IncludeInactive = true });
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert
@@ -191,11 +191,11 @@ namespace IntegrationTests.Security.Service
            var expectedCacheKeyName = $"ApplicationService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqName.Name)}_0";
 
            // Act
-           var filterCreatedByResult = await _SecurityService.Application.Filter(postReqCreatedBy);
-           var filterCreatedOnDateResult = await _SecurityService.Application.Filter(postReqCreatedOnDate);
-           var filterUpdatedByResult = await _SecurityService.Application.Filter(postReqUpdatedBy);
-           var filterUpdatedOnDateResult = await _SecurityService.Application.Filter(postReqUpdatedOnDate);
-           var filterNameResult = await _SecurityService.Application.Filter(postReqName);
+           var filterCreatedByResult = await _applicationService.Filter(postReqCreatedBy);
+           var filterCreatedOnDateResult = await _applicationService.Filter(postReqCreatedOnDate);
+           var filterUpdatedByResult = await _applicationService.Filter(postReqUpdatedBy);
+           var filterUpdatedOnDateResult = await _applicationService.Filter(postReqUpdatedOnDate);
+           var filterNameResult = await _applicationService.Filter(postReqName);
            var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
            // Assert
@@ -236,7 +236,7 @@ namespace IntegrationTests.Security.Service
             };
 
             // Act
-            await _SecurityService.Application.Insert(insertReq);
+            await _applicationService.Insert(insertReq);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert
@@ -266,7 +266,7 @@ namespace IntegrationTests.Security.Service
             };
 
             // Act
-            await _SecurityService.Application.Update(record.ApplicationId, updateReq);
+            await _applicationService.Update(record.ApplicationId, updateReq);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert
@@ -288,7 +288,7 @@ namespace IntegrationTests.Security.Service
             var record = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
             // Act
-            await _SecurityService.Application.Delete(record.ApplicationId);
+            await _applicationService.Delete(record.ApplicationId);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert

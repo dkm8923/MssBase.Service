@@ -123,9 +123,6 @@ namespace MssBase.Service
             services.AddTransient<IValidator<InsertUpdateApplicationRequest>, InsertUpdateApplicationRequestValidator>();
 
             #endregion
-
-            services.AddScoped<ISecurityServiceManager, SecurityServiceManager>();
-            services.AddScoped<ISecurityLogicManager, SecurityLogicManager>();
         }
     }
 }
