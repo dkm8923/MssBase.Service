@@ -1,3 +1,4 @@
+using Contract.Security.Application;
 using Contract.Security.ApplicationUser;
 using Dto.Security.ApplicationUser;
 using Dto.Security.ApplicationUser.Service;
@@ -10,11 +11,13 @@ namespace Service.Security.Service
     public class ApplicationUserService : IApplicationUserService
     {
         private readonly string cacheKeySectionName = ICacheService.ApplicationUserService;
+        private readonly IApplicationLogic _applicationLogic;
         private readonly IApplicationUserLogic _applicationUserLogic;
         private readonly ICacheService _cacheService;
 
-        public ApplicationUserService(IApplicationUserLogic applicationUserLogic, ICacheService cacheService)
+        public ApplicationUserService(IApplicationLogic applicationLogic, IApplicationUserLogic applicationUserLogic, ICacheService cacheService)
         {
+            _applicationLogic = applicationLogic;
             _applicationUserLogic = applicationUserLogic;
             _cacheService = cacheService;
         }
@@ -70,7 +73,7 @@ namespace Service.Security.Service
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _applicationUserLogic.Insert(req);
+            return await _applicationUserLogic.Insert(req, _applicationLogic);
         }
 
         #endregion
@@ -81,7 +84,7 @@ namespace Service.Security.Service
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _applicationUserLogic.Update(applicationUserId, req);
+            return await _applicationUserLogic.Update(applicationUserId, req, _applicationLogic);
         }
 
         #endregion

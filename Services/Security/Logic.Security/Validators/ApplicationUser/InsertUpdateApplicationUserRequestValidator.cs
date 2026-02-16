@@ -29,7 +29,7 @@ public class InsertUpdateApplicationUserRequestValidator : AbstractValidator<Ins
         RuleFor(v => v.Email)
             .NotEmpty().WithMessage(_validatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Email))
             .EmailAddress().WithMessage("Email must be in a valid format!")
-            .Length(1, 256).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Email, 256));
+            .Length(1, 128).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Email, 128));
 
         RuleFor(v => v.FirstName)
             .Length(0, 64).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.FirstName, 64));
@@ -38,7 +38,7 @@ public class InsertUpdateApplicationUserRequestValidator : AbstractValidator<Ins
             .Length(0, 64).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.LastName, 64));
 
         RuleFor(v => v.Password)
-            .Length(0, 256).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Password, 256));
+            .Length(0, 64).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Password, 64));
 
         RuleFor(v => v.ApplicationId)
             .GreaterThan(0).WithMessage(_validatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationId));

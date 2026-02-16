@@ -17,6 +17,7 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     public ApplicationUserUtilities(IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic) 
     {
         _applicationUserLogic = applicationUserLogic;
+        _applicationLogic = applicationLogic;
     }
 
     /// <summary>
@@ -53,10 +54,10 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     {
         return new InsertUpdateApplicationUserRequest
         { 
-            Email = LogicTestUtilities.GenerateRandomString(257),
+            Email = LogicTestUtilities.GenerateRandomString(120) + "@test.com",
             FirstName = LogicTestUtilities.GenerateRandomString(65),
             LastName = LogicTestUtilities.GenerateRandomString(65),
-            Password = LogicTestUtilities.GenerateRandomString(257),
+            Password = LogicTestUtilities.GenerateRandomString(65),
             Active = true,
             ApplicationId = 1,
             CurrentUser = LogicTestUtilities.GenerateRandomString(65)
@@ -85,7 +86,7 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
         //create test record
         var insertReq = CreateInsertUpdateRequestWithRandomValues(applicationId, active);
 
-        var ret = await _applicationUserLogic.Insert(insertReq);
+        var ret = await _applicationUserLogic.Insert(insertReq, _applicationLogic);
 
         ret.Errors.Should().BeNullOrEmpty("Insert of application user test record failed when it should have succeeded.");
 
@@ -160,10 +161,10 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     {
         return new Dictionary<string, List<string>>
         {
-            { "Email", new List<string> { "Email cannot exceed 256 characters!" } },
+            { "Email", new List<string> { "Email cannot exceed 128 characters!" } },
             { "FirstName", new List<string> { "FirstName cannot exceed 64 characters!" } },
             { "LastName", new List<string> { "LastName cannot exceed 64 characters!" } },
-            { "Password", new List<string> { "Password cannot exceed 256 characters!" } },
+            { "Password", new List<string> { "Password cannot exceed 64 characters!" } },
             { "CurrentUser", new List<string> { "CurrentUser cannot exceed 64 characters!" } }
         };
     }
@@ -181,7 +182,16 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
         return new Dictionary<string, List<string>>
         {
             { "Email", new List<string> { "Email is a required field!" } },
+            { "ApplicationId", new List<string> { "ApplicationId is a required field!" } },
             { "CurrentUser", new List<string> { "CurrentUser is a required field!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedInvalidEmailFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Email", new List<string> { "Email must be in a valid format!" } }
         };
     }
 

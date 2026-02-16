@@ -109,7 +109,15 @@ public record FilterApplicationServiceRequest : FilterApplicationLogicRequest, I
 #### 3a. Insert/Update Validator - `InsertUpdate{EntityName}RequestValidator.cs`
 Validates the Insert/Update request object using FluentValidation.
 
-**Pattern**:
+**IMPORTANT - Field Length Validation**:
+Always verify the correct max-length constraints from the database model/DTO before writing validators. Each field has a maximum character length defined in the database schema. Use the exact values or validation will fail. Common lengths:
+- Email fields: typically 128 characters
+- Name/FirstName/LastName fields: typically 64 characters
+- Description fields: typically 256 characters
+- Password fields: typically 256 characters
+- CurrentUser/audit fields: typically 64 characters
+
+**Pattern** (Application example):
 ```csharp
 public class InsertUpdateApplicationRequestValidator : AbstractValidator<InsertUpdateApplicationRequest>
 {
@@ -133,6 +141,52 @@ public class InsertUpdateApplicationRequestValidator : AbstractValidator<InsertU
 
         RuleFor(v => v.Description)
             .Length(0, 256).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Description, 256));
+
+        RuleFor(v => v.CurrentUser)
+            .NotEmpty().WithMessage(_validatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.CurrentUser))
+            .Length(1, 64).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.CurrentUser, 64));
+    }
+}
+```
+
+**Example** (ApplicationUser - reference for multi-field entity):
+```csharp
+public class InsertUpdateApplicationUserRequestValidator : AbstractValidator<InsertUpdateApplicationUserRequest>
+{
+    private readonly IValidatorUtilities _validatorUtilities;
+
+    private static class EntityFieldNames
+    {
+        public const string Email = "Email";                    // 128 max
+        public const string FirstName = "FirstName";            // 64 max
+        public const string LastName = "LastName";              // 64 max
+        public const string DateOfBirth = "DateOfBirth";        // optional
+        public const string Password = "Password";              // 256 max
+        public const string ApplicationId = "ApplicationId";    // required > 0
+        public const string CurrentUser = "CurrentUser";        // 64 max
+    }
+
+    public InsertUpdateApplicationUserRequestValidator(IValidatorUtilities validatorUtilities)
+    {
+        _validatorUtilities = validatorUtilities;
+        RuleLevelCascadeMode = CascadeMode.Stop;
+
+        RuleFor(v => v.Email)
+            .NotEmpty().WithMessage(_validatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Email))
+            .EmailAddress().WithMessage("Email must be in a valid format!")
+            .Length(1, 128).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Email, 128));
+
+        RuleFor(v => v.FirstName)
+            .Length(0, 64).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.FirstName, 64));
+
+        RuleFor(v => v.LastName)
+            .Length(0, 64).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.LastName, 64));
+
+        RuleFor(v => v.Password)
+            .Length(0, 256).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Password, 256));
+
+        RuleFor(v => v.ApplicationId)
+            .GreaterThan(0).WithMessage(_validatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationId));
 
         RuleFor(v => v.CurrentUser)
             .NotEmpty().WithMessage(_validatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.CurrentUser))
@@ -1099,6 +1153,68 @@ private ServiceCollection ConfigureBaseDependencies(ServiceCollection services)
 ```
 
 ---
+
+## Step 15.5: Standard Test Methods (Controller / Service / Logic)
+
+Add the following default test methods for each entity to ensure consistent, repeatable coverage across Controller, Service, and Logic layers. Use these names and short descriptions as templates when writing tests for new entities.
+
+**Controller Tests**
+- `Entity_GetAll_Should_Return_Active_Data`: verifies only active records are returned.
+- `Entity_GetAll_Should_Return_Inactive_Data_When_IncludeInactive`: verifies inactive records returned when requested.
+- `Entity_GetAll_Should_Return_Zero_Records_When_None_Exist`: verifies empty result handling.
+- `Entity_GetById_Should_Return_Active_Record`: verifies successful retrieval by id.
+- `Entity_GetById_Should_Return_Inactive_Record_When_IncludeInactive`: verifies retrieval of inactive with flag.
+- `Entity_GetById_Should_Return_NotFound_For_Missing_Record`: verifies 404 for non-existent id.
+- `Entity_GetById_Should_Return_BadRequest_For_Invalid_Id`: verifies validation for invalid id inputs.
+- `Entity_Filter_Should_Return_Active_Data`: verifies filtering returns active records.
+- `Entity_Filter_Should_Return_Inactive_Data_When_IncludeInactive`: verifies filter include inactive behavior.
+- `Entity_Filter_Should_Return_Zero_Records_When_None_Match`: verifies empty filter result handling.
+- `Entity_Filter_Should_Return_BadRequest_For_Null_Or_Blank_Body`: verifies controller rejects empty/invalid filter payloads.
+- `Entity_Insert_Should_Create_Record`: verifies successful insert via controller.
+- `Entity_Insert_Should_Return_BadRequest_For_Null_Or_Blank_Body`: verifies controller rejects empty/invalid insert payloads.
+- `Entity_Insert_Should_Return_ValidationErrors_For_Invalid_Data`: verifies required/max-length/unique validations surface to caller.
+- `Entity_Update_Should_Update_Record`: verifies successful update via controller.
+- `Entity_Update_Should_Return_BadRequest_For_Null_Or_Blank_Body`: verifies controller rejects empty/invalid update payloads.
+- `Entity_Update_Should_Return_ValidationErrors_For_Invalid_Data`: verifies update validation errors.
+- `Entity_Delete_Should_Delete_Record`: verifies delete endpoint returns expected status and record is gone.
+- `Entity_Delete_Should_Return_NotFound_For_Missing_Record`: verifies deleting non-existent id returns 404.
+- `Entity_Delete_Should_Return_BadRequest_For_Invalid_Id`: verifies controller validation for bad id values.
+
+**Service Tests (Caching & Delegation)**
+- `Entity_GetAll_Should_Cache_Result`: verifies GetAll populates cache for default flags.
+- `Entity_GetAll_IncludeInactive_Should_Cache_Result`: verifies include-inactive cache key variant.
+- `Entity_GetAll_Should_Not_Hit_Cache_When_DeleteCache_True`: verifies bypass/refresh behavior.
+- `Entity_GetById_Should_Cache_Result`: verifies GetById populates cache.
+- `Entity_GetById_Should_Not_Cache_When_Record_Not_Found`: verifies missing id does not create cache entry.
+- `Entity_Filter_Should_Cache_Result`: verifies filtered requests use cache.
+- `Entity_Insert_Should_Clear_Cache_On_Success`: verifies cache invalidation after insert.
+- `Entity_Update_Should_Clear_Cache_On_Success`: verifies cache invalidation after update.
+- `Entity_Delete_Should_Clear_Cache_On_Success`: verifies cache invalidation after delete.
+- `Entity_Service_Should_Propagate_Logic_Errors`: verifies service returns/describes errors from logic layer unchanged.
+- `Entity_Service_Should_Handle_IncludeRelated_Flag`: verifies service forwards includeRelated to logic/cache key.
+
+**Logic Tests (Validation & Persistence)**
+- `Entity_GetAll_Should_Return_Active_Data`: verifies logic returns only active by default.
+- `Entity_GetAll_Should_Return_Inactive_Data_When_IncludeInactive`: verifies flag behavior.
+- `Entity_GetById_Should_Return_Active_Record`: verifies successful retrieval.
+- `Entity_GetById_Should_Return_Null_For_Missing_Record`: verifies null/empty response for missing id.
+- `Entity_Filter_Should_Apply_All_Criteria`: verifies each filter field affects results as expected.
+- `Entity_Insert_Should_Create_Record`: verifies insert returns created DTO and persistence.
+- `Entity_Insert_Should_Return_ValidationErrors_For_Required_Fields`: verifies required-field validation.
+- `Entity_Insert_Should_Return_ValidationErrors_For_MaxLength_Fields`: verifies length validation.
+- `Entity_Insert_Should_Return_ValidationErrors_For_Unique_Constraints`: verifies unique-field constraints surface as validation errors.
+- `Entity_Insert_Should_Return_Error_For_Missing_ForeignKey_Reference`: verifies FK constraints or logical checks for related entities.
+- `Entity_Update_Should_Update_Record`: verifies update applies changes and persisted.
+- `Entity_Update_Should_Return_ValidationErrors_For_Invalid_Update`: verifies update validation (required/unique/max-length).
+- `Entity_Delete_Should_Delete_Record`: verifies deletion logic (soft-delete or remove) and subsequent GetById reflects deletion when appropriate.
+- `Entity_Delete_Should_Return_Error_For_Missing_Record`: verifies deleting non-existent id returns validation error.
+- `Entity_Validation_Should_Return_Specific_Error_Messages`: verify validator utilities generate expected messages (use Utilities.GetExpected*Errors).
+
+Notes:
+- Replace `Entity` in method names with the actual entity name (e.g., `ApplicationUser_GetAll_Should_Return_Active_Data`).
+- Add additional tests for related-entity behaviors (e.g., foreign-key validation) when the entity references other domain entities.
+- When caching is used, include tests for cache key variants (IncludeInactive, includeRelated, DeleteCache flag) and ensure cache invalidation is covered.
+- For controller tests, include null/blank body tests and unsupported media-type tests if applicable (to match existing project patterns).
 
 ## Step 16: Verify Build and Compilation
 **Final Step**: After completing all implementation and test files, verify that all projects compile successfully without errors.

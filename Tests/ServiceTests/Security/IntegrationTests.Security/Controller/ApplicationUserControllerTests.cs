@@ -129,6 +129,21 @@ namespace IntegrationTests.Security.Controller
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
+ 
+        [Fact]
+        public async Task ApplicationUser_GetById_Should_Return_Bad_Request_Invalid_Id()
+        {
+            // Arrange
+            var id = "asfasdfasdfasdf";
+
+            // Act
+            var response = await _client.GetAsync(ApiEndPoints.Security.ApplicationUser.Base + "/" + id);
+            var content = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult<string>>(response);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            content.Errors.Count.Should().Be(1);
+        }
 
         #endregion
 
@@ -171,6 +186,33 @@ namespace IntegrationTests.Security.Controller
             result.Response.Where(r => !r.Active).ToList().Should().HaveCountGreaterThan(0);
         }
 
+        [Fact]
+        public async Task ApplicationUser_Filter_Should_Return_Unsupported_Media_Type_Null_Request_Body()
+        {
+            // Arrange
+            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+
+            // Act
+            var response = await _client.PostAsync(ApiEndPoints.Security.ApplicationUser.Base + "/Filter", null);
+
+            //Assert
+            response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
+        }
+
+        [Fact]
+        public async Task ApplicationUser_Filter_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
+        {
+            // Arrange
+            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            var postReq = ControllerTestUtilities.FormatPostRequest(null);
+
+            // Act
+            var response = await _client.PostAsync(ApiEndPoints.Security.ApplicationUser.Base + "/Filter", postReq);
+
+            //Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
         #endregion
 
         #region Insert
@@ -187,6 +229,33 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             _securityTestUtilities.ApplicationUser.VerifyTestRecordValuesMatch(insertedRecord, insertCheck.Response);
+        }
+
+        [Fact]
+        public async Task ApplicationUser_Insert_Should_Return_Unsupported_Media_Type_Null_Request_Body()
+        {
+            // Arrange
+            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+
+            // Act
+            var response = await _client.PostAsync(ApiEndPoints.Security.ApplicationUser.Base, null);
+
+            //Assert
+            response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
+        }
+
+        [Fact]
+        public async Task ApplicationUser_Insert_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
+        {
+            // Arrange
+            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            var postReq = ControllerTestUtilities.FormatPostRequest(new object());
+
+            // Act
+            var response = await _client.PostAsync(ApiEndPoints.Security.ApplicationUser.Base, postReq);
+
+            //Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         #endregion
@@ -220,6 +289,33 @@ namespace IntegrationTests.Security.Controller
             updateResult.Response.LastName.Should().Be(updateReq.LastName);
             updateResult.Response.Active.Should().Be(updateReq.Active);
             updateResult.Response.ApplicationId.Should().Be(updateReq.ApplicationId);
+        }
+
+        [Fact]
+        public async Task ApplicationUser_Update_Should_Return_Unsupported_Media_Type_Null_Request_Body()
+        {
+            // Arrange
+            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+
+            // Act
+            var response = await _client.PutAsync(ApiEndPoints.Security.ApplicationUser.Base + "/1", null);
+
+            //Assert
+            response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
+        }
+
+        [Fact]
+        public async Task ApplicationUser_Update_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
+        {
+            // Arrange
+            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            var postReq = ControllerTestUtilities.FormatPostRequest(new object());
+
+            // Act
+            var response = await _client.PutAsync(ApiEndPoints.Security.ApplicationUser.Base + "/1", postReq);
+
+            //Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         #endregion

@@ -1,3 +1,4 @@
+using Contract.Security.Application;
 using Contract.Security.ApplicationUser;
 using Data.Security;
 using Data.Security.Converters;
@@ -129,9 +130,9 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Inserts a new application user into the data store.
         /// </summary>
-        public async Task<ErrorValidationResult<ApplicationUserDto>> Insert(InsertUpdateApplicationUserRequest req)
+        public async Task<ErrorValidationResult<ApplicationUserDto>> Insert(InsertUpdateApplicationUserRequest req, IApplicationLogic applicationLogic)
         {
-            var errorValidationResult = await _validateApplicationUserOnInsertUpdate(req);
+            var errorValidationResult = await _validateApplicationUserOnInsertUpdate(applicationLogic, req, null);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
@@ -151,9 +152,9 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Updates the details of an existing application user.
         /// </summary>
-        public async Task<ErrorValidationResult<ApplicationUserDto>> Update(int applicationUserId, InsertUpdateApplicationUserRequest req)
+        public async Task<ErrorValidationResult<ApplicationUserDto>> Update(int applicationUserId, InsertUpdateApplicationUserRequest req, IApplicationLogic applicationLogic)
         {
-            var errorValidationResult = await _validateApplicationUserOnInsertUpdate(req, applicationUserId);
+            var errorValidationResult = await _validateApplicationUserOnInsertUpdate(applicationLogic, req, applicationUserId);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
@@ -211,13 +212,22 @@ namespace Logic.Security.Logic
             return errorValidationResult;
         }
 
-        private async Task<ErrorValidationResult<ApplicationUserDto>> _validateApplicationUserOnInsertUpdate(InsertUpdateApplicationUserRequest req, int? applicationUserId = null)
+        private async Task<ErrorValidationResult<ApplicationUserDto>> _validateApplicationUserOnInsertUpdate(IApplicationLogic applicationLogic, InsertUpdateApplicationUserRequest req, int? applicationUserId = null)
         {
             ValidationResult result = await _insertUpdateApplicationUserRequestValidator.ValidateAsync(req);
             var errorValidationResult = _validatorUtilities.CreateDefaultValidationResponse<ApplicationUserDto>(result);
 
             if (errorValidationResult.Errors.Count == 0)
             {
+                // Validate Application exists
+                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet());
+                
+                if (applicationResponse.Response == null)
+                {
+                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+                    return errorValidationResult;
+                }
+
                 // Validate Application user email is unique
                 var emailCheck = await this.Filter(new FilterApplicationUserLogicRequest { Email = req.Email });
 
