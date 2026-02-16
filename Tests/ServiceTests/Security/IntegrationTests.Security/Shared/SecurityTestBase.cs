@@ -1,7 +1,10 @@
 using MssBase.Service.Shared;
 using Contract.Security.Application;
+using Contract.Security.ApplicationUser;
 using Dto.Security.Application;
 using Dto.Security.Application.Logic;
+using Dto.Security.ApplicationUser;
+using Dto.Security.ApplicationUser.Logic;
 using FluentValidation;
 using IntegrationTests.Security.Shared.Utilities;
 using IntegrationTests.Security.Shared.Utilities.Contracts;
@@ -9,6 +12,7 @@ using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities;
 using Logic.Security.Logic;
 using Logic.Security.Validators.Application;
+using Logic.Security.Validators.ApplicationUser;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Service.Security.Service;
@@ -26,7 +30,8 @@ public class SecurityTestBase
         protected readonly ServiceProvider _serviceProvider;
         protected readonly ILoggerService _loggerSvc;
         protected readonly IApplicationLogic _applicationLogic;
-        protected readonly ISecurityTestUtilitiesManager _SecurityTestUtilities;
+        protected readonly IApplicationUserLogic _applicationUserLogic;
+        protected readonly ISecurityTestUtilitiesManager _securityTestUtilities;
         protected readonly IValidatorUtilities _validatorUtilities;
 
         public SecurityTestBase()
@@ -39,7 +44,8 @@ public class SecurityTestBase
             
             _loggerSvc = _serviceProvider.GetService<ILoggerService>();
             _applicationLogic = _serviceProvider.GetService<IApplicationLogic>();
-            _SecurityTestUtilities = _serviceProvider.GetService<ISecurityTestUtilitiesManager>();
+            _applicationUserLogic = _serviceProvider.GetService<IApplicationUserLogic>();
+            _securityTestUtilities = _serviceProvider.GetService<ISecurityTestUtilitiesManager>();
             _validatorUtilities = _serviceProvider.GetService<IValidatorUtilities>();
         }
 
@@ -69,6 +75,7 @@ public class SecurityTestBase
             //unit testing dependencies
             services.AddTransient<ISecurityTestUtilitiesManager, SecurityTestUtilitiesManager>();
             services.AddTransient<IApplicationUtilities, ApplicationUtilities>();
+            services.AddTransient<IApplicationUserUtilities, ApplicationUserUtilities>();
             
             return services;
         }
@@ -82,13 +89,23 @@ public class SecurityTestBase
 
             #region Application
 
-            //Add Services Here...
             services.AddTransient<IApplicationService, ApplicationService>();
             services.AddTransient<IApplicationLogic, ApplicationLogic>();
 
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterApplicationLogicRequest>, FilterApplicationLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateApplicationRequest>, InsertUpdateApplicationRequestValidator>();
+
+            #endregion
+
+            #region ApplicationUser
+
+            services.AddTransient<IApplicationUserService, ApplicationUserService>();
+            services.AddTransient<IApplicationUserLogic, ApplicationUserLogic>();
+
+            //Configure Fluent Validation Validators
+            services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
+            services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
 
             #endregion
 

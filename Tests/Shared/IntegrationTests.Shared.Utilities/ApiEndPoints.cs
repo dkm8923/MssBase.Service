@@ -21,6 +21,11 @@
             {
                 public const string Base = "/api/Security/Application";
             }
+
+            public class ApplicationUser
+            {
+                public const string Base = "/api/Security/ApplicationUser";
+            }
         }
     }
 }

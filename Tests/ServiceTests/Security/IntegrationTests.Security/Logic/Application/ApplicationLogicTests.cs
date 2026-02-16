@@ -5,6 +5,7 @@ using FluentAssertions;
 using IntegrationTests.Security.Shared;
 using IntegrationTests.Shared;
 using Shared.Models;
+using IntegrationTests.Shared.Utilities;
 
 namespace IntegrationTests.Security.Logic.Application
 {
@@ -17,9 +18,9 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            await _SecurityTestUtilities.Application.CreateTestRecords();
-            await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
             var result = await _applicationLogic.GetAll(new BaseLogicGet());
@@ -32,9 +33,9 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            await _SecurityTestUtilities.Application.CreateTestRecords();
-            await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
             var result = await _applicationLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
@@ -47,7 +48,7 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_GetAll_Should_Return_Zero_Records()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
 
             // Act
             var result = await _applicationLogic.GetAll(new BaseLogicGet());
@@ -64,22 +65,22 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_GetById_Should_Return_Active_Record()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
             // Act
             var result = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet());
 
             // Assert
-            _SecurityTestUtilities.Application.VerifyTestRecordValuesMatch(result.Response, testRecord);
+            _securityTestUtilities.Application.VerifyTestRecordValuesMatch(result.Response, testRecord);
         }
 
         [Fact]
         public async Task Application_GetById_Should_Not_Return_Inactive_Record()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
             var result = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet());
@@ -92,8 +93,8 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
             var result = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet { IncludeInactive = true });
@@ -106,8 +107,8 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_GetById_Unused_Id_Should_Return_Null()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            await _securityTestUtilities.Application.CreateTestRecords();
             var id = -1;
 
             // Act
@@ -125,8 +126,8 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Filter_Should_Return_Active_Data()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            await _securityTestUtilities.Application.CreateTestRecords();
 
             var postReq = new FilterApplicationLogicRequest { };
 
@@ -147,9 +148,9 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            await _SecurityTestUtilities.Application.CreateTestRecords();
-            await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             var postReq = new FilterApplicationLogicRequest { IncludeInactive = true };
 
@@ -169,14 +170,14 @@ namespace IntegrationTests.Security.Logic.Application
         {
             //TODO: Test filtering by multiple application ids
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            var testData = await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            var testData = await _securityTestUtilities.Application.CreateTestRecords();
 
             var testRecord = testData.FirstOrDefault();
 
-            var postReqCreatedBy = new FilterApplicationServiceRequest { CreatedBy = "IntegrationTest" };
+            var postReqCreatedBy = new FilterApplicationServiceRequest { CreatedBy = TestConstants.CurrentUser };
             var postReqCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.Now) };
-            var postReqUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = "IntegrationTest" };
+            var postReqUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = TestConstants.CurrentUser };
             var postReqUpdatedOnDate = new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.Now) };
             var postReqName = new FilterApplicationServiceRequest { Name = testRecord.Name };
             
@@ -225,8 +226,8 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Filter_Should_Return_Zero_Records()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            await _securityTestUtilities.Application.CreateTestRecords();
 
             var postReqInvalidCreatedBy = new FilterApplicationServiceRequest { CreatedBy = "TestCreatedBy" };
             var postReqInvalidCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000") };
@@ -257,27 +258,27 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Insert_Should_Create_Record()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
 
             // Act
-            var insertedRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var insertedRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
             var insertCheck = await _applicationLogic.GetById(insertedRecord.ApplicationId, new BaseLogicGet());
 
             //Assert
-            _SecurityTestUtilities.Application.VerifyTestRecordValuesMatch(insertedRecord, insertCheck.Response);
+            _securityTestUtilities.Application.VerifyTestRecordValuesMatch(insertedRecord, insertCheck.Response);
         }
 
         [Fact]
         public async Task Application_Insert_Should_Not_Create_Record_Unique_Error()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
-            var recordToCreate = _SecurityTestUtilities.Application.ConvertApplicationDtoToInsertUpdateRequest(testRecord);
+            var recordToCreate = _securityTestUtilities.Application.ConvertApplicationDtoToInsertUpdateRequest(testRecord);
 
-            var expectedUniqueApplicationNameError = _SecurityTestUtilities.Application.GetExpectedUniqueFieldErrors();
+            var expectedUniqueApplicationNameError = _securityTestUtilities.Application.GetExpectedUniqueFieldErrors();
 
             // Act
             var result = await _applicationLogic.Insert(recordToCreate);
@@ -291,10 +292,10 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Insert_Should_Not_Create_Record_Required_Field_Errors()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
             var recordToCreate = new InsertUpdateApplicationRequest();
 
-            var expectedFieldErrors = _SecurityTestUtilities.Application.GetExpectedRequiredFieldErrors();
+            var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedRequiredFieldErrors();
 
             // Act
             var result = await _applicationLogic.Insert(recordToCreate);
@@ -309,10 +310,10 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Insert_Should_Not_Create_Record_Field_Max_Length_Errors()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            var recordToCreate = _SecurityTestUtilities.Application.CreateInsertUpdateRequestWithMaxLengthErrors();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            var recordToCreate = _securityTestUtilities.Application.CreateInsertUpdateRequestWithMaxLengthErrors();
 
-            var expectedFieldErrors = _SecurityTestUtilities.Application.GetExpectedMaxLengthFieldErrors();
+            var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedMaxLengthFieldErrors();
 
             // Act
             var result = await _applicationLogic.Insert(recordToCreate);
@@ -331,15 +332,15 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Update_Should_Update_Record()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            var insertedRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            var insertedRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
             var updateReq = new InsertUpdateApplicationRequest
             {
                 Name = "Updated Application Name",
                 Description = "Updated Application Description",
                 Active = false,
-                CurrentUser = "IntegrationTest"
+                CurrentUser = TestConstants.CurrentUser
             };
 
             // Act
@@ -357,19 +358,19 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Update_Should_Not_Update_Record_Unique_Error()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            var testRecords = await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            var testRecords = await _securityTestUtilities.Application.CreateTestRecords();
             var recordToUpdate = testRecords.FirstOrDefault();
             var dupeApplicationName = testRecords.LastOrDefault().Name;
 
-            var updateReq = _SecurityTestUtilities.Application.ConvertApplicationDtoToInsertUpdateRequest(recordToUpdate);
+            var updateReq = _securityTestUtilities.Application.ConvertApplicationDtoToInsertUpdateRequest(recordToUpdate);
             updateReq.Name = dupeApplicationName;
 
             // Act
             var updateResult = await _applicationLogic.Update(recordToUpdate.ApplicationId, updateReq);
 
             //Assert
-            var expectedUniqueUserFriendlyDescriptionError = _SecurityTestUtilities.Application.GetExpectedUniqueFieldErrors();
+            var expectedUniqueUserFriendlyDescriptionError = _securityTestUtilities.Application.GetExpectedUniqueFieldErrors();
 
             //Assert
             updateResult.Errors.Should().HaveCount(1);
@@ -380,12 +381,12 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Update_Should_Not_Update_Record_Required_Field_Errors()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            await _securityTestUtilities.Application.CreateTestRecords();
             var testRecords = await _applicationLogic.GetAll(new BaseLogicGet());
             var recordToUpdate = testRecords.Response.FirstOrDefault();
 
-            var expectedFieldErrors = _SecurityTestUtilities.Application.GetExpectedRequiredFieldErrors();
+            var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedRequiredFieldErrors();
 
             // Act
             var result = await _applicationLogic.Update(recordToUpdate.ApplicationId, new InsertUpdateApplicationRequest());
@@ -400,14 +401,14 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Update_Should_Not_Update_Record_Field_Max_Length_Errors()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            await _securityTestUtilities.Application.CreateTestRecords();
             var testRecords = await _applicationLogic.GetAll(new BaseLogicGet());
             var recordToUpdate = testRecords.Response.FirstOrDefault();
 
-            var updateReq = _SecurityTestUtilities.Application.CreateInsertUpdateRequestWithMaxLengthErrors();
+            var updateReq = _securityTestUtilities.Application.CreateInsertUpdateRequestWithMaxLengthErrors();
 
-            var expectedFieldErrors = _SecurityTestUtilities.Application.GetExpectedMaxLengthFieldErrors();
+            var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedMaxLengthFieldErrors();
 
             // Act
             var result = await _applicationLogic.Update(recordToUpdate.ApplicationId, updateReq);
@@ -426,8 +427,8 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Delete_Should_Delete_Record()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
             await _applicationLogic.Delete(testRecord.ApplicationId);
@@ -441,9 +442,9 @@ namespace IntegrationTests.Security.Logic.Application
         public async Task Application_Delete_Should_Not_Delete_Record_Invalid_Id()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
 
-            var expectedFieldErrors = _SecurityTestUtilities.Application.GetExpectedRecordDoesNotExistErrors();
+            var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedRecordDoesNotExistErrors();
 
             // Act
             var result = await _applicationLogic.Delete(-1);
