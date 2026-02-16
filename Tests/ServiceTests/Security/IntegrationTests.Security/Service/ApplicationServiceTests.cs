@@ -49,8 +49,8 @@ namespace IntegrationTests.Security.Service
         public async Task Application_GetAll_Active_Should_Cache()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            await _securityTestUtilities.Application.CreateTestRecords();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = $"ApplicationService_GetAll_0_0";
@@ -69,8 +69,8 @@ namespace IntegrationTests.Security.Service
         public async Task Application_GetAll_IncludeInactive_Should_Cache()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            await _securityTestUtilities.Application.CreateTestRecords();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = "ApplicationService_GetAll_1_0";
@@ -89,7 +89,7 @@ namespace IntegrationTests.Security.Service
         public async Task Application_GetAll_Should_Not_Cache_And_Return_Zero_Records()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = "ApplicationService_GetAll_0";
@@ -111,11 +111,11 @@ namespace IntegrationTests.Security.Service
         public async Task Application_GetById_Should_Cache()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
             await _cacheTestUtilities.DeleteAllKeyData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var expectedCacheKey = $"ApplicationService_GetById_{testRecord.ApplicationId}_0_0";
 
             // Act
@@ -131,10 +131,10 @@ namespace IntegrationTests.Security.Service
         public async Task Application_GetById_IncludeInactive_Should_Cache()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var testRecord = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
             var expectedCacheKey = $"ApplicationService_GetById_{testRecord.ApplicationId}_1_0";
 
             // Act
@@ -150,8 +150,8 @@ namespace IntegrationTests.Security.Service
         public async Task Application_GetById_Unused_Id_Should_Not_Cache()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
-            await _SecurityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+            await _securityTestUtilities.Application.CreateTestRecords();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var id = -1;
@@ -173,14 +173,14 @@ namespace IntegrationTests.Security.Service
         public async Task Application_Filter_Should_Cache()
         {
            // Arrange
-           await _SecurityTestUtilities.Application.DeleteAllRecords();
-           await _SecurityTestUtilities.Application.CreateTestRecords();
-           await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecordWithSpecificValues();
+           await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
+           await _securityTestUtilities.Application.CreateTestRecords();
+           await _securityTestUtilities.Application.CreateSingleApplicationTestRecordWithSpecificValues();
            await _cacheTestUtilities.DeleteAllKeyData();
 
-           var postReqCreatedBy = new FilterApplicationServiceRequest { CreatedBy = "IntegrationTest" };
+           var postReqCreatedBy = new FilterApplicationServiceRequest { CreatedBy = TestConstants.CurrentUser};
            var postReqCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.Now) };
-           var postReqUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = "IntegrationTest" };
+           var postReqUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = TestConstants.CurrentUser};
            var postReqUpdatedOnDate = new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.Now) };
            var postReqName = new FilterApplicationServiceRequest { Name = "Test Application Name" };
            
@@ -223,7 +223,7 @@ namespace IntegrationTests.Security.Service
         public async Task Application_Insert_Should_Delete_Cache()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
             await _cacheTestUtilities.DeleteAllKeyData();
             await CreateApplicationCacheKeys();
 
@@ -232,7 +232,7 @@ namespace IntegrationTests.Security.Service
                 Name = "Test Application Name 1",
                 Description = "Test Application Desc 1",
                 Active = true,
-                CurrentUser = "IntegrationTest"
+                CurrentUser = TestConstants.CurrentUser
             };
 
             // Act
@@ -251,18 +251,18 @@ namespace IntegrationTests.Security.Service
         public async Task Application_Update_Should_Delete_Cache()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
             await _cacheTestUtilities.DeleteAllKeyData();
             await CreateApplicationCacheKeys();
 
-            var record = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var record = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
             var updateReq = new InsertUpdateApplicationRequest
             {
                 Name = "Updated Application Name",
                 Description = "Updated ApplicationDescription",
                 Active = false,
-                CurrentUser = "IntegrationTest"
+                CurrentUser = TestConstants.CurrentUser
             };
 
             // Act
@@ -281,11 +281,11 @@ namespace IntegrationTests.Security.Service
         public async Task Application_Delete_Should_Delete_Cache()
         {
             // Arrange
-            await _SecurityTestUtilities.Application.DeleteAllRecords();
+            await _securityTestUtilities.Application.ClearTestTables(_securityTestUtilities.ApplicationUser);
             await _cacheTestUtilities.DeleteAllKeyData();
             await CreateApplicationCacheKeys();
 
-            var record = await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var record = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
             // Act
             await _applicationService.Delete(record.ApplicationId);

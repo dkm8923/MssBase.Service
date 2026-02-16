@@ -1,13 +1,17 @@
 ﻿using MssBase.Service.Shared;
 using Contract.Security;
 using Contract.Security.Application;
+using Contract.Security.ApplicationUser;
 //using Contract.Common;
 using Dto.Security.Application;
 using Dto.Security.Application.Logic;
+using Dto.Security.ApplicationUser;
+using Dto.Security.ApplicationUser.Logic;
 using FluentValidation;
 using Logic.Security;
 using Logic.Security.Logic;
 using Logic.Security.Validators.Application;
+using Logic.Security.Validators.ApplicationUser;
 using Logic.Common;
 using Microsoft.Extensions.Options;
 using Service.Security;
@@ -118,6 +122,17 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterApplicationLogicRequest>, FilterApplicationLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateApplicationRequest>, InsertUpdateApplicationRequestValidator>();
+
+            #endregion
+
+            #region ApplicationUser
+
+            services.AddScoped<IApplicationUserService, ApplicationUserService>();
+            services.AddScoped<IApplicationUserLogic, ApplicationUserLogic>();
+
+            //Configure Fluent Validation Validators
+            services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
+            services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
 
             #endregion
         }

@@ -3,6 +3,7 @@ using Dto.Security.Application;
 using FluentAssertions;
 using IntegrationTests.Security.Shared.Utilities.Contracts;
 using IntegrationTests.Shared;
+using IntegrationTests.Shared.Utilities;
 using Shared.Models;
 
 namespace IntegrationTests.Security.Shared.Utilities;
@@ -15,6 +16,12 @@ public class ApplicationUtilities : IApplicationUtilities
         _applicationLogic = applicationLogic;
     }
 
+    public async Task ClearTestTables(IApplicationUserUtilities applicationUserUtilities)
+    {
+        await applicationUserUtilities.DeleteAllRecords();
+        await DeleteAllRecords();
+    }
+
     public InsertUpdateApplicationRequest ConvertApplicationDtoToInsertUpdateRequest(ApplicationDto req)
     {
         return new InsertUpdateApplicationRequest
@@ -22,7 +29,7 @@ public class ApplicationUtilities : IApplicationUtilities
             Name = req.Name,
             Description = req.Description,
             Active = req.Active,
-            CurrentUser = "IntegrationTest"
+            CurrentUser = TestConstants.CurrentUser
         };
     }
 
@@ -44,7 +51,7 @@ public class ApplicationUtilities : IApplicationUtilities
             Name = LogicTestUtilities.GenerateRandomString(64),
             Description = LogicTestUtilities.GenerateRandomString(256),
             Active = active,
-            CurrentUser = "IntegrationTest"
+            CurrentUser = TestConstants.CurrentUser
         };
     }
 
@@ -85,7 +92,7 @@ public class ApplicationUtilities : IApplicationUtilities
                 Name = "Test Application Name",
                 Description = "Test Application Description",
                 Active = true,
-                CurrentUser = "IntegrationTest"
+                CurrentUser = TestConstants.CurrentUser
             };
 
             ret = await _applicationLogic.Insert(insertReq);
@@ -94,7 +101,7 @@ public class ApplicationUtilities : IApplicationUtilities
         {
             req.Name = req.Name ?? "Test Application Name";
             req.Description = req.Description ?? "Test Application Description";
-            req.CurrentUser = req.CurrentUser ?? "IntegrationTest"; 
+            req.CurrentUser = req.CurrentUser ?? TestConstants.CurrentUser;
             ret = await _applicationLogic.Insert(req);
         }
 

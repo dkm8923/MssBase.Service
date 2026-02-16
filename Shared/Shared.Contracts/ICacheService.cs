@@ -21,6 +21,7 @@ public interface ICacheService
 
     //Security Service Names
     public const string ApplicationService = "ApplicationService";
+    public const string ApplicationUserService = "ApplicationUserService";
 
     #endregion
 }
