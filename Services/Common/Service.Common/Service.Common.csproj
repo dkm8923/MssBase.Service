@@ -13,4 +13,8 @@
     <ProjectReference Include="..\Logic.Common\Logic.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Service/" />
+  </ItemGroup>
+
 </Project>

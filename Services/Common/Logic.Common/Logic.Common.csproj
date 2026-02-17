@@ -14,4 +14,9 @@
     <ProjectReference Include="..\Dto.Common\Dto.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Logic/" />
+    <Folder Include="Validators/" />
+  </ItemGroup>
+
 </Project>
