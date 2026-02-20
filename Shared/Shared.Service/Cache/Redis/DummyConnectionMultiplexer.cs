@@ -12,6 +12,7 @@ namespace Shared.Service.Cache.Redis
         public IServer GetServer(string host, int port, object asyncState = null) => null;
         public IServer GetServer(string hostAndPort, object asyncState = null) => null;
         public IServer GetServer(EndPoint endpoint, object asyncState = null) => null;
+        public IServer GetServer(RedisKey key, object? asyncState = null, CommandFlags flags = CommandFlags.None) => null;
         public EndPoint[] GetEndPoints(bool configuredOnly = false) => new EndPoint[0];
         public void GetStatus(TextWriter log = null) { }
         public void GetStatus(IBatch batch, TextWriter log = null) { }
