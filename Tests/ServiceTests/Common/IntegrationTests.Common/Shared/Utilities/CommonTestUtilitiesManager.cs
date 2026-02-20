@@ -4,19 +4,19 @@ namespace IntegrationTests.Common.Shared.Utilities
 {
     public class CommonTestUtilitiesManager : ICommonTestUtilitiesManager
     {
-        private IUnitUtilities _unitUtilities;
+        // private IUnitUtilities _unitUtilities;
         
-        public CommonTestUtilitiesManager(IUnitUtilities unitUtilities)
-        {
-            _unitUtilities = unitUtilities;
-        }
+        // public CommonTestUtilitiesManager(IUnitUtilities unitUtilities)
+        // {
+        //     _unitUtilities = unitUtilities;
+        // }
 
-        public IUnitUtilities Unit
-        {
-            get
-            {
-                return _unitUtilities;
-            }
-        }
+        // public IUnitUtilities Unit
+        // {
+        //     get
+        //     {
+        //         return _unitUtilities;
+        //     }
+        // }
     }
 }

@@ -2,6 +2,6 @@
 {
     public interface ICommonTestUtilitiesManager
     {
-        public IUnitUtilities Unit { get; }
+        
     }
 }

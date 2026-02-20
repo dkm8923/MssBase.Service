@@ -1,15 +1,11 @@
 ﻿using MssBase.Service.Shared;
-//using Contract.Common;
 using FluentValidation;
 using IntegrationTests.Common.Shared.Utilities;
 using IntegrationTests.Common.Shared.Utilities.Contracts;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities;
-using Logic.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-//using Service.Common;
-//using Service.Common.Service;
 using Service.Logger.Contracts;
 using Shared.Contracts.Logic.Validators;
 using Shared.Logic.Validators;

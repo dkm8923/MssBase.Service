@@ -10,14 +10,7 @@ public interface ICacheService
 	public Task RemoveKeysByPatternAsync(string pattern);
 
     //Common Service Names
-    public const string CommonTypeService = "CommonTypeService";
-    public const string UnitService = "UnitService";
-    public const string UnitGroupColumnService = "UnitGroupColumnService";
-    public const string UnitDefinitionService = "UnitDefinitionService";
-    public const string RateService = "RateService";
-
-    //Commission Servivce Names
-    public const string CommissionService = "CommissionService";
+    
 
     //Security Service Names
     public const string ApplicationService = "ApplicationService";
