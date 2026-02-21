@@ -13,7 +13,6 @@ namespace MssBase.Service.Controllers.Security
     [Route("api/security/[controller]")]
     [ApiController]
     [Tags("ApplicationUser")]
-    [SwaggerTag("ApplicationUser specific end points within Security Service")]
     [AutoValidationAttribute]
     public class ApplicationUserController : ApiBaseController
     {
@@ -25,21 +24,6 @@ namespace MssBase.Service.Controllers.Security
         }
 
         #region GetAll
-
-        #region swagger
-
-        [SwaggerOperation(
-            Summary = "Retrieves list of all available ApplicationUser record(s)",
-            Description = $@"{SwaggerUiDocumentation.QueryStringParms.QueryStringParmTitle}
-                            {SwaggerUiDocumentation.QueryStringParms.DeleteCache}
-                            {SwaggerUiDocumentation.QueryStringParms.IncludeInactive}
-                            {SwaggerUiDocumentation.QueryStringParms.IncludeRelated}
-                            "
-        )]
-        [SwaggerResponse(StatusCodes.Status200OK, SwaggerUiDocumentation.DefaultResponseMessage.GetAllRecords, typeof(ErrorValidationResult<IEnumerable<ApplicationUserDto>>))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
 
         [HttpGet()]
         public async Task<IActionResult> GetApplicationUsers([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
@@ -58,21 +42,6 @@ namespace MssBase.Service.Controllers.Security
         #endregion
 
         #region GetById
-
-        #region swagger
-
-        [SwaggerOperation(
-        Summary = "Retrieves specified ApplicationUser record by Id",
-            Description = $@"{SwaggerUiDocumentation.QueryStringParms.QueryStringParmTitle}
-                            {SwaggerUiDocumentation.QueryStringParms.DeleteCache}
-                            {SwaggerUiDocumentation.QueryStringParms.IncludeInactive}
-                            {SwaggerUiDocumentation.QueryStringParms.IncludeRelated}
-                            "
-        )]
-        [SwaggerResponse(StatusCodes.Status200OK, SwaggerUiDocumentation.DefaultResponseMessage.GetRecordById, typeof(ErrorValidationResult))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
 
         [HttpGet("{applicationUserId}", Name = "GetApplicationUser")]
         public async Task<IActionResult> GetApplicationUser(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
@@ -98,16 +67,6 @@ namespace MssBase.Service.Controllers.Security
 
         #region Filter
 
-        #region swagger
-
-        [SwaggerOperation(
-            Summary = "Retrieves list of ApplicationUsers that match filter parameters in request body"
-        )]
-        [SwaggerResponse(StatusCodes.Status200OK, SwaggerUiDocumentation.DefaultResponseMessage.FilterRecords, typeof(ErrorValidationResult<IEnumerable<ApplicationUserDto>>))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
-
         [HttpPost("Filter")]
         public async Task<IActionResult> FilterApplicationUsers(FilterApplicationUserServiceRequest req)
         {
@@ -125,16 +84,6 @@ namespace MssBase.Service.Controllers.Security
         #endregion
 
         #region Insert
-
-        #region swagger
-
-        [SwaggerOperation(
-            Summary = "Creates new ApplicationUser record"
-        )]
-        [SwaggerResponse(StatusCodes.Status201Created, SwaggerUiDocumentation.DefaultResponseMessage.InsertRecord, typeof(ErrorValidationResult<ApplicationUserDto>))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
 
         [HttpPost()]
         public async Task<IActionResult> InsertApplicationUser(InsertUpdateApplicationUserRequest req)
@@ -160,16 +109,6 @@ namespace MssBase.Service.Controllers.Security
 
         #region Update
 
-        #region swagger
-
-        [SwaggerOperation(
-            Summary = "Updates Existing ApplicationUser record"
-        )]
-        [SwaggerResponse(StatusCodes.Status200OK, SwaggerUiDocumentation.DefaultResponseMessage.UpdateRecord, typeof(ErrorValidationResult<ApplicationUserDto>))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
-
         [HttpPut("{applicationUserId}")]
         public async Task<IActionResult> UpdateApplicationUser(int applicationUserId, InsertUpdateApplicationUserRequest req)
         {
@@ -187,16 +126,6 @@ namespace MssBase.Service.Controllers.Security
         #endregion
 
         #region Delete
-
-        #region swagger
-
-        [SwaggerOperation(
-            Summary = "Deletes ApplicationUser record by Id"
-        )]
-        [SwaggerResponse(StatusCodes.Status204NoContent, SwaggerUiDocumentation.DefaultResponseMessage.DeleteRecord, typeof(ErrorValidationResult))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
 
         [HttpDelete("{applicationUserId}")]
         public async Task<IActionResult> DeleteApplicationUser(int applicationUserId)

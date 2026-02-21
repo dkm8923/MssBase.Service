@@ -13,7 +13,6 @@ namespace MssBase.Service.Controllers.Security
     [Route("api/security/[controller]")]
     [ApiController]
     [Tags("Application")]
-    [SwaggerTag("Application specific end points within Security Service")]
     [AutoValidationAttribute]
     public class ApplicationController : ApiBaseController
     {
@@ -26,21 +25,6 @@ namespace MssBase.Service.Controllers.Security
         }
 
         // GET: api/Security/Application
-
-        #region swagger
-
-        [SwaggerOperation(
-            Summary = "Retrieves list of all available Application record(s)",
-            Description = $@"{SwaggerUiDocumentation.QueryStringParms.QueryStringParmTitle}
-                            {SwaggerUiDocumentation.QueryStringParms.DeleteCache}
-                            {SwaggerUiDocumentation.QueryStringParms.IncludeInactive}
-                            {SwaggerUiDocumentation.QueryStringParms.IncludeRelated}
-                            "
-        )]
-        [SwaggerResponse(StatusCodes.Status200OK, SwaggerUiDocumentation.DefaultResponseMessage.GetAllRecords, typeof(ErrorValidationResult<IEnumerable<ApplicationDto>>))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
 
         [HttpGet()]
         public async Task<IActionResult> GetApplications([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
@@ -57,21 +41,6 @@ namespace MssBase.Service.Controllers.Security
         }
 
         // GET: api/Security/Application/{applicationId}
-
-        #region swagger
-
-        [SwaggerOperation(
-        Summary = "Retrieves specified Application record by Id",
-            Description = $@"{SwaggerUiDocumentation.QueryStringParms.QueryStringParmTitle}
-                            {SwaggerUiDocumentation.QueryStringParms.DeleteCache}
-                            {SwaggerUiDocumentation.QueryStringParms.IncludeInactive}
-                            {SwaggerUiDocumentation.QueryStringParms.IncludeRelated}
-                            "
-        )]
-        [SwaggerResponse(StatusCodes.Status200OK, SwaggerUiDocumentation.DefaultResponseMessage.GetRecordById, typeof(ErrorValidationResult))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
 
         [HttpGet("{applicationId}", Name = "GetApplication")]
         public async Task<IActionResult> GetApplication(int applicationId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
@@ -95,16 +64,6 @@ namespace MssBase.Service.Controllers.Security
 
         // POST: api/Security/Application/Filter
 
-        #region swagger
-
-        [SwaggerOperation(
-            Summary = "Retrieves list of Applications that match filter parameters in request body"
-        )]
-        [SwaggerResponse(StatusCodes.Status200OK, SwaggerUiDocumentation.DefaultResponseMessage.FilterRecords, typeof(ErrorValidationResult<IEnumerable<ApplicationDto>>))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
-
         [HttpPost("Filter")]
         public async Task<IActionResult> FilterApplications(FilterApplicationServiceRequest req)
         {
@@ -120,16 +79,6 @@ namespace MssBase.Service.Controllers.Security
         }
 
         // POST: api/Security/Application
-
-        #region swagger
-
-        [SwaggerOperation(
-            Summary = "Creates new Application record"
-        )]
-        [SwaggerResponse(StatusCodes.Status201Created, SwaggerUiDocumentation.DefaultResponseMessage.InsertRecord, typeof(ErrorValidationResult<ApplicationDto>))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
 
         [HttpPost()]
         public async Task<IActionResult> InsertApplication(InsertUpdateApplicationRequest req)
@@ -153,16 +102,6 @@ namespace MssBase.Service.Controllers.Security
 
         // PUT: api/Security/Application
 
-        #region swagger
-
-        [SwaggerOperation(
-            Summary = "Updates Existing Application record"
-        )]
-        [SwaggerResponse(StatusCodes.Status200OK, SwaggerUiDocumentation.DefaultResponseMessage.UpdateRecord, typeof(ErrorValidationResult<ApplicationDto>))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
-
         [HttpPut("{applicationId}")]
         public async Task<IActionResult> UpdateApplication(int applicationId, InsertUpdateApplicationRequest req)
         {
@@ -178,16 +117,6 @@ namespace MssBase.Service.Controllers.Security
         }
 
         // DELETE: api/Security/Application
-
-        #region swagger
-
-        [SwaggerOperation(
-            Summary = "Deletes Application record by Id"
-        )]
-        [SwaggerResponse(StatusCodes.Status204NoContent, SwaggerUiDocumentation.DefaultResponseMessage.DeleteRecord, typeof(ErrorValidationResult))]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, SwaggerUiDocumentation.DefaultResponseMessage.InternalServerError)]
-
-        #endregion
 
         [HttpDelete("{applicationId}")]
         public async Task<IActionResult> DeleteApplication(int applicationId)

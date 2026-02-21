@@ -9,10 +9,14 @@ using SharpGrip.FluentValidation.AutoValidation.Mvc.Enums;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Results;
 using System.Reflection;
+using Microsoft.AspNetCore.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var environment = builder.Environment.EnvironmentName;
+
+// Configure OpenApi
+builder.Services.AddOpenApi();
 
 // Configure Serilog
 builder.Host.UseSerilog((context, configuration) =>
@@ -48,27 +52,27 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddSwaggerGen(config =>
-{
-    config.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "MSS Base Api Service",
-        Description = "Contains REST API Backend for all Common MSS Operations",
-        Contact = new OpenApiContact
-        {
-            Name = "Lead Developer: Dan Mauk",
-            Email = "dmauk@mauksoftwaresolutions.com"
-            //Url = new Uri("https://google.com"),
-        }
-    });
+// builder.Services.AddSwaggerGen(config =>
+// {
+//     config.SwaggerDoc("v1", new OpenApiInfo
+//     {
+//         Title = "MSS Base Api Service",
+//         Description = "Contains REST API Backend for all Common MSS Operations",
+//         Contact = new OpenApiContact
+//         {
+//             Name = "Lead Developer: Dan Mauk",
+//             Email = "dmauk@mauksoftwaresolutions.com"
+//             //Url = new Uri("https://google.com"),
+//         }
+//     });
 
-    config.EnableAnnotations();
+//     config.EnableAnnotations();
     
-    // Set the comments path for the Swagger JSON and UI.
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    config.IncludeXmlComments(xmlPath);
-});
+//     // Set the comments path for the Swagger JSON and UI.
+//     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+//     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+//     config.IncludeXmlComments(xmlPath);
+// });
 
 builder.Services.ConfigureBaseDependencies(builder, environment);
 
@@ -104,23 +108,23 @@ builder.Services.AddFluentValidationAutoValidation(configuration =>
 });
 
 // Add MicroElements FluentValidation -> Swagger mapping
-builder.Services.AddFluentValidationRulesToSwagger();
+//builder.Services.AddFluentValidationRulesToSwagger();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseSwagger();
+//     app.UseSwaggerUI(options =>
+//     {
 
-        // Expand models/schemas by default
-        options.DefaultModelsExpandDepth(2);  // Or 2, 3, etc. for deeper nesting
+//         // Expand models/schemas by default
+//         options.DefaultModelsExpandDepth(2);  // Or 2, 3, etc. for deeper nesting
 
-        //options.EnableFilter();                        // Enable search/filter box
-    });
-}
+//         //options.EnableFilter();                        // Enable search/filter box
+//     });
+// }
 
 app.UseHttpsRedirection();
 
