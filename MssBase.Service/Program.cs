@@ -10,6 +10,7 @@ using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Results;
 using System.Reflection;
 using Microsoft.AspNetCore.OpenApi;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,28 +53,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// builder.Services.AddSwaggerGen(config =>
-// {
-//     config.SwaggerDoc("v1", new OpenApiInfo
-//     {
-//         Title = "MSS Base Api Service",
-//         Description = "Contains REST API Backend for all Common MSS Operations",
-//         Contact = new OpenApiContact
-//         {
-//             Name = "Lead Developer: Dan Mauk",
-//             Email = "dmauk@mauksoftwaresolutions.com"
-//             //Url = new Uri("https://google.com"),
-//         }
-//     });
-
-//     config.EnableAnnotations();
-    
-//     // Set the comments path for the Swagger JSON and UI.
-//     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-//     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-//     config.IncludeXmlComments(xmlPath);
-// });
-
 builder.Services.ConfigureBaseDependencies(builder, environment);
 
 //builder.Services.ConfigureCommonService(builder);
@@ -113,18 +92,11 @@ builder.Services.AddFluentValidationAutoValidation(configuration =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-// if (app.Environment.IsDevelopment())
-// {
-//     app.UseSwagger();
-//     app.UseSwaggerUI(options =>
-//     {
-
-//         // Expand models/schemas by default
-//         options.DefaultModelsExpandDepth(2);  // Or 2, 3, etc. for deeper nesting
-
-//         //options.EnableFilter();                        // Enable search/filter box
-//     });
-// }
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi().CacheOutput();
+    app.MapScalarApiReference();
+}
 
 app.UseHttpsRedirection();
 
