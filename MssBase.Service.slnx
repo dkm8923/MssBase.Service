@@ -1,0 +1,44 @@
+<Solution>
+  <Folder Name="/Services/" />
+  <Folder Name="/Services/Common/">
+    <Project Path="Services/Common/Contract.Common/Contract.Common.csproj" />
+    <Project Path="Services/Common/Data.Common/Data.Common.csproj" />
+    <Project Path="Services/Common/Dto.Common/Dto.Common.csproj" />
+    <Project Path="Services/Common/Logic.Common/Logic.Common.csproj" />
+    <Project Path="Services/Common/Service.Common/Service.Common.csproj" />
+  </Folder>
+  <Folder Name="/Services/Logger/">
+    <Project Path="Services/Logger/Service.Logger/Service.Logger.csproj" />
+  </Folder>
+  <Folder Name="/Services/Security/">
+    <Project Path="Services/Security/Contract.Security/Contract.Security.csproj" />
+    <Project Path="Services/Security/Data.Security/Data.Security.csproj" />
+    <Project Path="Services/Security/Dto.Security/Dto.Security.csproj" />
+    <Project Path="Services/Security/Logic.Security/Logic.Security.csproj" />
+    <Project Path="Services/Security/Service.Security/Service.Security.csproj" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="Shared/Shared.Contracts/Shared.Contracts.csproj" />
+    <Project Path="Shared/Shared.Logic/Shared.Logic.csproj" />
+    <Project Path="Shared/Shared.Models/Shared.Models.csproj" />
+    <Project Path="Shared/Shared.Service/Shared.Service.csproj" />
+  </Folder>
+  <Folder Name="/Tests/" />
+  <Folder Name="/Tests/IntegrationTests/" />
+  <Folder Name="/Tests/IntegrationTests/Common/">
+    <Project Path="Tests/ServiceTests/Common/IntegrationTests.Common/IntegrationTests.Common.csproj" />
+  </Folder>
+  <Folder Name="/Tests/IntegrationTests/Security/">
+    <Project Path="Tests/ServiceTests/Security/IntegrationTests.Security/IntegrationTests.Security.csproj" />
+  </Folder>
+  <Folder Name="/Tests/Shared/">
+    <Project Path="Tests/Shared/IntegrationTests.Shared.Utilities/IntegrationTests.Shared.Utilities.csproj" />
+  </Folder>
+  <Folder Name="/Tests/SharedLogicTests/">
+    <Project Path="Tests/SharedLogicTests/UnitTests.Shared.Logic/UnitTests.Shared.Logic.csproj" />
+  </Folder>
+  <Folder Name="/Tests/SharedServiceTests/">
+    <Project Path="Tests/SharedServiceTests/UnitTests.Shared.Service/UnitTests.Shared.Service.csproj" />
+  </Folder>
+  <Project Path="MssBase.Service/MssBase.Service.csproj" />
+</Solution>
