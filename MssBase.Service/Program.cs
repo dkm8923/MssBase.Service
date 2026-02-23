@@ -11,6 +11,8 @@ using SharpGrip.FluentValidation.AutoValidation.Mvc.Results;
 using System.Reflection;
 using Microsoft.AspNetCore.OpenApi;
 using Scalar.AspNetCore;
+using FluentValidation;
+using FluentValidation.Results;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -173,5 +175,10 @@ public class CustomResultFactory : IFluentValidationAutoValidationResultFactory
         sanitizedKey = sanitizedKey.TrimStart('.');
 
         return sanitizedKey;
+    }
+
+    public Task<IActionResult?> CreateActionResult(ActionExecutingContext context, ValidationProblemDetails validationProblemDetails, IDictionary<IValidationContext, ValidationResult> validationResults)
+    {
+        throw new NotImplementedException();
     }
 }
