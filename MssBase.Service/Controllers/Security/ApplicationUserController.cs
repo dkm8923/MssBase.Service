@@ -1,12 +1,10 @@
-using MssBase.Service.Controllers.Shared;
-using MssBase.Service.Shared;
+using Contract.Security.ApplicationUser;
 using Dto.Security.ApplicationUser;
 using Dto.Security.ApplicationUser.Service;
 using Microsoft.AspNetCore.Mvc;
+using MssBase.Service.Controllers.Shared;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
-using Swashbuckle.AspNetCore.Annotations;
-using Contract.Security.ApplicationUser;
 
 namespace MssBase.Service.Controllers.Security
 {
