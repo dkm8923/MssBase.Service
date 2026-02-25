@@ -11,8 +11,7 @@ using SharpGrip.FluentValidation.AutoValidation.Mvc.Results;
 using System.Reflection;
 using Microsoft.AspNetCore.OpenApi;
 using Scalar.AspNetCore;
-using FluentValidation;
-using FluentValidation.Results;
+using MssBase.Service.Shared.FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,7 +84,7 @@ builder.Services.AddFluentValidationAutoValidation(configuration =>
     configuration.EnableCustomBindingSourceAutomaticValidation = true;
 
     // Replace the default result factory with a custom implementation.
-    configuration.OverrideDefaultResultFactoryWith<CustomResultFactory>();
+    configuration.OverrideDefaultResultFactoryWith<FluentValidationCustomResultFactory>();
 });
 
 // Add MicroElements FluentValidation -> Swagger mapping
@@ -111,74 +110,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-public partial class Program { }
-
-public class CustomResultFactory : IFluentValidationAutoValidationResultFactory
-{
-    // Return errors in the same dictionary format as FluentValidation produces: { "Field": [ "msg" ] }
-    public IActionResult CreateActionResult(ActionExecutingContext context, ValidationProblemDetails? validationProblemDetails)
-    {
-        var original = validationProblemDetails?.Errors ?? new Dictionary<string, string[]>();
-
-        // Aggregate messages for sanitized keys
-        var aggregated = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var kv in original)
-        {
-            var key = kv.Key ?? string.Empty;
-            var sanitizedKey = SanitizeKey(key);
-
-            if (string.IsNullOrWhiteSpace(sanitizedKey))
-            {
-                sanitizedKey = key;
-            }
-
-            if (!aggregated.TryGetValue(sanitizedKey, out var list))
-            {
-                list = new List<string>();
-                aggregated[sanitizedKey] = list;
-            }
-
-            list.AddRange(kv.Value);
-        }
-
-        // Convert aggregated lists to arrays and remove duplicates
-        var resultDict = aggregated.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Distinct().ToArray());
-
-        return new BadRequestObjectResult(new { response = "Invalid Request", errors = resultDict });
-    }
-
-    private static string SanitizeKey(string key)
-    {
-        if (string.IsNullOrEmpty(key)) return key;
-
-        var sanitizedKey = key;
-
-        // Remove leading JSONPath like $.Property or $['Property'] or $("Property")
-        if (sanitizedKey.StartsWith("$."))
-        {
-            sanitizedKey = sanitizedKey.Substring(2);
-        }
-        else if (sanitizedKey.StartsWith("$["))
-        {
-            sanitizedKey = sanitizedKey.Substring(2);
-            if (sanitizedKey.EndsWith("]"))
-            {
-                sanitizedKey = sanitizedKey[..^1];
-            }
-
-            sanitizedKey = sanitizedKey.Trim('\'', '"');
-        }
-
-        // Trim any leading dot
-        sanitizedKey = sanitizedKey.TrimStart('.');
-
-        return sanitizedKey;
-    }
-
-    public Task<IActionResult?> CreateActionResult(ActionExecutingContext context, ValidationProblemDetails validationProblemDetails, IDictionary<IValidationContext, ValidationResult> validationResults)
-    {
-        throw new NotImplementedException();
-    }
-}

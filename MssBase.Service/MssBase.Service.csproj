@@ -33,6 +33,7 @@
   <ItemGroup>
     <Folder Include="Controllers/Common/" />
     <Folder Include="Controllers/Security/" />
+    <Folder Include="Shared/FluentValidation/" />
   </ItemGroup>
 
 </Project>
