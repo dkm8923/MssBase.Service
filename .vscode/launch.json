@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/MssBase.Service/bin/Debug/net9.0/MssBase.Service.dll",
+            "program": "${workspaceFolder}/MssBase.Service/bin/Debug/net10.0/MssBase.Service.dll",
             "args": [],
             "cwd": "${workspaceFolder}/MssBase.Service",
             "stopAtEntry": false,
