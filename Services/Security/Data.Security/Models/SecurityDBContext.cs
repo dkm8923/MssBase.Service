@@ -1,15 +1,14 @@
 using System;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 using System.Collections.Generic;
+using Data.Security.Configuration;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data.Security.Models;
 
 public partial class SecurityDBContext : DbContext
 {
-    public SecurityDBContext()
-    {
-    }
-
     public SecurityDBContext(DbContextOptions<SecurityDBContext> options)
         : base(options)
     {
@@ -27,34 +26,27 @@ public partial class SecurityDBContext : DbContext
 
     public virtual DbSet<UserPermission> UserPermissions { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+{
+    if (!optionsBuilder.IsConfigured)
+    {
+        // Read connection string from appsettings.json
+        var config = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true)
+            .Build();
+
+        var connectionString = config.GetSection("SecurityConnectionStrings:ReadWrite").Value;
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            optionsBuilder.UseSqlServer(connectionString);
+        }
+    }
+}
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Application>(entity =>
-        {
-            entity.ToTable("Application");
-
-            entity.HasKey(e => e.ApplicationId);
-
-            entity.HasIndex(e => e.Name, "UQ_Application_Name").IsUnique();
-
-            entity.Property(e => e.Active).ValueGeneratedNever();
-            entity.Property(e => e.CreatedBy)
-                .HasMaxLength(64)
-                .IsUnicode(false);
-            entity.Property(e => e.CreatedOn)
-                .HasPrecision(0);
-            entity.Property(e => e.Description)
-                .HasMaxLength(256)
-                .IsUnicode(false);
-            entity.Property(e => e.Name)
-                .HasMaxLength(64)
-                .IsUnicode(false);
-            entity.Property(e => e.UpdatedBy)
-                .HasMaxLength(64)
-                .IsUnicode(false);
-            entity.Property(e => e.UpdatedOn)
-                .HasPrecision(0);
-        });
+        modelBuilder.ApplyConfiguration(new ApplicationConfiguration());
 
         modelBuilder.Entity<ApplicationUser>(entity =>
         {
@@ -254,8 +246,8 @@ public partial class SecurityDBContext : DbContext
 
         });
 
-        OnModelCreatingPartial(modelBuilder);
+        //OnModelCreatingPartial(modelBuilder);
     }
 
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+    //partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
