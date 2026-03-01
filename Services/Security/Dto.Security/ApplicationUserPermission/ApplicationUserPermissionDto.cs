@@ -1,10 +1,10 @@
 using Shared.Models.Contracts;
 
-namespace Dto.Security.UserPermission
+namespace Dto.Security.ApplicationUserPermission
 {
-    public record UserPermissionDto// : ICreateable, IUpdateable
+    public record ApplicationUserPermissionDto// : ICreateable, IUpdateable
     {
-        public int UserPermissionId { get; set; }
+        public int ApplicationUserPermissionId { get; set; }
 
         public DateTime CreatedOn { get; set; }
 

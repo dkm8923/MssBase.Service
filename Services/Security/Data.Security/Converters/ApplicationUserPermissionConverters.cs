@@ -1,21 +1,21 @@
 using Data.Security.Models;
-using Dto.Security.UserPermission;
+using Dto.Security.ApplicationUserPermission;
 using Shared.Logic.Common;
 
 namespace Data.Security.Converters
 {
-    public static class UserPermissionConverters
+    public static class ApplicationUserPermissionConverters
     {
-        public static UserPermissionDto ToDto(this Models.UserPermission source)
+        public static ApplicationUserPermissionDto ToDto(this Models.ApplicationUserPermission source)
         {
             if (source == null)
             {
                 return null;
             }
 
-            var target = new UserPermissionDto
+            var target = new ApplicationUserPermissionDto
             {
-                UserPermissionId = source.UserPermissionId,
+                ApplicationUserPermissionId = source.ApplicationUserPermissionId,
                 Active = source.Active,
                 CreatedBy = source.CreatedBy,
                 CreatedOn = source.CreatedOn,
@@ -29,7 +29,7 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static List<UserPermissionDto> ToDtos(this IEnumerable<Models.UserPermission> source)
+        public static List<ApplicationUserPermissionDto> ToDtos(this IEnumerable<Models.ApplicationUserPermission> source)
         {
             if (source == null)
             {
@@ -41,14 +41,14 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static Models.UserPermission ToEntityOnInsert(this InsertUpdateUserPermissionRequest source)
+        public static Models.ApplicationUserPermission ToEntityOnInsert(this InsertUpdateApplicationUserPermissionRequest source)
         {
             if (source == null)
             {
                 return null;
             }
 
-            var target = new Models.UserPermission
+            var target = new Models.ApplicationUserPermission
             {
                 Active = source.Active,
                 ApplicationId = source.ApplicationId,
@@ -64,7 +64,7 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static Models.UserPermission UpdateEntityFromRequest(this Models.UserPermission entity, InsertUpdateUserPermissionRequest source)
+        public static Models.ApplicationUserPermission UpdateEntityFromRequest(this Models.ApplicationUserPermission entity, InsertUpdateApplicationUserPermissionRequest source)
         {
             if (source == null || entity == null)
             {

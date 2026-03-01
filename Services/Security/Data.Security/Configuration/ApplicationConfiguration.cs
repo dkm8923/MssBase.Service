@@ -1,23 +1,21 @@
 using Data.Security.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
+using Shared.Data;
 
 namespace Data.Security.Configuration;
 
 public class ApplicationConfiguration : IEntityTypeConfiguration<Application>
 {
+    private readonly string _tableName = "Application";
     public void Configure(EntityTypeBuilder<Application> builder)
     {
-        builder.ToTable("Application");
+        SetTableName(builder);
 
         builder.Property(t => t.ApplicationId).IsRequired();
-        builder.Property(t => t.CreatedOn).HasPrecision(2).IsRequired();
-        builder.Property(t => t.CreatedBy).HasMaxLength(64).IsRequired().IsUnicode(false);
-        builder.Property(t => t.UpdatedOn).HasPrecision(2).IsRequired();
-        builder.Property(t => t.UpdatedBy).HasMaxLength(64).IsRequired().IsUnicode(false);
-        builder.Property(t => t.Active).IsRequired();
+
+        DataUtilities.ConfigureAuditFields(builder);
+
         builder.Property(t => t.Name).HasMaxLength(64).IsRequired().IsUnicode(false);
         builder.Property(t => t.Description).HasMaxLength(256).IsUnicode(false);
 
@@ -25,54 +23,33 @@ public class ApplicationConfiguration : IEntityTypeConfiguration<Application>
         CreateUniqueKey(builder);
         CreateTableData(builder); 
     }
-        
-        public void CreatePrimaryKey(EntityTypeBuilder<Application> builder)
-        {
-            builder.HasKey(e => e.ApplicationId);
-        }
-        public void CreateUniqueKey(EntityTypeBuilder<Application> builder)
-        {
-            builder.HasIndex(e => e.Name).IsUnique().HasDatabaseName("UQ_Application_Name");
-        }
 
-        // public void CreateForeignKeys(EntityTypeBuilder<Address> builder) 
-        // {
-        //     builder.HasOne<UsaState>(addr => addr.State)
-        //         .WithMany(s => s.Addresses)
-        //         .HasForeignKey(addr => addr.StateId);
+    public void SetTableName(EntityTypeBuilder<Application> builder)
+    {
+        builder.ToTable(_tableName);
+    }
 
-        //     builder.HasOne<Country>(addr => addr.Country)
-        //      .WithMany(c => c.Addresses)
-        //      .HasForeignKey(addr => addr.CountryId);
+    public void CreatePrimaryKey(EntityTypeBuilder<Application> builder)
+    {
+        builder.HasKey(e => e.ApplicationId);
+    }
+    public void CreateUniqueKey(EntityTypeBuilder<Application> builder)
+    {
+        builder.HasIndex(e => e.Name).IsUnique().HasDatabaseName( DataUtilities.CreateUniqueKey(_tableName, "Name"));
+    }
 
-        //     builder.HasOne<AddressType>(addr => addr.AddressType)
-        //      .WithMany(at => at.Addresses)
-        //      .HasForeignKey(addr => addr.AddressTypeId);
-        // }
+    public void CreateTableData(EntityTypeBuilder<Application> builder) 
+    {
+        var dataArr = new List<Application>();
+        dataArr.Add(new Application { ApplicationId = 1, Name = "EOS", Description = "Enterprise Dispatch and Monitoring System for Logistic Operations", Active = true });
+        dataArr.Add(new Application { ApplicationId = 2, Name = "EPC", Description = "Enterprise Financial System for Processing Pricing & Commissions", Active = true });
+        dataArr.Add(new Application { ApplicationId = 3, Name = "EBS", Description = "Enterprise User Permission Management System", Active = true });
+        dataArr.Add(new Application { ApplicationId = 4, Name = "Bet-t", Description = "Interchange Configuration Tool", Active = true });
+        dataArr.Add(new Application { ApplicationId = 5, Name = "MyPortfolio", Description = "Agent Analytics / Reporting Portal", Active = true });
+        dataArr.Add(new Application { ApplicationId = 6, Name = "AIME", Description = "Agent Management Platform", Active = true });
 
-        public void CreateTableData(EntityTypeBuilder<Application> builder) 
-        {
-            var dataArr = new List<Application>();
-            dataArr.Add(new Application { ApplicationId = 1, Name = "Application1", Description = "Description1", Active = true });
-            dataArr.Add(new Application { ApplicationId = 2, Name = "Application2", Description = "Description2", Active = true });
+        DataUtilities.SetAuditFields(dataArr);
 
-            foreach (var r in dataArr)
-            {
-                r.CreatedOn = new DateTime(2026, 2, 26, 0, 0, 0);
-                r.CreatedBy = "dmaukTest";//ConfigurationConstants.DefaultCreatedBy;
-                r.UpdatedOn = new DateTime(2026, 2, 26, 0, 0, 0);
-                r.UpdatedBy = "dmaukTest";//ConfigurationConstants.DefaultCreatedBy;
-            }
-
-            builder.HasData(dataArr);
-
-            //return dataArr;
-        }
-
-        // public Application CreateApplicationRecord(Application req)
-        // {
-        //     req.ApplicationId = _configCommon.CreadGuidForId(req.ApplicationId);
-        //     return req;
-        // }
+        builder.HasData(dataArr);
+    }
 }
-

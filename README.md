@@ -6,7 +6,7 @@ Add A Migration:
 
 - Open a terminal in the root of your solution and run:
 
-dotnet ef migrations add InitialCreate \
+dotnet ef migrations add InitialMigration \
   --project Services/Security/Data.Security/Data.Security.csproj \
   --startup-project MssBase.Service/MssBase.Service.csproj \
   --output-dir Migrations

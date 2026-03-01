@@ -1,21 +1,10 @@
-using System;
-using System.Collections.Generic;
+using Shared.Data.Models;
 
 namespace Data.Security.Models;
 
-public partial class Permission
+public partial class Permission : AuditableEntity
 {
     public int PermissionId { get; set; }
-
-    public DateTime CreatedOn { get; set; }
-
-    public string CreatedBy { get; set; } = null!;
-
-    public DateTime? UpdatedOn { get; set; }
-
-    public string? UpdatedBy { get; set; }
-
-    public bool Active { get; set; }
 
     public string Name { get; set; } = null!;
 
@@ -26,4 +15,5 @@ public partial class Permission
     public virtual Application Application { get; set; } = null!;
 
     public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
+    public virtual ICollection<ApplicationUserPermission> ApplicationUserPermissions { get; set; } = new List<ApplicationUserPermission>();
 }

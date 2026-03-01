@@ -1,21 +1,10 @@
-using System;
-using System.Collections.Generic;
+using Shared.Data.Models;
 
 namespace Data.Security.Models;
 
-public partial class ApplicationUser
+public partial class ApplicationUser : AuditableEntity
 {
     public int ApplicationUserId { get; set; }
-
-    public DateTime CreatedOn { get; set; }
-
-    public string CreatedBy { get; set; } = null!;
-
-    public DateTime? UpdatedOn { get; set; }
-
-    public string? UpdatedBy { get; set; }
-
-    public bool Active { get; set; }
 
     public string Email { get; set; } = null!;
 
@@ -38,4 +27,5 @@ public partial class ApplicationUser
     public int ApplicationId { get; set; }
 
     public virtual Application Application { get; set; } = null!;
+    public virtual ICollection<ApplicationUserPermission> ApplicationUserPermissions { get; set; } = new List<ApplicationUserPermission>();
 }

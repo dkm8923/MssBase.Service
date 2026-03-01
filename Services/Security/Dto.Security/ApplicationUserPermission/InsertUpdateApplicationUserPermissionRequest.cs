@@ -1,8 +1,8 @@
 using Shared.Models.Contracts;
 
-namespace Dto.Security.UserPermission
+namespace Dto.Security.ApplicationUserPermission
 {
-    public record InsertUpdateUserPermissionRequest : ICurrentUser
+    public record InsertUpdateApplicationUserPermissionRequest : ICurrentUser
     {
         public bool Active { get; set; }
 

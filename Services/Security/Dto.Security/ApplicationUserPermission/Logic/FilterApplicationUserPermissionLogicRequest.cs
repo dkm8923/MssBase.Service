@@ -1,8 +1,8 @@
 using Shared.Models;
 
-namespace Dto.Security.UserPermission.Logic
+namespace Dto.Security.ApplicationUserPermission.Logic
 {
-    public record FilterUserPermissionLogicRequest : BaseLogicGet
+    public record FilterApplicationUserPermissionLogicRequest : BaseLogicGet
     {
         public string? CreatedBy { get; set; }
 
@@ -12,7 +12,7 @@ namespace Dto.Security.UserPermission.Logic
 
         public DateOnly? UpdatedOnDate { get; set; }
 
-        public List<int>? UserPermissionIds { get; set; }
+        public List<int>? ApplicationUserPermissionIds { get; set; }
 
         public bool? Active { get; set; }
 

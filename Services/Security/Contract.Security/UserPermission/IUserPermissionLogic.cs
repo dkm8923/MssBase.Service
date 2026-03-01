@@ -1,16 +1,16 @@
-using Dto.Security.UserPermission;
-using Dto.Security.UserPermission.Logic;
+using Dto.Security.ApplicationUserPermission;
+using Dto.Security.ApplicationUserPermission.Logic;
 using Shared.Models;
 
-namespace Contract.Security.UserPermission
+namespace Contract.Security.ApplicationUserPermission
 {
-    public interface IUserPermissionLogic
+    public interface IApplicationUserPermissionLogic
     {
-        public Task<ErrorValidationResult<IEnumerable<UserPermissionDto>>> GetAll(BaseLogicGet req);
-        public Task<ErrorValidationResult<UserPermissionDto>> GetById(int userPermissionId, BaseLogicGet req);
-        public Task<ErrorValidationResult<IEnumerable<UserPermissionDto>>> Filter(FilterUserPermissionLogicRequest req);
-        public Task<ErrorValidationResult<UserPermissionDto>> Insert(InsertUpdateUserPermissionRequest req);
-        public Task<ErrorValidationResult<UserPermissionDto>> Update(int userPermissionId, InsertUpdateUserPermissionRequest req);
-        public Task<ErrorValidationResult> Delete(int userPermissionId);
+        public Task<ErrorValidationResult<IEnumerable<ApplicationUserPermissionDto>>> GetAll(BaseLogicGet req);
+        public Task<ErrorValidationResult<ApplicationUserPermissionDto>> GetById(int applicationUserPermissionId, BaseLogicGet req);
+        public Task<ErrorValidationResult<IEnumerable<ApplicationUserPermissionDto>>> Filter(FilterApplicationUserPermissionLogicRequest req);
+        public Task<ErrorValidationResult<ApplicationUserPermissionDto>> Insert(InsertUpdateApplicationUserPermissionRequest req);
+        public Task<ErrorValidationResult<ApplicationUserPermissionDto>> Update(int applicationUserPermissionId, InsertUpdateApplicationUserPermissionRequest req);
+        public Task<ErrorValidationResult> Delete(int applicationUserPermissionId);
     }
 }

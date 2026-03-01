@@ -369,3 +369,4 @@ obj/
 *.exe
 *.cache
 *.vs/
+.idea/.idea.MssBase.Service/.idea/vcs.xml
