@@ -37,6 +37,7 @@
   <ItemGroup>
     <Folder Include="Controllers/Common/" />
     <Folder Include="Controllers/Security/" />
+    <Folder Include="Shared/ConnectionStrings/" />
     <Folder Include="Shared/FluentValidation/" />
   </ItemGroup>
 

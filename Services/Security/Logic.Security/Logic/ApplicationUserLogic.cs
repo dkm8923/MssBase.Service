@@ -1,3 +1,4 @@
+using Contract.Security;
 using Contract.Security.Application;
 using Contract.Security.ApplicationUser;
 using Data.Security;
@@ -15,7 +16,7 @@ namespace Logic.Security.Logic
 {
     public class ApplicationUserLogic : IApplicationUserLogic
     {
-        private readonly IDatabaseConnectionStrings _connectionStrings;
+        private readonly ISecurityConnectionStrings _connectionStrings;
         private readonly SecurityDBContextFactory _dbContextFactory;
 
         private IValidatorUtilities _validatorUtilities;
@@ -24,7 +25,7 @@ namespace Logic.Security.Logic
         private IValidator<InsertUpdateApplicationUserRequest> _insertUpdateApplicationUserRequestValidator;
 
         public ApplicationUserLogic(
-                            IDatabaseConnectionStrings connectionStrings,
+                            ISecurityConnectionStrings connectionStrings,
                             IValidatorUtilities validatorUtilities,
                             IValidator<FilterApplicationUserLogicRequest> filterApplicationUserLogicRequestValidator,
                             IValidator<InsertUpdateApplicationUserRequest> insertUpdateApplicationUserRequestValidator

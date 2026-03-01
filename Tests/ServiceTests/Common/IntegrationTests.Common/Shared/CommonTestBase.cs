@@ -11,6 +11,8 @@ using Shared.Contracts.Logic.Validators;
 using Shared.Logic.Validators;
 using Tests.Shared;
 using Shared.Contracts;
+using MssBase.Service.Shared.ConnectionStrings;
+using Contract.Common;
 
 namespace IntegrationTests.Common.Shared
 {
@@ -69,10 +71,10 @@ namespace IntegrationTests.Common.Shared
 
         private ServiceCollection ConfigureCommonService(ServiceCollection services)
         {
-            services.Configure<DatabaseConnectionStrings>(_configHelper.Configuration.GetSection("CommonConnectionStrings"));
+            services.Configure<CommonConnectionStrings>(_configHelper.Configuration.GetSection("CommonConnectionStrings"));
 
-            services.AddSingleton<IDatabaseConnectionStrings>(sp =>
-             sp.GetRequiredService<IOptionsMonitor<DatabaseConnectionStrings>>().CurrentValue);
+            services.AddSingleton<ICommonConnectionStrings>(sp =>
+             sp.GetRequiredService<IOptionsMonitor<CommonConnectionStrings>>().CurrentValue);
 
             #region Unit
 

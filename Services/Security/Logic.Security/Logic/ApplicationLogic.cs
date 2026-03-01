@@ -15,7 +15,7 @@ namespace Logic.Security.Logic
 {
     public class ApplicationLogic : IApplicationLogic
     {
-        private readonly IDatabaseConnectionStrings _connectionStrings;
+        private readonly ISecurityConnectionStrings _connectionStrings;
         private readonly SecurityDBContextFactory _dbContextFactory;
 
         private IValidatorUtilities _validatorUtilities;
@@ -24,7 +24,7 @@ namespace Logic.Security.Logic
         private IValidator<InsertUpdateApplicationRequest> _insertUpdateApplicationRequestValidator;
 
         public ApplicationLogic(
-                            IDatabaseConnectionStrings connectionStrings,
+                            ISecurityConnectionStrings connectionStrings,
                             IValidatorUtilities validatorUtilities,
                             IValidator<FilterApplicationLogicRequest> filterApplicationLogicRequestValidator,
                             IValidator<InsertUpdateApplicationRequest> insertUpdateApplicationRequestValidator

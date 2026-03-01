@@ -27,6 +27,8 @@ using Shared.Logic;
 using Shared.Logic.Validators;
 using Shared.Service.Cache.Redis;
 using StackExchange.Redis;
+using MssBase.Service.Shared.ConnectionStrings;
+using Contract.Common;
 
 namespace MssBase.Service
 {
@@ -94,10 +96,10 @@ namespace MssBase.Service
 
         public static void ConfigureCommonService(this IServiceCollection services, WebApplicationBuilder builder)
         {
-            services.Configure<DatabaseConnectionStrings>(builder.Configuration.GetSection("CommonConnectionStrings"));
+            services.Configure<CommonConnectionStrings>(builder.Configuration.GetSection("CommonConnectionStrings"));
 
-            services.AddSingleton<IDatabaseConnectionStrings>(sp =>
-             sp.GetRequiredService<IOptionsMonitor<DatabaseConnectionStrings>>().CurrentValue);
+            services.AddSingleton<ICommonConnectionStrings>(sp =>
+             sp.GetRequiredService<IOptionsMonitor<CommonConnectionStrings>>().CurrentValue);
 
             // #region CommonType
 
@@ -109,10 +111,10 @@ namespace MssBase.Service
 
         public static void ConfigureSecurityService(this IServiceCollection services, WebApplicationBuilder builder)
         {
-            services.Configure<DatabaseConnectionStrings>(builder.Configuration.GetSection("SecurityConnectionStrings"));
+            services.Configure<SecurityConnectionStrings>(builder.Configuration.GetSection("SecurityConnectionStrings"));
 
-            services.AddSingleton<IDatabaseConnectionStrings>(sp =>
-             sp.GetRequiredService<IOptionsMonitor<DatabaseConnectionStrings>>().CurrentValue);
+            services.AddSingleton<ISecurityConnectionStrings>(sp =>
+             sp.GetRequiredService<IOptionsMonitor<SecurityConnectionStrings>>().CurrentValue);
 
             #region Application
 
