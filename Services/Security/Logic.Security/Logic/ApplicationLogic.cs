@@ -76,14 +76,6 @@ namespace Logic.Security.Logic
                     records = records.Where(x => x.Active == true);
                 }
 
-                // var query = _repositoryContext.Contacts.AsNoTracking().AsQueryable()
-                //     .Include(contact => contact.ContactToAddressLinks).ThenInclude(row => row.Address)
-                //     .Include(contact => contact.ContactToPhoneNumberLinks).ThenInclude(row => row.PhoneNumber)
-                //     .Include(contact => contact.ContactToCompanyLinks).ThenInclude(row => row.Company)
-                //     .Include(contact => contact.ContactToCommonNoteLinks).ThenInclude(row => row.CommonNote)
-                //     .Where(q => q.Id == id)
-                //     .SingleOrDefaultAsync();
-
                 if (req.IncludeRelated)
                 {
                     records = records.Include(application => application.ApplicationUsers)
