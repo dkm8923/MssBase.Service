@@ -1,23 +1,21 @@
-using Shared.Models.Contracts;
+using Dto.Security.ApplicationUser;
+using Dto.Security.ApplicationUserPermission;
+using Dto.Security.Permission;
+using Dto.Security.Role;
+using Dto.Security.RolePermission;
+using Shared.Models;
 
 namespace Dto.Security.Application
 {
-    public record ApplicationDto// : ICreateable, IUpdateable
+    public record ApplicationDto : AuditableDto
     {
         public int ApplicationId { get; set; }
-
-        public DateTime CreatedOn { get; set; }
-
-        public string CreatedBy { get; set; } = null!;
-
-        public DateTime? UpdatedOn { get; set; }
-
-        public string? UpdatedBy { get; set; }
-
-        public bool Active { get; set; }
-
         public string Name { get; set; } = null!;
-
         public string? Description { get; set; }
+        public IEnumerable<ApplicationUserDto> ApplicationUsers { get; set; }
+        public IEnumerable<PermissionDto> Permissions { get; set; }
+        public IEnumerable<RoleDto> Roles { get; set; }
+        public IEnumerable<RolePermissionDto> RolePermissions { get; set; }
+        public IEnumerable<ApplicationUserPermissionDto> ApplicationUserPermissions { get; set; }
     }
 }
