@@ -15,6 +15,8 @@ public interface ICacheService
     //Security Service Names
     public const string ApplicationService = "ApplicationService";
     public const string ApplicationUserService = "ApplicationUserService";
+    public const string RoleService = "RoleService";
+    public const string PermissionService = "PermissionService";
 
     #endregion
 }

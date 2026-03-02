@@ -26,6 +26,16 @@
             {
                 public const string Base = "/api/Security/ApplicationUser";
             }
+
+            public class Role
+            {
+                public const string Base = "/api/Security/Role";
+            }
+
+            public class Permission
+            {
+                public const string Base = "/api/Security/Permission";
+            }
         }
     }
 }

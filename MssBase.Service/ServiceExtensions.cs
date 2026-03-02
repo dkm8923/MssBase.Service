@@ -29,6 +29,14 @@ using Shared.Service.Cache.Redis;
 using StackExchange.Redis;
 using MssBase.Service.Shared.ConnectionStrings;
 using Contract.Common;
+using Contract.Security.Role;
+using Contract.Security.Permission;
+using Dto.Security.Role.Logic;
+using Dto.Security.Role;
+using Dto.Security.Permission.Logic;
+using Dto.Security.Permission;
+using Logic.Security.Validators.Role;
+using Logic.Security.Validators.Permission;
 
 namespace MssBase.Service
 {
@@ -135,6 +143,28 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
+
+            #endregion
+
+            #region Role
+
+            services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IRoleLogic, RoleLogic>();
+
+            //Configure Fluent Validation Validators
+            services.AddTransient<IValidator<FilterRoleLogicRequest>, FilterRoleLogicRequestValidator>();
+            services.AddTransient<IValidator<InsertUpdateRoleRequest>, InsertUpdateRoleRequestValidator>();
+
+            #endregion
+
+            #region Permission
+
+            services.AddScoped<IPermissionService, PermissionService>();
+            services.AddScoped<IPermissionLogic, PermissionLogic>();
+
+            //Configure Fluent Validation Validators
+            services.AddTransient<IValidator<FilterPermissionLogicRequest>, FilterPermissionLogicRequestValidator>();
+            services.AddTransient<IValidator<InsertUpdatePermissionRequest>, InsertUpdatePermissionRequestValidator>();
 
             #endregion
         }

@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <Folder Include="Validators/Application/" />
+    <Folder Include="Validators/Permission/" />
+    <Folder Include="Validators/Role/" />
   </ItemGroup>
 
 </Project>
