@@ -25,6 +25,31 @@ namespace Data.Security.Converters
                 Description = source.Description
             };
 
+            if (source.ApplicationUsers != null)
+            {
+                target.ApplicationUsers = source.ApplicationUsers.Select(au => au.ToDto());
+            }
+
+            if (source.Permissions != null)
+            {
+                target.Permissions = source.Permissions.Select(p => p.ToDto());
+            }
+
+            if (source.Roles != null)
+            {
+                target.Roles = source.Roles.Select(r => r.ToDto());
+            }
+
+            if (source.RolePermissions != null)
+            {
+                target.RolePermissions = source.RolePermissions.Select(rp => rp.ToDto());
+            }
+
+            if (source.ApplicationUserPermissions != null)
+            {
+                target.ApplicationUserPermissions = source.ApplicationUserPermissions.Select(aup => aup.ToDto());
+            }
+
             return target;
         }
 

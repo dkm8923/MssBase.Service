@@ -3,6 +3,6 @@
     public interface ICreateable
     {
         string CreatedBy { get; set; }
-        DateTime? CreatedOn { get; set; }
+        DateTime CreatedOn { get; set; }
     }
 }

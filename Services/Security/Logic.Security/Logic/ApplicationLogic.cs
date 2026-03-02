@@ -42,7 +42,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> GetAll(BaseLogicGet req)
         {
-            var ret = await this.Filter(new FilterApplicationLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser });
+            var ret = await this.Filter(new FilterApplicationLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
             return ret;
         }
 
@@ -51,7 +51,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<ApplicationDto>> GetById(int applicationId, BaseLogicGet req)
         {
-            var res = await this.Filter(new FilterApplicationLogicRequest { ApplicationIds = new List<int> { applicationId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser });
+            var res = await this.Filter(new FilterApplicationLogicRequest { ApplicationIds = new List<int> { applicationId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
 
             return new ErrorValidationResult<ApplicationDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -74,6 +74,23 @@ namespace Logic.Security.Logic
                 if (!req.IncludeInactive)
                 {
                     records = records.Where(x => x.Active == true);
+                }
+
+                // var query = _repositoryContext.Contacts.AsNoTracking().AsQueryable()
+                //     .Include(contact => contact.ContactToAddressLinks).ThenInclude(row => row.Address)
+                //     .Include(contact => contact.ContactToPhoneNumberLinks).ThenInclude(row => row.PhoneNumber)
+                //     .Include(contact => contact.ContactToCompanyLinks).ThenInclude(row => row.Company)
+                //     .Include(contact => contact.ContactToCommonNoteLinks).ThenInclude(row => row.CommonNote)
+                //     .Where(q => q.Id == id)
+                //     .SingleOrDefaultAsync();
+
+                if (req.IncludeRelated)
+                {
+                    records = records.Include(application => application.ApplicationUsers)
+                                     .Include(application => application.Permissions)
+                                     .Include(application => application.Roles)
+                                     .Include(application => application.RolePermissions)
+                                     .Include(application => application.ApplicationUserPermissions);
                 }
 
                 if (req.ApplicationIds != null && req.ApplicationIds.Count > 0)
