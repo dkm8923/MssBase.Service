@@ -64,5 +64,10 @@ namespace Shared.Logic.Validators
 
             return validationResult;
         }
+
+        public string CreateDependencyExistsValidationErrorMessage(string dependencyName)
+        {
+            return $"Record still contains child dependencies! IE: : {dependencyName}";
+        }
     }
 }

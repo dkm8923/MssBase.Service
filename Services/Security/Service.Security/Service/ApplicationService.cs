@@ -27,10 +27,10 @@ namespace Service.Security.Service
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationLogic.GetAll(req));
         }
 
-        public async Task<ErrorValidationResult<ApplicationDto>> GetById(int unitId, BaseServiceGet req)
+        public async Task<ErrorValidationResult<ApplicationDto>> GetById(int applicationId, BaseServiceGet req)
         {
-            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, unitId, req.IncludeInactive, req.IncludeRelated);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationLogic.GetById(unitId, req));
+            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, applicationId, req.IncludeInactive, req.IncludeRelated);
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationLogic.GetById(applicationId, req));
         }
 
         public async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> Filter(FilterApplicationServiceRequest req)
@@ -73,22 +73,22 @@ namespace Service.Security.Service
 
         #region Update
 
-        public async Task<ErrorValidationResult<ApplicationDto>> Update(int ApplicationId, InsertUpdateApplicationRequest req)
+        public async Task<ErrorValidationResult<ApplicationDto>> Update(int applicationId, InsertUpdateApplicationRequest req)
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _applicationLogic.Update(ApplicationId, req);
+            return await _applicationLogic.Update(applicationId, req);
         }
 
         #endregion
 
         #region Delete
 
-        public async Task<ErrorValidationResult> Delete(int unitId)
+        public async Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId)
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _applicationLogic.Delete(unitId);
+            return await _applicationLogic.Delete(applicationId);
         }
 
         #endregion

@@ -12,6 +12,7 @@ namespace Shared.Contracts.Logic.Validators
         public string CreateFilterParmRequiredErrorMessage(List<string> fieldNames);
         public string CreateUniqueValidationErrorMessage(string fieldName);
         public string CreateRecordDoesNotExistValidationErrorMessage(string idName);
+        public string CreateDependencyExistsValidationErrorMessage(string dependencyName);
         public string SetPropertyNameOnFilterRequestValidation();
         public ErrorValidationResult<TResponse> CreateDefaultValidationResponse<TResponse>(ValidationResult result);
     }

@@ -183,26 +183,22 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Deletes the application with the specified identifier.
         /// </summary>
-        public async Task<ErrorValidationResult> Delete(int applicationId)
+        public async Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId)
         {
-            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            var errorValidationResult = await _validateApplicationOnDelete(applicationId);
+
+            if (errorValidationResult.Errors.Count == 0)
             {
-                var entity = await dbContext.Applications.FirstOrDefaultAsync(ent => ent.ApplicationId == applicationId);
-                var errorValidationResult = new ErrorValidationResult();
-
-                if (entity != null)
+                using (var dbContext = _dbContextFactory.CreateContextReadWrite())
                 {
+                    var entity = await dbContext.Applications.FirstOrDefaultAsync(ent => ent.ApplicationId == applicationId);
                     dbContext.Applications.Remove(entity);
-
                     await dbContext.SaveChangesAsync();
+                    errorValidationResult.Response = null;
                 }
-                else
-                {
-                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
-                }
-
-                return errorValidationResult;
             }
+
+            return errorValidationResult;
         }
 
         #region Validation
@@ -234,6 +230,46 @@ namespace Logic.Security.Logic
             }
 
             return errorValidationResult;
+        }
+
+        private async Task<ErrorValidationResult<ApplicationDto>> _validateApplicationOnDelete(int applicationId)
+        {
+            var applicationErrorValidationResult = await GetById(applicationId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true });
+
+            if (applicationErrorValidationResult.Response == null)
+            {
+                //application for given id does not exist
+                applicationErrorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(applicationErrorValidationResult.Errors);
+                return applicationErrorValidationResult;
+            }
+
+            //verify no dependencies exist on application record
+            if (applicationErrorValidationResult.Response.ApplicationUsers.Count() > 0)
+            {
+                applicationErrorValidationResult.Errors.Add("ApplicationUsers", new List<string> { _validatorUtilities.CreateDependencyExistsValidationErrorMessage("ApplicationUsers") });
+            }
+
+            if (applicationErrorValidationResult.Response.Permissions.Count() > 0)
+            {
+                applicationErrorValidationResult.Errors.Add("Permissions", new List<string> { _validatorUtilities.CreateDependencyExistsValidationErrorMessage("Permissions") });
+            }
+
+            if (applicationErrorValidationResult.Response.Roles.Count() > 0)
+            {
+                applicationErrorValidationResult.Errors.Add("Roles", new List<string> { _validatorUtilities.CreateDependencyExistsValidationErrorMessage("Roles") });
+            }
+
+            if (applicationErrorValidationResult.Response.RolePermissions.Count() > 0)
+            {
+                applicationErrorValidationResult.Errors.Add("RolePermissions", new List<string> { _validatorUtilities.CreateDependencyExistsValidationErrorMessage("RolePermissions") });
+            }
+
+            if (applicationErrorValidationResult.Response.ApplicationUserPermissions.Count() > 0)
+            {
+                applicationErrorValidationResult.Errors.Add("ApplicationUserPermissions", new List<string> { _validatorUtilities.CreateDependencyExistsValidationErrorMessage("ApplicationUserPermissions") });
+            }
+
+            return applicationErrorValidationResult;
         }
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)

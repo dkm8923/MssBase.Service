@@ -11,6 +11,6 @@ namespace Contract.Security.Application
         public Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> Filter(FilterApplicationLogicRequest req);
         public Task<ErrorValidationResult<ApplicationDto>> Insert(InsertUpdateApplicationRequest req);
         public Task<ErrorValidationResult<ApplicationDto>> Update(int applicationId, InsertUpdateApplicationRequest req);
-        public Task<ErrorValidationResult> Delete(int applicationId);
+        public Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId);
     }
 }
