@@ -4,7 +4,6 @@ namespace IntegrationTests.Security.Shared.Utilities.Contracts;
 
  public interface IApplicationUtilities
     {
-        public Task ClearTestTables(IApplicationUserUtilities applicationUserUtilities);
         public Task DeleteAllRecords();
         public Task<List<ApplicationDto>> CreateTestRecords(short numberOfRecordsToCreate = 5, bool active = true);
         public Task<ApplicationDto> CreateSingleApplicationTestRecord(bool active = true);

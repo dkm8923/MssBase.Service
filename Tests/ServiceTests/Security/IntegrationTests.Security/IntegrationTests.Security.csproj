@@ -31,6 +31,7 @@
     <Folder Include="Logic/Application/Validators/" />
     <Folder Include="Service/" />
     <Folder Include="Shared/" />
+    <Folder Include="Shared/SeedDatabase/" />
     <Folder Include="Shared/Utilities/" />
     <Folder Include="Shared/Utilities/Contracts/" />
   </ItemGroup>

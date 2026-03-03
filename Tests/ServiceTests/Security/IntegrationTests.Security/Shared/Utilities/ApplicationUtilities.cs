@@ -16,12 +16,6 @@ public class ApplicationUtilities : IApplicationUtilities
         _applicationLogic = applicationLogic;
     }
 
-    public async Task ClearTestTables(IApplicationUserUtilities applicationUserUtilities)
-    {
-        await applicationUserUtilities.DeleteAllRecords();
-        await DeleteAllRecords();
-    }
-
     public InsertUpdateApplicationRequest ConvertApplicationDtoToInsertUpdateRequest(ApplicationDto req)
     {
         return new InsertUpdateApplicationRequest
