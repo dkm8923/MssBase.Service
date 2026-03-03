@@ -455,6 +455,126 @@ namespace IntegrationTests.Security.Logic.Application
             LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
         }
 
+        [Fact]
+        public async Task Application_Delete_Should_Not_Delete_Record_ApplicationUser_Foreign_Key_Dependency_Exists()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            //get application user dependency error
+            var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedForeignKeyErrors();
+            expectedFieldErrors = expectedFieldErrors.Where(x => x.Key == "ApplicationUsers").ToDictionary();
+
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+            //create test application user
+            await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(testRecord.ApplicationId);
+            
+            // Act
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            
+            // Assert
+            result.Errors.Count.Should().Be(1);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task Application_Delete_Should_Not_Delete_Record_Permission_Foreign_Key_Dependency_Exists()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            //get permission dependency error
+            var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedForeignKeyErrors();
+            expectedFieldErrors = expectedFieldErrors.Where(x => x.Key == "Permissions").ToDictionary();
+
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+            //create test permission
+            await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(testRecord.ApplicationId);
+            
+            // Act
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            
+            // Assert
+            result.Errors.Count.Should().Be(1);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task Application_Delete_Should_Not_Delete_Record_Role_Foreign_Key_Dependency_Exists()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            //get role dependency error
+            var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedForeignKeyErrors();
+            expectedFieldErrors = expectedFieldErrors.Where(x => x.Key == "Roles").ToDictionary();
+
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+            //create test role
+            await _securityTestUtilities.Role.CreateSingleRoleTestRecord(testRecord.ApplicationId);
+            
+            // Act
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            
+            // Assert
+            result.Errors.Count.Should().Be(1);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        // [Fact]
+        // public async Task Application_Delete_Should_Not_Delete_Record_RolePermission_Foreign_Key_Dependency_Exists()
+        // {
+        //     // Arrange
+        //     await ClearAllSecurityTestTableData();
+
+        //     //get role permission dependency error
+        //     var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedForeignKeyErrors();
+        //     expectedFieldErrors = expectedFieldErrors.Where(x => x.Key == "RolePermissions").ToDictionary();
+
+        //     var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+        //     //create test role permission
+        //     await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(testRecord.ApplicationId);
+            
+        //     // Act
+        //     var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            
+        //     // Assert
+        //     result.Errors.Count.Should().Be(1);
+
+        //     LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        // }
+
+        // [Fact]
+        // public async Task Application_Delete_Should_Not_Delete_Record_ApplicationUserPermission_Foreign_Key_Dependency_Exists()
+        // {
+        //     // Arrange
+        //     await ClearAllSecurityTestTableData();
+
+        //     //get permission dependency error
+        //     var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedForeignKeyErrors();
+        //     expectedFieldErrors = expectedFieldErrors.Where(x => x.Key == "ApplicationUserPermissions").ToDictionary();
+
+        //     var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+        //     //create test application user permission
+        //     await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(testRecord.ApplicationId);
+            
+        //     // Act
+        //     var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            
+        //     // Assert
+        //     result.Errors.Count.Should().Be(1);
+
+        //     LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        // }
+
         #endregion
     }
 }

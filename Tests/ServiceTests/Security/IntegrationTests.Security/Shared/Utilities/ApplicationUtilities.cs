@@ -140,6 +140,10 @@ public class ApplicationUtilities : IApplicationUtilities
         }
     }
 
+    /// <summary>
+    /// Retrieves a dictionary of expected max length field validation error messages.
+    /// </summary>
+    /// <returns>A dictionary where the key is the max length field name and the value is a list of error messages associated with that max length field.</returns>
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors()
     {
         return new Dictionary<string, List<string>>
@@ -150,6 +154,10 @@ public class ApplicationUtilities : IApplicationUtilities
         };
     }
 
+    /// <summary>
+    /// Retrieves a dictionary of expected record does not exist validation error messages.
+    /// </summary>
+    /// <returns>A dictionary where the key is the record identifier name and the value is a list of error messages associated with that record identifier.</returns>
     public Dictionary<string, List<string>> GetExpectedRecordDoesNotExistErrors()
     {
         return new Dictionary<string, List<string>>
@@ -158,6 +166,10 @@ public class ApplicationUtilities : IApplicationUtilities
         };
     }
 
+    /// <summary>
+    /// Retrieves a dictionary of expected required field validation error messages.
+    /// </summary>
+    /// <returns>A dictionary where the key is the required field name and the value is a list of error messages associated with that required field.</returns>
     public Dictionary<string, List<string>> GetExpectedRequiredFieldErrors()
     {
         return new Dictionary<string, List<string>>
@@ -167,11 +179,31 @@ public class ApplicationUtilities : IApplicationUtilities
         };
     }
 
+    /// <summary>
+    /// Retrieves a dictionary of expected unique field validation error messages.
+    /// </summary>
+    /// <returns>A dictionary where the key is the unique field name and the value is a list of error messages associated with that unique field.</returns>
     public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors()
     {
         return new Dictionary<string, List<string>>
         {
             { "Name", new List<string> { "Name must be unique!" } }
+        };
+    }
+
+    /// <summary>
+    /// Retrieves a dictionary of expected foreign key validation error messages.
+    /// </summary>
+    /// <returns>A dictionary where the key is the foreign key name and the value is a list of error messages associated with that foreign key.</returns>
+    public Dictionary<string, List<string>> GetExpectedForeignKeyErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "ApplicationUsers", new List<string> { "Record still contains child dependencies! IE: ApplicationUsers" } },
+            { "Permissions", new List<string> { "Record still contains child dependencies! IE: Permissions" } },
+            { "Roles", new List<string> { "Record still contains child dependencies! IE: Roles" } },
+            { "RolePermissions", new List<string> { "Record still contains child dependencies! IE: RolePermissions" } },
+            { "ApplicationUserPermissions", new List<string> { "Record still contains child dependencies! IE: ApplicationUserPermissions" } }
         };
     }
 
