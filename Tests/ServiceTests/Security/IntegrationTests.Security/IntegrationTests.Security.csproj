@@ -26,9 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Logic/" />
-    <Folder Include="Logic/Application/" />
-    <Folder Include="Logic/Application/Validators/" />
     <Folder Include="Service/" />
     <Folder Include="Shared/" />
     <Folder Include="Shared/SeedDatabase/" />

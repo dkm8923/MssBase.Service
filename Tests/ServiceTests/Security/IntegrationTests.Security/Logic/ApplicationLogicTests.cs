@@ -7,7 +7,7 @@ using IntegrationTests.Shared;
 using Shared.Models;
 using IntegrationTests.Shared.Utilities;
 
-namespace IntegrationTests.Security.Logic.Application
+namespace IntegrationTests.Security.Logic
 {
     [Collection("SecurityIntegrationTests")]
     public class ApplicationLogicTests : SecurityTestBase
