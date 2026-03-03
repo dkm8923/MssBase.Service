@@ -4,7 +4,6 @@
     <File Path="Scripts/Ai/ENTITY_CREATION_GUIDE.md" />
   </Folder>
   <Folder Name="/Scripts/DotNet/">
-    <File Path="HelloWorld.cs" />
     <File Path="Scripts/DotNet/HelloWorld.cs" />
   </Folder>
   <Folder Name="/Scripts/Sql/">
