@@ -3,9 +3,6 @@
   <Folder Name="/Scripts/Ai/">
     <File Path="Scripts/Ai/ENTITY_CREATION_GUIDE.md" />
   </Folder>
-  <Folder Name="/Scripts/DotNet/">
-    <File Path="Scripts/DotNet/HelloWorld.cs" />
-  </Folder>
   <Folder Name="/Scripts/Sql/">
     <File Path="Scripts/Sql/SecurityDBQueries.sql" />
   </Folder>
