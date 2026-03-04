@@ -81,32 +81,30 @@ namespace Logic.Security.Logic
                 {
                     records = records.Where(x => req.RoleIds.Contains(x.RoleId));
                 }
-                else
+                
+                if (req.CreatedBy != null)
                 {
-                    if (req.CreatedBy != null)
-                    {
-                        records = records.Where(x => x.CreatedBy == req.CreatedBy);
-                    }
+                    records = records.Where(x => x.CreatedBy == req.CreatedBy);
+                }
 
-                    if (req.CreatedOnDate != null)
-                    {
-                        records = records.Where(x => DateOnly.FromDateTime((DateTime)x.CreatedOn) == req.CreatedOnDate);
-                    }
+                if (req.CreatedOnDate != null)
+                {
+                    records = records.Where(x => DateOnly.FromDateTime((DateTime)x.CreatedOn) == req.CreatedOnDate);
+                }
 
-                    if (req.UpdatedBy != null)
-                    {
-                        records = records.Where(x => x.UpdatedBy == req.UpdatedBy);
-                    }
+                if (req.UpdatedBy != null)
+                {
+                    records = records.Where(x => x.UpdatedBy == req.UpdatedBy);
+                }
 
-                    if (req.UpdatedOnDate != null)
-                    {
-                        records = records.Where(x => DateOnly.FromDateTime((DateTime)x.UpdatedOn) == req.UpdatedOnDate);
-                    }
+                if (req.UpdatedOnDate != null)
+                {
+                    records = records.Where(x => DateOnly.FromDateTime((DateTime)x.UpdatedOn) == req.UpdatedOnDate);
+                }
 
-                    if (req.Name != null)
-                    {
-                        records = records.Where(x => x.Name == req.Name);
-                    }
+                if (req.Name != null)
+                {
+                    records = records.Where(x => x.Name == req.Name);
                 }
 
                 return new ErrorValidationResult<IEnumerable<RoleDto>> { Response = records.ToDtos() };

@@ -31,6 +31,10 @@ using Contract.Security.Permission;
 using Dto.Security.Permission.Logic;
 using Logic.Security.Validators.Permission;
 using Dto.Security.Permission;
+using Contract.Security.ApplicationUserPermission;
+using Dto.Security.ApplicationUserPermission.Logic;
+using Dto.Security.ApplicationUserPermission;
+using Logic.Security.Validators.ApplicationUserPermission;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -41,6 +45,7 @@ public class SecurityTestBase
     protected readonly ILoggerService _loggerSvc;
     protected readonly IApplicationLogic _applicationLogic;
     protected readonly IApplicationUserLogic _applicationUserLogic;
+    protected readonly IApplicationUserPermissionLogic _applicationUserPermissionLogic;
     protected readonly IPermissionLogic _permissionLogic;
     protected readonly IRoleLogic _roleLogic;
     protected readonly ISecurityTestUtilitiesManager _securityTestUtilities;
@@ -57,6 +62,7 @@ public class SecurityTestBase
         _loggerSvc = _serviceProvider.GetService<ILoggerService>();
         _applicationLogic = _serviceProvider.GetService<IApplicationLogic>();
         _applicationUserLogic = _serviceProvider.GetService<IApplicationUserLogic>();
+        _applicationUserPermissionLogic = _serviceProvider.GetService<IApplicationUserPermissionLogic>();
         _permissionLogic = _serviceProvider.GetService<IPermissionLogic>();
         _roleLogic = _serviceProvider.GetService<IRoleLogic>();
         _securityTestUtilities = _serviceProvider.GetService<ISecurityTestUtilitiesManager>();
@@ -102,6 +108,7 @@ public class SecurityTestBase
         services.AddTransient<IApplicationUserUtilities, ApplicationUserUtilities>();
         services.AddTransient<IRoleUtilities, RoleUtilities>();
         services.AddTransient<IPermissionUtilities, PermissionUtilities>();
+        services.AddTransient<IApplicationUserPermissionUtilities, ApplicationUserPermissionUtilities>();
         
         return services;
     }
@@ -132,6 +139,17 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
+
+        #endregion
+
+        #region ApplicationUserPermission
+
+        services.AddTransient<IApplicationUserPermissionService, ApplicationUserPermissionService>();
+        services.AddTransient<IApplicationUserPermissionLogic, ApplicationUserPermissionLogic>();
+
+        //Configure Fluent Validation Validators
+        services.AddTransient<IValidator<FilterApplicationUserPermissionLogicRequest>, FilterApplicationUserPermissionLogicRequestValidator>();
+        services.AddTransient<IValidator<InsertUpdateApplicationUserPermissionRequest>, InsertUpdateApplicationUserPermissionRequestValidator>();
 
         #endregion
 

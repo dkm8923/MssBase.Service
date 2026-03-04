@@ -5,7 +5,7 @@ namespace IntegrationTests.Security.Shared.Utilities.Contracts;
 public interface IApplicationUserPermissionUtilities
 {
     // public Task<int> ClearTestTablesAndReturnApplicationId(IApplicationUtilities applicationUtilities);
-    // public Task DeleteAllRecords();
+    public Task DeleteAllRecords();
     // public Task<List<ApplicationUserPermissionDto>> CreateTestRecords(int applicationId, short numberOfRecordsToCreate = 5, bool active = true);
     // public Task<ApplicationUserPermissionDto> CreateSingleApplicationUserPermissionTestRecord(int applicationId,bool active = true);
     // //public Task<ApplicationUserPermissionDto> CreateSingleApplicationUserPermissionTestRecordWithSpecificValues(InsertUpdateApplicationUserPermissionRequest req = null);

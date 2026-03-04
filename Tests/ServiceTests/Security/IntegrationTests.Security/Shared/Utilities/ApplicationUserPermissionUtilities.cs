@@ -11,19 +11,19 @@ namespace IntegrationTests.Security.Shared.Utilities;
 
 public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtilities
 {
-    // protected readonly IApplicationUserPermissionLogic _ApplicationUserPermissionLogic;
-    // protected readonly IApplicationLogic _applicationLogic;
+    protected readonly IApplicationUserPermissionLogic _ApplicationUserPermissionLogic;
+    protected readonly IApplicationLogic _applicationLogic;
     
-    // public ApplicationUserPermissionUtilities(IApplicationUserPermissionLogic ApplicationUserPermissionLogic, IApplicationLogic applicationLogic) 
-    // {
-    //     _ApplicationUserPermissionLogic = ApplicationUserPermissionLogic;
-    //     _applicationLogic = applicationLogic;
-    // }
+    public ApplicationUserPermissionUtilities(IApplicationUserPermissionLogic ApplicationUserPermissionLogic, IApplicationLogic applicationLogic) 
+    {
+        _ApplicationUserPermissionLogic = ApplicationUserPermissionLogic;
+        _applicationLogic = applicationLogic;
+    }
 
-    // /// <summary>
-    // /// Asynchronously clears test data from the ApplicationUserPermission and Application tables, creates a fresh test application record, 
-    // /// and returns the application ID for use in subsequent tests.
-    // /// </summary>
+    /// <summary>
+    /// Asynchronously clears test data from the ApplicationUserPermission and Application tables, creates a fresh test application record, 
+    /// and returns the application ID for use in subsequent tests.
+    /// </summary>
     // public async Task<int> ClearTestTablesAndReturnApplicationId(IApplicationUtilities applicationUtilities)
     // {
     //     await DeleteAllRecords();
@@ -78,9 +78,9 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
     //     };
     // }
 
-    // /// <summary>
-    // /// Creates a single application user test record with randomized data for integration testing purposes.
-    // /// </summary>
+    /// <summary>
+    /// Creates a single application user test record with randomized data for integration testing purposes.
+    /// </summary>
     // public async Task<ApplicationUserPermissionDto> CreateSingleApplicationUserPermissionTestRecord(int applicationId, bool active = true)
     // {
     //     //create test record
@@ -93,43 +93,43 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
     //     return ret.Response;
     // }
 
-    // /// <summary>
-    // /// Creates a single application user test record with specific values provided in the request object.
-    // /// </summary>
-    // // public async Task<ApplicationUserPermissionDto> CreateSingleApplicationUserPermissionTestRecordWithSpecificValues(int applicationId, InsertUpdateApplicationUserPermissionRequest req = null)
-    // // {
-    // //     var ret = new ErrorValidationResult<ApplicationUserPermissionDto>();
+    /// <summary>
+    /// Creates a single application user test record with specific values provided in the request object.
+    /// </summary>
+    // public async Task<ApplicationUserPermissionDto> CreateSingleApplicationUserPermissionTestRecordWithSpecificValues(int applicationId, InsertUpdateApplicationUserPermissionRequest req = null)
+    // {
+    //     var ret = new ErrorValidationResult<ApplicationUserPermissionDto>();
 
-    // //     if (req == null)
-    // //     {
-    // //         var insertReq = new InsertUpdateApplicationUserPermissionRequest
-    // //         {
-    // //             Email = "test@ApplicationUserPermission.com",
-    // //             FirstName = "Test",
-    // //             LastName = "ApplicationUserPermission",
-    // //             Active = true,
-    // //             ApplicationId = 1,
-    // //             CurrentUser = TestConstants.CurrentUser
-    // //         };
+    //     if (req == null)
+    //     {
+    //         var insertReq = new InsertUpdateApplicationUserPermissionRequest
+    //         {
+    //             Email = "test@ApplicationUserPermission.com",
+    //             FirstName = "Test",
+    //             LastName = "ApplicationUserPermission",
+    //             Active = true,
+    //             ApplicationId = 1,
+    //             CurrentUser = TestConstants.CurrentUser
+    //         };
 
-    // //         ret = await _ApplicationUserPermissionLogic.Insert(insertReq);
-    // //     }
-    // //     else
-    // //     {
-    // //         req.Email = req.Email ?? "test@ApplicationUserPermission.com";
-    // //         req.FirstName = req.FirstName ?? "Test";
-    // //         req.LastName = req.LastName ?? "ApplicationUserPermission";
-    // //         req.ApplicationId = req.ApplicationId == 0 ? 1 : req.ApplicationId;
-    // //         req.CurrentUser = req.CurrentUser ?? TestConstants.CurrentUser; 
-    // //         ret = await _ApplicationUserPermissionLogic.Insert(req);
-    // //     }
+    //         ret = await _ApplicationUserPermissionLogic.Insert(insertReq);
+    //     }
+    //     else
+    //     {
+    //         req.Email = req.Email ?? "test@ApplicationUserPermission.com";
+    //         req.FirstName = req.FirstName ?? "Test";
+    //         req.LastName = req.LastName ?? "ApplicationUserPermission";
+    //         req.ApplicationId = req.ApplicationId == 0 ? 1 : req.ApplicationId;
+    //         req.CurrentUser = req.CurrentUser ?? TestConstants.CurrentUser; 
+    //         ret = await _ApplicationUserPermissionLogic.Insert(req);
+    //     }
 
-    // //     return ret.Response;
-    // // }
+    //     return ret.Response;
+    // }
 
-    // /// <summary>
-    // /// Asynchronously creates a set of predefined test application user records in the data store.
-    // /// </summary>
+    /// <summary>
+    /// Asynchronously creates a set of predefined test application user records in the data store.
+    /// </summary>
     // public async Task<List<ApplicationUserPermissionDto>> CreateTestRecords(int applicationId, short numberOfRecordsToCreate = 5, bool active = true)
     // {
     //     //create test records
@@ -144,18 +144,18 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
     //     return ret;
     // }
 
-    // /// <summary>
-    // /// Asynchronously deletes all records, including inactive ones, from the data store.
-    // /// </summary>
-    // public async Task DeleteAllRecords()
-    // {
-    //     var recordsToDelete = await _ApplicationUserPermissionLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
+    /// <summary>
+    /// Asynchronously deletes all records, including inactive ones, from the data store.
+    /// </summary>
+    public async Task DeleteAllRecords()
+    {
+        var recordsToDelete = await _ApplicationUserPermissionLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
 
-    //     foreach (var record in recordsToDelete.Response)
-    //     {
-    //         await _ApplicationUserPermissionLogic.Delete(record.ApplicationUserPermissionId);
-    //     }
-    // }
+        foreach (var record in recordsToDelete.Response)
+        {
+            await _ApplicationUserPermissionLogic.Delete(record.ApplicationUserPermissionId);
+        }
+    }
 
     // public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors()
     // {
@@ -203,9 +203,9 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
     //     };
     // }
 
-    // /// <summary>
-    // /// Verifies that all relevant property values of two application user records are equal.
-    // /// </summary>
+    /// <summary>
+    /// Verifies that all relevant property values of two application user records are equal.
+    /// </summary>
     // public void VerifyTestRecordValuesMatch(ApplicationUserPermissionDto recordA, ApplicationUserPermissionDto recordB)
     // {
     //     recordA.ApplicationUserPermissionId.Should().Be(recordB.ApplicationUserPermissionId);

@@ -1,3 +1,4 @@
+using Dto.Security.ApplicationUserPermission;
 using Shared.Models;
 
 namespace Dto.Security.ApplicationUser
@@ -15,5 +16,6 @@ namespace Dto.Security.ApplicationUser
         public DateTime? LastLockoutDate { get; set; }
         public short? FailedPasswordAttemptCount { get; set; }
         public int ApplicationId { get; set; }
+        public IEnumerable<ApplicationUserPermissionDto> ApplicationUserPermissions { get; set; }
     }
 }

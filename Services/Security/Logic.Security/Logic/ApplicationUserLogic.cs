@@ -43,7 +43,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> GetAll(BaseLogicGet req)
         {
-            var ret = await this.Filter(new FilterApplicationUserLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser });
+            var ret = await this.Filter(new FilterApplicationUserLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
             return ret;
         }
 
@@ -52,7 +52,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<ApplicationUserDto>> GetById(int applicationUserId, BaseLogicGet req)
         {
-            var res = await this.Filter(new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { applicationUserId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser });
+            var res = await this.Filter(new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { applicationUserId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
 
             return new ErrorValidationResult<ApplicationUserDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -77,51 +77,54 @@ namespace Logic.Security.Logic
                     records = records.Where(x => x.Active == true);
                 }
 
+                if (req.IncludeRelated)
+                {
+                    records = records.Include(applicationUser => applicationUser.ApplicationUserPermissions);
+                }
+
                 if (req.ApplicationUserIds != null && req.ApplicationUserIds.Count > 0)
                 {
                     records = records.Where(x => req.ApplicationUserIds.Contains(x.ApplicationUserId));
                 }
-                else
+                
+                if (req.CreatedBy != null)
                 {
-                    if (req.CreatedBy != null)
-                    {
-                        records = records.Where(x => x.CreatedBy == req.CreatedBy);
-                    }
+                    records = records.Where(x => x.CreatedBy == req.CreatedBy);
+                }
 
-                    if (req.CreatedOnDate != null)
-                    {
-                        records = records.Where(x => DateOnly.FromDateTime((DateTime)x.CreatedOn) == req.CreatedOnDate);
-                    }
+                if (req.CreatedOnDate != null)
+                {
+                    records = records.Where(x => DateOnly.FromDateTime((DateTime)x.CreatedOn) == req.CreatedOnDate);
+                }
 
-                    if (req.UpdatedBy != null)
-                    {
-                        records = records.Where(x => x.UpdatedBy == req.UpdatedBy);
-                    }
+                if (req.UpdatedBy != null)
+                {
+                    records = records.Where(x => x.UpdatedBy == req.UpdatedBy);
+                }
 
-                    if (req.UpdatedOnDate != null)
-                    {
-                        records = records.Where(x => DateOnly.FromDateTime((DateTime)x.UpdatedOn) == req.UpdatedOnDate);
-                    }
+                if (req.UpdatedOnDate != null)
+                {
+                    records = records.Where(x => DateOnly.FromDateTime((DateTime)x.UpdatedOn) == req.UpdatedOnDate);
+                }
 
-                    if (req.Email != null)
-                    {
-                        records = records.Where(x => x.Email == req.Email);
-                    }
+                if (req.Email != null)
+                {
+                    records = records.Where(x => x.Email == req.Email);
+                }
 
-                    if (req.FirstName != null)
-                    {
-                        records = records.Where(x => x.FirstName == req.FirstName);
-                    }
+                if (req.FirstName != null)
+                {
+                    records = records.Where(x => x.FirstName == req.FirstName);
+                }
 
-                    if (req.LastName != null)
-                    {
-                        records = records.Where(x => x.LastName == req.LastName);
-                    }
+                if (req.LastName != null)
+                {
+                    records = records.Where(x => x.LastName == req.LastName);
+                }
 
-                    if (req.ApplicationId != null)
-                    {
-                        records = records.Where(x => x.ApplicationId == req.ApplicationId);
-                    }
+                if (req.ApplicationId != null)
+                {
+                    records = records.Where(x => x.ApplicationId == req.ApplicationId);
                 }
 
                 return new ErrorValidationResult<IEnumerable<ApplicationUserDto>> { Response = records.ToDtos() };

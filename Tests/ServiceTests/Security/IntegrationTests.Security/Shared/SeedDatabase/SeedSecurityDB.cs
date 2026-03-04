@@ -10,6 +10,7 @@ using IntegrationTests.Shared.Utilities;
 using Dto.Security.ApplicationUser;
 using Dto.Security.Permission;
 using Dto.Security.Role;
+using Dto.Security.ApplicationUserPermission;
 
 namespace IntegrationTests.Security.Shared.SeedDatabase;
 
@@ -35,9 +36,10 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
 
         var applications = await CreateTestApplications();
         
-        await CreateTestApplicationUsers(applications);
-        await CreateTestPermissions(applications);
-        await CreateTestRoles(applications);
+        var applicationUsers = await CreateTestApplicationUsers(applications);
+        var permissions = await CreateTestPermissions(applications);
+        //var applicationUserPermissions = await CreateTestApplicationUserPermissions(applications, applicationUsers, permissions);
+        var roles = await CreateTestRoles(applications);
 
         // Assert
         1.Should().Be(1);
@@ -216,6 +218,115 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
 
         return ret;
     }
+
+    private async Task<List<ApplicationUserPermissionDto>> CreateTestApplicationUserPermissions(List<ApplicationDto> applications, List<ApplicationUserDto> applicationUsers, List<PermissionDto> permissions)
+    {
+        var ret = new List<ApplicationUserPermissionDto>();
+
+        var applicationUserPermissionsToCreate = new List<InsertUpdateApplicationUserPermissionRequest>();
+
+        //Commission Calculator Test Application
+        var commissionCalculatorAppId = applications.FirstOrDefault(x => x.Name == "Commission Calculator")?.ApplicationId;
+        var commissionCalculatorAppUsers = applicationUsers.Where(x => x.ApplicationId == commissionCalculatorAppId).ToList();
+        var commissionCalculatorPermissions = permissions.Where(x => x.ApplicationId == commissionCalculatorAppId).ToList();
+
+        if (commissionCalculatorAppId != null && commissionCalculatorAppUsers != null && commissionCalculatorPermissions != null)
+        {
+            foreach (var appUser in commissionCalculatorAppUsers)
+            {
+                foreach (var permission in commissionCalculatorPermissions)
+                {
+                    applicationUserPermissionsToCreate.Add(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = (int)commissionCalculatorAppId, ApplicationUserId = appUser.ApplicationUserId, PermissionId = permission.PermissionId, CurrentUser = TestConstants.CurrentUser });
+                }
+            }
+        }
+
+        //Payroll Processing Test Application
+        var payrollProcessingAppId = applications.FirstOrDefault(x => x.Name == "Payroll Processing")?.ApplicationId;
+        var payrollProcessingAppUsers = applicationUsers.Where(x => x.ApplicationId == payrollProcessingAppId).ToList();
+        var payrollProcessingPermissions = permissions.Where(x => x.ApplicationId == payrollProcessingAppId).ToList();
+
+        if (payrollProcessingAppId != null && payrollProcessingAppUsers != null && payrollProcessingPermissions != null)
+        {
+            var appUser = payrollProcessingAppUsers[0];
+            var permission = payrollProcessingPermissions[0];
+
+            applicationUserPermissionsToCreate.Add(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = (int)payrollProcessingAppId, ApplicationUserId = appUser.ApplicationUserId, PermissionId = permission.PermissionId, CurrentUser = TestConstants.CurrentUser });
+        }
+
+        //Invoice Manager Test Application
+        var invoiceManagerAppId = applications.FirstOrDefault(x => x.Name == "Invoice Manager")?.ApplicationId;
+        var invoiceManagerAppUsers = applicationUsers.Where(x => x.ApplicationId == invoiceManagerAppId).ToList();
+        var invoiceManagerPermissions = permissions.Where(x => x.ApplicationId == invoiceManagerAppId).ToList();
+
+        if (invoiceManagerAppId != null && invoiceManagerAppUsers != null && invoiceManagerPermissions != null)
+        {
+            var appUser = invoiceManagerAppUsers[1];
+            
+            applicationUserPermissionsToCreate.Add(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = (int)invoiceManagerAppId, ApplicationUserId = appUser.ApplicationUserId, PermissionId = invoiceManagerPermissions[0].PermissionId, CurrentUser = TestConstants.CurrentUser });
+            applicationUserPermissionsToCreate.Add(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = (int)invoiceManagerAppId, ApplicationUserId = appUser.ApplicationUserId, PermissionId = invoiceManagerPermissions[1].PermissionId, CurrentUser = TestConstants.CurrentUser });
+        }
+
+        //Analytics Dashboard Test Application
+        var analyticsDashboardAppId = applications.FirstOrDefault(x => x.Name == "Analytics Dashboard")?.ApplicationId;
+        var analyticsDashboardAppUsers = applicationUsers.Where(x => x.ApplicationId == analyticsDashboardAppId).ToList();
+        var analyticsDashboardPermissions = permissions.Where(x => x.ApplicationId == analyticsDashboardAppId).ToList();
+
+        if (analyticsDashboardAppId != null && analyticsDashboardAppUsers != null && analyticsDashboardPermissions != null)
+        {
+            foreach (var appUser in analyticsDashboardAppUsers)
+            {
+                foreach (var permission in analyticsDashboardPermissions)
+                {
+                    applicationUserPermissionsToCreate.Add(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = (int)analyticsDashboardAppId, ApplicationUserId = appUser.ApplicationUserId, PermissionId = permission.PermissionId, CurrentUser = TestConstants.CurrentUser });
+                }
+            }
+        }
+
+        //User Access Portal Test Application
+        var userAccessPortalAppId = applications.FirstOrDefault(x => x.Name == "User Access Portal")?.ApplicationId;
+        var userAccessPortalAppUsers = applicationUsers.Where(x => x.ApplicationId == userAccessPortalAppId).ToList();
+        var userAccessPortalPermissions = permissions.Where(x => x.ApplicationId == userAccessPortalAppId).ToList();
+
+        if (userAccessPortalAppId != null && userAccessPortalAppUsers != null && userAccessPortalPermissions != null)
+        {
+            var appUser = userAccessPortalAppUsers[0];
+            
+            applicationUserPermissionsToCreate.Add(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = (int)userAccessPortalAppId, ApplicationUserId = appUser.ApplicationUserId, PermissionId = userAccessPortalPermissions[1].PermissionId, CurrentUser = TestConstants.CurrentUser });
+            applicationUserPermissionsToCreate.Add(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = (int)userAccessPortalAppId, ApplicationUserId = appUser.ApplicationUserId, PermissionId = userAccessPortalPermissions[2].PermissionId, CurrentUser = TestConstants.CurrentUser });
+        }
+
+        //Audit Log Viewer Test Application
+        var auditLogViewerAppId = applications.FirstOrDefault(x => x.Name == "Audit Log Viewer")?.ApplicationId;
+        var auditLogViewerAppUsers = applicationUsers.Where(x => x.ApplicationId == auditLogViewerAppId).ToList();
+        var auditLogViewerPermissions = permissions.Where(x => x.ApplicationId == auditLogViewerAppId).ToList();
+
+        if (auditLogViewerAppId != null && auditLogViewerAppUsers != null && auditLogViewerPermissions != null)
+        {
+            foreach (var appUser in auditLogViewerAppUsers)
+            {
+                foreach (var permission in auditLogViewerPermissions)
+                {
+                    applicationUserPermissionsToCreate.Add(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = (int)auditLogViewerAppId, ApplicationUserId = appUser.ApplicationUserId, PermissionId = permission.PermissionId, CurrentUser = TestConstants.CurrentUser });
+                }
+            }
+        }
+
+        foreach (var applicationUserPermission in applicationUserPermissionsToCreate)
+        {
+            applicationUserPermission.CurrentUser = TestConstants.CurrentUser;
+            var insertedAppUser = await _applicationUserPermissionLogic.Insert(applicationUserPermission, _applicationLogic, _applicationUserLogic, _permissionLogic);
+
+            if (insertedAppUser.Response != null)
+            {
+                ret.Add(insertedAppUser.Response);
+            }
+        }
+
+        return ret;
+    }
+
+    
 
     private async Task<List<RoleDto>> CreateTestRoles(List<ApplicationDto> applications)
     {

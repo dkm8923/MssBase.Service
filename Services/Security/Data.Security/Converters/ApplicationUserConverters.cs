@@ -33,6 +33,11 @@ namespace Data.Security.Converters
                 ApplicationId = source.ApplicationId
             };
 
+            if (source.ApplicationUserPermissions != null)
+            {
+                target.ApplicationUserPermissions = source.ApplicationUserPermissions.Select(au => au.ToDto());
+            }
+
             return target;
         }
 
