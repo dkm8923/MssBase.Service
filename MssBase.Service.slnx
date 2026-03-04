@@ -26,6 +26,7 @@
   </Folder>
   <Folder Name="/Shared/">
     <Project Path="Shared/Shared.Contracts/Shared.Contracts.csproj" />
+    <Project Path="Shared/Shared.Data/Shared.Data.csproj" />
     <Project Path="Shared/Shared.Logic/Shared.Logic.csproj" />
     <Project Path="Shared/Shared.Models/Shared.Models.csproj" />
     <Project Path="Shared/Shared.Service/Shared.Service.csproj" />
