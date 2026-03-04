@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Contracts;
 using Shared.Contracts.Logic.Validators;
 using Shared.Models;
+using Shared.Logic;
 
 namespace Logic.Security.Logic
 {
@@ -70,64 +71,37 @@ namespace Logic.Security.Logic
 
             using (var dbContext = _dbContextFactory.CreateContextReadOnly())
             {
-                var records = dbContext.ApplicationUsers.AsQueryable().AsNoTracking();
+                var query = dbContext.ApplicationUsers.AsQueryable().AsNoTracking();
 
-                if (!req.IncludeInactive)
-                {
-                    records = records.Where(x => x.Active == true);
-                }
-
-                if (req.IncludeRelated)
-                {
-                    records = records.Include(applicationUser => applicationUser.ApplicationUserPermissions);
-                }
+                query = query.ApplyIncludeInactiveFilter(req);
+                query = query.ApplyAuditableFilters(req);
 
                 if (req.ApplicationUserIds != null && req.ApplicationUserIds.Count > 0)
                 {
-                    records = records.Where(x => req.ApplicationUserIds.Contains(x.ApplicationUserId));
+                    query = query.Where(x => req.ApplicationUserIds.Contains(x.ApplicationUserId));
                 }
                 
-                if (req.CreatedBy != null)
-                {
-                    records = records.Where(x => x.CreatedBy == req.CreatedBy);
-                }
-
-                if (req.CreatedOnDate != null)
-                {
-                    records = records.Where(x => DateOnly.FromDateTime((DateTime)x.CreatedOn) == req.CreatedOnDate);
-                }
-
-                if (req.UpdatedBy != null)
-                {
-                    records = records.Where(x => x.UpdatedBy == req.UpdatedBy);
-                }
-
-                if (req.UpdatedOnDate != null)
-                {
-                    records = records.Where(x => DateOnly.FromDateTime((DateTime)x.UpdatedOn) == req.UpdatedOnDate);
-                }
-
                 if (req.Email != null)
                 {
-                    records = records.Where(x => x.Email == req.Email);
+                    query = query.Where(x => x.Email == req.Email);
                 }
 
                 if (req.FirstName != null)
                 {
-                    records = records.Where(x => x.FirstName == req.FirstName);
+                    query = query.Where(x => x.FirstName == req.FirstName);
                 }
 
                 if (req.LastName != null)
                 {
-                    records = records.Where(x => x.LastName == req.LastName);
+                    query = query.Where(x => x.LastName == req.LastName);
                 }
 
                 if (req.ApplicationId != null)
                 {
-                    records = records.Where(x => x.ApplicationId == req.ApplicationId);
+                    query = query.Where(x => x.ApplicationId == req.ApplicationId);
                 }
 
-                return new ErrorValidationResult<IEnumerable<ApplicationUserDto>> { Response = records.ToDtos() };
+                return new ErrorValidationResult<IEnumerable<ApplicationUserDto>> { Response = query.ToDtos() };
             }
         }
 

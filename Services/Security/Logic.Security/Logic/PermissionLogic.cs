@@ -11,6 +11,7 @@ using Shared.Contracts.Logic.Validators;
 using Shared.Models;
 using Shared.Contracts;
 using Contract.Security.Application;
+using Shared.Logic;
 
 namespace Logic.Security.Logic
 {
@@ -70,44 +71,22 @@ namespace Logic.Security.Logic
 
             using (var dbContext = _dbContextFactory.CreateContextReadOnly())
             {
-                var records = dbContext.Permissions.AsQueryable().AsNoTracking();
+                var query = dbContext.Permissions.AsQueryable().AsNoTracking();
 
-                if (!req.IncludeInactive)
-                {
-                    records = records.Where(x => x.Active == true);
-                }
+                query = query.ApplyIncludeInactiveFilter(req);
+                query = query.ApplyAuditableFilters(req);
 
                 if (req.PermissionIds != null && req.PermissionIds.Count > 0)
                 {
-                    records = records.Where(x => req.PermissionIds.Contains(x.PermissionId));
+                    query = query.Where(x => req.PermissionIds.Contains(x.PermissionId));
                 }
                 
-                if (req.CreatedBy != null)
-                {
-                    records = records.Where(x => x.CreatedBy == req.CreatedBy);
-                }
-
-                if (req.CreatedOnDate != null)
-                {
-                    records = records.Where(x => DateOnly.FromDateTime((DateTime)x.CreatedOn) == req.CreatedOnDate);
-                }
-
-                if (req.UpdatedBy != null)
-                {
-                    records = records.Where(x => x.UpdatedBy == req.UpdatedBy);
-                }
-
-                if (req.UpdatedOnDate != null)
-                {
-                    records = records.Where(x => DateOnly.FromDateTime((DateTime)x.UpdatedOn) == req.UpdatedOnDate);
-                }
-
                 if (req.Name != null)
                 {
-                    records = records.Where(x => x.Name == req.Name);
+                    query = query.Where(x => x.Name == req.Name);
                 }
 
-                return new ErrorValidationResult<IEnumerable<PermissionDto>> { Response = records.ToDtos() };
+                return new ErrorValidationResult<IEnumerable<PermissionDto>> { Response = query.ToDtos() };
             }
         }
 

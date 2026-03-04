@@ -103,7 +103,6 @@ namespace MssBase.Service
 
             //configure shared utility logic
             services.AddTransient<IValidatorUtilities, ValidatorUtilities>();
-            services.AddTransient<ILogicUtilities, LogicUtilities>();
         }
 
         public static void ConfigureCommonService(this IServiceCollection services, WebApplicationBuilder builder)

@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Contracts;
 using Shared.Contracts.Logic.Validators;
 using Shared.Models;
+using Shared.Logic;
 
 namespace Logic.Security.Logic
 {
@@ -74,61 +75,37 @@ namespace Logic.Security.Logic
 
             using (var dbContext = _dbContextFactory.CreateContextReadOnly())
             {
-                var records = dbContext.ApplicationUserPermissions.AsQueryable().AsNoTracking();
+                var query = dbContext.ApplicationUserPermissions.AsQueryable().AsNoTracking();
 
-                if (!req.IncludeInactive)
-                {
-                    records = records.Where(x => x.Active == true);
-                }
+                query = query.ApplyIncludeInactiveFilter(req);
+                query = query.ApplyAuditableFilters(req);
 
                 // if (req.IncludeRelated)
                 // {
-                //     records = records.Include(applicationUserPermission => applicationUserPermission.ApplicationUserPermissionPermissions);
+                //     query = query.Include(applicationUserPermission => applicationUserPermission.ApplicationUserPermissionPermissions);
                 // }
 
                 if (req.ApplicationUserPermissionIds != null && req.ApplicationUserPermissionIds.Count > 0)
                 {
-                    records = records.Where(x => req.ApplicationUserPermissionIds.Contains(x.ApplicationUserPermissionId));
+                    query = query.Where(x => req.ApplicationUserPermissionIds.Contains(x.ApplicationUserPermissionId));
                 }
-                else
+                
+                if (req.ApplicationId != null)
                 {
-                    if (req.CreatedBy != null)
-                    {
-                        records = records.Where(x => x.CreatedBy == req.CreatedBy);
-                    }
-
-                    if (req.CreatedOnDate != null)
-                    {
-                        records = records.Where(x => DateOnly.FromDateTime((DateTime)x.CreatedOn) == req.CreatedOnDate);
-                    }
-
-                    if (req.UpdatedBy != null)
-                    {
-                        records = records.Where(x => x.UpdatedBy == req.UpdatedBy);
-                    }
-
-                    if (req.UpdatedOnDate != null)
-                    {
-                        records = records.Where(x => DateOnly.FromDateTime((DateTime)x.UpdatedOn) == req.UpdatedOnDate);
-                    }
-
-                    if (req.ApplicationId != null)
-                    {
-                        records = records.Where(x => x.ApplicationId == req.ApplicationId);
-                    }
-
-                    if (req.ApplicationUserId != null)
-                    {
-                        records = records.Where(x => x.ApplicationUserId == req.ApplicationUserId);
-                    }
-
-                    if (req.PermissionId != null)
-                    {
-                        records = records.Where(x => x.PermissionId == req.PermissionId);
-                    }
+                    query = query.Where(x => x.ApplicationId == req.ApplicationId);
                 }
 
-                return new ErrorValidationResult<IEnumerable<ApplicationUserPermissionDto>> { Response = records.ToDtos() };
+                if (req.ApplicationUserId != null)
+                {
+                    query = query.Where(x => x.ApplicationUserId == req.ApplicationUserId);
+                }
+
+                if (req.PermissionId != null)
+                {
+                    query = query.Where(x => x.PermissionId == req.PermissionId);
+                }
+
+                return new ErrorValidationResult<IEnumerable<ApplicationUserPermissionDto>> { Response = query.ToDtos() };
             }
         }
 
