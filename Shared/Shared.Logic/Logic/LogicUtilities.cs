@@ -1,5 +1,4 @@
-﻿using Shared.Contracts.Logic;
-using Shared.Data.Models;
+﻿using Shared.Data.Models;
 using Shared.Models;
 using Shared.Models.Contracts;
 

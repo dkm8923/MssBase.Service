@@ -8,10 +8,9 @@ using Dto.Security.ApplicationUser.Logic;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
-using Shared.Contracts;
-using Shared.Contracts.Logic.Validators;
 using Shared.Models;
 using Shared.Logic;
+using Shared.Logic.Validators;
 
 namespace Logic.Security.Logic
 {
@@ -20,21 +19,17 @@ namespace Logic.Security.Logic
         private readonly ISecurityConnectionStrings _connectionStrings;
         private readonly SecurityDBContextFactory _dbContextFactory;
 
-        private IValidatorUtilities _validatorUtilities;
-
         private IValidator<FilterApplicationUserLogicRequest> _filterApplicationUserLogicRequestValidator;
         private IValidator<InsertUpdateApplicationUserRequest> _insertUpdateApplicationUserRequestValidator;
 
         public ApplicationUserLogic(
                             ISecurityConnectionStrings connectionStrings,
-                            IValidatorUtilities validatorUtilities,
                             IValidator<FilterApplicationUserLogicRequest> filterApplicationUserLogicRequestValidator,
                             IValidator<InsertUpdateApplicationUserRequest> insertUpdateApplicationUserRequestValidator
         )
         {
             _connectionStrings = connectionStrings;
             _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
-            _validatorUtilities = validatorUtilities;
             _filterApplicationUserLogicRequestValidator = filterApplicationUserLogicRequestValidator;
             _insertUpdateApplicationUserRequestValidator = insertUpdateApplicationUserRequestValidator;
         }
@@ -186,14 +181,14 @@ namespace Logic.Security.Logic
         private async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> _validateApplicationUserFilter(FilterApplicationUserLogicRequest req)
         {
             ValidationResult result = await _filterApplicationUserLogicRequestValidator.ValidateAsync(req);
-            var errorValidationResult = _validatorUtilities.CreateDefaultValidationResponse<IEnumerable<ApplicationUserDto>>(result);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<IEnumerable<ApplicationUserDto>>(result);
             return errorValidationResult;
         }
 
         private async Task<ErrorValidationResult<ApplicationUserDto>> _validateApplicationUserOnInsertUpdate(IApplicationLogic applicationLogic, InsertUpdateApplicationUserRequest req, int? applicationUserId = null)
         {
             ValidationResult result = await _insertUpdateApplicationUserRequestValidator.ValidateAsync(req);
-            var errorValidationResult = _validatorUtilities.CreateDefaultValidationResponse<ApplicationUserDto>(result);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<ApplicationUserDto>(result);
 
             if (errorValidationResult.Errors.Count == 0)
             {
@@ -202,7 +197,7 @@ namespace Logic.Security.Logic
                 
                 if (applicationResponse.Response == null)
                 {
-                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
                     return errorValidationResult;
                 }
 
@@ -213,7 +208,7 @@ namespace Logic.Security.Logic
                 {
                     if ((applicationUserId == null || applicationUserId == 0) || (emailCheck.Response.FirstOrDefault().ApplicationUserId != applicationUserId))
                     {
-                        errorValidationResult.Errors.Add("Email", new List<string> { _validatorUtilities.CreateUniqueValidationErrorMessage("Email") });
+                        errorValidationResult.Errors.Add("Email", new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage("Email") });
                     }
                 }
             }
@@ -223,7 +218,7 @@ namespace Logic.Security.Logic
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add("ApplicationUser", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserId") });
+            errors.Add("ApplicationUser", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserId") });
             return errors;
         }
 

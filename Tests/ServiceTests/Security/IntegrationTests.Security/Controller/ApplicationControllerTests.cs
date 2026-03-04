@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Shared.Models;
 using System.Net;
 using IntegrationTests.Shared.Utilities;
+using Shared.Logic.Validators;
 
 namespace IntegrationTests.Security.Controller
 {
@@ -439,9 +440,10 @@ namespace IntegrationTests.Security.Controller
             var response = await _client.DeleteAsync(ApiEndPoints.Security.Application.Base + "/" + callerId);
             var errorValidationResult = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult>(response);
 
+            //TODO: Use hardcoded string for testing. (Should be in application utilities)
             var expectedInvalidDeleteError = new Dictionary<string, List<string>>
             {
-                { "Application", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") } }
+                { "Application", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") } }
             };
 
             // Assert

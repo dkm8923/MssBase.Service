@@ -1,37 +1,33 @@
 using Dto.Security.Permission;
-using Shared.Contracts.Logic.Validators;
 using FluentValidation;
+using Shared.Logic.Validators;
 
 namespace Logic.Security.Validators.Permission;
 
 public class InsertUpdatePermissionRequestValidator : AbstractValidator<InsertUpdatePermissionRequest>
 {
-    private readonly IValidatorUtilities _validatorUtilities;
+    private static class EntityFieldNames
+    {
+        public const string Name = "Name";
+        public const string Description = "Description";
+        public const string CurrentUser = "CurrentUser";
 
-        private static class EntityFieldNames
-        {
-            public const string Name = "Name";
-            public const string Description = "Description";
-            public const string CurrentUser = "CurrentUser";
+    }
 
-        }
+    public InsertUpdatePermissionRequestValidator()
+    {
+        // Set cascade mode per rule (stops after first failure within each RuleFor)
+        RuleLevelCascadeMode = CascadeMode.Stop;
 
-        public InsertUpdatePermissionRequestValidator(IValidatorUtilities validatorUtilities)
-        {
-            _validatorUtilities = validatorUtilities;
+        RuleFor(v => v.Name)
+            .NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Name))
+            .Length(1, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Name, 64));
 
-            // Set cascade mode per rule (stops after first failure within each RuleFor)
-            RuleLevelCascadeMode = CascadeMode.Stop;
+        RuleFor(v => v.Description)
+            .Length(0, 256).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Description, 256));
 
-            RuleFor(v => v.Name)
-                .NotEmpty().WithMessage(_validatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Name))
-                .Length(1, 64).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Name, 64));
-
-            RuleFor(v => v.Description)
-                .Length(0, 256).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Description, 256));
-
-            RuleFor(v => v.CurrentUser)
-                .NotEmpty().WithMessage(_validatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.CurrentUser))
-                .Length(1, 64).WithMessage(_validatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.CurrentUser, 64));
-        }
+        RuleFor(v => v.CurrentUser)
+            .NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.CurrentUser))
+            .Length(1, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.CurrentUser, 64));
+    }
 }

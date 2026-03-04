@@ -7,11 +7,10 @@ using Dto.Security.Permission.Logic;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
-using Shared.Contracts.Logic.Validators;
 using Shared.Models;
-using Shared.Contracts;
 using Contract.Security.Application;
 using Shared.Logic;
+using Shared.Logic.Validators;
 
 namespace Logic.Security.Logic
 {
@@ -20,21 +19,17 @@ namespace Logic.Security.Logic
         private readonly ISecurityConnectionStrings _connectionStrings;
         private readonly SecurityDBContextFactory _dbContextFactory;
 
-        private IValidatorUtilities _validatorUtilities;
-
         private IValidator<FilterPermissionLogicRequest> _filterPermissionLogicRequestValidator;
         private IValidator<InsertUpdatePermissionRequest> _insertUpdatePermissionRequestValidator;
 
         public PermissionLogic(
                             ISecurityConnectionStrings connectionStrings,
-                            IValidatorUtilities validatorUtilities,
                             IValidator<FilterPermissionLogicRequest> filterPermissionLogicRequestValidator,
                             IValidator<InsertUpdatePermissionRequest> insertUpdatePermissionRequestValidator
         )
         {
             _connectionStrings = connectionStrings;
             _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
-            _validatorUtilities = validatorUtilities;
             _filterPermissionLogicRequestValidator = filterPermissionLogicRequestValidator;
             _insertUpdatePermissionRequestValidator = insertUpdatePermissionRequestValidator;
         }
@@ -171,14 +166,14 @@ namespace Logic.Security.Logic
         private async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> _validatePermissionFilter(FilterPermissionLogicRequest req)
         {
             ValidationResult result = await _filterPermissionLogicRequestValidator.ValidateAsync(req);
-            var errorValidationResult = _validatorUtilities.CreateDefaultValidationResponse<IEnumerable<PermissionDto>>(result);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<IEnumerable<PermissionDto>>(result);
             return errorValidationResult;
         }
 
         private async Task<ErrorValidationResult<PermissionDto>> _validatePermissionOnInsertUpdate(IApplicationLogic applicationLogic, InsertUpdatePermissionRequest req, int? PermissionId = null)
         {
             ValidationResult result = await _insertUpdatePermissionRequestValidator.ValidateAsync(req);
-            var errorValidationResult = _validatorUtilities.CreateDefaultValidationResponse<PermissionDto>(result);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<PermissionDto>(result);
 
             if (errorValidationResult.Errors.Count == 0)
             {
@@ -187,7 +182,7 @@ namespace Logic.Security.Logic
                 
                 if (applicationResponse.Response == null)
                 {
-                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
                     return errorValidationResult;
                 }
 
@@ -198,7 +193,7 @@ namespace Logic.Security.Logic
                 {
                     if ((PermissionId == null || PermissionId == 0) || (nameCheck.Response.FirstOrDefault().PermissionId != PermissionId))
                     {
-                        errorValidationResult.Errors.Add("Name", new List<string> { _validatorUtilities.CreateUniqueValidationErrorMessage("Name") });
+                        errorValidationResult.Errors.Add("Name", new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage("Name") });
                     }
                 }
             }
@@ -208,7 +203,7 @@ namespace Logic.Security.Logic
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add("Permission", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("PermissionId") });
+            errors.Add("Permission", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("PermissionId") });
             return errors;
         }
 

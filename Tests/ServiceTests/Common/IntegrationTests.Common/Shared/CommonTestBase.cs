@@ -7,10 +7,8 @@ using IntegrationTests.Shared.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Service.Logger.Contracts;
-using Shared.Contracts.Logic.Validators;
 using Shared.Logic.Validators;
 using Tests.Shared;
-using Shared.Contracts;
 using MssBase.Service.Shared.ConnectionStrings;
 using Contract.Common;
 
@@ -23,8 +21,7 @@ namespace IntegrationTests.Common.Shared
         protected readonly ILoggerService _loggerSvc;
         //protected readonly ICommonLogicManager _CommonLogic;
         protected readonly ICommonTestUtilitiesManager _CommonTestUtilities;
-        protected readonly IValidatorUtilities _validatorUtilities;
-
+        
         public CommonTestBase()
         {
             //set environment variable to key off of in program.cs
@@ -36,7 +33,6 @@ namespace IntegrationTests.Common.Shared
             _loggerSvc = _serviceProvider.GetService<ILoggerService>();
             //_CommonLogic = _serviceProvider.GetService<ICommonLogicManager>();
             _CommonTestUtilities = _serviceProvider.GetService<ICommonTestUtilitiesManager>();
-            _validatorUtilities = _serviceProvider.GetService<IValidatorUtilities>();
         }
 
         private ServiceProvider ConfigureServices() 
@@ -58,9 +54,6 @@ namespace IntegrationTests.Common.Shared
 
             //configure logger service
             //services.AddSingleton<ILoggerService, LoggerServiceTestStub>();
-
-            //Configure Fluent Validation Validators
-            services.AddTransient<IValidatorUtilities, ValidatorUtilities>();
 
             //unit testing dependencies
             services.AddTransient<ICommonTestUtilitiesManager, CommonTestUtilitiesManager>();

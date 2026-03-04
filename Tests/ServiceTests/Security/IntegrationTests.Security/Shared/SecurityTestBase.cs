@@ -1,4 +1,3 @@
-using MssBase.Service.Shared;
 using Contract.Security.Application;
 using Contract.Security.ApplicationUser;
 using Dto.Security.Application;
@@ -17,10 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Service.Security.Service;
 using Service.Logger.Contracts;
-using Shared.Contracts.Logic.Validators;
-using Shared.Logic.Validators;
 using Tests.Shared;
-using Shared.Contracts;
 using MssBase.Service.Shared.ConnectionStrings;
 using Contract.Security;
 using Contract.Security.Role;
@@ -49,8 +45,7 @@ public class SecurityTestBase
     protected readonly IPermissionLogic _permissionLogic;
     protected readonly IRoleLogic _roleLogic;
     protected readonly ISecurityTestUtilitiesManager _securityTestUtilities;
-    protected readonly IValidatorUtilities _validatorUtilities;
-
+    
     public SecurityTestBase()
     {
         //set environment variable to key off of in program.cs
@@ -66,7 +61,6 @@ public class SecurityTestBase
         _permissionLogic = _serviceProvider.GetService<IPermissionLogic>();
         _roleLogic = _serviceProvider.GetService<IRoleLogic>();
         _securityTestUtilities = _serviceProvider.GetService<ISecurityTestUtilitiesManager>();
-        _validatorUtilities = _serviceProvider.GetService<IValidatorUtilities>();
     }
 
     protected async Task ClearAllSecurityTestTableData()
@@ -98,9 +92,6 @@ public class SecurityTestBase
 
         //configure logger service
         //services.AddSingleton<ILoggerService, LoggerServiceTestStub>();
-
-        //Configure Fluent Validation Validators
-        services.AddTransient<IValidatorUtilities, ValidatorUtilities>();
 
         //unit testing dependencies
         services.AddTransient<ISecurityTestUtilitiesManager, SecurityTestUtilitiesManager>();

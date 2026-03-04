@@ -7,10 +7,9 @@ using Dto.Security.Application.Logic;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
-using Shared.Contracts.Logic.Validators;
 using Shared.Models;
-using Shared.Contracts;
 using Shared.Logic;
+using Shared.Logic.Validators;
 
 namespace Logic.Security.Logic
 {
@@ -19,21 +18,17 @@ namespace Logic.Security.Logic
         private readonly ISecurityConnectionStrings _connectionStrings;
         private readonly SecurityDBContextFactory _dbContextFactory;
 
-        private IValidatorUtilities _validatorUtilities;
-
         private IValidator<FilterApplicationLogicRequest> _filterApplicationLogicRequestValidator;
         private IValidator<InsertUpdateApplicationRequest> _insertUpdateApplicationRequestValidator;
 
         public ApplicationLogic(
                             ISecurityConnectionStrings connectionStrings,
-                            IValidatorUtilities validatorUtilities,
                             IValidator<FilterApplicationLogicRequest> filterApplicationLogicRequestValidator,
                             IValidator<InsertUpdateApplicationRequest> insertUpdateApplicationRequestValidator
         )
         {
             _connectionStrings = connectionStrings;
             _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
-            _validatorUtilities = validatorUtilities;
             _filterApplicationLogicRequestValidator = filterApplicationLogicRequestValidator;
             _insertUpdateApplicationRequestValidator = insertUpdateApplicationRequestValidator;
         }
@@ -175,14 +170,14 @@ namespace Logic.Security.Logic
         private async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> _validateApplicationFilter(FilterApplicationLogicRequest req)
         {
             ValidationResult result = await _filterApplicationLogicRequestValidator.ValidateAsync(req);
-            var errorValidationResult = _validatorUtilities.CreateDefaultValidationResponse<IEnumerable<ApplicationDto>>(result);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<IEnumerable<ApplicationDto>>(result);
             return errorValidationResult;
         }
 
         private async Task<ErrorValidationResult<ApplicationDto>> _validateApplicationOnInsertUpdate(InsertUpdateApplicationRequest req, int? applicationId = null)
         {
             ValidationResult result = await _insertUpdateApplicationRequestValidator.ValidateAsync(req);
-            var errorValidationResult = _validatorUtilities.CreateDefaultValidationResponse<ApplicationDto>(result);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<ApplicationDto>(result);
 
             if (errorValidationResult.Errors.Count == 0)
             {
@@ -193,7 +188,7 @@ namespace Logic.Security.Logic
                 {
                     if ((applicationId == null || applicationId == 0) || (nameCheck.Response.FirstOrDefault().ApplicationId != applicationId))
                     {
-                        errorValidationResult.Errors.Add("Name", new List<string> { _validatorUtilities.CreateUniqueValidationErrorMessage("Name") });
+                        errorValidationResult.Errors.Add("Name", new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage("Name") });
                     }
                 }
             }
@@ -215,27 +210,27 @@ namespace Logic.Security.Logic
             //verify no dependencies exist on application record
             if (applicationErrorValidationResult.Response.ApplicationUsers.Count() > 0)
             {
-                applicationErrorValidationResult.Errors.Add("ApplicationUsers", new List<string> { _validatorUtilities.CreateDependencyExistsValidationErrorMessage("ApplicationUsers") });
+                applicationErrorValidationResult.Errors.Add("ApplicationUsers", new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage("ApplicationUsers") });
             }
 
             if (applicationErrorValidationResult.Response.Permissions.Count() > 0)
             {
-                applicationErrorValidationResult.Errors.Add("Permissions", new List<string> { _validatorUtilities.CreateDependencyExistsValidationErrorMessage("Permissions") });
+                applicationErrorValidationResult.Errors.Add("Permissions", new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage("Permissions") });
             }
 
             if (applicationErrorValidationResult.Response.Roles.Count() > 0)
             {
-                applicationErrorValidationResult.Errors.Add("Roles", new List<string> { _validatorUtilities.CreateDependencyExistsValidationErrorMessage("Roles") });
+                applicationErrorValidationResult.Errors.Add("Roles", new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage("Roles") });
             }
 
             if (applicationErrorValidationResult.Response.RolePermissions.Count() > 0)
             {
-                applicationErrorValidationResult.Errors.Add("RolePermissions", new List<string> { _validatorUtilities.CreateDependencyExistsValidationErrorMessage("RolePermissions") });
+                applicationErrorValidationResult.Errors.Add("RolePermissions", new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage("RolePermissions") });
             }
 
             if (applicationErrorValidationResult.Response.ApplicationUserPermissions.Count() > 0)
             {
-                applicationErrorValidationResult.Errors.Add("ApplicationUserPermissions", new List<string> { _validatorUtilities.CreateDependencyExistsValidationErrorMessage("ApplicationUserPermissions") });
+                applicationErrorValidationResult.Errors.Add("ApplicationUserPermissions", new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage("ApplicationUserPermissions") });
             }
 
             return applicationErrorValidationResult;
@@ -243,7 +238,7 @@ namespace Logic.Security.Logic
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add("Application", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+            errors.Add("Application", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
             return errors;
         }
 

@@ -12,10 +12,9 @@ using Dto.Security.Permission.Logic;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
-using Shared.Contracts;
-using Shared.Contracts.Logic.Validators;
 using Shared.Models;
 using Shared.Logic;
+using Shared.Logic.Validators;
 
 namespace Logic.Security.Logic
 {
@@ -24,21 +23,17 @@ namespace Logic.Security.Logic
         private readonly ISecurityConnectionStrings _connectionStrings;
         private readonly SecurityDBContextFactory _dbContextFactory;
 
-        private IValidatorUtilities _validatorUtilities;
-
         private IValidator<FilterApplicationUserPermissionLogicRequest> _filterApplicationUserPermissionLogicRequestValidator;
         private IValidator<InsertUpdateApplicationUserPermissionRequest> _insertUpdateApplicationUserPermissionRequestValidator;
 
         public ApplicationUserPermissionLogic(
                             ISecurityConnectionStrings connectionStrings,
-                            IValidatorUtilities validatorUtilities,
                             IValidator<FilterApplicationUserPermissionLogicRequest> filterApplicationUserPermissionLogicRequestValidator,
                             IValidator<InsertUpdateApplicationUserPermissionRequest> insertUpdateApplicationUserPermissionRequestValidator
         )
         {
             _connectionStrings = connectionStrings;
             _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
-            _validatorUtilities = validatorUtilities;
             _filterApplicationUserPermissionLogicRequestValidator = filterApplicationUserPermissionLogicRequestValidator;
             _insertUpdateApplicationUserPermissionRequestValidator = insertUpdateApplicationUserPermissionRequestValidator;
         }
@@ -199,7 +194,7 @@ namespace Logic.Security.Logic
         private async Task<ErrorValidationResult<IEnumerable<ApplicationUserPermissionDto>>> _validateApplicationUserPermissionFilter(FilterApplicationUserPermissionLogicRequest req)
         {
             ValidationResult result = await _filterApplicationUserPermissionLogicRequestValidator.ValidateAsync(req);
-            var errorValidationResult = _validatorUtilities.CreateDefaultValidationResponse<IEnumerable<ApplicationUserPermissionDto>>(result);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<IEnumerable<ApplicationUserPermissionDto>>(result);
             return errorValidationResult;
         }
 
@@ -210,7 +205,7 @@ namespace Logic.Security.Logic
                                                                                                                                 )
         {
             ValidationResult result = await _insertUpdateApplicationUserPermissionRequestValidator.ValidateAsync(req);
-            var errorValidationResult = _validatorUtilities.CreateDefaultValidationResponse<ApplicationUserPermissionDto>(result);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<ApplicationUserPermissionDto>(result);
 
             if (errorValidationResult.Errors.Count == 0)
             {
@@ -219,7 +214,7 @@ namespace Logic.Security.Logic
                 
                 if (applicationResponse.Response == null)
                 {
-                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
                     return errorValidationResult;
                 }
 
@@ -228,7 +223,7 @@ namespace Logic.Security.Logic
 
                 if (applicationUserResponse.Response == null || applicationUserResponse.Response.Count() == 0)
                 {
-                    errorValidationResult.Errors.Add("ApplicationUserId", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserId") });
+                    errorValidationResult.Errors.Add("ApplicationUserId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserId") });
                     return errorValidationResult;
                 }
 
@@ -237,7 +232,7 @@ namespace Logic.Security.Logic
 
                 if (permissionResponse.Response == null || permissionResponse.Response.Count() == 0)
                 {
-                    errorValidationResult.Errors.Add("PermissionId", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("PermissionId") });
+                    errorValidationResult.Errors.Add("PermissionId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("PermissionId") });
                     return errorValidationResult;
                 }
             }
@@ -247,7 +242,7 @@ namespace Logic.Security.Logic
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add("ApplicationUserPermission", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserPermissionId") });
+            errors.Add("ApplicationUserPermission", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserPermissionId") });
             return errors;
         }
 

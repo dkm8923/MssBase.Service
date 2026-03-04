@@ -21,10 +21,6 @@ using Service.Logger;
 using Service.Logger.Contracts;
 using Service.Logger.Models;
 using Shared.Contracts;
-using Shared.Contracts.Logic;
-using Shared.Contracts.Logic.Validators;
-using Shared.Logic;
-using Shared.Logic.Validators;
 using Shared.Service.Cache.Redis;
 using StackExchange.Redis;
 using MssBase.Service.Shared.ConnectionStrings;
@@ -100,9 +96,6 @@ namespace MssBase.Service
         public static void ConfigureBaseDependencies(this IServiceCollection services, WebApplicationBuilder builder, string environmentName)
         {
             ConfigureLoggerService(services, builder, environmentName);
-
-            //configure shared utility logic
-            services.AddTransient<IValidatorUtilities, ValidatorUtilities>();
         }
 
         public static void ConfigureCommonService(this IServiceCollection services, WebApplicationBuilder builder)

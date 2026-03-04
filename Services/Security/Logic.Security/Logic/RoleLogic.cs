@@ -7,11 +7,10 @@ using Dto.Security.Role.Logic;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
-using Shared.Contracts.Logic.Validators;
 using Shared.Models;
-using Shared.Contracts;
 using Contract.Security.Application;
 using Shared.Logic;
+using Shared.Logic.Validators;
 
 namespace Logic.Security.Logic
 {
@@ -20,21 +19,17 @@ namespace Logic.Security.Logic
         private readonly ISecurityConnectionStrings _connectionStrings;
         private readonly SecurityDBContextFactory _dbContextFactory;
 
-        private IValidatorUtilities _validatorUtilities;
-
         private IValidator<FilterRoleLogicRequest> _filterRoleLogicRequestValidator;
         private IValidator<InsertUpdateRoleRequest> _insertUpdateRoleRequestValidator;
 
         public RoleLogic(
                             ISecurityConnectionStrings connectionStrings,
-                            IValidatorUtilities validatorUtilities,
                             IValidator<FilterRoleLogicRequest> filterRoleLogicRequestValidator,
                             IValidator<InsertUpdateRoleRequest> insertUpdateRoleRequestValidator
         )
         {
             _connectionStrings = connectionStrings;
             _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
-            _validatorUtilities = validatorUtilities;
             _filterRoleLogicRequestValidator = filterRoleLogicRequestValidator;
             _insertUpdateRoleRequestValidator = insertUpdateRoleRequestValidator;
         }
@@ -171,14 +166,14 @@ namespace Logic.Security.Logic
         private async Task<ErrorValidationResult<IEnumerable<RoleDto>>> _validateRoleFilter(FilterRoleLogicRequest req)
         {
             ValidationResult result = await _filterRoleLogicRequestValidator.ValidateAsync(req);
-            var errorValidationResult = _validatorUtilities.CreateDefaultValidationResponse<IEnumerable<RoleDto>>(result);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<IEnumerable<RoleDto>>(result);
             return errorValidationResult;
         }
 
         private async Task<ErrorValidationResult<RoleDto>> _validateRoleOnInsertUpdate(IApplicationLogic applicationLogic, InsertUpdateRoleRequest req, int? RoleId = null)
         {
             ValidationResult result = await _insertUpdateRoleRequestValidator.ValidateAsync(req);
-            var errorValidationResult = _validatorUtilities.CreateDefaultValidationResponse<RoleDto>(result);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<RoleDto>(result);
 
             if (errorValidationResult.Errors.Count == 0)
             {
@@ -187,7 +182,7 @@ namespace Logic.Security.Logic
                 
                 if (applicationResponse.Response == null)
                 {
-                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
                     return errorValidationResult;
                 }
 
@@ -198,7 +193,7 @@ namespace Logic.Security.Logic
                 {
                     if ((RoleId == null || RoleId == 0) || (nameCheck.Response.FirstOrDefault().RoleId != RoleId))
                     {
-                        errorValidationResult.Errors.Add("Name", new List<string> { _validatorUtilities.CreateUniqueValidationErrorMessage("Name") });
+                        errorValidationResult.Errors.Add("Name", new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage("Name") });
                     }
                 }
             }
@@ -208,7 +203,7 @@ namespace Logic.Security.Logic
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add("Role", new List<string> { _validatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("RoleId") });
+            errors.Add("Role", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("RoleId") });
             return errors;
         }
 
