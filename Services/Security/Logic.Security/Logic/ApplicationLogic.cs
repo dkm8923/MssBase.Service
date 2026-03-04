@@ -90,7 +90,7 @@ namespace Logic.Security.Logic
                     records = records.Where(x => req.ApplicationIds.Contains(x.ApplicationId));
                 }
                 
-                if (req.CreatedBy != null)
+                if (!string.IsNullOrWhiteSpace(req.CreatedBy))
                 {
                     records = records.Where(x => x.CreatedBy == req.CreatedBy);
                 }
@@ -100,7 +100,7 @@ namespace Logic.Security.Logic
                     records = records.Where(x => DateOnly.FromDateTime((DateTime)x.CreatedOn) == req.CreatedOnDate);
                 }
 
-                if (req.UpdatedBy != null)
+                if (!string.IsNullOrWhiteSpace(req.UpdatedBy))
                 {
                     records = records.Where(x => x.UpdatedBy == req.UpdatedBy);
                 }
