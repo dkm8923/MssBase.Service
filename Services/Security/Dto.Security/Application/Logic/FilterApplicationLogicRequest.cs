@@ -3,7 +3,7 @@ using Shared.Models.Contracts;
 
 namespace Dto.Security.Application.Logic
 {
-    public record FilterApplicationLogicRequest : BaseLogicGet
+    public record FilterApplicationLogicRequest : BaseLogicGet, IAuditableFilter
     {
         public string? CreatedBy { get; set; }
         public DateOnly? CreatedOnDate { get; set; }
