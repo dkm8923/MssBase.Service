@@ -76,9 +76,14 @@ namespace Logic.Security.Logic
                     query = query.Where(x => req.PermissionIds.Contains(x.PermissionId));
                 }
                 
-                if (req.Name != null)
+                if (!string.IsNullOrWhiteSpace(req.Name))
                 {
                     query = query.Where(x => x.Name == req.Name);
+                }
+
+                if (req.ApplicationId != null)
+                {
+                    query = query.Where(x => x.ApplicationId == req.ApplicationId);
                 }
 
                 return new ErrorValidationResult<IEnumerable<PermissionDto>> { Response = query.ToDtos() };

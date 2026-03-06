@@ -76,7 +76,7 @@ namespace Logic.Security.Logic
                     query = query.Where(x => req.RoleIds.Contains(x.RoleId));
                 }
                 
-                if (req.Name != null)
+                if (!string.IsNullOrWhiteSpace(req.Name))
                 {
                     query = query.Where(x => x.Name == req.Name);
                 }
