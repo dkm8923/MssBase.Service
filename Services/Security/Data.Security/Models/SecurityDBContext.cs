@@ -25,6 +25,7 @@ public partial class SecurityDBContext : DbContext
     public virtual DbSet<RolePermission> RolePermissions { get; set; }
 
     public virtual DbSet<ApplicationUserPermission> ApplicationUserPermissions { get; set; }
+    public virtual DbSet<ApplicationUserRole> ApplicationUserRoles { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 {

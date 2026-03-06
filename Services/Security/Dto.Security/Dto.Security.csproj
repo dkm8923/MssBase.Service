@@ -10,4 +10,8 @@
     <ProjectReference Include="..\..\..\Shared\Shared.Models\Shared.Models.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ApplicationUserRole/Logic/" />
+  </ItemGroup>
+
 </Project>

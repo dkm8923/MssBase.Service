@@ -12,4 +12,8 @@
     <ProjectReference Include="..\Dto.Security\Dto.Security.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ApplicationUserRole/" />
+  </ItemGroup>
+
 </Project>

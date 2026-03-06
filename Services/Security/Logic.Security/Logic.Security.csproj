@@ -17,6 +17,7 @@
   <ItemGroup>
     <Folder Include="Validators/Application/" />
     <Folder Include="Validators/ApplicationUserPermission/" />
+    <Folder Include="Validators/ApplicationUserRole/" />
     <Folder Include="Validators/Permission/" />
     <Folder Include="Validators/Role/" />
     <Folder Include="Validators/RolePermission/" />

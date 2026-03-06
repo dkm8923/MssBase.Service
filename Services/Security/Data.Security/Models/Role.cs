@@ -15,4 +15,5 @@ public partial class Role : AuditableEntity
     public virtual Application Application { get; set; } = null!;
 
     public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
+    public virtual ICollection<ApplicationUserRole> ApplicationUserRoles { get; set; } = new List<ApplicationUserRole>();
 }

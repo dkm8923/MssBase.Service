@@ -37,6 +37,10 @@ using Contract.Security.ApplicationUserPermission;
 using Dto.Security.ApplicationUserPermission.Logic;
 using Logic.Security.Validators.ApplicationUserPermission;
 using Dto.Security.ApplicationUserPermission;
+using Contract.Security.ApplicationUserRole;
+using Dto.Security.ApplicationUserRole.Logic;
+using Logic.Security.Validators.ApplicationUserRole;
+using Dto.Security.ApplicationUserRole;
 
 namespace MssBase.Service
 {
@@ -150,6 +154,17 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterApplicationUserPermissionLogicRequest>, FilterApplicationUserPermissionLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateApplicationUserPermissionRequest>, InsertUpdateApplicationUserPermissionRequestValidator>();
+
+            #endregion
+
+            #region ApplicationUserRole
+
+            services.AddScoped<IApplicationUserRoleService, ApplicationUserRoleService>();
+            services.AddScoped<IApplicationUserRoleLogic, ApplicationUserRoleLogic>();
+
+            //Configure Fluent Validation Validators
+            services.AddTransient<IValidator<FilterApplicationUserRoleLogicRequest>, FilterApplicationUserRoleLogicRequestValidator>();
+            services.AddTransient<IValidator<InsertUpdateApplicationUserRoleRequest>, InsertUpdateApplicationUserRoleRequestValidator>();
 
             #endregion
 
