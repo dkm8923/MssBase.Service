@@ -47,7 +47,7 @@ namespace IntegrationTests.Security.Controller
             await _securityTestUtilities.Permission.CreateTestRecords(permissionId, 1, false);
 
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<PermissionDto>>(_client, ApiEndPoints.Security.Permission.Base + "?" + ControllerTestUtilities.createIncludeInactiveQueryStringParm(true));
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<PermissionDto>>(_client, ApiEndPoints.Security.Permission.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
             // Assert
             result.Errors.Should().HaveCount(0);
@@ -109,7 +109,7 @@ namespace IntegrationTests.Security.Controller
             var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(permissionId, false);
 
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.Permission.Base + "/" + testRecord.PermissionId + "?" + ControllerTestUtilities.createIncludeInactiveQueryStringParm(true));
+            var response = await _client.GetAsync(ApiEndPoints.Security.Permission.Base + "/" + testRecord.PermissionId + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);

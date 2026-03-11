@@ -148,6 +148,14 @@ public class RoleUtilities : IRoleUtilities
         };
     }
 
+    public Dictionary<string, List<string>> GetExpectedInvalidApplicationIdFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "ApplicationId", new List<string> { "ApplicationId is invalid!" } }
+        };
+    }
+
     /// <summary>
     /// Verifies that all relevant property values of two role records are equal.
     /// </summary>

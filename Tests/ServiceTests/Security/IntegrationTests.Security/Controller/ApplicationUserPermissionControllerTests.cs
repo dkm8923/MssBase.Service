@@ -1,11 +1,8 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+using System;
 
-namespace IntegrationTests.Security.Controller
+namespace IntegrationTests.Security.Controller;
+
+public class ApplicationUserPermissionControllerTests
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ApplicationUserPermissionController : ControllerBase
-    {
-    }
+
 }

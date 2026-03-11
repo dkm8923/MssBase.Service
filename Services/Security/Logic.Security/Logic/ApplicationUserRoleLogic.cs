@@ -200,7 +200,7 @@ namespace Logic.Security.Logic
 
         private async Task<ErrorValidationResult<ApplicationUserRoleDto>> _validateApplicationUserRoleOnInsertUpdate(IApplicationLogic applicationLogic,
                                                                                                                                  IApplicationUserLogic applicationUserLogic,
-                                                                                                                                 IRoleLogic permissionLogic,         
+                                                                                                                                 IRoleLogic roleLogic,         
                                                                                                                                  InsertUpdateApplicationUserRoleRequest req
                                                                                                                                 )
         {
@@ -210,7 +210,7 @@ namespace Logic.Security.Logic
             if (errorValidationResult.Errors.Count == 0)
             {
                 // Validate Application exists
-                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet());
+                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet { IncludeInactive = true });
                 
                 if (applicationResponse.Response == null)
                 {
@@ -219,7 +219,7 @@ namespace Logic.Security.Logic
                 }
 
                 // Validate ApplicationUser exists
-                var applicationUserResponse = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { req.ApplicationUserId }, ApplicationId = req.ApplicationId });
+                var applicationUserResponse = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { req.ApplicationUserId }, ApplicationId = req.ApplicationId, IncludeInactive = true });
 
                 if (applicationUserResponse.Response == null || applicationUserResponse.Response.Count() == 0)
                 {
@@ -228,9 +228,9 @@ namespace Logic.Security.Logic
                 }
 
                 // Validate Role exists
-                var permissionResponse = await permissionLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { req.RoleId }, ApplicationId = req.ApplicationId });
+                var roleResponse = await roleLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { req.RoleId }, ApplicationId = req.ApplicationId, IncludeInactive = true });
 
-                if (permissionResponse.Response == null || permissionResponse.Response.Count() == 0)
+                if (roleResponse.Response == null || roleResponse.Response.Count() == 0)
                 {
                     errorValidationResult.Errors.Add("RoleId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("RoleId") });
                     return errorValidationResult;

@@ -6,22 +6,23 @@ public class SecurityTestUtilitiesManager : ISecurityTestUtilitiesManager
 {
     private IApplicationUtilities _applicationUtilities;
     private IApplicationUserUtilities _applicationUserUtilities;
+    private IApplicationUserPermissionUtilities _applicationUserPermissionUtilities;
     private IRoleUtilities _roleUtilities;
     private IPermissionUtilities _permissionUtilities;
-    private IApplicationUserPermissionUtilities _applicationUserPermissionUtilities;
-
+    
     public SecurityTestUtilitiesManager(
-        IApplicationUtilities applicationUtilities,
-        IApplicationUserUtilities applicationUserUtilities,
-        IRoleUtilities roleUtilities,
-        IPermissionUtilities permissionUtilities,
-        IApplicationUserPermissionUtilities applicationUserPermissionUtilities)
+           IApplicationUtilities applicationUtilities,
+           IApplicationUserUtilities applicationUserUtilities,
+           IApplicationUserPermissionUtilities applicationUserPermissionUtilities,
+           IRoleUtilities roleUtilities,
+           IPermissionUtilities permissionUtilities
+        )
     {
         _applicationUtilities = applicationUtilities;
         _applicationUserUtilities = applicationUserUtilities;
+        _applicationUserPermissionUtilities = applicationUserPermissionUtilities;
         _roleUtilities = roleUtilities;
         _permissionUtilities = permissionUtilities;
-        _applicationUserPermissionUtilities = applicationUserPermissionUtilities;
     }
 
     public IApplicationUtilities Application
@@ -40,6 +41,14 @@ public class SecurityTestUtilitiesManager : ISecurityTestUtilitiesManager
         }
     }
 
+    public IApplicationUserPermissionUtilities ApplicationUserPermission
+    {
+        get
+        {
+            return _applicationUserPermissionUtilities;
+        }
+    }
+
     public IRoleUtilities Role
     {
         get
@@ -53,14 +62,6 @@ public class SecurityTestUtilitiesManager : ISecurityTestUtilitiesManager
         get
         {
             return _permissionUtilities;
-        }
-    }
-
-    public IApplicationUserPermissionUtilities ApplicationUserPermission
-    {
-        get
-        {
-            return _applicationUserPermissionUtilities;
         }
     }
 }

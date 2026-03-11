@@ -178,7 +178,7 @@ namespace Logic.Security.Logic
             if (errorValidationResult.Errors.Count == 0)
             {
                 // Validate Application exists
-                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet());
+                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet { IncludeInactive = true });
                 
                 if (applicationResponse.Response == null)
                 {

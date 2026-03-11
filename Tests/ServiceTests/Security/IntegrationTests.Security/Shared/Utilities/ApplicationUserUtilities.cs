@@ -145,6 +145,40 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     }
 
     /// <summary>
+    /// Asynchronously creates a set of predefined active test application user records in the data store.
+    /// </summary>
+    public async Task<List<ApplicationUserDto>> CreateActiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
+    {
+        //create test records
+        var ret = new List<ApplicationUserDto>();
+        var recordsToCreate = new List<InsertUpdateApplicationUserRequest>();
+
+        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
+        {
+            ret.Add(await CreateSingleApplicationUserTestRecord(applicationId, true));
+        }
+
+        return ret;
+    }
+
+    /// <summary>
+    /// Asynchronously creates a set of predefined inactive test application user records in the data store.
+    /// </summary>
+    public async Task<List<ApplicationUserDto>> CreateInactiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
+    {
+        //create test records
+        var ret = new List<ApplicationUserDto>();
+        var recordsToCreate = new List<InsertUpdateApplicationUserRequest>();
+
+        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
+        {
+            ret.Add(await CreateSingleApplicationUserTestRecord(applicationId, false));
+        }
+
+        return ret;
+    }
+
+    /// <summary>
     /// Asynchronously deletes all records, including inactive ones, from the data store.
     /// </summary>
     public async Task DeleteAllRecords()

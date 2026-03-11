@@ -140,7 +140,7 @@ namespace Logic.Security.Logic
                                                                                       IPermissionLogic permissionLogic
                                                                                      )
         {
-            var errorValidationResult = await _validateApplicationUserPermissionOnInsertUpdate(applicationLogic, applicationUserPermissionLogic, permissionLogic, req);
+            var errorValidationResult = await _validateApplicationUserPermissionOnInsertUpdate(applicationLogic, applicationUserPermissionLogic, permissionLogic, req, applicationUserPermissionId);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
@@ -201,7 +201,8 @@ namespace Logic.Security.Logic
         private async Task<ErrorValidationResult<ApplicationUserPermissionDto>> _validateApplicationUserPermissionOnInsertUpdate(IApplicationLogic applicationLogic,
                                                                                                                                  IApplicationUserLogic applicationUserLogic,
                                                                                                                                  IPermissionLogic permissionLogic,         
-                                                                                                                                 InsertUpdateApplicationUserPermissionRequest req
+                                                                                                                                 InsertUpdateApplicationUserPermissionRequest req,
+                                                                                                                                 int? applicationUserPermissionId = null
                                                                                                                                 )
         {
             ValidationResult result = await _insertUpdateApplicationUserPermissionRequestValidator.ValidateAsync(req);
@@ -210,7 +211,7 @@ namespace Logic.Security.Logic
             if (errorValidationResult.Errors.Count == 0)
             {
                 // Validate Application exists
-                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet());
+                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet { IncludeInactive = true });
                 
                 if (applicationResponse.Response == null)
                 {
@@ -219,7 +220,7 @@ namespace Logic.Security.Logic
                 }
 
                 // Validate ApplicationUser exists
-                var applicationUserResponse = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { req.ApplicationUserId }, ApplicationId = req.ApplicationId });
+                var applicationUserResponse = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { req.ApplicationUserId }, ApplicationId = req.ApplicationId, IncludeInactive = true });
 
                 if (applicationUserResponse.Response == null || applicationUserResponse.Response.Count() == 0)
                 {
@@ -228,12 +229,28 @@ namespace Logic.Security.Logic
                 }
 
                 // Validate Permission exists
-                var permissionResponse = await permissionLogic.Filter(new FilterPermissionLogicRequest { PermissionIds = new List<int> { req.PermissionId }, ApplicationId = req.ApplicationId });
+                var permissionResponse = await permissionLogic.Filter(new FilterPermissionLogicRequest { PermissionIds = new List<int> { req.PermissionId }, ApplicationId = req.ApplicationId, IncludeInactive = true });
 
                 if (permissionResponse.Response == null || permissionResponse.Response.Count() == 0)
                 {
                     errorValidationResult.Errors.Add("PermissionId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("PermissionId") });
                     return errorValidationResult;
+                }
+
+                // Validate ApplicationUserPermission is unique
+                var uniqueApplicationUserPermissionCheck = await this.Filter(new FilterApplicationUserPermissionLogicRequest { 
+                    ApplicationId = req.ApplicationId, 
+                    ApplicationUserId = req.ApplicationUserId, 
+                    PermissionId = req.PermissionId, 
+                    IncludeInactive = true 
+                });
+
+                if (uniqueApplicationUserPermissionCheck.Errors.Count == 0 && uniqueApplicationUserPermissionCheck.Response.Count() > 0)
+                {
+                    if ((applicationUserPermissionId == null || applicationUserPermissionId == 0) || (uniqueApplicationUserPermissionCheck.Response.FirstOrDefault().ApplicationUserPermissionId != applicationUserPermissionId))
+                    {
+                        errorValidationResult.Errors.Add("ApplicationUserPermission", new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage("ApplicationUserPermission") });
+                    }
                 }
             }
 

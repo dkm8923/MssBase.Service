@@ -48,7 +48,7 @@ public class PermissionUtilities : IPermissionUtilities
         return new InsertUpdatePermissionRequest
         { 
             Name = LogicTestUtilities.GenerateRandomString(65),
-            Description = LogicTestUtilities.GenerateRandomString(65),
+            Description = LogicTestUtilities.GenerateRandomString(257),
             Active = true,
             ApplicationId = 1,
             CurrentUser = LogicTestUtilities.GenerateRandomString(65)
@@ -100,6 +100,40 @@ public class PermissionUtilities : IPermissionUtilities
     }
 
     /// <summary>
+    /// Asynchronously creates a set of predefined active test permission records in the data store.
+    /// </summary>
+    public async Task<List<PermissionDto>> CreateActiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
+    {
+        //create test records
+        var ret = new List<PermissionDto>();
+        var recordsToCreate = new List<InsertUpdatePermissionRequest>();
+
+        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
+        {
+            ret.Add(await CreateSinglePermissionTestRecord(applicationId, true));
+        }
+
+        return ret;
+    }
+
+    /// <summary>
+    /// Asynchronously creates a set of predefined inactive test permission records in the data store.
+    /// </summary>
+    public async Task<List<PermissionDto>> CreateInactiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
+    {
+        //create test records
+        var ret = new List<PermissionDto>();
+        var recordsToCreate = new List<InsertUpdatePermissionRequest>();
+
+        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
+        {
+            ret.Add(await CreateSinglePermissionTestRecord(applicationId, false));
+        }
+
+        return ret;
+    }
+
+    /// <summary>
     /// Asynchronously deletes all records, including inactive ones, from the data store.
     /// </summary>
     public async Task DeleteAllRecords()
@@ -145,6 +179,14 @@ public class PermissionUtilities : IPermissionUtilities
         return new Dictionary<string, List<string>>
         {
             { "Name", new List<string> { "Name must be unique!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedInvalidApplicationIdFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "ApplicationId", new List<string> { "ApplicationId is invalid!" } }
         };
     }
 

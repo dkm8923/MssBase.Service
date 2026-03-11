@@ -16,4 +16,5 @@ public interface IRoleUtilities
     public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors();
     public Dictionary<string, List<string>> GetExpectedRequiredFieldErrors();
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedInvalidApplicationIdFieldErrors();
 }

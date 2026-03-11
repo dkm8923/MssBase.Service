@@ -7,6 +7,8 @@ public interface IApplicationUserUtilities
     public Task<int> ClearTestTablesAndReturnApplicationId(IApplicationUtilities applicationUtilities);
     public Task DeleteAllRecords();
     public Task<List<ApplicationUserDto>> CreateTestRecords(int applicationId, short numberOfRecordsToCreate = 5, bool active = true);
+    public Task<List<ApplicationUserDto>> CreateActiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5);
+    public Task<List<ApplicationUserDto>> CreateInactiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5);
     public Task<ApplicationUserDto> CreateSingleApplicationUserTestRecord(int applicationId,bool active = true);
     //public Task<ApplicationUserDto> CreateSingleApplicationUserTestRecordWithSpecificValues(InsertUpdateApplicationUserRequest req = null);
     public InsertUpdateApplicationUserRequest CreateInsertUpdateRequestWithMaxLengthErrors();

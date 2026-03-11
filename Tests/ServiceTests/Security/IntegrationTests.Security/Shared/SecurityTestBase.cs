@@ -31,6 +31,10 @@ using Contract.Security.ApplicationUserPermission;
 using Dto.Security.ApplicationUserPermission.Logic;
 using Dto.Security.ApplicationUserPermission;
 using Logic.Security.Validators.ApplicationUserPermission;
+using Contract.Security.ApplicationUserRole;
+using Dto.Security.ApplicationUserRole.Logic;
+using Logic.Security.Validators.ApplicationUserRole;
+using Dto.Security.ApplicationUserRole;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -65,12 +69,100 @@ public class SecurityTestBase
 
     protected async Task ClearAllSecurityTestTableData()
     {
-        //await _securityTestUtilities.ApplicationUserPermission.DeleteAllRecords();
+        await _securityTestUtilities.ApplicationUserPermission.DeleteAllRecords();
         //await _securityTestUtilities.RolePermission.DeleteAllRecords();
         await _securityTestUtilities.Role.DeleteAllRecords();
         await _securityTestUtilities.Permission.DeleteAllRecords();
         await _securityTestUtilities.ApplicationUser.DeleteAllRecords();
         await _securityTestUtilities.Application.DeleteAllRecords();
+    }
+
+    protected async Task<SecurityTestData> ArrangeSecurityTestData()
+    {
+        var securityTestDataRet = new SecurityTestData();
+
+        await ClearAllSecurityTestTableData();
+
+        //create test applications
+            var activeApplications = await _securityTestUtilities.Application.CreateActiveTestRecords();
+            var inactiveApplications = await _securityTestUtilities.Application.CreateInactiveTestRecords();
+            
+            var activeApplicationUsers = new List<ApplicationUserDto>();
+            var inactiveApplicationUsers = new List<ApplicationUserDto>();
+
+            var activePermissions = new List<PermissionDto>();
+            var inactivePermissions = new List<PermissionDto>();
+            
+            var activeApplicationUserPermissions = new List<ApplicationUserPermissionDto>();
+            var inactiveApplicationUserPermissions = new List<ApplicationUserPermissionDto>();
+
+            foreach (var activeApplication in activeApplications)
+            {
+                //create test active application users
+                var activeApplicationUserRes = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(activeApplication.ApplicationId);
+                activeApplicationUserRes.ForEach(r => activeApplicationUsers.Add(r));
+
+                //create test inactive application users
+                var inactiveApplicationUserRes = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(activeApplication.ApplicationId);
+                inactiveApplicationUserRes.ForEach(r => inactiveApplicationUsers.Add(r));
+
+                //create test active permissions
+                var activePermissionRes = await _securityTestUtilities.Permission.CreateActiveTestRecords(activeApplication.ApplicationId);
+                activePermissionRes.ForEach(r => activePermissions.Add(r));
+
+                //create test inactive permissions
+                var inactivePermissionRes = await _securityTestUtilities.Permission.CreateInactiveTestRecords(activeApplication.ApplicationId);
+                inactivePermissionRes.ForEach(r => inactivePermissions.Add(r));
+
+                //create test active application user permissions
+                foreach (var activePermission in activePermissionRes)
+                {
+                    foreach (var activeApplicationUser in activeApplicationUserRes)
+                    {
+                        activeApplicationUserPermissions.AddRange(await _securityTestUtilities.ApplicationUserPermission.CreateActiveTestRecords(activeApplication.ApplicationId, activeApplicationUser.ApplicationUserId, activePermission.PermissionId, 1));
+                    }
+                }
+
+                //create test inactive application user permissions
+                foreach (var inactivePermission in inactivePermissionRes)
+                {
+                    foreach (var inactiveApplicationUser in inactiveApplicationUserRes)
+                    {
+                        inactiveApplicationUserPermissions.AddRange(await _securityTestUtilities.ApplicationUserPermission.CreateInactiveTestRecords(activeApplication.ApplicationId, inactiveApplicationUser.ApplicationUserId, inactivePermission.PermissionId, 1));
+                    }
+                }
+            }
+
+            foreach (var inactiveApplication in inactiveApplications)
+            {
+                //create test inactive application users
+                var inactiveApplicationUserRes = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(inactiveApplication.ApplicationId);
+                inactiveApplicationUserRes.ForEach(r => inactiveApplicationUsers.Add(r));
+
+                //create test inactive permissions
+                var inactivePermissionRes = await _securityTestUtilities.Permission.CreateInactiveTestRecords(inactiveApplication.ApplicationId);
+                inactivePermissionRes.ForEach(r => inactivePermissions.Add(r));
+
+                //create test inactive application user permissions
+                foreach (var inactivePermission in inactivePermissionRes)
+                {
+                    foreach (var inactiveApplicationUser in inactiveApplicationUserRes)
+                    {
+                        inactiveApplicationUserPermissions.AddRange(await _securityTestUtilities.ApplicationUserPermission.CreateInactiveTestRecords(inactiveApplication.ApplicationId, inactiveApplicationUser.ApplicationUserId, inactivePermission.PermissionId, 1));
+                    }
+                }
+            }
+            
+            securityTestDataRet.ActiveApplications = activeApplications;
+            securityTestDataRet.InactiveApplications = inactiveApplications;
+            securityTestDataRet.ActiveApplicationUsers = activeApplicationUsers;
+            securityTestDataRet.InactiveApplicationUsers = inactiveApplicationUsers;
+            securityTestDataRet.ActivePermissions = activePermissions;
+            securityTestDataRet.InactivePermissions = inactivePermissions;
+            securityTestDataRet.ActiveApplicationUserPermissions = activeApplicationUserPermissions;
+            securityTestDataRet.InactiveApplicationUserPermissions = inactiveApplicationUserPermissions;
+
+            return securityTestDataRet;
     }
 
     private ServiceProvider ConfigureServices() 
@@ -141,6 +233,17 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterApplicationUserPermissionLogicRequest>, FilterApplicationUserPermissionLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateApplicationUserPermissionRequest>, InsertUpdateApplicationUserPermissionRequestValidator>();
+
+        #endregion
+
+        #region ApplicationUserRole
+
+        services.AddTransient<IApplicationUserRoleService, ApplicationUserRoleService>();
+        services.AddTransient<IApplicationUserRoleLogic, ApplicationUserRoleLogic>();
+
+        //Configure Fluent Validation Validators
+        services.AddTransient<IValidator<FilterApplicationUserRoleLogicRequest>, FilterApplicationUserRoleLogicRequestValidator>();
+        services.AddTransient<IValidator<InsertUpdateApplicationUserRoleRequest>, InsertUpdateApplicationUserRoleRequestValidator>();
 
         #endregion
 

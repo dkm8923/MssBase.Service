@@ -210,7 +210,7 @@ namespace Logic.Security.Logic
             if (errorValidationResult.Errors.Count == 0)
             {
                 // Validate Application exists
-                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet());
+                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet { IncludeInactive = true });
                 
                 if (applicationResponse.Response == null)
                 {
@@ -219,7 +219,7 @@ namespace Logic.Security.Logic
                 }
 
                 // Validate Role exists
-                var roleResponse = await roleLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { req.RoleId }, ApplicationId = req.ApplicationId });
+                var roleResponse = await roleLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { req.RoleId }, ApplicationId = req.ApplicationId, IncludeInactive = true });
 
                 if (roleResponse.Response == null || roleResponse.Response.Count() == 0)
                 {
@@ -228,7 +228,7 @@ namespace Logic.Security.Logic
                 }
 
                 // Validate Permission exists
-                var permissionResponse = await permissionLogic.Filter(new FilterPermissionLogicRequest { PermissionIds = new List<int> { req.PermissionId }, ApplicationId = req.ApplicationId });
+                var permissionResponse = await permissionLogic.Filter(new FilterPermissionLogicRequest { PermissionIds = new List<int> { req.PermissionId }, ApplicationId = req.ApplicationId, IncludeInactive = true });
 
                 if (permissionResponse.Response == null || permissionResponse.Response.Count() == 0)
                 {

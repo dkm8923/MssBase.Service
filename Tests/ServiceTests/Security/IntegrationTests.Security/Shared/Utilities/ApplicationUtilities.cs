@@ -125,6 +125,48 @@ public class ApplicationUtilities : IApplicationUtilities
     }
 
     /// <summary>
+    /// Asynchronously creates a set of predefined test active application records in the data store.
+    /// </summary>
+    /// <remarks>This method is intended for use in integration testing scenarios to populate the data
+    /// store with sample application records. The created records use fixed test values and may overwrite existing data
+    /// with the same identifiers.</remarks>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public async Task<List<ApplicationDto>> CreateActiveTestRecords(short numberOfRecordsToCreate = 5)
+    {
+        //create test records
+        var ret = new List<ApplicationDto>();
+        var recordsToCreate = new List<InsertUpdateApplicationRequest>();
+
+        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
+        {
+            ret.Add(await CreateSingleApplicationTestRecord(true));
+        }
+
+        return ret;
+    }
+
+    /// <summary>
+    /// Asynchronously creates a set of predefined test inactive application records in the data store.
+    /// </summary>
+    /// <remarks>This method is intended for use in integration testing scenarios to populate the data
+    /// store with sample application records. The created records use fixed test values and may overwrite existing data
+    /// with the same identifiers.</remarks>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public async Task<List<ApplicationDto>> CreateInactiveTestRecords(short numberOfRecordsToCreate = 5)
+    {
+        //create test records
+        var ret = new List<ApplicationDto>();
+        var recordsToCreate = new List<InsertUpdateApplicationRequest>();
+
+        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
+        {
+            ret.Add(await CreateSingleApplicationTestRecord(false));
+        }
+
+        return ret;
+    }
+
+    /// <summary>
     /// Asynchronously deletes all records, including inactive ones, from the data store.
     /// </summary>
     /// <remarks>This method deletes both active and inactive records. Use with caution, as this
@@ -226,4 +268,6 @@ public class ApplicationUtilities : IApplicationUtilities
         recordA.UpdatedBy.Should().Be(recordB.UpdatedBy);
         //recordA.UpdatedOn.Should().Be(recordB.UpdatedOn);
     }
+
+    
 }
