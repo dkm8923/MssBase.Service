@@ -5,16 +5,22 @@ using FluentAssertions;
 using IntegrationTests.Security.Shared;
 using Shared.Models;
 using IntegrationTests.Shared;
+using IntegrationTests.Shared.Utilities.Contracts.Logic;
 
 namespace IntegrationTests.Security.Logic
 {
     [Collection("SecurityIntegrationTests")]
-    public class ApplicationUserLogicTests : SecurityTestBase
+    public class ApplicationUserLogicTests : SecurityTestBase,
+                                             IDefaultLogicTestsGetAll,
+                                             IDefaultLogicTestsGetById, 
+                                             IDefaultLogicTestsInsert, 
+                                             IDefaultLogicTestsUpdate,
+                                             IDefaultLogicTestsDelete
     {
         #region GetAll
 
         [Fact]
-        public async Task ApplicationUser_GetAll_Should_Return_Active_Data()
+        public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -29,7 +35,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_GetAll_Should_Return_Inactive_Data()
+        public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -44,7 +50,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_GetAll_Should_Return_Zero_Records()
+        public async Task Default_GetAll_Should_Return_Zero_Records()
         {
             // Arrange
             await _securityTestUtilities.ApplicationUser.DeleteAllRecords();
@@ -61,7 +67,7 @@ namespace IntegrationTests.Security.Logic
         #region GetById
 
         [Fact]
-        public async Task ApplicationUser_GetById_Should_Return_Active_Record()
+        public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -75,7 +81,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_GetById_Should_Not_Return_Inactive_Record()
+        public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -89,7 +95,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_GetById_Should_Return_Inactive_Record()
+        public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -107,7 +113,7 @@ namespace IntegrationTests.Security.Logic
         #region Filter
 
         [Fact]
-        public async Task ApplicationUser_Filter_Should_Return_Active_Data()
+        public async Task Default_Filter_Should_Return_Active_Data()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -129,7 +135,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_Filter_Should_Return_Inactive_Data()
+        public async Task Default_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -150,7 +156,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_Filter_Should_Return_Zero_Records()
+        public async Task Default_Filter_Should_Return_Zero_Records()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -173,7 +179,7 @@ namespace IntegrationTests.Security.Logic
         #region Insert
 
         [Fact]
-        public async Task ApplicationUser_Insert_Should_Create_Record()
+        public async Task Default_Insert_Should_Create_Record()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -189,7 +195,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_Insert_Should_Not_Create_Record_Unique_Error()
+        public async Task Default_Insert_Should_Not_Create_Record_Unique_Error()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -208,7 +214,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_Insert_Should_Not_Create_Record_Required_Field_Errors()
+        public async Task Default_Insert_Should_Not_Create_Record_Required_Field_Errors()
         {
             // Arrange
             await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -226,7 +232,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_Insert_Should_Not_Create_Record_Field_Max_Length_Errors()
+        public async Task Default_Insert_Should_Not_Create_Record_Field_Max_Length_Errors()
         {
             // Arrange
             await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -267,7 +273,7 @@ namespace IntegrationTests.Security.Logic
         #region Update
 
         [Fact]
-        public async Task ApplicationUser_Update_Should_Update_Record()
+        public async Task Default_Update_Should_Update_Record()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -293,7 +299,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_Update_Should_Not_Update_Record_Unique_Error()
+        public async Task Default_Update_Should_Not_Update_Record_Unique_Error()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -315,7 +321,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_Update_Should_Not_Update_Record_Required_Field_Errors()
+        public async Task Default_Update_Should_Not_Update_Record_Required_Field_Errors()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -334,12 +340,33 @@ namespace IntegrationTests.Security.Logic
             LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
         }
 
+        [Fact]
+        public async Task ApplicationUser_Update_Should_Not_Create_Record_Invalid_Email_Error()
+        {
+            // Arrange
+            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            var testRecords = await _applicationUserLogic.GetAll(new BaseLogicGet());
+            var recordToUpdate = testRecords.Response.FirstOrDefault();
+            recordToUpdate.Email = "invalidEmail";
+
+            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedInvalidEmailFieldErrors();
+
+            // Act
+            var result = await _applicationUserLogic.Update(recordToUpdate.ApplicationUserId, _securityTestUtilities.ApplicationUser.ConvertApplicationUserDtoToInsertUpdateRequest(recordToUpdate), _applicationLogic);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
         #endregion
 
         #region Delete
 
         [Fact]
-        public async Task ApplicationUser_Delete_Should_Delete_Record()
+        public async Task Default_Delete_Should_Delete_Record()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -352,6 +379,23 @@ namespace IntegrationTests.Security.Logic
             // Assert
             result.Errors.Should().BeNullOrEmpty();
             getResult.Response.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task Default_Delete_Should_Not_Delete_Record_Invalid_Id()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedRecordDoesNotExistErrors();
+
+            // Act
+            var result = await _applicationUserLogic.Delete(-1);
+
+            // Assert
+            result.Errors.Count.Should().Be(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
         }
 
         #endregion

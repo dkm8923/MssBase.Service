@@ -6,6 +6,7 @@ using FluentAssertions;
 using IntegrationTests.Security.Shared;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities;
+using IntegrationTests.Shared.Utilities.Contracts.Service;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Logic.Common;
 using Shared.Models;
@@ -13,7 +14,13 @@ using Shared.Models;
 namespace IntegrationTests.Security.Service
 {
     [Collection("SecurityIntegrationTests")]
-    public class ApplicationServiceTests : SecurityTestBase
+    public class ApplicationServiceTests : SecurityTestBase,
+                                           IDefaultServiceTestsGetAll,
+                                           IDefaultServiceTestsGetById,
+                                           IDefaultServiceTestsFilter,
+                                           IDefaultServiceTestsInsert,
+                                           IDefaultServiceTestsUpdate,
+                                           IDefaultServiceTestsDelete
     {
         //TODO: Add tests for include related logic
         private readonly IApplicationService _applicationService;
@@ -46,7 +53,7 @@ namespace IntegrationTests.Security.Service
         #region GetAll
 
         [Fact]
-        public async Task Application_GetAll_Active_Should_Cache()
+        public async Task Default_GetAll_Active_Should_Cache()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -66,7 +73,7 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
-        public async Task Application_GetAll_IncludeInactive_Should_Cache()
+        public async Task Default_GetAll_IncludeInactive_Should_Cache()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -86,7 +93,7 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
-        public async Task Application_GetAll_Should_Not_Cache_And_Return_Zero_Records()
+        public async Task Default_GetAll_Should_Not_Cache_And_Return_Zero_Records()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -108,7 +115,7 @@ namespace IntegrationTests.Security.Service
         #region GetById
 
         [Fact]
-        public async Task Application_GetById_Should_Cache()
+        public async Task Default_GetById_Should_Cache()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -128,7 +135,7 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
-        public async Task Application_GetById_IncludeInactive_Should_Cache()
+        public async Task Default_GetById_IncludeInactive_Should_Cache()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -147,7 +154,7 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
-        public async Task Application_GetById_Unused_Id_Should_Not_Cache()
+        public async Task Default_GetById_Unused_Id_Should_Not_Cache()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -170,7 +177,7 @@ namespace IntegrationTests.Security.Service
         #region Filter
 
         [Fact]
-        public async Task Application_Filter_Should_Cache()
+        public async Task Default_Filter_Should_Cache()
         {
            // Arrange
            await ClearAllSecurityTestTableData();
@@ -220,7 +227,7 @@ namespace IntegrationTests.Security.Service
         #region Insert
 
         [Fact]
-        public async Task Application_Insert_Should_Delete_Cache()
+        public async Task Default_Insert_Should_Delete_Cache()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -248,7 +255,7 @@ namespace IntegrationTests.Security.Service
         #region Update
 
         [Fact]
-        public async Task Application_Update_Should_Delete_Cache()
+        public async Task Default_Update_Should_Delete_Cache()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -278,7 +285,7 @@ namespace IntegrationTests.Security.Service
         #region Delete
 
         [Fact]
-        public async Task Application_Delete_Should_Delete_Cache()
+        public async Task Default_Delete_Should_Delete_Cache()
         {
             // Arrange
             await ClearAllSecurityTestTableData();

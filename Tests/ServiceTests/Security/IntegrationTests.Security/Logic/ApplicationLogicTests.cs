@@ -6,16 +6,22 @@ using IntegrationTests.Security.Shared;
 using IntegrationTests.Shared;
 using Shared.Models;
 using IntegrationTests.Shared.Utilities;
+using IntegrationTests.Shared.Utilities.Contracts.Logic;
 
 namespace IntegrationTests.Security.Logic
 {
     [Collection("SecurityIntegrationTests")]
-    public class ApplicationLogicTests : SecurityTestBase
+    public class ApplicationLogicTests : SecurityTestBase, 
+                                         IDefaultLogicTestsGetAll,
+                                         IDefaultLogicTestsGetById, 
+                                         IDefaultLogicTestsInsert, 
+                                         IDefaultLogicTestsUpdate,
+                                         IDefaultLogicTestsDelete
     {
         #region GetAll
 
         [Fact]
-        public async Task Application_GetAll_Should_Return_Active_Data()
+        public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -30,7 +36,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_GetAll_Should_Return_Inactive_Data()
+        public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -45,7 +51,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_GetAll_Should_Return_Zero_Records()
+        public async Task Default_GetAll_Should_Return_Zero_Records()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -62,7 +68,7 @@ namespace IntegrationTests.Security.Logic
         #region GetById
 
         [Fact]
-        public async Task Application_GetById_Should_Return_Active_Record()
+        public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -76,7 +82,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_GetById_Should_Not_Return_Inactive_Record()
+        public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -90,7 +96,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_GetById_Should_Return_Inactive_Record()
+        public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -104,7 +110,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_GetById_Unused_Id_Should_Return_Null()
+        public async Task Default_GetById_Unused_Id_Should_Return_Null()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -123,7 +129,7 @@ namespace IntegrationTests.Security.Logic
         #region Filter
 
         [Fact]
-        public async Task Application_Filter_Should_Return_Active_Data()
+        public async Task Default_Filter_Should_Return_Active_Data()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -145,7 +151,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_Filter_Should_Return_Inactive_Data()
+        public async Task Default_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -166,7 +172,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_Filter_Should_Filter_Data()
+        public async Task Default_Filter_Should_Filter_Data()
         {
             //TODO: Test filtering by multiple application ids
             // Arrange
@@ -223,7 +229,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_Filter_Should_Return_Zero_Records()
+        public async Task Default_Filter_Should_Return_Zero_Records()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -255,7 +261,7 @@ namespace IntegrationTests.Security.Logic
         #region Insert
 
         [Fact]
-        public async Task Application_Insert_Should_Create_Record()
+        public async Task Default_Insert_Should_Create_Record()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -270,7 +276,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_Insert_Should_Not_Create_Record_Unique_Error()
+        public async Task Default_Insert_Should_Not_Create_Record_Unique_Error()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -289,7 +295,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_Insert_Should_Not_Create_Record_Required_Field_Errors()
+        public async Task Default_Insert_Should_Not_Create_Record_Required_Field_Errors()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -307,7 +313,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_Insert_Should_Not_Create_Record_Field_Max_Length_Errors()
+        public async Task Default_Insert_Should_Not_Create_Record_Field_Max_Length_Errors()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -329,7 +335,7 @@ namespace IntegrationTests.Security.Logic
         #region Update
 
         [Fact]
-        public async Task Application_Update_Should_Update_Record()
+        public async Task Default_Update_Should_Update_Record()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -355,7 +361,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_Update_Should_Not_Update_Record_Unique_Error()
+        public async Task Default_Update_Should_Not_Update_Record_Unique_Error()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -378,7 +384,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_Update_Should_Not_Update_Record_Required_Field_Errors()
+        public async Task Default_Update_Should_Not_Update_Record_Required_Field_Errors()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -398,7 +404,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_Update_Should_Not_Update_Record_Field_Max_Length_Errors()
+        public async Task Default_Update_Should_Not_Update_Record_Field_Max_Length_Errors()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -424,7 +430,7 @@ namespace IntegrationTests.Security.Logic
         #region Delete
 
         [Fact]
-        public async Task Application_Delete_Should_Delete_Record()
+        public async Task Default_Delete_Should_Delete_Record()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -439,7 +445,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Application_Delete_Should_Not_Delete_Record_Invalid_Id()
+        public async Task Default_Delete_Should_Not_Delete_Record_Invalid_Id()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
