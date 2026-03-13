@@ -180,14 +180,19 @@ namespace IntegrationTests.Shared
             return result;
         }
 
-        public static string createIncludeInactiveQueryStringParm(bool includeInactive)
+        public static string CreateIncludeInactiveQueryStringParm(bool includeInactive)
         {
             return $"IncludeInactive={includeInactive}";
         }
 
-        public static string createDeleteCacheQueryStringParm(bool deleteCache)
+        public static string CreateDeleteCacheQueryStringParm(bool deleteCache)
         {
             return $"DeleteCache={deleteCache}";
+        }
+
+        public static string CreateIncludeRelatedQueryStringParm(bool includeRelated)
+        {
+            return $"IncludeRelated={includeRelated}";
         }
 
         public static string AddDeleteCacheQueryStringParmToApiEndPointUrl(string apiEndPoint, bool deleteCache)
@@ -205,18 +210,18 @@ namespace IntegrationTests.Shared
                     if (count == 0)
                     {
                         //url has ? but nothing after
-                        apiEndPoint += createDeleteCacheQueryStringParm(true);
+                        apiEndPoint += CreateDeleteCacheQueryStringParm(true);
                     }
                     else 
                     {
                         //url has ? along with query string parm
-                        apiEndPoint += "&" + createDeleteCacheQueryStringParm(true);
+                        apiEndPoint += "&" + CreateDeleteCacheQueryStringParm(true);
                     }
                 }
                 else
                 {
                     //url does not have any ? / query string parms
-                    apiEndPoint += "?" + createDeleteCacheQueryStringParm(true);
+                    apiEndPoint += "?" + CreateDeleteCacheQueryStringParm(true);
                 }
             }
 

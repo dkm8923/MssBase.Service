@@ -47,7 +47,7 @@ namespace IntegrationTests.Security.Controller
             await _securityTestUtilities.Role.CreateTestRecords(roleId, 1, false);
 
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base + "?" + ControllerTestUtilities.createIncludeInactiveQueryStringParm(true));
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
             // Assert
             result.Errors.Should().HaveCount(0);
@@ -109,7 +109,7 @@ namespace IntegrationTests.Security.Controller
             var testRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(roleId, false);
 
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.Role.Base + "/" + testRecord.RoleId + "?" + ControllerTestUtilities.createIncludeInactiveQueryStringParm(true));
+            var response = await _client.GetAsync(ApiEndPoints.Security.Role.Base + "/" + testRecord.RoleId + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);

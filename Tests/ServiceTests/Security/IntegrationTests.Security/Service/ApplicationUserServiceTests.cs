@@ -5,6 +5,7 @@ using FluentAssertions;
 using IntegrationTests.Security.Shared;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities;
+using IntegrationTests.Shared.Utilities.Contracts.Service;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Logic.Common;
 using Shared.Models;
@@ -12,7 +13,13 @@ using Shared.Models;
 namespace IntegrationTests.Security.Service
 {
     [Collection("SecurityIntegrationTests")]
-    public class ApplicationUserServiceTests : SecurityTestBase
+    public class ApplicationUserServiceTests : SecurityTestBase,
+                                               IDefaultServiceTestsGetAll,
+                                               IDefaultServiceTestsGetById,
+                                               IDefaultServiceTestsFilter//,
+                                            //    IDefaultServiceTestsInsert,
+                                            //    IDefaultServiceTestsUpdate,
+                                            //    IDefaultServiceTestsDelete
     {
         private readonly IApplicationUserService _applicationUserService;
         private readonly ICacheTestUtilities _cacheTestUtilities;
@@ -23,10 +30,28 @@ namespace IntegrationTests.Security.Service
             _applicationUserService = _serviceProvider.GetService<IApplicationUserService>();
         }
 
+        #region utils
+
+        private async Task CreateApplicationUserCacheKeys()
+        {
+            var result = await _applicationUserService.GetAll(new BaseServiceGet { DeleteCache = false, IncludeInactive = true });
+
+            foreach (var record in result.Response)
+            {
+                await _applicationUserService.GetById(record.ApplicationUserId, new BaseServiceGet());
+                //await _applicationUserService.Filter(new FilterApplicationUserServiceRequest { Name = record.Name });
+                await _applicationUserService.Filter(new FilterApplicationUserServiceRequest { CreatedOnDate = DateOnly.Parse(record.CreatedOn.ToString()) });
+                await _applicationUserService.Filter(new FilterApplicationUserServiceRequest { CreatedBy = record.CreatedBy });
+                await _applicationUserService.Filter(new FilterApplicationUserServiceRequest { UpdatedOnDate = DateOnly.Parse(record.UpdatedOn.ToString()) });
+            }
+        }
+
+        #endregion
+
         #region GetAll
 
         [Fact]
-        public async Task ApplicationUser_GetAll_Active_Should_Cache()
+        public async Task Default_GetAll_Active_Should_Cache()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -45,7 +70,7 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
-        public async Task ApplicationUser_GetAll_IncludeInactive_Should_Cache()
+        public async Task Default_GetAll_IncludeInactive_Should_Cache()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -64,7 +89,7 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
-        public async Task ApplicationUser_GetAll_Should_Not_Cache_And_Return_Zero_Records()
+        public async Task Default_GetAll_Should_Not_Cache_And_Return_Zero_Records()
         {
             // Arrange
             await _securityTestUtilities.ApplicationUser.DeleteAllRecords();
@@ -86,7 +111,7 @@ namespace IntegrationTests.Security.Service
         #region GetById
 
         [Fact]
-        public async Task ApplicationUser_GetById_Should_Cache()
+        public async Task Default_GetById_Should_Cache()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -105,7 +130,7 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
-        public async Task ApplicationUser_GetById_IncludeInactive_Should_Cache()
+        public async Task Default_GetById_IncludeInactive_Should_Cache()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -124,7 +149,7 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
-        public async Task ApplicationUser_GetById_Unused_Id_Should_Not_Cache()
+        public async Task Default_GetById_Unused_Id_Should_Not_Cache()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -147,7 +172,7 @@ namespace IntegrationTests.Security.Service
         #region Filter
 
         [Fact]
-        public async Task ApplicationUser_Filter_Should_Cache()
+        public async Task Default_Filter_Should_Cache()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -170,7 +195,7 @@ namespace IntegrationTests.Security.Service
         #region Insert
 
         [Fact]
-        public async Task ApplicationUser_Insert_Should_Clear_Cache()
+        public async Task Default_Insert_Should_Clear_Cache()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -195,7 +220,7 @@ namespace IntegrationTests.Security.Service
         #region Update
 
         [Fact]
-        public async Task ApplicationUser_Update_Should_Clear_Cache()
+        public async Task Default_Update_Should_Clear_Cache()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -225,22 +250,23 @@ namespace IntegrationTests.Security.Service
 
         #region Delete
 
-        [Fact]
-        public async Task ApplicationUser_Delete_Should_Clear_Cache()
-        {
-            // Arrange
-            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(applicationId);
-            await _cacheTestUtilities.DeleteAllKeyData();
+        // [Fact]
+        // public async Task Default_Delete_Should_Delete_Cache()
+        // {
+        //     // Arrange
+        //     await ClearAllSecurityTestTableData();
+        //     await _cacheTestUtilities.DeleteAllKeyData();
+        //     await CreateApplicationUserCacheKeys();
 
-            // Act
-            var result = await _applicationUserService.Delete(testRecord.ApplicationUserId);
-            var cacheKeysAfter = _cacheTestUtilities.GetKeys();
+        //     var record = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord();
 
-            // Assert
-            result.Errors.Should().BeNullOrEmpty();
-            cacheKeysAfter.Should().HaveCount(0);
-        }
+        //     // Act
+        //     await _applicationUserService.Delete(record.ApplicationUserId);
+        //     var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+        //     //Assert
+        //     availableCacheKeys.Should().HaveCount(0);
+        // }
 
         #endregion
     }

@@ -7,11 +7,19 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Shared.Models;
 using System.Net;
 using IntegrationTests.Shared.Utilities;
+using IntegrationTests.Shared.Utilities.Contracts.Controller;
 
 namespace IntegrationTests.Security.Controller
 {
     [Collection("SecurityIntegrationTests")]
-    public class ApplicationUserControllerTests : SecurityTestBase, IClassFixture<WebApplicationFactory<Program>>
+    public class ApplicationUserControllerTests : SecurityTestBase, 
+                                                  IClassFixture<WebApplicationFactory<Program>>,
+                                                  //IDefaultControllerTestsGetAll,
+                                                //   IDefaultControllerTestsGetById,
+                                                //   IDefaultControllerTestsFilter,
+                                                  IDefaultControllerTestsInsert,
+                                                  IDefaultControllerTestsUpdate,
+                                                  IDefaultControllerTestsDelete
     {
         private readonly HttpClient _client;
 
@@ -23,12 +31,13 @@ namespace IntegrationTests.Security.Controller
         #region GetAll
 
         [Fact]
-        public async Task ApplicationUser_GetAll_Should_Return_Active_Data()
+        public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId, 1, false);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.ApplicationUser.CreateTestRecords(application.ApplicationId);
+            await _securityTestUtilities.ApplicationUser.CreateTestRecords(application.ApplicationId, 1, false);
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base);
@@ -39,15 +48,16 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task ApplicationUser_GetAll_Should_Return_Inactive_Data()
+        public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId, 1, false);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.ApplicationUser.CreateTestRecords(application.ApplicationId);
+            await _securityTestUtilities.ApplicationUser.CreateTestRecords(application.ApplicationId, 1, false);
 
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base + "?" + ControllerTestUtilities.createIncludeInactiveQueryStringParm(true));
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
             // Assert
             result.Errors.Should().HaveCount(0);
@@ -55,7 +65,7 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task ApplicationUser_GetAll_Should_Return_Zero_Records()
+        public async Task Default_GetAll_Should_Return_Zero_Records()
         {
             // Arrange
             await _securityTestUtilities.ApplicationUser.DeleteAllRecords();
@@ -68,16 +78,56 @@ namespace IntegrationTests.Security.Controller
             result.Response.Should().HaveCount(0);
         }
 
+        // [Fact]
+        // public async Task Default_GetAll_Should_Return_Related_Data()
+        // {
+        //     // Arrange
+        //     await ClearAllSecurityTestTableData();
+        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+        //     await _securityTestUtilities.ApplicationUser.CreateTestRecords(application.ApplicationId);
+        //     await _securityTestUtilities.Permission.CreateTestRecords(application.ApplicationId);
+        //     //await _securityTestUtilities.ApplicationUserPermission.CreateTestRecords(application.ApplicationId);
+
+        //     // Act
+        //     var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
+
+        //     // Assert
+        //     result.Errors.Should().HaveCount(0);
+        //     result.Response.Should().HaveCount(6);
+        // }
+
+        // public async Task Default_GetAll_Should_Return_Related_Data()
+        // {
+        //     // Arrange
+        //     await ClearAllSecurityTestTableData();
+        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+        //     await _securityTestUtilities.ApplicationUser.CreateTestRecords(application.ApplicationId);
+            
+
+        //     // Act
+        //     var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base);
+
+        //     // Assert
+        //     result.Errors.Should().HaveCount(0);
+        //     result.Response.Should().HaveCount(5);
+        // }
+
+        // public Task Default_GetAll_Should_Not_Return_Related_Data()
+        // {
+        //     throw new NotImplementedException();
+        // }
+
         #endregion
 
         #region GetById
 
         [Fact]
-        public async Task ApplicationUser_GetById_Should_Return_Active_Record()
+        public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(applicationId);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
             
             // Act
             var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserDto>(_client, ApiEndPoints.Security.ApplicationUser.Base, testRecord.ApplicationUserId);
@@ -88,11 +138,12 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task ApplicationUser_GetById_Should_Not_Return_Inactive_Record()
+        public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(applicationId, false);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, false);
 
             // Act
             var response = await _client.GetAsync(ApiEndPoints.Security.ApplicationUser.Base + "/" + testRecord.ApplicationUserId);
@@ -102,25 +153,27 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task ApplicationUser_GetById_Should_Return_Inactive_Record()
+        public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(applicationId, false);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, false);
 
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.ApplicationUser.Base + "/" + testRecord.ApplicationUserId + "?" + ControllerTestUtilities.createIncludeInactiveQueryStringParm(true));
+            var response = await _client.GetAsync(ApiEndPoints.Security.ApplicationUser.Base + "/" + testRecord.ApplicationUserId + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
         [Fact]
-        public async Task ApplicationUser_GetById_Should_Return_NotFound()
+        public async Task Default_GetById_Should_Return_NotFound()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.ApplicationUser.CreateTestRecords(application.ApplicationId);
             var id = -1;
 
             // Act
@@ -131,7 +184,7 @@ namespace IntegrationTests.Security.Controller
         }
  
         [Fact]
-        public async Task ApplicationUser_GetById_Should_Return_Bad_Request_Invalid_Id()
+        public async Task Default_GetById_Should_Return_Bad_Request_Invalid_Id()
         {
             // Arrange
             var id = "asfasdfasdfasdf";
@@ -218,7 +271,7 @@ namespace IntegrationTests.Security.Controller
         #region Insert
 
         [Fact]
-        public async Task ApplicationUser_Insert_Should_Create_Record()
+        public async Task Default_Insert_Should_Create_Record()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -232,7 +285,7 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task ApplicationUser_Insert_Should_Return_Unsupported_Media_Type_Null_Request_Body()
+        public async Task Default_Insert_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -245,7 +298,7 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task ApplicationUser_Insert_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
+        public async Task Default_Insert_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -263,7 +316,7 @@ namespace IntegrationTests.Security.Controller
         #region Update
 
         [Fact]
-        public async Task ApplicationUser_Update_Should_Update_Record()
+        public async Task Default_Update_Should_Update_Record()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -292,7 +345,7 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task ApplicationUser_Update_Should_Return_Unsupported_Media_Type_Null_Request_Body()
+        public async Task Default_Update_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -305,7 +358,7 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task ApplicationUser_Update_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
+        public async Task Default_Update_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -323,7 +376,7 @@ namespace IntegrationTests.Security.Controller
         #region Delete
 
         [Fact]
-        public async Task ApplicationUser_Delete_Should_Delete_Record()
+        public async Task Default_Delete_Should_Delete_Record()
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -336,6 +389,33 @@ namespace IntegrationTests.Security.Controller
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
             getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public async Task Default_Delete_Should_Not_Delete_Record_Id_Does_Not_Exist()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var applicationId = -1;
+
+            // Act
+            var getResponse = await _client.GetAsync(ApiEndPoints.Security.Application.Base + "/" + applicationId);
+            var response = await _client.DeleteAsync(ApiEndPoints.Security.Application.Base + "/" + applicationId);
+            var errorValidationResult = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult>(response);
+
+            //TODO: Use hardcoded string for testing. (Should be in application utilities)
+            var expectedInvalidDeleteError = _securityTestUtilities.Application.GetExpectedRecordDoesNotExistErrors();
+            
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            errorValidationResult.Errors.Should().BeEquivalentTo(expectedInvalidDeleteError);
+        }
+        
+        [Fact]
+        public async Task Default_Delete_Should_Return_Bad_Request_Invalid_Id()
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

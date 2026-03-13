@@ -555,7 +555,7 @@ public class ApplicationControllerTests : SecurityTestBase, IClassFixture<WebApp
         // Act
         var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(
             _client, ApiEndPoints.Security.Application.Base + "?" + 
-            ControllerTestUtilities.createIncludeInactiveQueryStringParm(true));
+            ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
         // Assert
         result.Errors.Should().HaveCount(0);
