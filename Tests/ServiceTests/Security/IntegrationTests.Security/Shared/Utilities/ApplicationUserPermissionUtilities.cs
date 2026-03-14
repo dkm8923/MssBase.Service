@@ -26,17 +26,6 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
         _permissionLogic = permissionLogic;
     }
 
-    /// <summary>
-    /// Asynchronously clears test data from the ApplicationUserPermission and Application tables, creates a fresh test application record, 
-    /// and returns the application ID for use in subsequent tests.
-    /// </summary>
-    public async Task<int> ClearTestTablesAndReturnApplicationId(IApplicationUtilities applicationUtilities)
-    {
-        await DeleteAllRecords();
-        await applicationUtilities.DeleteAllRecords();
-        return (await applicationUtilities.CreateTestRecords(1, true)).FirstOrDefault().ApplicationId;
-    }
-
     public InsertUpdateApplicationUserPermissionRequest ConvertApplicationUserPermissionDtoToInsertUpdateRequest(ApplicationUserPermissionDto req)
     {
         return new InsertUpdateApplicationUserPermissionRequest
@@ -61,7 +50,7 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
         };
     }
     
-    public InsertUpdateApplicationUserPermissionRequest CreateInsertUpdateRequestWithRandomValues(int applicationId, int applicationUserId, int permissionId, bool active = true)
+    public InsertUpdateApplicationUserPermissionRequest CreateInsertUpdateRequestWithSpecificValues(int applicationId, int applicationUserId, int permissionId, bool active = true)
     {
         return new InsertUpdateApplicationUserPermissionRequest
         {
@@ -74,12 +63,12 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
     }
 
     /// <summary>
-    /// Creates a single application user permission test record with randomized data for integration testing purposes.
+    /// Creates a single application user permission test record with specific data for integration testing purposes.
     /// </summary>
     private async Task<ApplicationUserPermissionDto> CreateSingleApplicationUserPermissionTestRecord(int applicationId, int applicationUserId, int permissionId, bool active = true)
     {
         //create test record
-        var insertReq = CreateInsertUpdateRequestWithRandomValues(applicationId, applicationUserId, permissionId, active);
+        var insertReq = CreateInsertUpdateRequestWithSpecificValues(applicationId, applicationUserId, permissionId, active);
 
         var ret = await _applicationUserPermissionLogic.Insert(insertReq, _applicationLogic, _applicationUserLogic, _permissionLogic);
 

@@ -169,35 +169,35 @@ namespace IntegrationTests.Security.Logic
             var applicationUserPermissionId = securityTestData.ActiveApplicationUserPermissions.FirstOrDefault().ApplicationUserPermissionId;
 
             //create new permission
-            var newPermissionRes = await _permissionLogic.Insert(new InsertUpdatePermissionRequest
+            var testPermission1 = await _permissionLogic.Insert(new InsertUpdatePermissionRequest
             {
                 ApplicationId = applicationId,
-                Name = "Integration Test Permission for Filter",
-                Description = "Integration Test Permission for Filter Description",
+                Name = "Test Permission Name 1",
+                Description = "Test Permission Description 1",
                 Active = true,
                 CurrentUser = TestConstants.CurrentUser
             }, _applicationLogic);
 
             //create new application user permission with specific created / updated by values
-            var testApplicationUserPermissionRes = await _applicationUserPermissionLogic.Insert(new InsertUpdateApplicationUserPermissionRequest
+            var testApplicationUserPermission1Res = await _applicationUserPermissionLogic.Insert(new InsertUpdateApplicationUserPermissionRequest
             {
                 ApplicationId = applicationId,
                 ApplicationUserId = applicationUserId,
-                PermissionId = newPermissionRes.Response.PermissionId,
+                PermissionId = testPermission1.Response.PermissionId,
                 Active = true,
                 CurrentUser = "IntegrationTestInsert"
             }, _applicationLogic, _applicationUserLogic, _permissionLogic);
 
-            await _applicationUserPermissionLogic.Update(testApplicationUserPermissionRes.Response.ApplicationUserPermissionId, new InsertUpdateApplicationUserPermissionRequest
+            await _applicationUserPermissionLogic.Update(testApplicationUserPermission1Res.Response.ApplicationUserPermissionId, new InsertUpdateApplicationUserPermissionRequest
             {
                 ApplicationId = applicationId,
                 ApplicationUserId = applicationUserId,
-                PermissionId = newPermissionRes.Response.PermissionId,
-                Active = false,
+                PermissionId = testPermission1.Response.PermissionId,
+                Active = true,
                 CurrentUser = "IntegrationTestUpdate"
             }, _applicationLogic, _applicationUserLogic, _permissionLogic);
 
-            var todaysUtcDate = new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day);
+            var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
 
             var postReqFilterCreatedBy = new FilterApplicationUserPermissionServiceRequest { CreatedBy = "IntegrationTestInsert" };
             var postReqFilterCreatedOnDate = new FilterApplicationUserPermissionServiceRequest { CreatedOnDate = todaysUtcDate };
@@ -218,11 +218,11 @@ namespace IntegrationTests.Security.Logic
             
             // Assert
             filterCreatedByResult.Response.Should().HaveCount(1);
-            filterCreatedOnDateResult.Response.Should().HaveCount(0);
+            filterCreatedOnDateResult.Response.Should().HaveCount(126);
             filterUpdatedByResult.Response.Should().HaveCount(1);
-            filterUpdatedOnDateResult.Response.Should().HaveCount(0);
+            filterUpdatedOnDateResult.Response.Should().HaveCount(126);
             filterApplicationUserPermissionIdsResult.Response.Should().HaveCount(3);
-            filterApplicationIdResult.Response.Should().HaveCount(25);
+            filterApplicationIdResult.Response.Should().HaveCount(26);
             filterPermissionIdResult.Response.Should().HaveCount(5);
         }
 
