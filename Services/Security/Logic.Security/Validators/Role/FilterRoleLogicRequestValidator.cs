@@ -10,7 +10,6 @@ public class FilterRoleLogicRequestValidator : AbstractValidator<FilterRoleLogic
     [
         nameof(FilterRoleLogicRequest.RoleIds),
         nameof(FilterRoleLogicRequest.Name),
-        nameof(FilterRoleLogicRequest.Description),
         nameof(FilterRoleLogicRequest.ApplicationId),
         nameof(FilterRoleLogicRequest.CreatedBy),
         nameof(FilterRoleLogicRequest.CreatedOnDate),
@@ -34,7 +33,6 @@ public class FilterRoleLogicRequestValidator : AbstractValidator<FilterRoleLogic
     {
         return (v.RoleIds is { Count: > 0 })
             || !string.IsNullOrWhiteSpace(v.Name)
-            || !string.IsNullOrWhiteSpace(v.Description)
             || v.ApplicationId.HasValue
             || !string.IsNullOrWhiteSpace(v.CreatedBy)
             || v.CreatedOnDate.HasValue

@@ -47,8 +47,8 @@ public class RoleUtilities : IRoleUtilities
     {
         return new InsertUpdateRoleRequest
         { 
-            Name = LogicTestUtilities.GenerateRandomString(120),
-            Description = LogicTestUtilities.GenerateRandomString(65),
+            Name = LogicTestUtilities.GenerateRandomString(65),
+            Description = LogicTestUtilities.GenerateRandomString(257),
             Active = true,
             ApplicationId = 1,
             CurrentUser = LogicTestUtilities.GenerateRandomString(65)
@@ -152,7 +152,7 @@ public class RoleUtilities : IRoleUtilities
     {
         return new Dictionary<string, List<string>>
         {
-            { "ApplicationId", new List<string> { "ApplicationId is invalid!" } }
+            { "ApplicationId", new List<string> { "Record does not exist for specified ApplicationId!" } }
         };
     }
 

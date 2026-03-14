@@ -11,11 +11,12 @@ namespace IntegrationTests.Security.Logic
 {
     [Collection("SecurityIntegrationTests")]
     public class RoleLogicTests : SecurityTestBase, 
-                                        IDefaultLogicTestsGetAll,
-                                        IDefaultLogicTestsGetById, 
-                                        IDefaultLogicTestsInsert, 
-                                        IDefaultLogicTestsUpdate,
-                                        IDefaultLogicTestsDelete
+                                  IDefaultLogicTestsGetAll,
+                                  IDefaultLogicTestsGetById,
+                                  IDefaultLogicTestsFilter, 
+                                  IDefaultLogicTestsInsert, 
+                                  IDefaultLogicTestsUpdate,
+                                  IDefaultLogicTestsDelete
     {
         #region GetAll
 
@@ -174,6 +175,70 @@ namespace IntegrationTests.Security.Logic
             invalidApplicationIdResult.Response.Should().HaveCount(0);
         }
 
+        [Fact]
+        public async Task Default_Filter_Should_Filter_Records()
+        {
+            // Arrange
+            int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            var roles = await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+
+            //create test roles for filtering tests
+            var testRole1 = await _roleLogic.Insert(new InsertUpdateRoleRequest
+            {
+                ApplicationId = applicationId,
+                Name = "Test Role Name 1",
+                Description = "Test Role Description 1",
+                Active = true,
+                CurrentUser = "IntegrationTestInsert"
+            }, _applicationLogic);
+
+            var testRole2 = await _roleLogic.Insert(new InsertUpdateRoleRequest
+            {
+                ApplicationId = applicationId,
+                Name = "Test Role Name 2",
+                Description = "Test Role Description 2",
+                Active = true,
+                CurrentUser = "IntegrationTestInsert"
+            }, _applicationLogic);
+
+            await _roleLogic.Update(testRole2.Response.RoleId, new InsertUpdateRoleRequest
+            {
+                ApplicationId = applicationId,
+                Name = "Test Role Name 2",
+                Description = "Test Role Description 2",
+                Active = true,
+                CurrentUser = "IntegrationTestUpdate"
+            }, _applicationLogic);
+
+            var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
+
+            var postReqFilterCreatedBy = new FilterRoleLogicRequest { CreatedBy = "IntegrationTestInsert" };
+            var postReqFilterCreatedOnDate = new FilterRoleLogicRequest { CreatedOnDate = todaysUtcDate };
+            var postReqFilterUpdatedBy = new FilterRoleLogicRequest { UpdatedBy = "IntegrationTestUpdate" };
+            var postReqFilterUpdatedOnDate = new FilterRoleLogicRequest { UpdatedOnDate = todaysUtcDate };
+            var postReqFilterRoleIds = new FilterRoleLogicRequest { RoleIds = new List<int> { roles[0].RoleId, roles[1].RoleId, roles[2].RoleId } };
+            var postReqFilterName = new FilterRoleLogicRequest { Name = "Test Role Name 1" };
+            var postReqFilterApplicationId = new FilterRoleLogicRequest { ApplicationId = applicationId };
+            
+            // Act
+            var filterCreatedByResult = await _roleLogic.Filter(postReqFilterCreatedBy);
+            var filterCreatedOnDateResult = await _roleLogic.Filter(postReqFilterCreatedOnDate);
+            var filterUpdatedByResult = await _roleLogic.Filter(postReqFilterUpdatedBy);
+            var filterUpdatedOnDateResult = await _roleLogic.Filter(postReqFilterUpdatedOnDate);
+            var filterRoleIdsResult = await _roleLogic.Filter(postReqFilterRoleIds);
+            var filterNameResult = await _roleLogic.Filter(postReqFilterName);
+            var filterApplicationIdResult = await _roleLogic.Filter(postReqFilterApplicationId);
+            
+            // Assert
+            filterCreatedByResult.Response.Should().HaveCount(2);
+            filterCreatedOnDateResult.Response.Should().HaveCount(7);
+            filterUpdatedByResult.Response.Should().HaveCount(1);
+            filterUpdatedOnDateResult.Response.Should().HaveCount(7);
+            filterRoleIdsResult.Response.Should().HaveCount(3);
+            filterNameResult.Response.Should().HaveCount(1);
+            filterApplicationIdResult.Response.Should().HaveCount(7);
+        }
+
         #endregion
 
         #region Insert
@@ -257,7 +322,7 @@ namespace IntegrationTests.Security.Logic
             // Arrange
             int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
             var recordToCreate = _securityTestUtilities.Role.CreateInsertUpdateRequestWithRandomValues(applicationId, true);
-            recordToCreate.ApplicationId = -1;
+            recordToCreate.ApplicationId = 99;
 
             var expectedFieldErrors = _securityTestUtilities.Role.GetExpectedInvalidApplicationIdFieldErrors();
 
