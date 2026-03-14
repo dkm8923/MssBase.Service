@@ -322,7 +322,7 @@ namespace IntegrationTests.Security.Logic
             // Arrange
             int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
             var recordToCreate = _securityTestUtilities.Role.CreateInsertUpdateRequestWithRandomValues(applicationId, true);
-            recordToCreate.ApplicationId = 99;
+            recordToCreate.ApplicationId = applicationId > 1 ? applicationId - 1 : applicationId + 1;
 
             var expectedFieldErrors = _securityTestUtilities.Role.GetExpectedInvalidApplicationIdFieldErrors();
 

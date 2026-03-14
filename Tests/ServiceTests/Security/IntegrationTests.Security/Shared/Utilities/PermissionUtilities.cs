@@ -186,7 +186,7 @@ public class PermissionUtilities : IPermissionUtilities
     {
         return new Dictionary<string, List<string>>
         {
-            { "ApplicationId", new List<string> { "ApplicationId is invalid!" } }
+            { "ApplicationId", new List<string> { "Record does not exist for specified ApplicationId!" } }
         };
     }
 

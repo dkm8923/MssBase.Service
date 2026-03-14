@@ -12,7 +12,8 @@ namespace IntegrationTests.Security.Logic
     [Collection("SecurityIntegrationTests")]
     public class PermissionLogicTests : SecurityTestBase, 
                                         IDefaultLogicTestsGetAll,
-                                        IDefaultLogicTestsGetById, 
+                                        IDefaultLogicTestsGetById,
+                                        IDefaultLogicTestsFilter,  
                                         IDefaultLogicTestsInsert, 
                                         IDefaultLogicTestsUpdate,
                                         IDefaultLogicTestsDelete
@@ -174,6 +175,70 @@ namespace IntegrationTests.Security.Logic
             invalidApplicationIdResult.Response.Should().HaveCount(0);
         }
 
+        [Fact]
+        public async Task Default_Filter_Should_Filter_Records()
+        {
+            // Arrange
+            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            var permissions = await _securityTestUtilities.Permission.CreateTestRecords(applicationId);
+
+            //create test permissions for filtering tests
+            var testPermission1 = await _permissionLogic.Insert(new InsertUpdatePermissionRequest
+            {
+                ApplicationId = applicationId,
+                Name = "Test Permission Name 1",
+                Description = "Test Permission Description 1",
+                Active = true,
+                CurrentUser = "IntegrationTestInsert"
+            }, _applicationLogic);
+
+            var testPermission2 = await _permissionLogic.Insert(new InsertUpdatePermissionRequest
+            {
+                ApplicationId = applicationId,
+                Name = "Test Permission Name 2",
+                Description = "Test Permission Description 2",
+                Active = true,
+                CurrentUser = "IntegrationTestInsert"
+            }, _applicationLogic);
+
+            await _permissionLogic.Update(testPermission2.Response.PermissionId, new InsertUpdatePermissionRequest
+            {
+                ApplicationId = applicationId,
+                Name = "Test Permission Name 2",
+                Description = "Test Permission Description 2",
+                Active = true,
+                CurrentUser = "IntegrationTestUpdate"
+            }, _applicationLogic);
+
+            var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
+
+            var postReqFilterCreatedBy = new FilterPermissionLogicRequest { CreatedBy = "IntegrationTestInsert" };
+            var postReqFilterCreatedOnDate = new FilterPermissionLogicRequest { CreatedOnDate = todaysUtcDate };
+            var postReqFilterUpdatedBy = new FilterPermissionLogicRequest { UpdatedBy = "IntegrationTestUpdate" };
+            var postReqFilterUpdatedOnDate = new FilterPermissionLogicRequest { UpdatedOnDate = todaysUtcDate };
+            var postReqFilterPermissionIds = new FilterPermissionLogicRequest { PermissionIds = new List<int> { permissions[0].PermissionId, permissions[1].PermissionId, permissions[2].PermissionId } };
+            var postReqFilterName = new FilterPermissionLogicRequest { Name = "Test Permission Name 1" };
+            var postReqFilterApplicationId = new FilterPermissionLogicRequest { ApplicationId = applicationId };
+            
+            // Act
+            var filterCreatedByResult = await _permissionLogic.Filter(postReqFilterCreatedBy);
+            var filterCreatedOnDateResult = await _permissionLogic.Filter(postReqFilterCreatedOnDate);
+            var filterUpdatedByResult = await _permissionLogic.Filter(postReqFilterUpdatedBy);
+            var filterUpdatedOnDateResult = await _permissionLogic.Filter(postReqFilterUpdatedOnDate);
+            var filterPermissionIdsResult = await _permissionLogic.Filter(postReqFilterPermissionIds);
+            var filterNameResult = await _permissionLogic.Filter(postReqFilterName);
+            var filterApplicationIdResult = await _permissionLogic.Filter(postReqFilterApplicationId);
+            
+            // Assert
+            filterCreatedByResult.Response.Should().HaveCount(2);
+            filterCreatedOnDateResult.Response.Should().HaveCount(7);
+            filterUpdatedByResult.Response.Should().HaveCount(1);
+            filterUpdatedOnDateResult.Response.Should().HaveCount(7);
+            filterPermissionIdsResult.Response.Should().HaveCount(3);
+            filterNameResult.Response.Should().HaveCount(1);
+            filterApplicationIdResult.Response.Should().HaveCount(7);
+        }
+
         #endregion
 
         #region Insert
@@ -257,7 +322,7 @@ namespace IntegrationTests.Security.Logic
             // Arrange
             int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
             var recordToCreate = _securityTestUtilities.Permission.CreateInsertUpdateRequestWithRandomValues(applicationId, true);
-            recordToCreate.ApplicationId = -1;
+            recordToCreate.ApplicationId = applicationId > 1 ? applicationId - 1 : applicationId + 1;
 
             var expectedFieldErrors = _securityTestUtilities.Permission.GetExpectedInvalidApplicationIdFieldErrors();
 
