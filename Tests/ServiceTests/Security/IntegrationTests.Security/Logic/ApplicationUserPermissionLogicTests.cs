@@ -15,6 +15,7 @@ namespace IntegrationTests.Security.Logic
     public class ApplicationUserPermissionLogicTests : SecurityTestBase,
                                                        IDefaultLogicTestsGetAll,
                                                        IDefaultLogicTestsGetById,
+                                                       IDefaultLogicTestsFilter,
                                                        IDefaultLogicTestsInsert, 
                                                        IDefaultLogicTestsUpdate,
                                                        IDefaultLogicTestsDelete
