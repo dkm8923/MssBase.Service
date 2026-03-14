@@ -53,5 +53,6 @@ public partial class SecurityDBContext : DbContext
         modelBuilder.ApplyConfiguration(new RoleConfiguration());
         modelBuilder.ApplyConfiguration(new RolePermissionConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserPermissionConfiguration());
+        modelBuilder.ApplyConfiguration(new ApplicationUserRoleConfiguration());
     }
 }
