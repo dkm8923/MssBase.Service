@@ -12,7 +12,8 @@ namespace IntegrationTests.Security.Logic
     [Collection("SecurityIntegrationTests")]
     public class ApplicationUserLogicTests : SecurityTestBase,
                                              IDefaultLogicTestsGetAll,
-                                             IDefaultLogicTestsGetById, 
+                                             IDefaultLogicTestsGetById,
+                                             IDefaultLogicTestsFilter, 
                                              IDefaultLogicTestsInsert, 
                                              IDefaultLogicTestsUpdate,
                                              IDefaultLogicTestsDelete
@@ -172,6 +173,88 @@ namespace IntegrationTests.Security.Logic
             // Assert
             invalidEmailResult.Response.Should().HaveCount(0);
             invalidApplicationIdResult.Response.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Filter_Records()
+        {
+            // Arrange
+            int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            var applicationUsers = await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+
+            //create test roles for filtering tests
+            var testApplicationUser1 = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest
+            {
+                ApplicationId = applicationId,
+                Email = "testEmail1@test.com",
+                FirstName = "TestFirstName1",
+                LastName = "TestLastName1",
+                DateOfBirth = new DateTime(1990, 1, 1),
+                Password = "TestPassword1!",
+                Active = true,
+                CurrentUser = "IntegrationTestInsert"
+            }, _applicationLogic);
+
+            var testApplicationUser2 = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest
+            {
+                ApplicationId = applicationId,
+                Email = "testEmail2@test.com",
+                FirstName = "TestFirstName2",
+                LastName = "TestLastName2",
+                DateOfBirth = new DateTime(1991, 2, 2),
+                Password = "TestPassword2!",
+                Active = true,
+                CurrentUser = "IntegrationTestInsert"
+            }, _applicationLogic);
+
+            await _applicationUserLogic.Update(testApplicationUser2.Response.ApplicationUserId, new InsertUpdateApplicationUserRequest
+            {
+                ApplicationId = applicationId,
+                Email = "testEmail2@test.com",
+                FirstName = "TestFirstName2",
+                LastName = "TestLastName2",
+                DateOfBirth = new DateTime(1991, 2, 2),
+                Password = "TestPassword2!",
+                Active = true,
+                CurrentUser = "IntegrationTestUpdate"
+            }, _applicationLogic);
+
+            var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
+
+            var postReqFilterCreatedBy = new FilterApplicationUserLogicRequest { CreatedBy = "IntegrationTestInsert" };
+            var postReqFilterCreatedOnDate = new FilterApplicationUserLogicRequest { CreatedOnDate = todaysUtcDate };
+            var postReqFilterUpdatedBy = new FilterApplicationUserLogicRequest { UpdatedBy = "IntegrationTestUpdate" };
+            var postReqFilterUpdatedOnDate = new FilterApplicationUserLogicRequest { UpdatedOnDate = todaysUtcDate };
+            var postReqFilterApplicationUserIds = new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { applicationUsers[0].ApplicationUserId, applicationUsers[1].ApplicationUserId, applicationUsers[2].ApplicationUserId } };
+            var postReqFilterEmail = new FilterApplicationUserLogicRequest { Email = testApplicationUser1.Response.Email };
+            var postReqFilterFirstName = new FilterApplicationUserLogicRequest { FirstName = testApplicationUser1.Response.FirstName };
+            var postReqFilterLastName = new FilterApplicationUserLogicRequest { LastName = testApplicationUser1.Response.LastName };
+            var postReqFilterDateOfBirth = new FilterApplicationUserLogicRequest { DateOfBirth = testApplicationUser1.Response.DateOfBirth };
+            var postReqFilterApplicationId = new FilterApplicationUserLogicRequest { ApplicationId = applicationId };
+            
+            // Act
+            var filterCreatedByResult = await _applicationUserLogic.Filter(postReqFilterCreatedBy);
+            var filterCreatedOnDateResult = await _applicationUserLogic.Filter(postReqFilterCreatedOnDate);
+            var filterUpdatedByResult = await _applicationUserLogic.Filter(postReqFilterUpdatedBy);
+            var filterUpdatedOnDateResult = await _applicationUserLogic.Filter(postReqFilterUpdatedOnDate);
+            var filterApplicationUserIdsResult = await _applicationUserLogic.Filter(postReqFilterApplicationUserIds);
+            var filterEmailResult = await _applicationUserLogic.Filter(postReqFilterEmail);
+            var filterFirstNameResult = await _applicationUserLogic.Filter(postReqFilterFirstName);
+            var filterLastNameResult = await _applicationUserLogic.Filter(postReqFilterLastName);
+            var filterDateOfBirthResult = await _applicationUserLogic.Filter(postReqFilterDateOfBirth);
+            var filterApplicationIdResult = await _applicationUserLogic.Filter(postReqFilterApplicationId);
+            
+            // Assert
+            filterCreatedByResult.Response.Should().HaveCount(2);
+            filterCreatedOnDateResult.Response.Should().HaveCount(12);
+            filterUpdatedByResult.Response.Should().HaveCount(1);
+            filterUpdatedOnDateResult.Response.Should().HaveCount(12);
+            filterApplicationUserIdsResult.Response.Should().HaveCount(3);
+            filterEmailResult.Response.Should().HaveCount(1);
+            filterFirstNameResult.Response.Should().HaveCount(1);
+            filterLastNameResult.Response.Should().HaveCount(1);
+            filterDateOfBirthResult.Response.Should().HaveCount(1);
+            filterApplicationIdResult.Response.Should().HaveCount(7);
         }
 
         #endregion

@@ -13,7 +13,8 @@ namespace IntegrationTests.Security.Logic
     [Collection("SecurityIntegrationTests")]
     public class ApplicationLogicTests : SecurityTestBase, 
                                          IDefaultLogicTestsGetAll,
-                                         IDefaultLogicTestsGetById, 
+                                         IDefaultLogicTestsGetById,
+                                         IDefaultLogicTestsFilter,  
                                          IDefaultLogicTestsInsert, 
                                          IDefaultLogicTestsUpdate,
                                          IDefaultLogicTestsDelete
@@ -254,6 +255,64 @@ namespace IntegrationTests.Security.Logic
             invalidUpdatedByResult.Response.Should().HaveCount(0);
             invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
             invalidNameResult.Response.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Filter_Records()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var applications = await _securityTestUtilities.Application.CreateTestRecords();
+
+            //create test roles for filtering tests
+            var testApplication1 = await _applicationLogic.Insert(new InsertUpdateApplicationRequest
+            {
+                Active = true,
+                Name = "Test Application Name 1",
+                Description = "Test Application Description 1",
+                CurrentUser = "IntegrationTestInsert"
+            });
+
+            var testApplication2 = await _applicationLogic.Insert(new InsertUpdateApplicationRequest
+            {
+                Active = true,
+                Name = "Test Application Name 2",
+                Description = "Test Application Description 2",
+                CurrentUser = "IntegrationTestInsert"
+            });
+
+            await _applicationLogic.Update(testApplication2.Response.ApplicationId, new InsertUpdateApplicationRequest
+            {
+                Active = true,
+                Name = "Test Application Name 2",
+                Description = "Test Application Description 2",
+                CurrentUser = "IntegrationTestUpdate"
+            });
+
+            var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
+
+            var postReqFilterCreatedBy = new FilterApplicationLogicRequest { CreatedBy = "IntegrationTestInsert" };
+            var postReqFilterCreatedOnDate = new FilterApplicationLogicRequest { CreatedOnDate = todaysUtcDate };
+            var postReqFilterUpdatedBy = new FilterApplicationLogicRequest { UpdatedBy = "IntegrationTestUpdate" };
+            var postReqFilterUpdatedOnDate = new FilterApplicationLogicRequest { UpdatedOnDate = todaysUtcDate };
+            var postReqFilterApplicationIds = new FilterApplicationLogicRequest { ApplicationIds = new List<int> { applications[0].ApplicationId, applications[1].ApplicationId, applications[2].ApplicationId } };
+            var postReqFilterName = new FilterApplicationLogicRequest { Name = testApplication1.Response.Name };
+            
+            // Act
+            var filterCreatedByResult = await _applicationLogic.Filter(postReqFilterCreatedBy);
+            var filterCreatedOnDateResult = await _applicationLogic.Filter(postReqFilterCreatedOnDate);
+            var filterUpdatedByResult = await _applicationLogic.Filter(postReqFilterUpdatedBy);
+            var filterUpdatedOnDateResult = await _applicationLogic.Filter(postReqFilterUpdatedOnDate);
+            var filterApplicationIdsResult = await _applicationLogic.Filter(postReqFilterApplicationIds);
+            var filterNameResult = await _applicationLogic.Filter(postReqFilterName);
+            
+            // Assert
+            filterCreatedByResult.Response.Should().HaveCount(2);
+            filterCreatedOnDateResult.Response.Should().HaveCount(7);
+            filterUpdatedByResult.Response.Should().HaveCount(1);
+            filterUpdatedOnDateResult.Response.Should().HaveCount(7);
+            filterApplicationIdsResult.Response.Should().HaveCount(3);
+            filterNameResult.Response.Should().HaveCount(1);
         }
 
         #endregion
