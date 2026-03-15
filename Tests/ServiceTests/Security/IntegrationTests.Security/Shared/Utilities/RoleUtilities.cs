@@ -28,7 +28,7 @@ public class RoleUtilities : IRoleUtilities
     {
         await DeleteAllRecords();
         await applicationUtilities.DeleteAllRecords();
-        return (await applicationUtilities.CreateTestRecords(1, true)).FirstOrDefault().ApplicationId;
+        return (await applicationUtilities.CreateActiveTestRecords(1)).FirstOrDefault().ApplicationId;
     }
 
     public InsertUpdateRoleRequest ConvertRoleDtoToInsertUpdateRequest(RoleDto req)

@@ -26,7 +26,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
             await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
@@ -41,7 +41,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
             await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
@@ -115,7 +115,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
             var id = -1;
 
             // Act
@@ -134,7 +134,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
 
             var postReq = new FilterApplicationLogicRequest { };
 
@@ -156,7 +156,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
             await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             var postReq = new FilterApplicationLogicRequest { IncludeInactive = true };
@@ -178,7 +178,7 @@ namespace IntegrationTests.Security.Logic
             //TODO: Test filtering by multiple application ids
             // Arrange
             await ClearAllSecurityTestTableData();
-            var testData = await _securityTestUtilities.Application.CreateTestRecords();
+            var testData = await _securityTestUtilities.Application.CreateActiveTestRecords();
 
             var testRecord = testData.FirstOrDefault();
 
@@ -234,7 +234,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
 
             var postReqInvalidCreatedBy = new FilterApplicationServiceRequest { CreatedBy = "TestCreatedBy" };
             var postReqInvalidCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000") };
@@ -262,7 +262,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var applications = await _securityTestUtilities.Application.CreateTestRecords();
+            var applications = await _securityTestUtilities.Application.CreateActiveTestRecords();
 
             //create test roles for filtering tests
             var testApplication1 = await _applicationLogic.Insert(new InsertUpdateApplicationRequest
@@ -424,7 +424,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var testRecords = await _securityTestUtilities.Application.CreateTestRecords();
+            var testRecords = await _securityTestUtilities.Application.CreateActiveTestRecords();
             var recordToUpdate = testRecords.FirstOrDefault();
             var dupeApplicationName = testRecords.LastOrDefault().Name;
 
@@ -447,7 +447,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
             var testRecords = await _applicationLogic.GetAll(new BaseLogicGet());
             var recordToUpdate = testRecords.Response.FirstOrDefault();
 
@@ -467,7 +467,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
             var testRecords = await _applicationLogic.GetAll(new BaseLogicGet());
             var recordToUpdate = testRecords.Response.FirstOrDefault();
 

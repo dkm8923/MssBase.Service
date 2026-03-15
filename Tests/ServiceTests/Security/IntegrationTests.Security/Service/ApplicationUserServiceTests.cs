@@ -55,7 +55,7 @@ namespace IntegrationTests.Security.Service
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = $"ApplicationUserService_GetAll_0_0";
@@ -74,7 +74,7 @@ namespace IntegrationTests.Security.Service
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = "ApplicationUserService_GetAll_1_0";
@@ -153,7 +153,7 @@ namespace IntegrationTests.Security.Service
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var id = -1;
@@ -176,7 +176,7 @@ namespace IntegrationTests.Security.Service
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var postReq = new FilterApplicationUserServiceRequest { CreatedBy = TestConstants.CurrentUser };
@@ -199,7 +199,7 @@ namespace IntegrationTests.Security.Service
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
             var applicationUserCacheKeys = _cacheTestUtilities.GetKeys();
             applicationUserCacheKeys.Should().HaveCountGreaterThan(0);
 

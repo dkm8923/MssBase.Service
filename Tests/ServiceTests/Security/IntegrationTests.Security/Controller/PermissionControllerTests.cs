@@ -27,8 +27,8 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             int permissionId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Permission.CreateTestRecords(permissionId);
-            await _securityTestUtilities.Permission.CreateTestRecords(permissionId, 1, false);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(permissionId);
+            await _securityTestUtilities.Permission.CreateInactiveTestRecords(permissionId, 1);
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<PermissionDto>>(_client, ApiEndPoints.Security.Permission.Base);
@@ -43,8 +43,8 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             int permissionId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Permission.CreateTestRecords(permissionId);
-            await _securityTestUtilities.Permission.CreateTestRecords(permissionId, 1, false);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(permissionId);
+            await _securityTestUtilities.Permission.CreateInactiveTestRecords(permissionId, 1);
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<PermissionDto>>(_client, ApiEndPoints.Security.Permission.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
@@ -120,7 +120,7 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             int permissionId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Permission.CreateTestRecords(permissionId);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(permissionId);
             var id = -1;
 
             // Act
@@ -154,7 +154,7 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             int permissionId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Permission.CreateTestRecords(permissionId);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(permissionId);
 
             var postReq = new FilterPermissionServiceRequest { };
 
@@ -172,8 +172,8 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             int permissionId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Permission.CreateTestRecords(permissionId);
-            await _securityTestUtilities.Permission.CreateTestRecords(permissionId, 1, false);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(permissionId);
+            await _securityTestUtilities.Permission.CreateInactiveTestRecords(permissionId, 1);
 
             var postReq = new FilterPermissionServiceRequest { IncludeInactive = true };
 

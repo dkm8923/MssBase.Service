@@ -25,7 +25,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
             await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(applicationId, false);
 
             // Act
@@ -40,7 +40,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
             await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(applicationId, false);
 
             // Act
@@ -118,7 +118,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
 
             var postReq = new FilterApplicationUserLogicRequest { };
 
@@ -140,7 +140,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
             await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(applicationId, false);
 
             var postReq = new FilterApplicationUserLogicRequest { IncludeInactive = true };
@@ -161,7 +161,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
 
             var postReqInvalidEmail = new FilterApplicationUserServiceRequest { Email = "invalid@test.com" };
             var postReqInvalidApplicationId = new FilterApplicationUserServiceRequest { ApplicationId = -1 };
@@ -180,7 +180,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var applicationUsers = await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            var applicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
 
             //create test roles for filtering tests
             var testApplicationUser1 = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest
@@ -386,7 +386,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecords = await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            var testRecords = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
             var recordToUpdate = testRecords.FirstOrDefault();
             var dupeEmail = testRecords.LastOrDefault().Email;
 
@@ -408,7 +408,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
             var testRecords = await _applicationUserLogic.GetAll(new BaseLogicGet());
             var recordToUpdate = testRecords.Response.FirstOrDefault();
 
@@ -428,7 +428,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
             var testRecords = await _applicationUserLogic.GetAll(new BaseLogicGet());
             var recordToUpdate = testRecords.Response.FirstOrDefault();
             recordToUpdate.Email = "invalidEmail";

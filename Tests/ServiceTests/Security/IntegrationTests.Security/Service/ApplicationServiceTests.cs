@@ -57,7 +57,7 @@ namespace IntegrationTests.Security.Service
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = $"ApplicationService_GetAll_0_0";
@@ -77,7 +77,7 @@ namespace IntegrationTests.Security.Service
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = "ApplicationService_GetAll_1_0";
@@ -158,7 +158,7 @@ namespace IntegrationTests.Security.Service
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var id = -1;
@@ -181,7 +181,7 @@ namespace IntegrationTests.Security.Service
         {
            // Arrange
            await ClearAllSecurityTestTableData();
-           await _securityTestUtilities.Application.CreateTestRecords();
+           await _securityTestUtilities.Application.CreateActiveTestRecords();
            await _securityTestUtilities.Application.CreateSingleApplicationTestRecordWithSpecificValues();
            await _cacheTestUtilities.DeleteAllKeyData();
 
