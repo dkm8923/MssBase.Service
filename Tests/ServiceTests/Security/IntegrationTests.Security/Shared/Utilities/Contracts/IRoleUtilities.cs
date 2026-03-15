@@ -6,7 +6,8 @@ public interface IRoleUtilities
 {
     public Task<int> ClearTestTablesAndReturnApplicationId(IApplicationUtilities applicationUtilities);
     public Task DeleteAllRecords();
-    public Task<List<RoleDto>> CreateTestRecords(int applicationId, short numberOfRecordsToCreate = 5, bool active = true);
+    public Task<List<RoleDto>> CreateActiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5);
+    public Task<List<RoleDto>> CreateInactiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5);
     public Task<RoleDto> CreateSingleRoleTestRecord(int applicationId,bool active = true);
     public InsertUpdateRoleRequest CreateInsertUpdateRequestWithMaxLengthErrors();
     public InsertUpdateRoleRequest CreateInsertUpdateRequestWithRandomValues(int applicationId, bool active = true);

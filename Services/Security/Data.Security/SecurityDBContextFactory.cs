@@ -34,10 +34,21 @@ namespace Data.Security
             //     decryptedConnectionString = Encryption.Decrypt(connectionString);
             // }
 
-            var options = new DbContextOptionsBuilder<SecurityDBContext>()
-            .UseSqlServer(decryptedConnectionString)
-            .LogTo(Console.WriteLine)
-            .Options;
+            var isDevelopment = string.Equals(
+                Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+                "Development",
+                StringComparison.OrdinalIgnoreCase);
+
+            var optionsBuilder = new DbContextOptionsBuilder<SecurityDBContext>()
+                .UseSqlServer(decryptedConnectionString)
+                .LogTo(Console.WriteLine);
+
+            if (isDevelopment)
+            {
+                optionsBuilder.EnableSensitiveDataLogging();
+            }
+
+            var options = optionsBuilder.Options;
 
             return new SecurityDBContext(options);
         }

@@ -81,6 +81,11 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.Name == req.Name);
                 }
 
+                if (req.ApplicationId != null)
+                {
+                    query = query.Where(x => x.ApplicationId == req.ApplicationId);
+                }
+
                 return new ErrorValidationResult<IEnumerable<RoleDto>> { Response = query.ToDtos() };
             }
         }

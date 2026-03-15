@@ -8,7 +8,6 @@ public interface IPermissionUtilities
     public Task DeleteAllRecords();
     public Task<List<PermissionDto>> CreateActiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5);
     public Task<List<PermissionDto>> CreateInactiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5);
-    public Task<List<PermissionDto>> CreateTestRecords(int applicationId, short numberOfRecordsToCreate = 5, bool active = true);
     public Task<PermissionDto> CreateSinglePermissionTestRecord(int applicationId,bool active = true);
     public InsertUpdatePermissionRequest CreateInsertUpdateRequestWithMaxLengthErrors();
     public InsertUpdatePermissionRequest CreateInsertUpdateRequestWithRandomValues(int applicationId, bool active = true);

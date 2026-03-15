@@ -102,28 +102,6 @@ public class ApplicationUtilities : IApplicationUtilities
         return ret.Response;
     }
 
-
-    /// <summary>
-    /// Asynchronously creates a set of predefined test application records in the data store.
-    /// </summary>
-    /// <remarks>This method is intended for use in integration testing scenarios to populate the data
-    /// store with sample application records. The created records use fixed test values and may overwrite existing data
-    /// with the same identifiers.</remarks>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task<List<ApplicationDto>> CreateTestRecords(short numberOfRecordsToCreate = 5, bool active = true)
-    {
-        //create test records
-        var ret = new List<ApplicationDto>();
-        var recordsToCreate = new List<InsertUpdateApplicationRequest>();
-
-        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
-        {
-            ret.Add(await CreateSingleApplicationTestRecord(active));
-        }
-
-        return ret;
-    }
-
     /// <summary>
     /// Asynchronously creates a set of predefined test active application records in the data store.
     /// </summary>

@@ -42,7 +42,7 @@ namespace Shared.Logic
 
             if (!string.IsNullOrWhiteSpace(filter.CreatedBy))
             {
-                query = query.Where(e => e.CreatedBy == filter.CreatedBy);
+                query = query.Where(x => x.CreatedBy == filter.CreatedBy);
             }
                 
             if (filter.CreatedOnDate.HasValue)
@@ -52,7 +52,7 @@ namespace Shared.Logic
 
             if (!string.IsNullOrWhiteSpace(filter.UpdatedBy))
             {
-                query = query.Where(e => e.UpdatedBy == filter.UpdatedBy);
+                query = query.Where(x => x.UpdatedBy == filter.UpdatedBy);
             }
                 
             if (filter.UpdatedOnDate.HasValue)

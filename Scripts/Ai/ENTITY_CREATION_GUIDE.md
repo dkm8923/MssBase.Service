@@ -402,7 +402,7 @@ Implements `I{EntityName}Utilities` interface and provides helper methods for te
 - `CreateInsertUpdateRequestWithMaxLengthErrors()` - Creates a request with field length violations
 - `CreateSingleApplicationTestRecord()` - Creates and inserts a single test record
 - `CreateSingleApplicationTestRecordWithSpecificValues()` - Creates a test record with specific values
-- `CreateTestRecords()` - Creates multiple test records
+- `CreateActiveTestRecords()` - Creates multiple active test records
 - `DeleteAllRecords()` - Deletes all records including inactive ones
 - `ConvertApplicationDtoToInsertUpdateRequest()` - Converts DTO to request
 - `VerifyTestRecordValuesMatch()` - Verifies two records have matching values
@@ -481,7 +481,7 @@ Defines the contract for the utilities class.
 public interface IApplicationUtilities
 {
     public Task DeleteAllRecords();
-    public Task<List<ApplicationDto>> CreateTestRecords(short numberOfRecordsToCreate = 5, bool active = true);
+    public Task<List<ApplicationDto>> CreateActiveTestRecords(short numberOfRecordsToCreate = 5);
     public Task<ApplicationDto> CreateSingleApplicationTestRecord(bool active = true);
     public Task<ApplicationDto> CreateSingleApplicationTestRecordWithSpecificValues(InsertUpdateApplicationRequest req = null);
     public InsertUpdateApplicationRequest CreateInsertUpdateRequestWithMaxLengthErrors();
@@ -532,8 +532,8 @@ public class ApplicationControllerTests : SecurityTestBase, IClassFixture<WebApp
     {
         // Arrange
         await _SecurityTestUtilities.Application.DeleteAllRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords(1, false); // inactive record
+        await _SecurityTestUtilities.Application.CreateActiveTestRecords();
+        await _SecurityTestUtilities.Application.CreateInactiveTestRecords(1); // inactive record
 
         // Act
         var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(
@@ -549,13 +549,13 @@ public class ApplicationControllerTests : SecurityTestBase, IClassFixture<WebApp
     {
         // Arrange
         await _SecurityTestUtilities.Application.DeleteAllRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords(1, false);
+        await _SecurityTestUtilities.Application.CreateActiveTestRecords();
+        await _SecurityTestUtilities.Application.CreateInactiveTestRecords(1);
 
         // Act
         var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(
             _client, ApiEndPoints.Security.Application.Base + "?" + 
-            ControllerTestUtilities.createIncludeInactiveQueryStringParm(true));
+            ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
         // Assert
         result.Errors.Should().HaveCount(0);
@@ -591,7 +591,7 @@ public class ApplicationControllerTests : SecurityTestBase, IClassFixture<WebApp
     {
         // Arrange
         await _SecurityTestUtilities.Application.DeleteAllRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords();
+        await _SecurityTestUtilities.Application.CreateActiveTestRecords();
 
         var postReq = new FilterApplicationServiceRequest { };
 
@@ -708,7 +708,7 @@ public class ApplicationLogicTests : SecurityTestBase
     {
         // Arrange
         await _SecurityTestUtilities.Application.DeleteAllRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords();
+        await _SecurityTestUtilities.Application.CreateActiveTestRecords();
         await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
         // Act
@@ -723,7 +723,7 @@ public class ApplicationLogicTests : SecurityTestBase
     {
         // Arrange
         await _SecurityTestUtilities.Application.DeleteAllRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords();
+        await _SecurityTestUtilities.Application.CreateActiveTestRecords();
         await _SecurityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
         // Act
@@ -760,7 +760,7 @@ public class ApplicationLogicTests : SecurityTestBase
     {
         // Arrange
         await _SecurityTestUtilities.Application.DeleteAllRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords();
+        await _SecurityTestUtilities.Application.CreateActiveTestRecords();
 
         var postReq = new FilterApplicationLogicRequest { };
 
@@ -887,7 +887,7 @@ public class ApplicationServiceTests : SecurityTestBase
     {
         // Arrange
         await _SecurityTestUtilities.Application.DeleteAllRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords();
+        await _SecurityTestUtilities.Application.CreateActiveTestRecords();
         await _cacheTestUtilities.DeleteAllKeyData();
 
         var expectedCacheKey = $"ApplicationService_GetAll_0_0";
@@ -906,7 +906,7 @@ public class ApplicationServiceTests : SecurityTestBase
     {
         // Arrange
         await _SecurityTestUtilities.Application.DeleteAllRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords();
+        await _SecurityTestUtilities.Application.CreateActiveTestRecords();
         await _cacheTestUtilities.DeleteAllKeyData();
 
         var expectedCacheKey = "ApplicationService_GetAll_1_0";
@@ -952,7 +952,7 @@ public class ApplicationServiceTests : SecurityTestBase
     {
         // Arrange
         await _SecurityTestUtilities.Application.DeleteAllRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords();
+        await _SecurityTestUtilities.Application.CreateActiveTestRecords();
         await _cacheTestUtilities.DeleteAllKeyData();
 
         var postReq = new FilterApplicationServiceRequest { CreatedBy = TestConstants.CurrentUser };
@@ -976,7 +976,7 @@ public class ApplicationServiceTests : SecurityTestBase
     {
         // Arrange
         await _SecurityTestUtilities.Application.DeleteAllRecords();
-        await _SecurityTestUtilities.Application.CreateTestRecords();
+        await _SecurityTestUtilities.Application.CreateActiveTestRecords();
         var applicationCacheKeys = _cacheTestUtilities.GetKeys();
         applicationCacheKeys.Should().HaveCountGreaterThan(0);
 

@@ -27,8 +27,8 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateTestRecords(roleId);
-            await _securityTestUtilities.Role.CreateTestRecords(roleId, 1, false);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(roleId);
+            await _securityTestUtilities.Role.CreateInactiveTestRecords(roleId, 1);
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base);
@@ -43,11 +43,11 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateTestRecords(roleId);
-            await _securityTestUtilities.Role.CreateTestRecords(roleId, 1, false);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(roleId);
+            await _securityTestUtilities.Role.CreateInactiveTestRecords(roleId, 1);
 
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base + "?" + ControllerTestUtilities.createIncludeInactiveQueryStringParm(true));
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
             // Assert
             result.Errors.Should().HaveCount(0);
@@ -109,7 +109,7 @@ namespace IntegrationTests.Security.Controller
             var testRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(roleId, false);
 
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.Role.Base + "/" + testRecord.RoleId + "?" + ControllerTestUtilities.createIncludeInactiveQueryStringParm(true));
+            var response = await _client.GetAsync(ApiEndPoints.Security.Role.Base + "/" + testRecord.RoleId + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -120,7 +120,7 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateTestRecords(roleId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(roleId);
             var id = -1;
 
             // Act
@@ -154,7 +154,7 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateTestRecords(roleId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(roleId);
 
             var postReq = new FilterRoleServiceRequest { };
 
@@ -172,8 +172,8 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateTestRecords(roleId);
-            await _securityTestUtilities.Role.CreateTestRecords(roleId, 1, false);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(roleId);
+            await _securityTestUtilities.Role.CreateInactiveTestRecords(roleId, 1);
 
             var postReq = new FilterRoleServiceRequest { IncludeInactive = true };
 

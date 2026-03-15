@@ -28,7 +28,7 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     {
         await DeleteAllRecords();
         await applicationUtilities.DeleteAllRecords();
-        return (await applicationUtilities.CreateTestRecords(1, true)).FirstOrDefault().ApplicationId;
+        return (await applicationUtilities.CreateActiveTestRecords(1)).FirstOrDefault().ApplicationId;
     }
 
     public InsertUpdateApplicationUserRequest ConvertApplicationUserDtoToInsertUpdateRequest(ApplicationUserDto req)
@@ -126,23 +126,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
 
     //     return ret.Response;
     // }
-
-    /// <summary>
-    /// Asynchronously creates a set of predefined test application user records in the data store.
-    /// </summary>
-    public async Task<List<ApplicationUserDto>> CreateTestRecords(int applicationId, short numberOfRecordsToCreate = 5, bool active = true)
-    {
-        //create test records
-        var ret = new List<ApplicationUserDto>();
-        var recordsToCreate = new List<InsertUpdateApplicationUserRequest>();
-
-        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
-        {
-            ret.Add(await CreateSingleApplicationUserTestRecord(applicationId, active));
-        }
-
-        return ret;
-    }
 
     /// <summary>
     /// Asynchronously creates a set of predefined active test application user records in the data store.

@@ -28,7 +28,7 @@ public class PermissionUtilities : IPermissionUtilities
     {
         await DeleteAllRecords();
         await applicationUtilities.DeleteAllRecords();
-        return (await applicationUtilities.CreateTestRecords(1, true)).FirstOrDefault().ApplicationId;
+        return (await applicationUtilities.CreateActiveTestRecords(1)).FirstOrDefault().ApplicationId;
     }
 
     public InsertUpdatePermissionRequest ConvertPermissionDtoToInsertUpdateRequest(PermissionDto req)
@@ -80,23 +80,6 @@ public class PermissionUtilities : IPermissionUtilities
         ret.Errors.Should().BeNullOrEmpty("Insert of permission test record failed when it should have succeeded.");
 
         return ret.Response;
-    }
-
-    /// <summary>
-    /// Asynchronously creates a set of predefined test permission records in the data store.
-    /// </summary>
-    public async Task<List<PermissionDto>> CreateTestRecords(int applicationId, short numberOfRecordsToCreate = 5, bool active = true)
-    {
-        //create test records
-        var ret = new List<PermissionDto>();
-        var recordsToCreate = new List<InsertUpdatePermissionRequest>();
-
-        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
-        {
-            ret.Add(await CreateSinglePermissionTestRecord(applicationId, active));
-        }
-
-        return ret;
     }
 
     /// <summary>
@@ -186,7 +169,7 @@ public class PermissionUtilities : IPermissionUtilities
     {
         return new Dictionary<string, List<string>>
         {
-            { "ApplicationId", new List<string> { "ApplicationId is invalid!" } }
+            { "ApplicationId", new List<string> { "Record does not exist for specified ApplicationId!" } }
         };
     }
 

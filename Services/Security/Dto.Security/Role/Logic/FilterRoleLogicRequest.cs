@@ -11,7 +11,6 @@ namespace Dto.Security.Role.Logic
         public DateOnly? UpdatedOnDate { get; set; }
         public List<int>? RoleIds { get; set; }
         public string? Name { get; set; }
-        public string? Description { get; set; }
         public int? ApplicationId { get; set; }
     }
 }

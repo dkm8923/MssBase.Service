@@ -18,7 +18,7 @@ public class SecurityTestData
         ActiveApplicationUsers = new List<ApplicationUserDto>();
         InactiveApplicationUsers = new List<ApplicationUserDto>();
         ActiveApplicationUserRoles = new List<ApplicationUserRoleDto>();
-        InactiveApplicationUserRoless = new List<ApplicationUserRoleDto>();
+        InactiveApplicationUserRoles = new List<ApplicationUserRoleDto>();
         ActivePermissions = new List<PermissionDto>();
         InactivePermissions = new List<PermissionDto>();
         ActiveRoles = new List<RoleDto>();
@@ -34,7 +34,7 @@ public class SecurityTestData
     public List<ApplicationUserDto> ActiveApplicationUsers { get; set; }
     public List<ApplicationUserDto> InactiveApplicationUsers { get; set; }
     public List<ApplicationUserRoleDto> ActiveApplicationUserRoles { get; set; }
-    public List<ApplicationUserRoleDto> InactiveApplicationUserRoless { get; set; }
+    public List<ApplicationUserRoleDto> InactiveApplicationUserRoles { get; set; }
     public List<PermissionDto> ActivePermissions { get; set; }
     public List<PermissionDto> InactivePermissions { get; set; }
     public List<RoleDto> ActiveRoles { get; set; }

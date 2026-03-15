@@ -4,6 +4,7 @@ using Data.Security.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Security.Migrations
 {
     [DbContext(typeof(SecurityDBContext))]
-    partial class SecurityDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260314212408_3_14_26_ApplicationUserRole")]
+    partial class _3_14_26_ApplicationUserRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -342,38 +345,30 @@ namespace Data.Security.Migrations
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
-                        .HasMaxLength(64)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(64)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedOn")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
                     b.Property<string>("UpdatedBy")
                         .IsRequired()
-                        .HasMaxLength(64)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(64)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("UpdatedOn")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("ApplicationUserRoleId");
+
+                    b.HasIndex("ApplicationId");
 
                     b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("RoleId");
 
-                    b.HasIndex("ApplicationId", "ApplicationUserId", "RoleId")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_ApplicationUserRole_ApplicationId_ApplicationUserId_RoleId");
-
-                    b.ToTable("ApplicationUserRole", (string)null);
+                    b.ToTable("ApplicationUserRoles");
                 });
 
             modelBuilder.Entity("Data.Security.Models.Permission", b =>
@@ -686,20 +681,20 @@ namespace Data.Security.Migrations
                     b.HasOne("Data.Security.Models.Application", "Application")
                         .WithMany("ApplicationUserRoles")
                         .HasForeignKey("ApplicationId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ApplicationUserRole_Application");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Data.Security.Models.ApplicationUser", "ApplicationUser")
                         .WithMany("ApplicationUserRoles")
                         .HasForeignKey("ApplicationUserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ApplicationUserRole_User");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Data.Security.Models.Role", "Role")
                         .WithMany("ApplicationUserRoles")
                         .HasForeignKey("RoleId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ApplicationUserRole_Role");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Application");
 

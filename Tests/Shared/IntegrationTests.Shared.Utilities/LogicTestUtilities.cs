@@ -80,5 +80,14 @@ namespace IntegrationTests.Shared
                 actualErrors[expected.Key].Should().BeEquivalentTo(expected.Value);
             }
         }
+
+        /// <summary>
+        /// Gets today's date in UTC as a DateOnly object.
+        /// </summary>
+        /// <returns></returns>
+        public static DateOnly GetTodaysUtcDateOnly()
+        {
+            return new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day);
+        }
     }
 }

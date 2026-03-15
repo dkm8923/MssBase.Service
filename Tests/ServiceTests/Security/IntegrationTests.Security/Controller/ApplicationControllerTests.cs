@@ -44,8 +44,8 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
-            await _securityTestUtilities.Application.CreateTestRecords(1, false); //inactive record that should not be returned in results
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
+            await _securityTestUtilities.Application.CreateInactiveTestRecords(1); //inactive record that should not be returned in results
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(_client, ApiEndPoints.Security.Application.Base);
@@ -60,8 +60,8 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
-            await _securityTestUtilities.Application.CreateTestRecords(1, false); //inactive record that should be returned in results when includeInactive = true
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
+            await _securityTestUtilities.Application.CreateInactiveTestRecords(1); //inactive record that should be returned in results when includeInactive = true
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(_client, ApiEndPoints.Security.Application.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
@@ -90,12 +90,12 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var applications = await _securityTestUtilities.Application.CreateTestRecords();
+            var applications = await _securityTestUtilities.Application.CreateActiveTestRecords();
             var applicationId = applications[0].ApplicationId;
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Permission.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Application.CreateTestRecords(1, false); //inactive record that should be returned in results when includeInactive = true
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
+            await _securityTestUtilities.Application.CreateInactiveTestRecords(1); //inactive record that should be returned in results when includeInactive = true
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(_client, ApiEndPoints.Security.Application.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true));
@@ -115,12 +115,12 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var applications = await _securityTestUtilities.Application.CreateTestRecords();
+            var applications = await _securityTestUtilities.Application.CreateActiveTestRecords();
             var applicationId = applications[0].ApplicationId;
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Permission.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Application.CreateTestRecords(1, false); //inactive record that should be returned in results when includeInactive = true
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
+            await _securityTestUtilities.Application.CreateInactiveTestRecords(1); //inactive record that should be returned in results when includeInactive = true
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(_client, ApiEndPoints.Security.Application.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(false));
@@ -187,7 +187,7 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
             var id = -1;
 
             // Act
@@ -219,9 +219,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             await ClearAllSecurityTestTableData();
             var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(testRecord.ApplicationId);
-            await _securityTestUtilities.Permission.CreateTestRecords(testRecord.ApplicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(testRecord.ApplicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(testRecord.ApplicationId);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(testRecord.ApplicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(testRecord.ApplicationId);
             
             // Act
             var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base + "/" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true), testRecord.ApplicationId);
@@ -240,9 +240,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             await ClearAllSecurityTestTableData();
             var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(testRecord.ApplicationId);
-            await _securityTestUtilities.Permission.CreateTestRecords(testRecord.ApplicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(testRecord.ApplicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(testRecord.ApplicationId);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(testRecord.ApplicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(testRecord.ApplicationId);
             
             // Act
             var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base + "/" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(false), testRecord.ApplicationId);
@@ -264,7 +264,7 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
 
             var postReq = new FilterApplicationServiceRequest { };
 
@@ -282,8 +282,8 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
-            await _securityTestUtilities.Application.CreateTestRecords(1, false); //inactive record that should be returned in results when includeInactive = true
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
+            await _securityTestUtilities.Application.CreateInactiveTestRecords(1); //inactive record that should be returned in results when includeInactive = true
 
             var postReq = new FilterApplicationServiceRequest { IncludeInactive = true };
 
@@ -301,7 +301,7 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
             await _securityTestUtilities.Application.CreateSingleApplicationTestRecordWithSpecificValues();
 
             var postReqCreatedBy = new FilterApplicationServiceRequest { CreatedBy = TestConstants.CurrentUser };
@@ -356,7 +356,7 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            await _securityTestUtilities.Application.CreateTestRecords();
+            await _securityTestUtilities.Application.CreateActiveTestRecords();
 
             var postReqInvalidCreatedBy = new FilterApplicationServiceRequest { CreatedBy = "TestCreatedBy" };
             var postReqInvalidCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000") };
@@ -412,11 +412,11 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var applications = await _securityTestUtilities.Application.CreateTestRecords();
+            var applications = await _securityTestUtilities.Application.CreateActiveTestRecords();
             var applicationId = applications[0].ApplicationId;
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Permission.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
             
             var postReq = new FilterApplicationServiceRequest { IncludeRelated = true };
 
@@ -439,11 +439,11 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var applications = await _securityTestUtilities.Application.CreateTestRecords();
+            var applications = await _securityTestUtilities.Application.CreateActiveTestRecords();
             var applicationId = applications[0].ApplicationId;
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Permission.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(applicationId);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
             
             var postReq = new FilterApplicationServiceRequest { IncludeRelated = false };
 

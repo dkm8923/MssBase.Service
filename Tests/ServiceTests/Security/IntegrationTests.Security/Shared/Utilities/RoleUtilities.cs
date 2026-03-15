@@ -28,7 +28,7 @@ public class RoleUtilities : IRoleUtilities
     {
         await DeleteAllRecords();
         await applicationUtilities.DeleteAllRecords();
-        return (await applicationUtilities.CreateTestRecords(1, true)).FirstOrDefault().ApplicationId;
+        return (await applicationUtilities.CreateActiveTestRecords(1)).FirstOrDefault().ApplicationId;
     }
 
     public InsertUpdateRoleRequest ConvertRoleDtoToInsertUpdateRequest(RoleDto req)
@@ -47,8 +47,8 @@ public class RoleUtilities : IRoleUtilities
     {
         return new InsertUpdateRoleRequest
         { 
-            Name = LogicTestUtilities.GenerateRandomString(120),
-            Description = LogicTestUtilities.GenerateRandomString(65),
+            Name = LogicTestUtilities.GenerateRandomString(65),
+            Description = LogicTestUtilities.GenerateRandomString(257),
             Active = true,
             ApplicationId = 1,
             CurrentUser = LogicTestUtilities.GenerateRandomString(65)
@@ -83,9 +83,9 @@ public class RoleUtilities : IRoleUtilities
     }
 
     /// <summary>
-    /// Asynchronously creates a set of predefined test role records in the data store.
+    /// Asynchronously creates a set of predefined active test role records in the data store.
     /// </summary>
-    public async Task<List<RoleDto>> CreateTestRecords(int applicationId, short numberOfRecordsToCreate = 5, bool active = true)
+    public async Task<List<RoleDto>> CreateActiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
     {
         //create test records
         var ret = new List<RoleDto>();
@@ -93,7 +93,24 @@ public class RoleUtilities : IRoleUtilities
 
         for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
         {
-            ret.Add(await CreateSingleRoleTestRecord(applicationId, active));
+            ret.Add(await CreateSingleRoleTestRecord(applicationId, true));
+        }
+
+        return ret;
+    }
+
+    /// <summary>
+    /// Asynchronously creates a set of predefined inactive test role records in the data store.
+    /// </summary>
+    public async Task<List<RoleDto>> CreateInactiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
+    {
+        //create test records
+        var ret = new List<RoleDto>();
+        var recordsToCreate = new List<InsertUpdateRoleRequest>();
+
+        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
+        {
+            ret.Add(await CreateSingleRoleTestRecord(applicationId, false));
         }
 
         return ret;
@@ -152,7 +169,7 @@ public class RoleUtilities : IRoleUtilities
     {
         return new Dictionary<string, List<string>>
         {
-            { "ApplicationId", new List<string> { "ApplicationId is invalid!" } }
+            { "ApplicationId", new List<string> { "Record does not exist for specified ApplicationId!" } }
         };
     }
 
