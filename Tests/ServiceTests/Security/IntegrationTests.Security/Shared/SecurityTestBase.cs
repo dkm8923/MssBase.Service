@@ -35,6 +35,10 @@ using Contract.Security.ApplicationUserRole;
 using Dto.Security.ApplicationUserRole.Logic;
 using Logic.Security.Validators.ApplicationUserRole;
 using Dto.Security.ApplicationUserRole;
+using Contract.Security.RolePermission;
+using Dto.Security.RolePermission.Logic;
+using Logic.Security.Validators.RolePermission;
+using Dto.Security.RolePermission;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -49,6 +53,7 @@ public class SecurityTestBase
     protected readonly IApplicationUserRoleLogic _applicationUserRoleLogic;
     protected readonly IPermissionLogic _permissionLogic;
     protected readonly IRoleLogic _roleLogic;
+    protected readonly IRolePermissionLogic _rolePermissionLogic;
     protected readonly ISecurityTestUtilitiesManager _securityTestUtilities;
     
     public SecurityTestBase()
@@ -66,6 +71,7 @@ public class SecurityTestBase
         _applicationUserRoleLogic = _serviceProvider.GetService<IApplicationUserRoleLogic>();
         _permissionLogic = _serviceProvider.GetService<IPermissionLogic>();
         _roleLogic = _serviceProvider.GetService<IRoleLogic>();
+        _rolePermissionLogic = _serviceProvider.GetService<IRolePermissionLogic>();
         _securityTestUtilities = _serviceProvider.GetService<ISecurityTestUtilitiesManager>();
     }
 
@@ -73,7 +79,7 @@ public class SecurityTestBase
     {
         await _securityTestUtilities.ApplicationUserPermission.DeleteAllRecords();
         await _securityTestUtilities.ApplicationUserRole.DeleteAllRecords();
-        //await _securityTestUtilities.RolePermission.DeleteAllRecords();
+        await _securityTestUtilities.RolePermission.DeleteAllRecords();
         await _securityTestUtilities.Role.DeleteAllRecords();
         await _securityTestUtilities.Permission.DeleteAllRecords();
         await _securityTestUtilities.ApplicationUser.DeleteAllRecords();
@@ -104,6 +110,9 @@ public class SecurityTestBase
 
         var activeApplicationUserRoles = new List<ApplicationUserRoleDto>();
         var inactiveApplicationUserRoles = new List<ApplicationUserRoleDto>();
+
+        var activeRolePermissions = new List<RolePermissionDto>();
+        var inactiveRolePermissions = new List<RolePermissionDto>();
 
         foreach (var activeApplication in activeApplications)
         {
@@ -166,6 +175,24 @@ public class SecurityTestBase
                     inactiveApplicationUserRoles.AddRange(await _securityTestUtilities.ApplicationUserRole.CreateInactiveTestRecords(activeApplication.ApplicationId, inactiveApplicationUser.ApplicationUserId, inactiveRole.RoleId, 1));
                 }
             }
+
+            //create test active role permissions
+            foreach (var activeRole in activeRoleRes)
+            {
+                foreach (var activePermission in activePermissionRes)
+                {
+                    activeRolePermissions.AddRange(await _securityTestUtilities.RolePermission.CreateActiveTestRecords(activeApplication.ApplicationId, activeRole.RoleId, activePermission.PermissionId, 1));
+                }
+            }
+
+            //create test inactive role permissions
+            foreach (var inactiveRole in inactiveRoleRes)
+            {
+                foreach (var inactivePermission in inactivePermissionRes)
+                {
+                    inactiveRolePermissions.AddRange(await _securityTestUtilities.RolePermission.CreateInactiveTestRecords(activeApplication.ApplicationId, inactiveRole.RoleId, inactivePermission.PermissionId, 1));
+                }
+            }
         }
 
         foreach (var inactiveApplication in inactiveApplications)
@@ -199,6 +226,15 @@ public class SecurityTestBase
                     inactiveApplicationUserRoles.AddRange(await _securityTestUtilities.ApplicationUserRole.CreateInactiveTestRecords(inactiveApplication.ApplicationId, inactiveApplicationUser.ApplicationUserId, inactiveRole.RoleId, 1));
                 }
             }
+
+            //create test inactive role permissions
+            foreach (var inactiveRole in inactiveRoleRes)
+            {
+                foreach (var inactivePermission in inactivePermissionRes)
+                {
+                    inactiveRolePermissions.AddRange(await _securityTestUtilities.RolePermission.CreateInactiveTestRecords(inactiveApplication.ApplicationId, inactiveRole.RoleId, inactivePermission.PermissionId, 1));
+                }
+            }
         }
         
         securityTestDataRet.ActiveApplications = activeApplications;
@@ -213,6 +249,8 @@ public class SecurityTestBase
         securityTestDataRet.InactiveApplicationUserPermissions = inactiveApplicationUserPermissions;
         securityTestDataRet.ActiveApplicationUserRoles = activeApplicationUserRoles;
         securityTestDataRet.InactiveApplicationUserRoles = inactiveApplicationUserRoles;
+        securityTestDataRet.ActiveRolePermissions = activeRolePermissions;
+        securityTestDataRet.InactiveRolePermissions = inactiveRolePermissions;
 
         return securityTestDataRet;
     }
@@ -245,6 +283,7 @@ public class SecurityTestBase
         services.AddTransient<IPermissionUtilities, PermissionUtilities>();
         services.AddTransient<IApplicationUserPermissionUtilities, ApplicationUserPermissionUtilities>();
         services.AddTransient<IApplicationUserRoleUtilities, ApplicationUserRoleUtilities>();
+        services.AddTransient<IRolePermissionUtilities, RolePermissionUtilities>();
         
         return services;
     }
@@ -319,6 +358,17 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterPermissionLogicRequest>, FilterPermissionLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdatePermissionRequest>, InsertUpdatePermissionRequestValidator>();
+
+        #endregion
+
+        #region RolePermission
+
+        services.AddTransient<IRolePermissionService, RolePermissionService>();
+        services.AddTransient<IRolePermissionLogic, RolePermissionLogic>();
+
+        //Configure Fluent Validation Validators
+        services.AddTransient<IValidator<FilterRolePermissionLogicRequest>, FilterRolePermissionLogicRequestValidator>();
+        services.AddTransient<IValidator<InsertUpdateRolePermissionRequest>, InsertUpdateRolePermissionRequestValidator>();
 
         #endregion
 

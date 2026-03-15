@@ -140,7 +140,7 @@ namespace Logic.Security.Logic
                                                                                       IPermissionLogic permissionLogic
                                                                                      )
         {
-            var errorValidationResult = await _validateRolePermissionOnInsertUpdate(applicationLogic, roleLogic, permissionLogic, req);
+            var errorValidationResult = await _validateRolePermissionOnInsertUpdate(applicationLogic, roleLogic, permissionLogic, req, rolePermissionId);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
@@ -201,7 +201,8 @@ namespace Logic.Security.Logic
         private async Task<ErrorValidationResult<RolePermissionDto>> _validateRolePermissionOnInsertUpdate(IApplicationLogic applicationLogic,
                                                                                                            IRoleLogic roleLogic,
                                                                                                            IPermissionLogic permissionLogic,         
-                                                                                                           InsertUpdateRolePermissionRequest req
+                                                                                                           InsertUpdateRolePermissionRequest req,
+                                                                                                           int? rolePermissionId = null
                                                                                                         )
         {
             ValidationResult result = await _insertUpdateRolePermissionRequestValidator.ValidateAsync(req);
@@ -234,6 +235,22 @@ namespace Logic.Security.Logic
                 {
                     errorValidationResult.Errors.Add("PermissionId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("PermissionId") });
                     return errorValidationResult;
+                }
+
+                // Validate RolePermission is unique
+                var uniqueRolePermissionCheck = await this.Filter(new FilterRolePermissionLogicRequest { 
+                    ApplicationId = req.ApplicationId, 
+                    PermissionId = req.PermissionId, 
+                    RoleId = req.RoleId, 
+                    IncludeInactive = true 
+                });
+
+                if (uniqueRolePermissionCheck.Errors.Count == 0 && uniqueRolePermissionCheck.Response.Count() > 0)
+                {
+                    if ((rolePermissionId == null || rolePermissionId == 0) || (uniqueRolePermissionCheck.Response.FirstOrDefault().RolePermissionId != rolePermissionId))
+                    {
+                        errorValidationResult.Errors.Add("RolePermission", new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage("RolePermission") });
+                    }
                 }
             }
 
