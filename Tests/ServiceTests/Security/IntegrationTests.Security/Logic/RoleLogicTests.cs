@@ -25,7 +25,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
             await _securityTestUtilities.Role.CreateSingleRoleTestRecord(applicationId, false);
 
             // Act
@@ -40,7 +40,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
             await _securityTestUtilities.Role.CreateSingleRoleTestRecord(applicationId, false);
 
             // Act
@@ -118,7 +118,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
 
             var postReq = new FilterRoleLogicRequest { };
 
@@ -140,7 +140,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
             await _securityTestUtilities.Role.CreateSingleRoleTestRecord(applicationId, false);
 
             var postReq = new FilterRoleLogicRequest { IncludeInactive = true };
@@ -161,7 +161,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
 
             var postReqInvalidName = new FilterRoleLogicRequest { Name = "Invalid Name" };
             var postReqInvalidApplicationId = new FilterRoleLogicRequest { ApplicationId = -1 };
@@ -180,7 +180,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var roles = await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            var roles = await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
 
             //create test roles for filtering tests
             var testRole1 = await _roleLogic.Insert(new InsertUpdateRoleRequest
@@ -374,7 +374,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecords = await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            var testRecords = await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
             var recordToUpdate = testRecords.FirstOrDefault();
             var dupeName = testRecords.LastOrDefault().Name;
 
@@ -396,7 +396,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             int applicationId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
             var testRecords = await _roleLogic.GetAll(new BaseLogicGet());
             var recordToUpdate = testRecords.Response.FirstOrDefault();
 

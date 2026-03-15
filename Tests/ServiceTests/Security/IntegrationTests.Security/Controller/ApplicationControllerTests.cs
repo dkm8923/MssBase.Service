@@ -94,7 +94,7 @@ namespace IntegrationTests.Security.Controller
             var applicationId = applications[0].ApplicationId;
             await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
             await _securityTestUtilities.Permission.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
             await _securityTestUtilities.Application.CreateTestRecords(1, false); //inactive record that should be returned in results when includeInactive = true
 
             // Act
@@ -119,7 +119,7 @@ namespace IntegrationTests.Security.Controller
             var applicationId = applications[0].ApplicationId;
             await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
             await _securityTestUtilities.Permission.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
             await _securityTestUtilities.Application.CreateTestRecords(1, false); //inactive record that should be returned in results when includeInactive = true
 
             // Act
@@ -221,7 +221,7 @@ namespace IntegrationTests.Security.Controller
             var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             await _securityTestUtilities.ApplicationUser.CreateTestRecords(testRecord.ApplicationId);
             await _securityTestUtilities.Permission.CreateTestRecords(testRecord.ApplicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(testRecord.ApplicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(testRecord.ApplicationId);
             
             // Act
             var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base + "/" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true), testRecord.ApplicationId);
@@ -240,9 +240,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             await ClearAllSecurityTestTableData();
             var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.ApplicationUser.CreateTestRecords(testRecord.ApplicationId);
-            await _securityTestUtilities.Permission.CreateTestRecords(testRecord.ApplicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(testRecord.ApplicationId);
+            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(testRecord.ApplicationId);
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(testRecord.ApplicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(testRecord.ApplicationId);
             
             // Act
             var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base + "/" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(false), testRecord.ApplicationId);
@@ -416,7 +416,7 @@ namespace IntegrationTests.Security.Controller
             var applicationId = applications[0].ApplicationId;
             await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
             await _securityTestUtilities.Permission.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
             
             var postReq = new FilterApplicationServiceRequest { IncludeRelated = true };
 
@@ -443,7 +443,7 @@ namespace IntegrationTests.Security.Controller
             var applicationId = applications[0].ApplicationId;
             await _securityTestUtilities.ApplicationUser.CreateTestRecords(applicationId);
             await _securityTestUtilities.Permission.CreateTestRecords(applicationId);
-            await _securityTestUtilities.Role.CreateTestRecords(applicationId);
+            await _securityTestUtilities.Role.CreateActiveTestRecords(applicationId);
             
             var postReq = new FilterApplicationServiceRequest { IncludeRelated = false };
 

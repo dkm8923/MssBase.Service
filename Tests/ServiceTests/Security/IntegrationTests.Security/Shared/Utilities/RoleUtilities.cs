@@ -117,23 +117,6 @@ public class RoleUtilities : IRoleUtilities
     }
 
     /// <summary>
-    /// Asynchronously creates a set of predefined test role records in the data store.
-    /// </summary>
-    public async Task<List<RoleDto>> CreateTestRecords(int applicationId, short numberOfRecordsToCreate = 5, bool active = true)
-    {
-        //create test records
-        var ret = new List<RoleDto>();
-        var recordsToCreate = new List<InsertUpdateRoleRequest>();
-
-        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
-        {
-            ret.Add(await CreateSingleRoleTestRecord(applicationId, active));
-        }
-
-        return ret;
-    }
-
-    /// <summary>
     /// Asynchronously deletes all records, including inactive ones, from the data store.
     /// </summary>
     public async Task DeleteAllRecords()
