@@ -14,7 +14,7 @@ namespace IntegrationTests.Shared
 
         public static async Task<ErrorValidationResult<TResponse>> GetAllRecordsWithValidationResult<TResponse>(HttpClient client, string apiEndPoint, bool deleteCache = true)
         {
-            apiEndPoint = AddDeleteCacheQueryStringParmToApiEndPointUrl(apiEndPoint, deleteCache);
+            apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateDeleteCacheQueryStringParm(deleteCache));
 
             var response = await client.GetAsync(apiEndPoint);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -43,7 +43,36 @@ namespace IntegrationTests.Shared
         public static async Task<ErrorValidationResult<TResponse>> GetRecordByIdWithValidationResult<TResponse>(HttpClient client, string apiEndPoint, int id, bool deleteCache = true)
         {
             apiEndPoint = apiEndPoint + "/" + id;
-            apiEndPoint = AddDeleteCacheQueryStringParmToApiEndPointUrl(apiEndPoint, deleteCache);
+            apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateDeleteCacheQueryStringParm(deleteCache));
+
+            var response = await client.GetAsync(apiEndPoint);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var ret = await GetResponseContent<ErrorValidationResult<TResponse>>(response);
+
+            Assert.IsType<ErrorValidationResult<TResponse>>(ret);
+
+            return ret;
+        }
+
+        public static async Task<ErrorValidationResult<TResponse>> GetRecordByIdWithValidationResult<TResponse>(HttpClient client, string apiEndPoint, int id, BaseServiceGet req)
+        {
+            apiEndPoint = apiEndPoint + "/" + id;
+
+            if (req.DeleteCache) 
+            {
+                apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateDeleteCacheQueryStringParm(req.DeleteCache));
+            }
+            
+            if (req.IncludeInactive) 
+            {
+                apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateIncludeInactiveQueryStringParm(req.IncludeInactive));
+            }
+
+            if (req.IncludeRelated) 
+            {
+                apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateIncludeRelatedQueryStringParm(req.IncludeRelated));
+            }
 
             var response = await client.GetAsync(apiEndPoint);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -57,8 +86,8 @@ namespace IntegrationTests.Shared
 
         public static async Task<T[]> GetAllRecords<T>(HttpClient client, string apiEndPoint, bool deleteCache = true)
         {
-            apiEndPoint = AddDeleteCacheQueryStringParmToApiEndPointUrl(apiEndPoint, deleteCache);
-            
+            apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateDeleteCacheQueryStringParm(deleteCache));
+
             var response = await client.GetAsync(apiEndPoint);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -86,7 +115,7 @@ namespace IntegrationTests.Shared
         public static async Task<T> GetRecordById<T>(HttpClient client, string apiEndPoint, int id, bool deleteCache = true)
         {
             apiEndPoint = apiEndPoint + "/" + id;
-            apiEndPoint = AddDeleteCacheQueryStringParmToApiEndPointUrl(apiEndPoint, deleteCache);
+            apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateDeleteCacheQueryStringParm(deleteCache));
 
             var response = await client.GetAsync(apiEndPoint);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -195,34 +224,30 @@ namespace IntegrationTests.Shared
             return $"IncludeRelated={includeRelated}";
         }
 
-        public static string AddDeleteCacheQueryStringParmToApiEndPointUrl(string apiEndPoint, bool deleteCache)
+        public static string AddQueryStringParmToApiEndPointUrl(string apiEndPoint, string queryStringParm)
         {
-            if (deleteCache)
+            if (apiEndPoint.Contains("?"))
             {
-                //TODO: Make this less brittle
-                if (apiEndPoint.Contains("?"))
-                {
-                    //verify url has query string and not just a question mark (Get ct of characters after ?)
-                    var count = 0;
-                    int index = apiEndPoint.IndexOf("?");
-                    count = apiEndPoint.Length - index - 1;
+                //verify url has query string and not just a question mark (Get ct of characters after ?)
+                var count = 0;
+                int index = apiEndPoint.IndexOf("?");
+                count = apiEndPoint.Length - index - 1;
 
-                    if (count == 0)
-                    {
-                        //url has ? but nothing after
-                        apiEndPoint += CreateDeleteCacheQueryStringParm(true);
-                    }
-                    else 
-                    {
-                        //url has ? along with query string parm
-                        apiEndPoint += "&" + CreateDeleteCacheQueryStringParm(true);
-                    }
-                }
-                else
+                if (count == 0)
                 {
-                    //url does not have any ? / query string parms
-                    apiEndPoint += "?" + CreateDeleteCacheQueryStringParm(true);
+                    //url has ? but nothing after
+                    apiEndPoint += queryStringParm;
                 }
+                else 
+                {
+                    //url has ? along with query string parm
+                    apiEndPoint += "&" + queryStringParm;
+                }
+            }
+            else
+            {
+                //url does not have any ? / query string parms
+                apiEndPoint += "?" + queryStringParm;
             }
 
             return apiEndPoint;

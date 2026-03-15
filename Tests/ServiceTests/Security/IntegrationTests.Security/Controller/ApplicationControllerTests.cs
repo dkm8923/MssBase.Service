@@ -225,7 +225,7 @@ namespace IntegrationTests.Security.Controller
             
             // Act
             var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base + "/" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true), testRecord.ApplicationId);
-
+            
             // Assert
             result.Errors.Should().HaveCount(0);
             

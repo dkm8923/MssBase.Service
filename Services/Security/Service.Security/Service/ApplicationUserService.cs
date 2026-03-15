@@ -24,15 +24,15 @@ namespace Service.Security.Service
 
         #region GET
 
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> GetAll(BaseServiceGet req, bool includeRelated = false)
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> GetAll(BaseServiceGet req)
         {
-            var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, includeRelated);
+            var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.GetAll(req));
         }
 
-        public async Task<ErrorValidationResult<ApplicationUserDto>> GetById(int applicationUserId, BaseServiceGet req, bool includeRelated = false)
+        public async Task<ErrorValidationResult<ApplicationUserDto>> GetById(int applicationUserId, BaseServiceGet req)
         {
-            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, applicationUserId, req.IncludeInactive, includeRelated);
+            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, applicationUserId, req.IncludeInactive, req.IncludeRelated);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.GetById(applicationUserId, req));
         }
 
@@ -48,6 +48,7 @@ namespace Service.Security.Service
             var lastNameKey = CacheUtilities.CreateKeyFromString(req.LastName);
             var applicationIdKey = (req.ApplicationId ?? 0).ToString();
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
+            var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
 
             var cacheKeyName = CacheUtilities.CreateFilterCacheKey(cacheKeySectionName, new List<string> {
                  createdByKey
@@ -60,6 +61,7 @@ namespace Service.Security.Service
                 ,lastNameKey
                 ,applicationIdKey
                 ,includeInactiveKey
+                ,includeRelatedKey
             });
 
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.Filter(req));
