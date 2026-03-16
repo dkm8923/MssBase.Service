@@ -30,15 +30,15 @@ namespace Service.Security.Service
 
         #region GET
 
-        public async Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> GetAll(BaseServiceGet req, bool includeRelated = false)
+        public async Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> GetAll(BaseServiceGet req)
         {
-            var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, includeRelated);
+            var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _rolePermissionLogic.GetAll(req));
         }
 
-        public async Task<ErrorValidationResult<RolePermissionDto>> GetById(int rolePermissionId, BaseServiceGet req, bool includeRelated = false)
+        public async Task<ErrorValidationResult<RolePermissionDto>> GetById(int rolePermissionId, BaseServiceGet req)
         {
-            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, rolePermissionId, req.IncludeInactive, includeRelated);
+            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, rolePermissionId, req.IncludeInactive, req.IncludeRelated);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _rolePermissionLogic.GetById(rolePermissionId, req));
         }
 
@@ -52,6 +52,7 @@ namespace Service.Security.Service
             var applicationIdKey = CacheUtilities.CreateKeyFromInt(req.ApplicationId); 
             var permissionIdKey = CacheUtilities.CreateKeyFromInt(req.PermissionId); 
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
+            var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
 
             var cacheKeyName = CacheUtilities.CreateFilterCacheKey(cacheKeySectionName, new List<string> {
                  createdByKey
@@ -62,6 +63,7 @@ namespace Service.Security.Service
                 ,applicationIdKey
                 ,permissionIdKey
                 ,includeInactiveKey
+                ,includeRelatedKey
             });
 
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _rolePermissionLogic.Filter(req));

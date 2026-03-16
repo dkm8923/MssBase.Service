@@ -35,15 +35,15 @@ namespace Service.Security.Service
 
         #region GET
 
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserRoleDto>>> GetAll(BaseServiceGet req, bool includeRelated = false)
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserRoleDto>>> GetAll(BaseServiceGet req)
         {
-            var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, includeRelated);
+            var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserRoleLogic.GetAll(req));
         }
 
-        public async Task<ErrorValidationResult<ApplicationUserRoleDto>> GetById(int applicationUserId, BaseServiceGet req, bool includeRelated = false)
+        public async Task<ErrorValidationResult<ApplicationUserRoleDto>> GetById(int applicationUserId, BaseServiceGet req)
         {
-            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, applicationUserId, req.IncludeInactive, includeRelated);
+            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, applicationUserId, req.IncludeInactive, req.IncludeRelated);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserRoleLogic.GetById(applicationUserId, req));
         }
 
@@ -58,6 +58,7 @@ namespace Service.Security.Service
             var applicationUserIdKey = CacheUtilities.CreateKeyFromInt(req.ApplicationUserId);
             var roleIdKey = CacheUtilities.CreateKeyFromInt(req.RoleId);
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
+            var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
 
             var cacheKeyName = CacheUtilities.CreateFilterCacheKey(cacheKeySectionName, new List<string> {
                  createdByKey
@@ -69,6 +70,7 @@ namespace Service.Security.Service
                 ,applicationUserIdKey
                 ,roleIdKey
                 ,includeInactiveKey
+                ,includeRelatedKey
             });
 
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserRoleLogic.Filter(req));

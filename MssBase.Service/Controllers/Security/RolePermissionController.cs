@@ -28,7 +28,7 @@ namespace MssBase.Service.Controllers.Security
         {
             try
             {
-                var records = await _rolePermissionSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, includeRelated);
+                var records = await _rolePermissionSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated });
                 return Ok(records);
             }
             catch (Exception ex)
@@ -46,7 +46,7 @@ namespace MssBase.Service.Controllers.Security
         {
             try
             {
-                var record = await _rolePermissionSvc.GetById(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, includeRelated);
+                var record = await _rolePermissionSvc.GetById(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated });
 
                 if (record.Response == null)
                 {
