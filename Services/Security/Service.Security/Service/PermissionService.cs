@@ -24,15 +24,15 @@ namespace Service.Security.Service
 
         #region GET
 
-        public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> GetAll(BaseServiceGet req, bool includeRelated = false)
+        public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> GetAll(BaseServiceGet req)
         {
-            var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, includeRelated);
+            var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.GetAll(req));
         }
 
-        public async Task<ErrorValidationResult<PermissionDto>> GetById(int permissionId, BaseServiceGet req, bool includeRelated = false)
+        public async Task<ErrorValidationResult<PermissionDto>> GetById(int permissionId, BaseServiceGet req)
         {
-            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, permissionId, req.IncludeInactive, includeRelated);
+            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, permissionId, req.IncludeInactive, req.IncludeRelated);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.GetById(permissionId, req));
         }
 
@@ -46,6 +46,7 @@ namespace Service.Security.Service
             var nameKey = CacheUtilities.CreateKeyFromString(req.Name);
             var applicationIdKey = (req.ApplicationId ?? 0).ToString();
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
+            var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
 
             var cacheKeyName = CacheUtilities.CreateFilterCacheKey(cacheKeySectionName, new List<string> {
                  createdByKey
@@ -56,6 +57,7 @@ namespace Service.Security.Service
                 ,nameKey
                 ,applicationIdKey
                 ,includeInactiveKey
+                ,includeRelatedKey
             });
 
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.Filter(req));

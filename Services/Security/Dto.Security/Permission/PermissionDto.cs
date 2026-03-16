@@ -1,3 +1,4 @@
+using Dto.Security.RolePermission;
 using Shared.Models;
 
 namespace Dto.Security.Permission
@@ -8,5 +9,6 @@ namespace Dto.Security.Permission
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public int ApplicationId { get; set; }
+        public IEnumerable<RolePermissionDto> RolePermissions { get; set; }
     }
 }
