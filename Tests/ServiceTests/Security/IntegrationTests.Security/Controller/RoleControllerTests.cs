@@ -7,11 +7,19 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Shared.Models;
 using System.Net;
 using IntegrationTests.Shared.Utilities;
+using IntegrationTests.Shared.Utilities.Contracts.Controller;
 
 namespace IntegrationTests.Security.Controller
 {
     [Collection("SecurityIntegrationTests")]
-    public class RoleControllerTests : SecurityTestBase, IClassFixture<WebApplicationFactory<Program>>
+    public class RoleControllerTests : SecurityTestBase, 
+                                                  IClassFixture<WebApplicationFactory<Program>>,
+                                                  IDefaultControllerTestsGetAll,
+                                                  IDefaultControllerTestsGetById,
+                                                  IDefaultControllerTestsFilter,
+                                                  IDefaultControllerTestsInsert,
+                                                  IDefaultControllerTestsUpdate,
+                                                  IDefaultControllerTestsDelete
     {
         private readonly HttpClient _client;
 
@@ -23,12 +31,13 @@ namespace IntegrationTests.Security.Controller
         #region GetAll
 
         [Fact]
-        public async Task Role_GetAll_Should_Return_Active_Data()
+        public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateActiveTestRecords(roleId);
-            await _securityTestUtilities.Role.CreateInactiveTestRecords(roleId, 1);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId);
+            await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId, 1);
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base);
@@ -39,12 +48,13 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_GetAll_Should_Return_Inactive_Data()
+        public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateActiveTestRecords(roleId);
-            await _securityTestUtilities.Role.CreateInactiveTestRecords(roleId, 1);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId);
+            await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId, 1);
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
@@ -55,10 +65,10 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_GetAll_Should_Return_Zero_Records()
+        public async Task Default_GetAll_Should_Return_Zero_Records()
         {
             // Arrange
-            await _securityTestUtilities.Role.DeleteAllRecords();
+            await ClearAllSecurityTestTableData();
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base);
@@ -73,11 +83,12 @@ namespace IntegrationTests.Security.Controller
         #region GetById
 
         [Fact]
-        public async Task Role_GetById_Should_Return_Active_Record()
+        public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(roleId);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
             
             // Act
             var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RoleDto>(_client, ApiEndPoints.Security.Role.Base, testRecord.RoleId);
@@ -88,11 +99,12 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_GetById_Should_Not_Return_Inactive_Record()
+        public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(roleId, false);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId, false);
 
             // Act
             var response = await _client.GetAsync(ApiEndPoints.Security.Role.Base + "/" + testRecord.RoleId);
@@ -102,11 +114,12 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_GetById_Should_Return_Inactive_Record()
+        public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(roleId, false);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId, false);
 
             // Act
             var response = await _client.GetAsync(ApiEndPoints.Security.Role.Base + "/" + testRecord.RoleId + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
@@ -116,11 +129,12 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_GetById_Should_Return_NotFound()
+        public async Task Default_GetById_Should_Return_NotFound()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateActiveTestRecords(roleId);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId);
             var id = -1;
 
             // Act
@@ -131,7 +145,7 @@ namespace IntegrationTests.Security.Controller
         }
  
         [Fact]
-        public async Task Role_GetById_Should_Return_Bad_Request_Invalid_Id()
+        public async Task Default_GetById_Should_Return_Bad_Request_Invalid_Id()
         {
             // Arrange
             var id = "asfasdfasdfasdf";
@@ -150,11 +164,12 @@ namespace IntegrationTests.Security.Controller
         #region Filter
 
         [Fact]
-        public async Task Role_Filter_Should_Return_Active_Data()
+        public async Task Default_Filter_Should_Return_Active_Data()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateActiveTestRecords(roleId);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId);
 
             var postReq = new FilterRoleServiceRequest { };
 
@@ -168,12 +183,13 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_Filter_Should_Return_Inactive_Data()
+        public async Task Default_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Role.CreateActiveTestRecords(roleId);
-            await _securityTestUtilities.Role.CreateInactiveTestRecords(roleId, 1);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId);
+            await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId, 1);
 
             var postReq = new FilterRoleServiceRequest { IncludeInactive = true };
 
@@ -187,11 +203,43 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_Filter_Should_Return_Unsupported_Media_Type_Null_Request_Body()
+        public async Task Default_Filter_Should_Filter_Data()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var roles = await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 5);
+            
+            var postReq = new FilterRoleServiceRequest { RoleIds = new List<int> { roles[0].RoleId, roles[1].RoleId } };
 
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base, postReq);
+
+            //Assert
+            result.Response.Should().HaveCount(2);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Zero_Records()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var postReq = new FilterRoleServiceRequest { };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base, postReq);
+
+            //Assert
+            result.Response.Should().HaveCount(0);
+        }
+        
+        [Fact]
+        public async Task Default_Filter_Should_Return_Unsupported_Media_Type_Null_Request_Body()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
             // Act
             var response = await _client.PostAsync(ApiEndPoints.Security.Role.Base + "/Filter", null);
 
@@ -200,10 +248,10 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_Filter_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
+        public async Task Default_Filter_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            await ClearAllSecurityTestTableData();
             var postReq = ControllerTestUtilities.FormatPostRequest(null);
 
             // Act
@@ -218,13 +266,14 @@ namespace IntegrationTests.Security.Controller
         #region Insert
 
         [Fact]
-        public async Task Role_Insert_Should_Create_Record()
+        public async Task Default_Insert_Should_Create_Record()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            
             // Act
-            var insertedRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(roleId);
+            var insertedRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
             var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RoleDto>(_client, ApiEndPoints.Security.Role.Base, insertedRecord.RoleId);
 
             // Assert
@@ -232,10 +281,10 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_Insert_Should_Return_Unsupported_Media_Type_Null_Request_Body()
+        public async Task Default_Insert_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            await ClearAllSecurityTestTableData();
 
             // Act
             var response = await _client.PostAsync(ApiEndPoints.Security.Role.Base, null);
@@ -245,10 +294,10 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_Insert_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
+        public async Task Default_Insert_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            await ClearAllSecurityTestTableData();
             var postReq = ControllerTestUtilities.FormatPostRequest(new object());
 
             // Act
@@ -263,18 +312,19 @@ namespace IntegrationTests.Security.Controller
         #region Update
 
         [Fact]
-        public async Task Role_Update_Should_Update_Record()
+        public async Task Default_Update_Should_Update_Record()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var insertedRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(roleId);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var insertedRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
 
             var updateReq = new InsertUpdateRoleRequest
             {
-                Name = "test name updated",
-                Description = "Test Description Updated",
+                Name = "name update",
+                Description = "description update",
                 Active = false,
-                ApplicationId = roleId,
+                ApplicationId = application.ApplicationId,
                 CurrentUser = TestConstants.CurrentUser
             };
 
@@ -290,10 +340,10 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_Update_Should_Return_Unsupported_Media_Type_Null_Request_Body()
+        public async Task Default_Update_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            await ClearAllSecurityTestTableData();
 
             // Act
             var response = await _client.PutAsync(ApiEndPoints.Security.Role.Base + "/1", null);
@@ -303,7 +353,7 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Role_Update_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
+        public async Task Default_Update_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
             int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
@@ -321,11 +371,12 @@ namespace IntegrationTests.Security.Controller
         #region Delete
 
         [Fact]
-        public async Task Role_Delete_Should_Delete_Record()
+        public async Task Default_Delete_Should_Delete_Record()
         {
             // Arrange
-            int roleId = await _securityTestUtilities.Role.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(roleId, false);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId, false);
 
             // Act
             var response = await ControllerTestUtilities.DeleteRecord(_client, ApiEndPoints.Security.Role.Base, testRecord.RoleId);
@@ -334,6 +385,44 @@ namespace IntegrationTests.Security.Controller
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
             getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public async Task Default_Delete_Should_Not_Delete_Record_Id_Does_Not_Exist()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var roleId = -1;
+
+            // Act
+            var getResponse = await _client.GetAsync(ApiEndPoints.Security.Role.Base + "/" + roleId);
+            var response = await _client.DeleteAsync(ApiEndPoints.Security.Role.Base + "/" + roleId);
+            var errorValidationResult = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult>(response);
+
+            //TODO: Use hardcoded string for testing. (Should be in application utilities)
+            var expectedInvalidDeleteError = _securityTestUtilities.Role.GetExpectedRecordDoesNotExistErrors();
+            
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            errorValidationResult.Errors.Should().BeEquivalentTo(expectedInvalidDeleteError);
+        }
+        
+        [Fact]
+        public async Task Default_Delete_Should_Return_Bad_Request_Invalid_Id()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var roleId = "asdfasfdasdfasfdas";
+
+            // Act
+            var getResponse = await _client.GetAsync(ApiEndPoints.Security.Role.Base + "/" + roleId);
+            var response = await _client.DeleteAsync(ApiEndPoints.Security.Role.Base + "/" + roleId);
+
+            // Assert
+            getResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
         }
 
         #endregion
