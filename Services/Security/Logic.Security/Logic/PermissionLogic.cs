@@ -71,11 +71,6 @@ namespace Logic.Security.Logic
                 query = query.ApplyIncludeInactiveFilter(req);
                 query = query.ApplyAuditableFilters(req);
 
-                if (req.IncludeRelated)
-                {
-                    query = query.Include(permission => permission.RolePermissions).ThenInclude(rolePermission => rolePermission.Role);
-                }
-
                 if (req.PermissionIds != null && req.PermissionIds.Count > 0)
                 {
                     query = query.Where(x => req.PermissionIds.Contains(x.PermissionId));

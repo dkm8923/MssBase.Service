@@ -46,8 +46,7 @@ namespace Service.Security.Service
             var nameKey = CacheUtilities.CreateKeyFromString(req.Name);
             var applicationIdKey = (req.ApplicationId ?? 0).ToString();
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
-            var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
-
+            
             var cacheKeyName = CacheUtilities.CreateFilterCacheKey(cacheKeySectionName, new List<string> {
                  createdByKey
                 ,createdOnKey
@@ -57,14 +56,13 @@ namespace Service.Security.Service
                 ,nameKey
                 ,applicationIdKey
                 ,includeInactiveKey
-                ,includeRelatedKey
             });
 
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.Filter(req));
         }
 
         #endregion
-
+    
         #region Insert
 
         public async Task<ErrorValidationResult<PermissionDto>> Insert(InsertUpdatePermissionRequest req)

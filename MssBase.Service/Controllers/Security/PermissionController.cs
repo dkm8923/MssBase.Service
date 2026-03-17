@@ -24,11 +24,11 @@ namespace MssBase.Service.Controllers.Security
         #region GetAll
 
         [HttpGet()]
-        public async Task<IActionResult> GetPermissions([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
+        public async Task<IActionResult> GetPermissions([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false)
         {
             try
             {
-                var records = await _permissionService.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated });
+                var records = await _permissionService.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive });
                 return Ok(records);
             }
             catch (Exception ex)
@@ -42,11 +42,11 @@ namespace MssBase.Service.Controllers.Security
         #region GetById
 
         [HttpGet("{permissionId}", Name = "GetPermission")]
-        public async Task<IActionResult> GetPermission(int permissionId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
+        public async Task<IActionResult> GetPermission(int permissionId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false)
         {
             try
             {
-                var record = await _permissionService.GetById(permissionId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated });
+                var record = await _permissionService.GetById(permissionId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive });
 
                 if (record.Response == null)
                 {
