@@ -12,13 +12,13 @@ namespace Service.Security.Service
     {
         private readonly string cacheKeySectionName = ICacheService.PermissionService;
         private readonly IApplicationLogic _applicationLogic;
-        private readonly IPermissionLogic _roleLogic;
+        private readonly IPermissionLogic _permissionLogic;
         private readonly ICacheService _cacheService;
 
-        public PermissionService(IApplicationLogic applicationLogic, IPermissionLogic roleLogic, ICacheService cacheService)
+        public PermissionService(IApplicationLogic applicationLogic, IPermissionLogic permissionLogic, ICacheService cacheService)
         {
             _applicationLogic = applicationLogic;
-            _roleLogic = roleLogic;
+            _permissionLogic = permissionLogic;
             _cacheService = cacheService;
         }
 
@@ -27,13 +27,13 @@ namespace Service.Security.Service
         public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> GetAll(BaseServiceGet req)
         {
             var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.GetAll(req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.GetAll(req));
         }
 
         public async Task<ErrorValidationResult<PermissionDto>> GetById(int permissionId, BaseServiceGet req)
         {
             var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, permissionId, req.IncludeInactive, req.IncludeRelated);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.GetById(permissionId, req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.GetById(permissionId, req));
         }
 
         public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> Filter(FilterPermissionServiceRequest req)
@@ -60,7 +60,7 @@ namespace Service.Security.Service
                 ,includeRelatedKey
             });
 
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.Filter(req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.Filter(req));
         }
 
         #endregion
@@ -71,7 +71,7 @@ namespace Service.Security.Service
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _roleLogic.Insert(req, _applicationLogic);
+            return await _permissionLogic.Insert(req, _applicationLogic);
         }
 
         #endregion
@@ -82,7 +82,7 @@ namespace Service.Security.Service
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _roleLogic.Update(permissionId, req, _applicationLogic);
+            return await _permissionLogic.Update(permissionId, req, _applicationLogic);
         }
 
         #endregion
@@ -93,7 +93,7 @@ namespace Service.Security.Service
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _roleLogic.Delete(permissionId);
+            return await _permissionLogic.Delete(permissionId);
         }
 
         #endregion
