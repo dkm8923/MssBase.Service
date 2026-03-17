@@ -24,7 +24,7 @@ namespace MssBase.Service.Controllers.Security
         #region GetAll
 
         [HttpGet()]
-        public async Task<IActionResult> GetApplicationUserRoles([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
+        public async Task<IActionResult> GetApplicationUserRoles([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace MssBase.Service.Controllers.Security
         #region GetById
 
         [HttpGet("{applicationUserId}", Name = "GetApplicationUserRole")]
-        public async Task<IActionResult> GetApplicationUserRole(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
+        public async Task<IActionResult> GetApplicationUserRole(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false)
         {
             try
             {

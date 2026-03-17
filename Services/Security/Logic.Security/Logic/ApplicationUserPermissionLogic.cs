@@ -43,7 +43,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<IEnumerable<ApplicationUserPermissionDto>>> GetAll(BaseLogicGet req)
         {
-            var ret = await this.Filter(new FilterApplicationUserPermissionLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
+            var ret = await this.Filter(new FilterApplicationUserPermissionLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser });
             return ret;
         }
 
@@ -52,7 +52,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<ApplicationUserPermissionDto>> GetById(int applicationUserPermissionId, BaseLogicGet req)
         {
-            var res = await this.Filter(new FilterApplicationUserPermissionLogicRequest { ApplicationUserPermissionIds = new List<int> { applicationUserPermissionId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
+            var res = await this.Filter(new FilterApplicationUserPermissionLogicRequest { ApplicationUserPermissionIds = new List<int> { applicationUserPermissionId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser });
 
             return new ErrorValidationResult<ApplicationUserPermissionDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -74,11 +74,6 @@ namespace Logic.Security.Logic
 
                 query = query.ApplyIncludeInactiveFilter(req);
                 query = query.ApplyAuditableFilters(req);
-
-                // if (req.IncludeRelated)
-                // {
-                //     query = query.Include(applicationUserPermission => applicationUserPermission.ApplicationUserPermissionPermissions);
-                // }
 
                 if (req.ApplicationUserPermissionIds != null && req.ApplicationUserPermissionIds.Count > 0)
                 {
