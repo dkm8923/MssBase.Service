@@ -72,7 +72,7 @@ public class RolePermissionUtilities : IRolePermissionUtilities
 
         var ret = await _rolePermissionLogic.Insert(insertReq, _applicationLogic, _roleLogic, _permissionLogic);
 
-        ret.Errors.Should().BeNullOrEmpty("Insert of application user permission test record failed when it should have succeeded.");
+        ret.Errors.Should().BeNullOrEmpty("Insert of role permission test record failed when it should have succeeded.");
 
         return ret.Response;
     }
