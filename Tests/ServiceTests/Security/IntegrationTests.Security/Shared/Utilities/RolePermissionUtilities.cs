@@ -65,7 +65,7 @@ public class RolePermissionUtilities : IRolePermissionUtilities
     /// <summary>
     /// Creates a single application user permission test record with specific data for integration testing purposes.
     /// </summary>
-    private async Task<RolePermissionDto> CreateSingleRolePermissionTestRecord(int applicationId, int roleId, int permissionId, bool active = true)
+    public async Task<RolePermissionDto> CreateSingleRolePermissionTestRecord(int applicationId, int roleId, int permissionId, bool active = true)
     {
         //create test record
         var insertReq = CreateInsertUpdateRequestWithSpecificValues(applicationId, roleId, permissionId, active);

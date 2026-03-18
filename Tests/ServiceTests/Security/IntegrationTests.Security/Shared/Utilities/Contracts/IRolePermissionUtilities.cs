@@ -7,6 +7,7 @@ public interface IRolePermissionUtilities
     public Task DeleteAllRecords();
     public Task<List<RolePermissionDto>> CreateActiveTestRecords(int applicationId, int applicationUserId, int permissionId, short numberOfRecordsToCreate = 5);
     public Task<List<RolePermissionDto>> CreateInactiveTestRecords(int applicationId, int applicationUserId, int permissionId, short numberOfRecordsToCreate = 5);
+    public Task<RolePermissionDto> CreateSingleRolePermissionTestRecord(int applicationId, int roleId, int permissionId, bool active = true);
     public InsertUpdateRolePermissionRequest CreateInsertUpdateRequestWithMaxLengthErrors(int applicationId, int applicationUserId, int permissionId);
     public InsertUpdateRolePermissionRequest CreateInsertUpdateRequestWithSpecificValues(int applicationId, int applicationUserId, int permissionId, bool active = true);
     public InsertUpdateRolePermissionRequest ConvertRolePermissionDtoToInsertUpdateRequest(RolePermissionDto req);
