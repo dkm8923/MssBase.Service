@@ -65,7 +65,7 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
     /// <summary>
     /// Creates a single application user permission test record with specific data for integration testing purposes.
     /// </summary>
-    private async Task<ApplicationUserPermissionDto> CreateSingleApplicationUserPermissionTestRecord(int applicationId, int applicationUserId, int permissionId, bool active = true)
+    public async Task<ApplicationUserPermissionDto> CreateSingleApplicationUserPermissionTestRecord(int applicationId, int applicationUserId, int permissionId, bool active = true)
     {
         //create test record
         var insertReq = CreateInsertUpdateRequestWithSpecificValues(applicationId, applicationUserId, permissionId, active);
@@ -110,7 +110,7 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
 
         return ret;
     }
-
+    
     /// <summary>
     /// Asynchronously deletes all records, including inactive ones, from the data store.
     /// </summary>
