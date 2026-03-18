@@ -39,9 +39,9 @@ namespace IntegrationTests.Security.Service
             foreach (var record in result.Response)
             {
                 await _applicationUserService.GetById(record.ApplicationUserId, new BaseServiceGet());
-                await _applicationUserService.Filter(new FilterApplicationUserServiceRequest { CreatedOnDate = DateOnly.Parse(record.CreatedOn.ToString()) });
+                await _applicationUserService.Filter(new FilterApplicationUserServiceRequest { CreatedOnDate = DateOnly.FromDateTime(record.CreatedOn) });
                 await _applicationUserService.Filter(new FilterApplicationUserServiceRequest { CreatedBy = record.CreatedBy });
-                await _applicationUserService.Filter(new FilterApplicationUserServiceRequest { UpdatedOnDate = DateOnly.Parse(record.UpdatedOn.ToString()) });
+                await _applicationUserService.Filter(new FilterApplicationUserServiceRequest { UpdatedOnDate = DateOnly.FromDateTime((DateTime)record.UpdatedOn) });
             }
         }
 
