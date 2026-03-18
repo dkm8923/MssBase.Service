@@ -399,7 +399,6 @@ namespace IntegrationTests.Security.Controller
             var response = await _client.DeleteAsync(ApiEndPoints.Security.Permission.Base + "/" + permissionId);
             var errorValidationResult = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult>(response);
 
-            //TODO: Use hardcoded string for testing. (Should be in application utilities)
             var expectedInvalidDeleteError = _securityTestUtilities.Permission.GetExpectedRecordDoesNotExistErrors();
             
             // Assert
