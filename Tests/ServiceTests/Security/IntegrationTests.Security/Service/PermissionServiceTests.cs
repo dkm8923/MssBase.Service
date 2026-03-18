@@ -206,10 +206,8 @@ namespace IntegrationTests.Security.Service
            var postReqUpdatedOnDate = new FilterPermissionServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
            var postReqPermissionIds = new FilterPermissionServiceRequest { PermissionIds = new List<int> { permissionRes.Response.PermissionId } };
            var postReqName = new FilterPermissionServiceRequest { Name = "Test Name" };
-           var postReqDescription = new FilterPermissionServiceRequest { Description = "Test Description" };
            var postReqApplicationId = new FilterPermissionServiceRequest { ApplicationId = application.ApplicationId };
            var postReqIncludeInactive = new FilterPermissionServiceRequest { IncludeInactive = true };
-           var postReqIncludeRelated = new FilterPermissionServiceRequest { IncludeRelated = true };
            
            var expectedCacheKeyCreatedBy = $"PermissionService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0";
            var expectedCacheKeyCreatedOnDate = $"PermissionService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0";
