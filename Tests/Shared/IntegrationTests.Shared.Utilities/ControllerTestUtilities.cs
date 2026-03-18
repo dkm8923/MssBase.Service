@@ -145,6 +145,20 @@ namespace IntegrationTests.Shared
             return ret;
         }
 
+        public static async Task<ErrorValidationResult<TResponse>> CreateRecordWithValidationResult<TResponse>(HttpClient client, string apiEndPoint, object req)
+        {
+            var postReq = FormatPostRequest(req);
+
+            var response = await client.PostAsync(apiEndPoint, postReq);
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            var ret = await GetResponseContent<ErrorValidationResult<TResponse>>(response);
+
+            Assert.IsType<ErrorValidationResult<TResponse>>(ret);
+
+            return ret;
+        }
+
         #endregion
 
         #region Put
