@@ -13,13 +13,13 @@ namespace IntegrationTests.Security.Controller
 {
     [Collection("SecurityIntegrationTests")]
     public class ApplicationUserPermissionControllerTests : SecurityTestBase, 
-                                                  IClassFixture<WebApplicationFactory<Program>>//,
-                                                //   IDefaultControllerTestsGetAll,
-                                                //   IDefaultControllerTestsGetById,
-                                                //   IDefaultControllerTestsFilter,
-                                                //   IDefaultControllerTestsInsert,
-                                                //   IDefaultControllerTestsUpdate,
-                                                //   IDefaultControllerTestsDelete
+                                                  IClassFixture<WebApplicationFactory<Program>>,
+                                                  IDefaultControllerTestsGetAll,
+                                                  IDefaultControllerTestsGetById,
+                                                  IDefaultControllerTestsFilter,
+                                                  IDefaultControllerTestsInsert,
+                                                  IDefaultControllerTestsUpdate,
+                                                  IDefaultControllerTestsDelete
     {
         private readonly HttpClient _client;
 
@@ -421,22 +421,24 @@ namespace IntegrationTests.Security.Controller
 
         #region Delete
 
-        // [Fact]
-        // public async Task Default_Delete_Should_Delete_Record()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var testRecord = await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, false);
+        [Fact]
+        public async Task Default_Delete_Should_Delete_Record()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var activePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
+            var applicationUserPermission = await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, activePermission.PermissionId);
 
-        //     // Act
-        //     var response = await ControllerTestUtilities.DeleteRecord(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, testRecord.ApplicationUserPermissionId);
-        //     var getResponse = await _client.GetAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/" + testRecord.ApplicationUserPermissionId);
+            // Act
+            var response = await ControllerTestUtilities.DeleteRecord(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, applicationUserPermission.ApplicationUserPermissionId);
+            var getResponse = await _client.GetAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/" + applicationUserPermission.ApplicationUserPermissionId);
 
-        //     // Assert
-        //     response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        //     getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        // }
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
 
         [Fact]
         public async Task Default_Delete_Should_Not_Delete_Record_Id_Does_Not_Exist()
