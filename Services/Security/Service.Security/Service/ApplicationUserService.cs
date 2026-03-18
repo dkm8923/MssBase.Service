@@ -46,6 +46,8 @@ namespace Service.Security.Service
             var emailKey = CacheUtilities.CreateKeyFromString(req.Email);
             var firstNameKey = CacheUtilities.CreateKeyFromString(req.FirstName);
             var lastNameKey = CacheUtilities.CreateKeyFromString(req.LastName);
+            //var dateOfBirthKey = CacheUtilities.CreateKeyFromString(req.DateOfBirth.ToString());
+            var dateOfBirthKey = "0"; //TODO: Make this work, should be DateOnly
             var applicationIdKey = (req.ApplicationId ?? 0).ToString();
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
             var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
@@ -59,6 +61,7 @@ namespace Service.Security.Service
                 ,emailKey
                 ,firstNameKey
                 ,lastNameKey
+                ,dateOfBirthKey
                 ,applicationIdKey
                 ,includeInactiveKey
                 ,includeRelatedKey
