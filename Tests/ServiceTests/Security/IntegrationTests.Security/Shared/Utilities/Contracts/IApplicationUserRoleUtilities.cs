@@ -7,6 +7,7 @@ public interface IApplicationUserRoleUtilities
     public Task DeleteAllRecords();
     public Task<List<ApplicationUserRoleDto>> CreateActiveTestRecords(int applicationId, int applicationUserId, int roleId, short numberOfRecordsToCreate = 5);
     public Task<List<ApplicationUserRoleDto>> CreateInactiveTestRecords(int applicationId, int applicationUserId, int roleId, short numberOfRecordsToCreate = 5);
+    public Task<ApplicationUserRoleDto> CreateSingleApplicationUserRoleTestRecord(int applicationId, int applicationUserId, int roleId, bool active = true);
     public InsertUpdateApplicationUserRoleRequest CreateInsertUpdateRequestWithMaxLengthErrors(int applicationId, int applicationUserId, int roleId);
     public InsertUpdateApplicationUserRoleRequest CreateInsertUpdateRequestWithSpecificValues(int applicationId, int applicationUserId, int roleId, bool active = true);
     public InsertUpdateApplicationUserRoleRequest ConvertApplicationUserRoleDtoToInsertUpdateRequest(ApplicationUserRoleDto req);

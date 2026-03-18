@@ -65,7 +65,7 @@ public class ApplicationUserRoleUtilities : IApplicationUserRoleUtilities
     /// <summary>
     /// Creates a single application user role test record with specific data for integration testing purposes.
     /// </summary>
-    private async Task<ApplicationUserRoleDto> CreateSingleApplicationUserRoleTestRecord(int applicationId, int applicationUserId, int roleId, bool active = true)
+    public async Task<ApplicationUserRoleDto> CreateSingleApplicationUserRoleTestRecord(int applicationId, int applicationUserId, int roleId, bool active = true)
     {
         //create test record
         var insertReq = CreateInsertUpdateRequestWithSpecificValues(applicationId, applicationUserId, roleId, active);
