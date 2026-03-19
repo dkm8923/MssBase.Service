@@ -270,7 +270,7 @@ namespace IntegrationTests.Security.Logic
                 Active = true,
                 Name = "Test Application Name 1",
                 Description = "Test Application Description 1",
-                CurrentUser = "IntegrationTestInsert"
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
             });
 
             var testApplication2 = await _applicationLogic.Insert(new InsertUpdateApplicationRequest
@@ -278,7 +278,7 @@ namespace IntegrationTests.Security.Logic
                 Active = true,
                 Name = "Test Application Name 2",
                 Description = "Test Application Description 2",
-                CurrentUser = "IntegrationTestInsert"
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
             });
 
             await _applicationLogic.Update(testApplication2.Response.ApplicationId, new InsertUpdateApplicationRequest
@@ -286,14 +286,14 @@ namespace IntegrationTests.Security.Logic
                 Active = true,
                 Name = "Test Application Name 2",
                 Description = "Test Application Description 2",
-                CurrentUser = "IntegrationTestUpdate"
+                CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             });
 
             var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
 
-            var postReqFilterCreatedBy = new FilterApplicationLogicRequest { CreatedBy = "IntegrationTestInsert" };
+            var postReqFilterCreatedBy = new FilterApplicationLogicRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
             var postReqFilterCreatedOnDate = new FilterApplicationLogicRequest { CreatedOnDate = todaysUtcDate };
-            var postReqFilterUpdatedBy = new FilterApplicationLogicRequest { UpdatedBy = "IntegrationTestUpdate" };
+            var postReqFilterUpdatedBy = new FilterApplicationLogicRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterApplicationLogicRequest { UpdatedOnDate = todaysUtcDate };
             var postReqFilterApplicationIds = new FilterApplicationLogicRequest { ApplicationIds = new List<int> { applications[0].ApplicationId, applications[1].ApplicationId, applications[2].ApplicationId } };
             var postReqFilterName = new FilterApplicationLogicRequest { Name = testApplication1.Response.Name };

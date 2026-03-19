@@ -191,20 +191,20 @@ namespace IntegrationTests.Security.Service
                FirstName = "Test First Name",
                LastName = "Test Last Name",
                Active = true,
-               CurrentUser = "IntegrationTestInsert"
+               CurrentUser = TestConstants.SpecificCurrentUserForInsert
            };
 
            var applicationUserRes = await _applicationUserLogic.Insert(applicationUserInsertReq, _applicationLogic);
 
-           applicationUserInsertReq.CurrentUser = "IntegrationTestUpdate";
+           applicationUserInsertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
 
            await _applicationUserLogic.Update(applicationUserRes.Response.ApplicationUserId, applicationUserInsertReq, _applicationLogic);
 
            await _cacheTestUtilities.DeleteAllKeyData();
 
-           var postReqCreatedBy = new FilterApplicationUserServiceRequest { CreatedBy = "IntegrationTestInsert" };
+           var postReqCreatedBy = new FilterApplicationUserServiceRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
            var postReqCreatedOnDate = new FilterApplicationUserServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-           var postReqUpdatedBy = new FilterApplicationUserServiceRequest { UpdatedBy = "IntegrationTestUpdate" };
+           var postReqUpdatedBy = new FilterApplicationUserServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
            var postReqUpdatedOnDate = new FilterApplicationUserServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
            var postReqApplicationUserIds = new FilterApplicationUserServiceRequest { ApplicationUserIds = new List<int> { applicationUserRes.Response.ApplicationUserId } };
            var postReqEmail = new FilterApplicationUserServiceRequest { Email = "test@test.com" };

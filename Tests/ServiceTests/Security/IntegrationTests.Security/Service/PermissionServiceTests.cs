@@ -189,20 +189,20 @@ namespace IntegrationTests.Security.Service
                Name = "Test Name",
                Description = "Test Description",
                Active = true,
-               CurrentUser = "IntegrationTestInsert"
+               CurrentUser = TestConstants.SpecificCurrentUserForInsert
            };
 
            var permissionRes = await _permissionLogic.Insert(permissionInsertReq, _applicationLogic);
 
-           permissionInsertReq.CurrentUser = "IntegrationTestUpdate";
+           permissionInsertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
 
            await _permissionLogic.Update(permissionRes.Response.PermissionId, permissionInsertReq, _applicationLogic);
 
            await _cacheTestUtilities.DeleteAllKeyData();
 
-           var postReqCreatedBy = new FilterPermissionServiceRequest { CreatedBy = "IntegrationTestInsert" };
+           var postReqCreatedBy = new FilterPermissionServiceRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
            var postReqCreatedOnDate = new FilterPermissionServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-           var postReqUpdatedBy = new FilterPermissionServiceRequest { UpdatedBy = "IntegrationTestUpdate" };
+           var postReqUpdatedBy = new FilterPermissionServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
            var postReqUpdatedOnDate = new FilterPermissionServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
            var postReqPermissionIds = new FilterPermissionServiceRequest { PermissionIds = new List<int> { permissionRes.Response.PermissionId } };
            var postReqName = new FilterPermissionServiceRequest { Name = "Test Name" };

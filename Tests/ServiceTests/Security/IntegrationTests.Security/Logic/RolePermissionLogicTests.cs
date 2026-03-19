@@ -186,7 +186,7 @@ namespace IntegrationTests.Security.Logic
                 RoleId = roleId,
                 PermissionId = testPermission1.Response.PermissionId,
                 Active = true,
-                CurrentUser = "IntegrationTestInsert"
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic, _roleLogic, _permissionLogic);
 
             await _rolePermissionLogic.Update(testRolePermission1Res.Response.RolePermissionId, new InsertUpdateRolePermissionRequest
@@ -195,14 +195,14 @@ namespace IntegrationTests.Security.Logic
                 RoleId = roleId,
                 PermissionId = testPermission1.Response.PermissionId,
                 Active = true,
-                CurrentUser = "IntegrationTestUpdate"
+                CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, _applicationLogic, _roleLogic, _permissionLogic);
 
             var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
 
-            var postReqFilterCreatedBy = new FilterRolePermissionServiceRequest { CreatedBy = "IntegrationTestInsert" };
+            var postReqFilterCreatedBy = new FilterRolePermissionServiceRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
             var postReqFilterCreatedOnDate = new FilterRolePermissionServiceRequest { CreatedOnDate = todaysUtcDate };
-            var postReqFilterUpdatedBy = new FilterRolePermissionServiceRequest { UpdatedBy = "IntegrationTestUpdate" };
+            var postReqFilterUpdatedBy = new FilterRolePermissionServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterRolePermissionServiceRequest { UpdatedOnDate = todaysUtcDate };
             var postReqFilterRolePermissionIds = new FilterRolePermissionServiceRequest { RolePermissionIds = new List<int> { securityTestData.ActiveRolePermissions[0].RolePermissionId, securityTestData.ActiveRolePermissions[1].RolePermissionId, securityTestData.ActiveRolePermissions[2].RolePermissionId } };
             var postReqFilterApplicationId = new FilterRolePermissionServiceRequest { ApplicationId = applicationId };

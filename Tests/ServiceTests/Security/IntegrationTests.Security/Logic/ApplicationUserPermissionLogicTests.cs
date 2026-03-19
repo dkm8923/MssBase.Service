@@ -186,7 +186,7 @@ namespace IntegrationTests.Security.Logic
                 ApplicationUserId = applicationUserId,
                 PermissionId = testPermission1.Response.PermissionId,
                 Active = true,
-                CurrentUser = "IntegrationTestInsert"
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic, _applicationUserLogic, _permissionLogic);
 
             await _applicationUserPermissionLogic.Update(testApplicationUserPermission1Res.Response.ApplicationUserPermissionId, new InsertUpdateApplicationUserPermissionRequest
@@ -195,14 +195,14 @@ namespace IntegrationTests.Security.Logic
                 ApplicationUserId = applicationUserId,
                 PermissionId = testPermission1.Response.PermissionId,
                 Active = true,
-                CurrentUser = "IntegrationTestUpdate"
+                CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, _applicationLogic, _applicationUserLogic, _permissionLogic);
 
             var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
 
-            var postReqFilterCreatedBy = new FilterApplicationUserPermissionServiceRequest { CreatedBy = "IntegrationTestInsert" };
+            var postReqFilterCreatedBy = new FilterApplicationUserPermissionServiceRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
             var postReqFilterCreatedOnDate = new FilterApplicationUserPermissionServiceRequest { CreatedOnDate = todaysUtcDate };
-            var postReqFilterUpdatedBy = new FilterApplicationUserPermissionServiceRequest { UpdatedBy = "IntegrationTestUpdate" };
+            var postReqFilterUpdatedBy = new FilterApplicationUserPermissionServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterApplicationUserPermissionServiceRequest { UpdatedOnDate = todaysUtcDate };
             var postReqFilterApplicationUserPermissionIds = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = new List<int> { securityTestData.ActiveApplicationUserPermissions[0].ApplicationUserPermissionId, securityTestData.ActiveApplicationUserPermissions[1].ApplicationUserPermissionId, securityTestData.ActiveApplicationUserPermissions[2].ApplicationUserPermissionId } };
             var postReqFilterApplicationId = new FilterApplicationUserPermissionServiceRequest { ApplicationId = applicationId };

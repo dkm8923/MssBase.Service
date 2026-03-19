@@ -6,6 +6,7 @@ using IntegrationTests.Security.Shared;
 using Shared.Models;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities.Contracts.Logic;
+using IntegrationTests.Shared.Utilities;
 
 namespace IntegrationTests.Security.Logic
 {
@@ -189,7 +190,7 @@ namespace IntegrationTests.Security.Logic
                 Name = "Test Role Name 1",
                 Description = "Test Role Description 1",
                 Active = true,
-                CurrentUser = "IntegrationTestInsert"
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic);
 
             var testRole2 = await _roleLogic.Insert(new InsertUpdateRoleRequest
@@ -198,7 +199,7 @@ namespace IntegrationTests.Security.Logic
                 Name = "Test Role Name 2",
                 Description = "Test Role Description 2",
                 Active = true,
-                CurrentUser = "IntegrationTestInsert"
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic);
 
             await _roleLogic.Update(testRole2.Response.RoleId, new InsertUpdateRoleRequest
@@ -207,14 +208,14 @@ namespace IntegrationTests.Security.Logic
                 Name = "Test Role Name 2",
                 Description = "Test Role Description 2",
                 Active = true,
-                CurrentUser = "IntegrationTestUpdate"
+                CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, _applicationLogic);
 
             var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
 
-            var postReqFilterCreatedBy = new FilterRoleLogicRequest { CreatedBy = "IntegrationTestInsert" };
+            var postReqFilterCreatedBy = new FilterRoleLogicRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
             var postReqFilterCreatedOnDate = new FilterRoleLogicRequest { CreatedOnDate = todaysUtcDate };
-            var postReqFilterUpdatedBy = new FilterRoleLogicRequest { UpdatedBy = "IntegrationTestUpdate" };
+            var postReqFilterUpdatedBy = new FilterRoleLogicRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterRoleLogicRequest { UpdatedOnDate = todaysUtcDate };
             var postReqFilterRoleIds = new FilterRoleLogicRequest { RoleIds = new List<int> { roles[0].RoleId, roles[1].RoleId, roles[2].RoleId } };
             var postReqFilterName = new FilterRoleLogicRequest { Name = "Test Role Name 1" };
@@ -353,7 +354,7 @@ namespace IntegrationTests.Security.Logic
                 Description = "Updated description",
                 Active = false,
                 ApplicationId = newApplication.ApplicationId,
-                CurrentUser = "IntegrationTestUpdate"
+                CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             };
 
             // Act

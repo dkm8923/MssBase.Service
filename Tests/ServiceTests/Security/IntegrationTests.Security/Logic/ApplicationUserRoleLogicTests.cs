@@ -186,7 +186,7 @@ namespace IntegrationTests.Security.Logic
                 ApplicationUserId = applicationUserId,
                 RoleId = testRole1.Response.RoleId,
                 Active = true,
-                CurrentUser = "IntegrationTestInsert"
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic, _applicationUserLogic, _roleLogic);
 
             await _applicationUserRoleLogic.Update(testApplicationUserRole1Res.Response.ApplicationUserRoleId, new InsertUpdateApplicationUserRoleRequest
@@ -195,14 +195,14 @@ namespace IntegrationTests.Security.Logic
                 ApplicationUserId = applicationUserId,
                 RoleId = testRole1.Response.RoleId,
                 Active = true,
-                CurrentUser = "IntegrationTestUpdate"
+                CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, _applicationLogic, _applicationUserLogic, _roleLogic);
 
             var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
 
-            var postReqFilterCreatedBy = new FilterApplicationUserRoleServiceRequest { CreatedBy = "IntegrationTestInsert" };
+            var postReqFilterCreatedBy = new FilterApplicationUserRoleServiceRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
             var postReqFilterCreatedOnDate = new FilterApplicationUserRoleServiceRequest { CreatedOnDate = todaysUtcDate };
-            var postReqFilterUpdatedBy = new FilterApplicationUserRoleServiceRequest { UpdatedBy = "IntegrationTestUpdate" };
+            var postReqFilterUpdatedBy = new FilterApplicationUserRoleServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterApplicationUserRoleServiceRequest { UpdatedOnDate = todaysUtcDate };
             var postReqFilterApplicationUserRoleIds = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { securityTestData.ActiveApplicationUserRoles[0].ApplicationUserRoleId, securityTestData.ActiveApplicationUserRoles[1].ApplicationUserRoleId, securityTestData.ActiveApplicationUserRoles[2].ApplicationUserRoleId } };
             var postReqFilterApplicationId = new FilterApplicationUserRoleServiceRequest { ApplicationId = applicationId };

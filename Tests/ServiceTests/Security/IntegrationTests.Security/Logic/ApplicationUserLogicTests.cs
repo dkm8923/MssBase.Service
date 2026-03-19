@@ -6,6 +6,7 @@ using IntegrationTests.Security.Shared;
 using Shared.Models;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities.Contracts.Logic;
+using IntegrationTests.Shared.Utilities;
 
 namespace IntegrationTests.Security.Logic
 {
@@ -192,7 +193,7 @@ namespace IntegrationTests.Security.Logic
                 DateOfBirth = new DateTime(1990, 1, 1),
                 Password = "TestPassword1!",
                 Active = true,
-                CurrentUser = "IntegrationTestInsert"
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic);
 
             var testApplicationUser2 = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest
@@ -204,7 +205,7 @@ namespace IntegrationTests.Security.Logic
                 DateOfBirth = new DateTime(1991, 2, 2),
                 Password = "TestPassword2!",
                 Active = true,
-                CurrentUser = "IntegrationTestInsert"
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic);
 
             await _applicationUserLogic.Update(testApplicationUser2.Response.ApplicationUserId, new InsertUpdateApplicationUserRequest
@@ -216,14 +217,14 @@ namespace IntegrationTests.Security.Logic
                 DateOfBirth = new DateTime(1991, 2, 2),
                 Password = "TestPassword2!",
                 Active = true,
-                CurrentUser = "IntegrationTestUpdate"
+                CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, _applicationLogic);
 
             var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
 
-            var postReqFilterCreatedBy = new FilterApplicationUserLogicRequest { CreatedBy = "IntegrationTestInsert" };
+            var postReqFilterCreatedBy = new FilterApplicationUserLogicRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
             var postReqFilterCreatedOnDate = new FilterApplicationUserLogicRequest { CreatedOnDate = todaysUtcDate };
-            var postReqFilterUpdatedBy = new FilterApplicationUserLogicRequest { UpdatedBy = "IntegrationTestUpdate" };
+            var postReqFilterUpdatedBy = new FilterApplicationUserLogicRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterApplicationUserLogicRequest { UpdatedOnDate = todaysUtcDate };
             var postReqFilterApplicationUserIds = new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { applicationUsers[0].ApplicationUserId, applicationUsers[1].ApplicationUserId, applicationUsers[2].ApplicationUserId } };
             var postReqFilterEmail = new FilterApplicationUserLogicRequest { Email = testApplicationUser1.Response.Email };

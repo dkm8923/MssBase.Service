@@ -189,20 +189,20 @@ namespace IntegrationTests.Security.Service
                Name = "Test Name",
                Description = "Test Description",
                Active = true,
-               CurrentUser = "IntegrationTestInsert"
+               CurrentUser = TestConstants.SpecificCurrentUserForInsert
            };
 
            var roleRes = await _roleLogic.Insert(roleInsertReq, _applicationLogic);
 
-           roleInsertReq.CurrentUser = "IntegrationTestUpdate";
+           roleInsertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
 
            await _roleLogic.Update(roleRes.Response.RoleId, roleInsertReq, _applicationLogic);
 
            await _cacheTestUtilities.DeleteAllKeyData();
 
-           var postReqCreatedBy = new FilterRoleServiceRequest { CreatedBy = "IntegrationTestInsert" };
+           var postReqCreatedBy = new FilterRoleServiceRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
            var postReqCreatedOnDate = new FilterRoleServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-           var postReqUpdatedBy = new FilterRoleServiceRequest { UpdatedBy = "IntegrationTestUpdate" };
+           var postReqUpdatedBy = new FilterRoleServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
            var postReqUpdatedOnDate = new FilterRoleServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
            var postReqRoleIds = new FilterRoleServiceRequest { RoleIds = new List<int> { roleRes.Response.RoleId } };
            var postReqName = new FilterRoleServiceRequest { Name = "Test Name" };

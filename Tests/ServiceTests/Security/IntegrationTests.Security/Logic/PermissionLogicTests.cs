@@ -6,6 +6,7 @@ using IntegrationTests.Security.Shared;
 using Shared.Models;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities.Contracts.Logic;
+using IntegrationTests.Shared.Utilities;
 
 namespace IntegrationTests.Security.Logic
 {
@@ -189,7 +190,7 @@ namespace IntegrationTests.Security.Logic
                 Name = "Test Permission Name 1",
                 Description = "Test Permission Description 1",
                 Active = true,
-                CurrentUser = "IntegrationTestInsert"
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic);
 
             var testPermission2 = await _permissionLogic.Insert(new InsertUpdatePermissionRequest
@@ -198,7 +199,7 @@ namespace IntegrationTests.Security.Logic
                 Name = "Test Permission Name 2",
                 Description = "Test Permission Description 2",
                 Active = true,
-                CurrentUser = "IntegrationTestInsert"
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic);
 
             await _permissionLogic.Update(testPermission2.Response.PermissionId, new InsertUpdatePermissionRequest
@@ -207,14 +208,14 @@ namespace IntegrationTests.Security.Logic
                 Name = "Test Permission Name 2",
                 Description = "Test Permission Description 2",
                 Active = true,
-                CurrentUser = "IntegrationTestUpdate"
+                CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, _applicationLogic);
 
             var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
 
-            var postReqFilterCreatedBy = new FilterPermissionLogicRequest { CreatedBy = "IntegrationTestInsert" };
+            var postReqFilterCreatedBy = new FilterPermissionLogicRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
             var postReqFilterCreatedOnDate = new FilterPermissionLogicRequest { CreatedOnDate = todaysUtcDate };
-            var postReqFilterUpdatedBy = new FilterPermissionLogicRequest { UpdatedBy = "IntegrationTestUpdate" };
+            var postReqFilterUpdatedBy = new FilterPermissionLogicRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterPermissionLogicRequest { UpdatedOnDate = todaysUtcDate };
             var postReqFilterPermissionIds = new FilterPermissionLogicRequest { PermissionIds = new List<int> { permissions[0].PermissionId, permissions[1].PermissionId, permissions[2].PermissionId } };
             var postReqFilterName = new FilterPermissionLogicRequest { Name = "Test Permission Name 1" };
@@ -353,7 +354,7 @@ namespace IntegrationTests.Security.Logic
                 Description = "Updated description",
                 Active = false,
                 ApplicationId = newApplication.ApplicationId,
-                CurrentUser = "IntegrationTestUpdate"
+                CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             };
 
             // Act
