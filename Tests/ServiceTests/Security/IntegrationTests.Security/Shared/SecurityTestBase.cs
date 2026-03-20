@@ -86,6 +86,37 @@ public class SecurityTestBase
         await _securityTestUtilities.Application.DeleteAllRecords();
     }
 
+    protected async Task<SecurityTestData> ArrangeApplicationUserPermissionTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+        var activePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
+        var inactivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
+
+        var activeApplicationUserPermissions = new List<ApplicationUserPermissionDto>();
+        var inactiveApplicationUserPermissions = new List<ApplicationUserPermissionDto>();
+
+        //create 5 active ApplicationUserPermission records
+        foreach (var activePermission in activePermissions) 
+        {
+            activeApplicationUserPermissions.Add(await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, activePermission.PermissionId));
+        }
+
+        //create 5 inactive ApplicationUserPermission records
+        foreach (var inactivePermission in inactivePermissions) 
+        {
+            inactiveApplicationUserPermissions.Add(await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, inactivePermission.PermissionId, false));
+        }
+
+        ret.ActiveApplicationUserPermissions = activeApplicationUserPermissions;
+        ret.InactiveApplicationUserPermissions = inactiveApplicationUserPermissions;
+
+        return ret;
+    }
+
     protected async Task<SecurityTestData> ArrangeSecurityTestData()
     {
         var securityTestDataRet = new SecurityTestData();
