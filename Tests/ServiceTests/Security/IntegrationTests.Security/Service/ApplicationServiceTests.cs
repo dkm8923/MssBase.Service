@@ -190,12 +190,17 @@ namespace IntegrationTests.Security.Service
            var postReqUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = TestConstants.CurrentUser};
            var postReqUpdatedOnDate = new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
            var postReqName = new FilterApplicationServiceRequest { Name = "Test Application Name" };
+           var postReqIncludeInactive = new FilterApplicationServiceRequest { IncludeInactive = true };
+           var postReqIncludeRelated = new FilterApplicationServiceRequest { IncludeRelated = true };
            
-           var expectedCacheKeyCreatedBy = $"ApplicationService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0";
-           var expectedCacheKeyCreatedOnDate = $"ApplicationService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0";
-           var expectedCacheKeyUpdatedBy = $"ApplicationService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0";
-           var expectedCacheKeyUpdatedOnDate = $"ApplicationService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0";
-           var expectedCacheKeyName = $"ApplicationService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqName.Name)}_0";
+           //ApplicationService_Filter_IntegrationTest_0_0_0_0_0_0_0
+           var expectedCacheKeyCreatedBy = $"ApplicationService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0";
+           var expectedCacheKeyCreatedOnDate = $"ApplicationService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedBy = $"ApplicationService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0";
+           var expectedCacheKeyUpdatedOnDate = $"ApplicationService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0";
+           var expectedCacheKeyName = $"ApplicationService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqName.Name)}_0_0";
+           var expectedCacheKeyIncludeInactive = $"ApplicationService_Filter_0_0_0_0_0_0_1_0";
+           var expectedCacheKeyIncludeRelated = $"ApplicationService_Filter_0_0_0_0_0_0_0_1";
 
            // Act
            var filterCreatedByResult = await _applicationService.Filter(postReqCreatedBy);
@@ -203,6 +208,9 @@ namespace IntegrationTests.Security.Service
            var filterUpdatedByResult = await _applicationService.Filter(postReqUpdatedBy);
            var filterUpdatedOnDateResult = await _applicationService.Filter(postReqUpdatedOnDate);
            var filterNameResult = await _applicationService.Filter(postReqName);
+           var filterIncludeInactiveResult = await _applicationService.Filter(postReqIncludeInactive);
+           var filterIncludeRelatedResult = await _applicationService.Filter(postReqIncludeRelated);
+
            var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
            // Assert
@@ -220,6 +228,12 @@ namespace IntegrationTests.Security.Service
 
            availableCacheKeys.Should().Contain(expectedCacheKeyName);
            filterNameResult.Response.Should().HaveCount(1);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyIncludeInactive);
+           filterIncludeInactiveResult.Response.Should().HaveCountGreaterThan(0);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyIncludeRelated);
+           filterIncludeRelatedResult.Response.Should().HaveCountGreaterThan(0);
         }
 
         #endregion
