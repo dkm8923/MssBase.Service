@@ -29,44 +29,7 @@ namespace IntegrationTests.Security.Controller
         }
 
         #region utils
-
-        private async Task<ArrangeTestDataResponse> _arrangeTestData()
-        {
-            // Arrange
-            var ret = new ArrangeTestDataResponse();
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
-            var activePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            var inactivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-
-            var activeApplicationUserPermissions = new List<ApplicationUserPermissionDto>();
-            var inactiveApplicationUserPermissions = new List<ApplicationUserPermissionDto>();
-
-            //create 5 active ApplicationUserPermission records
-            foreach (var activePermission in activePermissions) 
-            {
-                activeApplicationUserPermissions.Add(await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, activePermission.PermissionId));
-            }
-
-            //create 5 inactive ApplicationUserPermission records
-            foreach (var inactivePermission in inactivePermissions) 
-            {
-                inactiveApplicationUserPermissions.Add(await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, inactivePermission.PermissionId, false));
-            }
-
-            ret.ActiveApplicationUserPermissions = activeApplicationUserPermissions;
-            ret.InactiveApplicationUserPermissions = inactiveApplicationUserPermissions;
-
-            return ret;
-        }
-
-        public class ArrangeTestDataResponse 
-        {
-            public List<ApplicationUserPermissionDto> ActiveApplicationUserPermissions { get; set; }
-            public List<ApplicationUserPermissionDto> InactiveApplicationUserPermissions { get; set; }
-        }
-
+        
         #endregion
 
         #region GetAll
@@ -75,7 +38,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            await _arrangeTestData();
+            await ArrangeApplicationUserPermissionTestData();
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base);
@@ -89,7 +52,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            await _arrangeTestData();
+            await ArrangeApplicationUserPermissionTestData();
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
@@ -121,7 +84,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
             var activeTestRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions[0];
             
             // Act
@@ -136,7 +99,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
             var inactiveTestRecord = arrangeTestDataResponse.InactiveApplicationUserPermissions[0];
 
             // Act
@@ -150,7 +113,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
             var inactiveTestRecord = arrangeTestDataResponse.InactiveApplicationUserPermissions[0];
 
             // Act
@@ -198,7 +161,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Active_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
             var postReq = new FilterApplicationUserPermissionServiceRequest { };
 
             // Act
@@ -214,7 +177,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
             var postReq = new FilterApplicationUserPermissionServiceRequest { IncludeInactive = true };
 
             // Act
@@ -230,7 +193,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Filter_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
             var applicationUserPermissionIds = new List<int> 
             { 
                 arrangeTestDataResponse.ActiveApplicationUserPermissions[0].ApplicationUserPermissionId, 
