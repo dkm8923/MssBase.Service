@@ -30,43 +30,6 @@ namespace IntegrationTests.Security.Controller
 
         #region utils
 
-        private async Task<ArrangeTestDataResponse> _arrangeTestData()
-        {
-            // Arrange
-            var ret = new ArrangeTestDataResponse();
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
-            var activePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            var inactivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-
-            var activeRolePermissions = new List<RolePermissionDto>();
-            var inactiveRolePermissions = new List<RolePermissionDto>();
-
-            //create 5 active RolePermission records
-            foreach (var activePermission in activePermissions) 
-            {
-                activeRolePermissions.Add(await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, role.RoleId, activePermission.PermissionId));
-            }
-
-            //create 5 inactive RolePermission records
-            foreach (var inactivePermission in inactivePermissions) 
-            {
-                inactiveRolePermissions.Add(await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, role.RoleId, inactivePermission.PermissionId, false));
-            }
-
-            ret.ActiveRolePermissions = activeRolePermissions;
-            ret.InactiveRolePermissions = inactiveRolePermissions;
-
-            return ret;
-        }
-
-        public class ArrangeTestDataResponse 
-        {
-            public List<RolePermissionDto> ActiveRolePermissions { get; set; }
-            public List<RolePermissionDto> InactiveRolePermissions { get; set; }
-        }
-
         #endregion
 
         #region GetAll
@@ -75,7 +38,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            await _arrangeTestData();
+            await ArrangeRolePermissionTestData();
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base);
@@ -89,7 +52,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            await _arrangeTestData();
+            await ArrangeRolePermissionTestData();
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
@@ -121,7 +84,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
             var activeTestRecord = arrangeTestDataResponse.ActiveRolePermissions[0];
             
             // Act
@@ -136,7 +99,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
             var inactiveTestRecord = arrangeTestDataResponse.InactiveRolePermissions[0];
 
             // Act
@@ -150,7 +113,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
             var inactiveTestRecord = arrangeTestDataResponse.InactiveRolePermissions[0];
 
             // Act
@@ -198,7 +161,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Active_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
             var postReq = new FilterRolePermissionServiceRequest { };
 
             // Act
@@ -214,7 +177,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
             var postReq = new FilterRolePermissionServiceRequest { IncludeInactive = true };
 
             // Act
@@ -230,7 +193,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Filter_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
             var rolePermissionIds = new List<int> 
             { 
                 arrangeTestDataResponse.ActiveRolePermissions[0].RolePermissionId, 

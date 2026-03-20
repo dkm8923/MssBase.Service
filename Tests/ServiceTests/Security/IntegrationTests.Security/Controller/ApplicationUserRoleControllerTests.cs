@@ -30,43 +30,6 @@ namespace IntegrationTests.Security.Controller
 
         #region utils
 
-        private async Task<ArrangeTestDataResponse> _arrangeTestData()
-        {
-            // Arrange
-            var ret = new ArrangeTestDataResponse();
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
-            var activeRoles = await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId);
-            var inactiveRoles = await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId);
-
-            var activeApplicationUserRoles = new List<ApplicationUserRoleDto>();
-            var inactiveApplicationUserRoles = new List<ApplicationUserRoleDto>();
-
-            //create 5 active ApplicationUserRole records
-            foreach (var activeRole in activeRoles) 
-            {
-                activeApplicationUserRoles.Add(await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, activeRole.RoleId));
-            }
-
-            //create 5 inactive ApplicationUserRole records
-            foreach (var inactiveRole in inactiveRoles) 
-            {
-                inactiveApplicationUserRoles.Add(await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, inactiveRole.RoleId, false));
-            }
-
-            ret.ActiveApplicationUserRoles = activeApplicationUserRoles;
-            ret.InactiveApplicationUserRoles = inactiveApplicationUserRoles;
-
-            return ret;
-        }
-
-        public class ArrangeTestDataResponse 
-        {
-            public List<ApplicationUserRoleDto> ActiveApplicationUserRoles { get; set; }
-            public List<ApplicationUserRoleDto> InactiveApplicationUserRoles { get; set; }
-        }
-
         #endregion
 
         #region GetAll
@@ -75,7 +38,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            await _arrangeTestData();
+            await ArrangeApplicationUserRoleTestData();
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserRoleDto>>(_client, ApiEndPoints.Security.ApplicationUserRole.Base);
@@ -89,7 +52,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            await _arrangeTestData();
+            await ArrangeApplicationUserRoleTestData();
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserRoleDto>>(_client, ApiEndPoints.Security.ApplicationUserRole.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
@@ -121,7 +84,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var activeTestRecord = arrangeTestDataResponse.ActiveApplicationUserRoles[0];
             
             // Act
@@ -136,7 +99,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var inactiveTestRecord = arrangeTestDataResponse.InactiveApplicationUserRoles[0];
 
             // Act
@@ -150,7 +113,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var inactiveTestRecord = arrangeTestDataResponse.InactiveApplicationUserRoles[0];
 
             // Act
@@ -198,7 +161,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Active_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var postReq = new FilterApplicationUserRoleServiceRequest { };
 
             // Act
@@ -214,7 +177,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var postReq = new FilterApplicationUserRoleServiceRequest { IncludeInactive = true };
 
             // Act
@@ -230,7 +193,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Filter_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await _arrangeTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var applicationUserRoleIds = new List<int> 
             { 
                 arrangeTestDataResponse.ActiveApplicationUserRoles[0].ApplicationUserRoleId, 
