@@ -86,6 +86,19 @@ public class SecurityTestBase
         await _securityTestUtilities.Application.DeleteAllRecords();
     }
 
+    protected async Task<SecurityTestData> ArrangeApplicationUserTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);;
+        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId);
+
+        return ret;
+    }
+
     protected async Task<SecurityTestData> ArrangeApplicationUserPermissionTestData()
     {
         // Arrange

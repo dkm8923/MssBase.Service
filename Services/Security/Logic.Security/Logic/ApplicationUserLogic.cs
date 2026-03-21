@@ -96,6 +96,11 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.LastName == req.LastName);
                 }
 
+                if (req.DateOfBirth != null)
+                {
+                    query = query.Where(x => x.DateOfBirth == req.DateOfBirth);
+                }
+
                 if (req.ApplicationId != null)
                 {
                     query = query.Where(x => x.ApplicationId == req.ApplicationId);
