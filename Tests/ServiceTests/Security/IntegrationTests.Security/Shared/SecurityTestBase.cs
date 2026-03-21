@@ -112,6 +112,19 @@ public class SecurityTestBase
         return ret;
     }
 
+    protected async Task<SecurityTestData> ArrangeRoleTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+        ret.ActiveRoles = await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId);;
+        ret.InactiveRoles = await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId);
+
+        return ret;
+    }
+
     protected async Task<SecurityTestData> ArrangeApplicationUserPermissionTestData()
     {
         // Arrange
