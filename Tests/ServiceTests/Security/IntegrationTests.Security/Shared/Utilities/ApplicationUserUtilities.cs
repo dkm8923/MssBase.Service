@@ -20,17 +20,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
         _applicationLogic = applicationLogic;
     }
 
-    /// <summary>
-    /// Asynchronously clears test data from the ApplicationUser and Application tables, creates a fresh test application record, 
-    /// and returns the application ID for use in subsequent tests.
-    /// </summary>
-    public async Task<int> ClearTestTablesAndReturnApplicationId(IApplicationUtilities applicationUtilities)
-    {
-        await DeleteAllRecords();
-        await applicationUtilities.DeleteAllRecords();
-        return (await applicationUtilities.CreateActiveTestRecords(1)).FirstOrDefault().ApplicationId;
-    }
-
     public InsertUpdateApplicationUserRequest ConvertApplicationUserDtoToInsertUpdateRequest(ApplicationUserDto req)
     {
         return new InsertUpdateApplicationUserRequest
@@ -92,40 +81,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
 
         return ret.Response;
     }
-
-    /// <summary>
-    /// Creates a single application user test record with specific values provided in the request object.
-    /// </summary>
-    // public async Task<ApplicationUserDto> CreateSingleApplicationUserTestRecordWithSpecificValues(int applicationId, InsertUpdateApplicationUserRequest req = null)
-    // {
-    //     var ret = new ErrorValidationResult<ApplicationUserDto>();
-
-    //     if (req == null)
-    //     {
-    //         var insertReq = new InsertUpdateApplicationUserRequest
-    //         {
-    //             Email = "test@applicationuser.com",
-    //             FirstName = "Test",
-    //             LastName = "ApplicationUser",
-    //             Active = true,
-    //             ApplicationId = 1,
-    //             CurrentUser = TestConstants.CurrentUser
-    //         };
-
-    //         ret = await _applicationUserLogic.Insert(insertReq);
-    //     }
-    //     else
-    //     {
-    //         req.Email = req.Email ?? "test@applicationuser.com";
-    //         req.FirstName = req.FirstName ?? "Test";
-    //         req.LastName = req.LastName ?? "ApplicationUser";
-    //         req.ApplicationId = req.ApplicationId == 0 ? 1 : req.ApplicationId;
-    //         req.CurrentUser = req.CurrentUser ?? TestConstants.CurrentUser; 
-    //         ret = await _applicationUserLogic.Insert(req);
-    //     }
-
-    //     return ret.Response;
-    // }
 
     /// <summary>
     /// Asynchronously creates a set of predefined active test application user records in the data store.

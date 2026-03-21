@@ -34,10 +34,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);
-            await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, 1);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base);
@@ -51,17 +48,14 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);
-            await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, 1);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(6);
+            result.Response.Should().HaveCount(10);
         }
 
         [Fact]
@@ -132,9 +126,8 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
             
             // Act
             var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserDto>(_client, ApiEndPoints.Security.ApplicationUser.Base, testRecord.ApplicationUserId);
@@ -148,9 +141,8 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, false);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUsers.FirstOrDefault();
 
             // Act
             var response = await _client.GetAsync(ApiEndPoints.Security.ApplicationUser.Base + "/" + testRecord.ApplicationUserId);
@@ -163,9 +155,8 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, false);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUsers.FirstOrDefault();
 
             // Act
             var response = await _client.GetAsync(ApiEndPoints.Security.ApplicationUser.Base + "/" + testRecord.ApplicationUserId + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
@@ -178,9 +169,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_NotFound()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
             var id = -1;
 
             // Act
@@ -194,6 +183,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Bad_Request_Invalid_Id()
         {
             // Arrange
+            await ClearAllSecurityTestTableData();
             var id = "asfasdfasdfasdf";
 
             // Act
@@ -265,9 +255,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Active_Data()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
 
             var postReq = new FilterApplicationUserServiceRequest { };
 
@@ -284,10 +272,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);
-            await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, 1);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
 
             var postReq = new FilterApplicationUserServiceRequest { IncludeInactive = true };
 
@@ -304,9 +289,8 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Filter_Data()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 5);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var applicationUsers = arrangeTestDataResponse.ActiveApplicationUsers;
             
             var postReq = new FilterApplicationUserServiceRequest { ApplicationUserIds = new List<int> { applicationUsers[0].ApplicationUserId, applicationUsers[1].ApplicationUserId } };
 
@@ -414,6 +398,7 @@ namespace IntegrationTests.Security.Controller
         [Fact]
         public async Task Default_Insert_Should_Create_Record()
         {
+            //TODO: Make this insert at controller level
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
@@ -461,9 +446,8 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Update_Should_Update_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var insertedRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var insertedRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
 
             var updateReq = new InsertUpdateApplicationUserRequest
             {
@@ -471,7 +455,7 @@ namespace IntegrationTests.Security.Controller
                 FirstName = "Updated",
                 LastName = "User",
                 Active = false,
-                ApplicationId = application.ApplicationId,
+                ApplicationId = insertedRecord.ApplicationId,
                 CurrentUser = TestConstants.CurrentUser
             };
 
@@ -504,7 +488,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Update_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            int applicationUserId = await _securityTestUtilities.ApplicationUser.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            await ClearAllSecurityTestTableData();
             var postReq = ControllerTestUtilities.FormatPostRequest(new object());
 
             // Act
@@ -523,8 +507,8 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, false);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
 
             // Act
             var response = await ControllerTestUtilities.DeleteRecord(_client, ApiEndPoints.Security.ApplicationUser.Base, testRecord.ApplicationUserId);

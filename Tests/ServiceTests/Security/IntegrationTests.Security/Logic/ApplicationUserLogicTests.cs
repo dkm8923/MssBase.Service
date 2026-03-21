@@ -116,7 +116,7 @@ namespace IntegrationTests.Security.Logic
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
             
-var postReq = new FilterApplicationUserLogicRequest { };
+            var postReq = new FilterApplicationUserLogicRequest { };
 
             // Act
             var result = await _applicationUserLogic.Filter(postReq);
