@@ -4,7 +4,6 @@ namespace IntegrationTests.Security.Shared.Utilities.Contracts;
 
 public interface IPermissionUtilities
 {
-    public Task<int> ClearTestTablesAndReturnApplicationId(IApplicationUtilities applicationUtilities);
     public Task DeleteAllRecords();
     public Task<List<PermissionDto>> CreateActiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5);
     public Task<List<PermissionDto>> CreateInactiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5);

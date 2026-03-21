@@ -34,11 +34,8 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId, 1);
-
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<PermissionDto>>(_client, ApiEndPoints.Security.Permission.Base);
 
@@ -51,17 +48,14 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId, 1);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
 
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<PermissionDto>>(_client, ApiEndPoints.Security.Permission.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(6);
+            result.Response.Should().HaveCount(10);
         }
 
         [Fact]
@@ -86,9 +80,8 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            var testRecord = arrangeTestDataResponse.ActivePermissions.FirstOrDefault();
             
             // Act
             var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<PermissionDto>(_client, ApiEndPoints.Security.Permission.Base, testRecord.PermissionId);
@@ -102,9 +95,8 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId, false);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            var testRecord = arrangeTestDataResponse.InactivePermissions.FirstOrDefault();
 
             // Act
             var response = await _client.GetAsync(ApiEndPoints.Security.Permission.Base + "/" + testRecord.PermissionId);
@@ -117,9 +109,8 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId, false);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            var testRecord = arrangeTestDataResponse.InactivePermissions.FirstOrDefault();
 
             // Act
             var response = await _client.GetAsync(ApiEndPoints.Security.Permission.Base + "/" + testRecord.PermissionId + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
@@ -133,8 +124,6 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
             var id = -1;
 
             // Act
@@ -148,6 +137,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetById_Should_Return_Bad_Request_Invalid_Id()
         {
             // Arrange
+            await ClearAllSecurityTestTableData();
             var id = "asfasdfasdfasdf";
 
             // Act
@@ -167,10 +157,8 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Active_Data()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            
             var postReq = new FilterPermissionServiceRequest { };
 
             // Act
@@ -186,10 +174,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId, 1);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
 
             var postReq = new FilterPermissionServiceRequest { IncludeInactive = true };
 
@@ -206,9 +191,8 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Filter_Data()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var permissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 5);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            var permissions = arrangeTestDataResponse.ActivePermissions;
             
             var postReq = new FilterPermissionServiceRequest { PermissionIds = new List<int> { permissions[0].PermissionId, permissions[1].PermissionId } };
 
@@ -356,7 +340,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Update_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            int permissionId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            await ClearAllSecurityTestTableData();
             var postReq = ControllerTestUtilities.FormatPostRequest(new object());
 
             // Act
