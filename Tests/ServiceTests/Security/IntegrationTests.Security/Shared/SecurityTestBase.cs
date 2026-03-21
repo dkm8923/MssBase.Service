@@ -99,6 +99,19 @@ public class SecurityTestBase
         return ret;
     }
 
+    protected async Task<SecurityTestData> ArrangePermissionTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+        ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);;
+        ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId);
+
+        return ret;
+    }
+
     protected async Task<SecurityTestData> ArrangeApplicationUserPermissionTestData()
     {
         // Arrange

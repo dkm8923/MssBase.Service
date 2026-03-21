@@ -25,10 +25,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
-            await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(applicationId, false);
-
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            
             // Act
             var result = await _permissionLogic.GetAll(new BaseLogicGet());
 
@@ -40,22 +38,20 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
-            await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(applicationId, false);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
 
             // Act
             var result = await _permissionLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
 
             // Assert
-            result.Response.Should().HaveCount(6);
+            result.Response.Should().HaveCount(10);
         }
 
         [Fact]
         public async Task Default_GetAll_Should_Return_Zero_Records()
         {
             // Arrange
-            await _securityTestUtilities.Permission.DeleteAllRecords();
+            await ClearAllSecurityTestTableData();
 
             // Act
             var result = await _permissionLogic.GetAll(new BaseLogicGet());
@@ -72,9 +68,9 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(applicationId);
-
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            var testRecord = arrangeTestDataResponse.ActivePermissions.FirstOrDefault();
+            
             // Act
             var result = await _permissionLogic.GetById(testRecord.PermissionId, new BaseLogicGet());
 
@@ -86,8 +82,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(applicationId, false);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            var testRecord = arrangeTestDataResponse.InactivePermissions.FirstOrDefault();
 
             // Act
             var result = await _permissionLogic.GetById(testRecord.PermissionId, new BaseLogicGet());
@@ -100,8 +96,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(applicationId, false);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            var testRecord = arrangeTestDataResponse.InactivePermissions.FirstOrDefault();
 
             // Act
             var result = await _permissionLogic.GetById(testRecord.PermissionId, new BaseLogicGet { IncludeInactive = true });
@@ -118,8 +114,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Return_Active_Data()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
 
             var postReq = new FilterPermissionLogicRequest { };
 
@@ -140,9 +135,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
-            await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(applicationId, false);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
 
             var postReq = new FilterPermissionLogicRequest { IncludeInactive = true };
 
@@ -161,8 +154,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Return_Zero_Records()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
 
             var postReqInvalidName = new FilterPermissionLogicRequest { Name = "Invalid Name" };
             var postReqInvalidApplicationId = new FilterPermissionLogicRequest { ApplicationId = -1 };
@@ -180,8 +172,9 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Filter_Records()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var permissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            int applicationId = arrangeTestDataResponse.ActivePermissions.FirstOrDefault()?.ApplicationId ?? 0;
+            var permissions = arrangeTestDataResponse.ActivePermissions;
 
             //create test permissions for filtering tests
             var testPermission1 = await _permissionLogic.Insert(new InsertUpdatePermissionRequest
@@ -248,7 +241,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Insert_Should_Create_Record()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            int applicationId = arrangeTestDataResponse.ActivePermissions.FirstOrDefault()?.ApplicationId ?? 0;
             var insertReq = _securityTestUtilities.Permission.CreateInsertUpdateRequestWithRandomValues(applicationId);
 
             // Act
@@ -266,7 +260,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Insert_Should_Not_Create_Record_Unique_Error()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            int applicationId = arrangeTestDataResponse.ActivePermissions.FirstOrDefault()?.ApplicationId ?? 0;
             var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(applicationId);
 
             var recordToCreate = _securityTestUtilities.Permission.ConvertPermissionDtoToInsertUpdateRequest(testRecord);
@@ -285,7 +280,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Insert_Should_Not_Create_Record_Required_Field_Errors()
         {
             // Arrange
-            await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            await ClearAllSecurityTestTableData();
             var recordToCreate = new InsertUpdatePermissionRequest();
 
             var expectedFieldErrors = _securityTestUtilities.Permission.GetExpectedRequiredFieldErrors();
@@ -303,7 +298,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Insert_Should_Not_Create_Record_Field_Max_Length_Errors()
         {
             // Arrange
-            await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            await ClearAllSecurityTestTableData();
             var recordToCreate = _securityTestUtilities.Permission.CreateInsertUpdateRequestWithMaxLengthErrors();
 
             var expectedFieldErrors = _securityTestUtilities.Permission.GetExpectedMaxLengthFieldErrors();
@@ -321,7 +316,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Permission_Insert_Should_Not_Create_Record_Invalid_ApplicationId_Error()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            int applicationId = arrangeTestDataResponse.ActivePermissions.FirstOrDefault()?.ApplicationId ?? 0;
             var recordToCreate = _securityTestUtilities.Permission.CreateInsertUpdateRequestWithRandomValues(applicationId, true);
             recordToCreate.ApplicationId = applicationId > 1 ? applicationId - 1 : applicationId + 1;
 
@@ -344,8 +340,9 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Update_Should_Update_Record()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(applicationId);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
             var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
             var updateReq = new InsertUpdatePermissionRequest
@@ -374,8 +371,9 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Update_Should_Not_Update_Record_Unique_Error()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecords = await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecords = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
             var recordToUpdate = testRecords.FirstOrDefault();
             var dupeName = testRecords.LastOrDefault().Name;
 
@@ -396,8 +394,9 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Update_Should_Not_Update_Record_Required_Field_Errors()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(applicationId);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
             var testRecords = await _permissionLogic.GetAll(new BaseLogicGet());
             var recordToUpdate = testRecords.Response.FirstOrDefault();
 
@@ -412,8 +411,6 @@ namespace IntegrationTests.Security.Logic
             LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
         }
 
-        //public async Task Permission_Insert_Should_Not_Create_Record_Invalid_ApplicationId_Error()
-
         #endregion
 
         #region Delete
@@ -422,8 +419,9 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Delete_Should_Delete_Record()
         {
             // Arrange
-            int applicationId = await _securityTestUtilities.Permission.ClearTestTablesAndReturnApplicationId(_securityTestUtilities.Application);
-            var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(applicationId);
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
 
             // Act
             var result = await _permissionLogic.Delete(testRecord.PermissionId);
