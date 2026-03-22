@@ -53,9 +53,7 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetAll_Active_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = $"PermissionService_GetAll_0_0";
@@ -73,10 +71,7 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetAll_IncludeInactive_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = "PermissionService_GetAll_1_0";
@@ -116,15 +111,14 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetById_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var aplicationUser = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            var permission = arrangeTestDataResponse.ActivePermissions.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"PermissionService_GetById_{aplicationUser.PermissionId}_0_0";
+            var expectedCacheKey = $"PermissionService_GetById_{permission.PermissionId}_0_0";
 
             // Act
-            var result = await _permissionService.GetById(aplicationUser.PermissionId, new BaseServiceGet());
+            var result = await _permissionService.GetById(permission.PermissionId, new BaseServiceGet());
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert
@@ -136,15 +130,14 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetById_IncludeInactive_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var aplicationUser = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId, false);
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            var permission = arrangeTestDataResponse.InactivePermissions.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"PermissionService_GetById_{aplicationUser.PermissionId}_1_0";
+            var expectedCacheKey = $"PermissionService_GetById_{permission.PermissionId}_1_0";
 
             // Act
-            var result = await _permissionService.GetById(aplicationUser.PermissionId, new BaseServiceGet { IncludeInactive = true });
+            var result = await _permissionService.GetById(permission.PermissionId, new BaseServiceGet { IncludeInactive = true });
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert
