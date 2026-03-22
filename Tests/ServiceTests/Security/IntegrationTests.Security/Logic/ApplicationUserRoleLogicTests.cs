@@ -30,26 +30,26 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            await ArrangeSecurityTestData();
-
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            
             // Act
             var result = await _applicationUserRoleLogic.GetAll(new BaseLogicGet());
 
             // Assert
-            result.Response.Should().HaveCount(125);
+            result.Response.Should().HaveCount(5);
         }
 
         [Fact]
         public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            await ArrangeSecurityTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
 
             // Act
             var result = await _applicationUserRoleLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
 
             // Assert
-            result.Response.Should().HaveCount(375);
+            result.Response.Should().HaveCount(10);
         }
 
         [Fact]
@@ -75,8 +75,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var testRecord = securityTestData.ActiveApplicationUserRoles.FirstOrDefault();  
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserRoles.FirstOrDefault();  
 
             // Act
             var result = await _applicationUserRoleLogic.GetById(testRecord.ApplicationUserRoleId, new BaseLogicGet());
@@ -89,8 +89,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
            // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var testRecord = securityTestData.InactiveApplicationUserRoles.FirstOrDefault();  
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUserRoles.FirstOrDefault();  
 
             // Act
             var result = await _applicationUserRoleLogic.GetById(testRecord.ApplicationUserRoleId, new BaseLogicGet());
@@ -105,8 +105,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var testRecord = securityTestData.InactiveApplicationUserRoles.FirstOrDefault();  
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUserRoles.FirstOrDefault();  
 
             // Act
             var result = await _applicationUserRoleLogic.GetById(testRecord.ApplicationUserRoleId, new BaseLogicGet { IncludeInactive = true });
@@ -123,7 +123,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Return_Active_Data()
         {
             // Arrange
-            await ArrangeSecurityTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
 
             var postReq = new FilterApplicationUserRoleLogicRequest { };
 
@@ -144,7 +144,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
-            await ArrangeSecurityTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
 
             var postReq = new FilterApplicationUserRoleLogicRequest { IncludeInactive = true };
 
@@ -163,12 +163,12 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Filter_Records()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var applicationId = securityTestData.ActiveApplications.FirstOrDefault().ApplicationId;
-            var applicationUserId = securityTestData.ActiveApplicationUsers.Where(x => x.ApplicationId == applicationId).FirstOrDefault().ApplicationUserId;
-            var roleId = securityTestData.ActiveRoles.Where(x => x.ApplicationId == applicationId).FirstOrDefault().RoleId;
-            var applicationUserRoleId = securityTestData.ActiveApplicationUserRoles.FirstOrDefault().ApplicationUserRoleId;
-
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var applicationUserRole = arrangeTestDataResponse.ActiveApplicationUserRoles.FirstOrDefault();
+            var applicationId = applicationUserRole.ApplicationId;
+            var applicationUserId = applicationUserRole.ApplicationUserId;
+            var roleId = applicationUserRole.RoleId;
+            
             //create new role
             var testRole1 = await _roleLogic.Insert(new InsertUpdateRoleRequest
             {
@@ -204,7 +204,7 @@ namespace IntegrationTests.Security.Logic
             var postReqFilterCreatedOnDate = new FilterApplicationUserRoleServiceRequest { CreatedOnDate = todaysUtcDate };
             var postReqFilterUpdatedBy = new FilterApplicationUserRoleServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterApplicationUserRoleServiceRequest { UpdatedOnDate = todaysUtcDate };
-            var postReqFilterApplicationUserRoleIds = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { securityTestData.ActiveApplicationUserRoles[0].ApplicationUserRoleId, securityTestData.ActiveApplicationUserRoles[1].ApplicationUserRoleId, securityTestData.ActiveApplicationUserRoles[2].ApplicationUserRoleId } };
+            var postReqFilterApplicationUserRoleIds = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { applicationUserRole.ApplicationUserRoleId } };
             var postReqFilterApplicationId = new FilterApplicationUserRoleServiceRequest { ApplicationId = applicationId };
             var postReqFilterRoleId = new FilterApplicationUserRoleServiceRequest { RoleId = roleId };
             
@@ -219,19 +219,19 @@ namespace IntegrationTests.Security.Logic
             
             // Assert
             filterCreatedByResult.Response.Should().HaveCount(1);
-            filterCreatedOnDateResult.Response.Should().HaveCount(126);
+            filterCreatedOnDateResult.Response.Should().HaveCount(6);
             filterUpdatedByResult.Response.Should().HaveCount(1);
-            filterUpdatedOnDateResult.Response.Should().HaveCount(126);
-            filterApplicationUserRoleIdsResult.Response.Should().HaveCount(3);
-            filterApplicationIdResult.Response.Should().HaveCount(26);
-            filterRoleIdResult.Response.Should().HaveCount(5);
+            filterUpdatedOnDateResult.Response.Should().HaveCount(6);
+            filterApplicationUserRoleIdsResult.Response.Should().HaveCount(1);
+            filterApplicationIdResult.Response.Should().HaveCount(6);
+            filterRoleIdResult.Response.Should().HaveCount(1);
         }
 
         [Fact]
         public async Task Default_Filter_Should_Return_Zero_Records()
         {
             // Arrange
-            await ArrangeSecurityTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
 
             var postReqInvalidCreatedBy = new FilterApplicationUserRoleServiceRequest { CreatedBy = "asdfasdf" };
             var postReqInvalidCreatedOnDate = new FilterApplicationUserRoleServiceRequest { CreatedOnDate = new DateOnly(1989, 06, 15) };
@@ -303,8 +303,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Insert_Should_Not_Create_Record_Unique_Error()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var applicationUserRole = securityTestData.ActiveApplicationUserRoles.FirstOrDefault();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var applicationUserRole = arrangeTestDataResponse.ActiveApplicationUserRoles.FirstOrDefault();
             var recordToCreate = _securityTestUtilities.ApplicationUserRole.ConvertApplicationUserRoleDtoToInsertUpdateRequest(applicationUserRole);
             
             var expectedUniqueError = _securityTestUtilities.ApplicationUserRole.GetExpectedUniqueFieldErrors();
@@ -362,8 +362,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Update_Should_Update_Record()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var recordToUpdate = securityTestData.ActiveApplicationUserRoles.FirstOrDefault();   
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var recordToUpdate = arrangeTestDataResponse.ActiveApplicationUserRoles.FirstOrDefault();   
 
             var updateReq = new InsertUpdateApplicationUserRoleRequest
             {
@@ -389,9 +389,9 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Update_Should_Not_Update_Record_Unique_Error()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var recordToUpdate = securityTestData.ActiveApplicationUserRoles.FirstOrDefault();   
-            var recordToCopy = securityTestData.ActiveApplicationUserRoles.Skip(1).FirstOrDefault();
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var recordToUpdate = arrangeTestDataResponse.ActiveApplicationUserRoles.FirstOrDefault();   
+            var recordToCopy = arrangeTestDataResponse.ActiveApplicationUserRoles.Skip(1).FirstOrDefault();
 
             var updateReq = _securityTestUtilities.ApplicationUserRole.ConvertApplicationUserRoleDtoToInsertUpdateRequest(recordToUpdate);
             updateReq.ApplicationId = recordToCopy.ApplicationId;
@@ -412,8 +412,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Update_Should_Not_Update_Record_Required_Field_Errors()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var recordToUpdate = securityTestData.ActiveApplicationUserRoles.FirstOrDefault();   
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var recordToUpdate = arrangeTestDataResponse.ActiveApplicationUserRoles.FirstOrDefault();   
 
             var expectedFieldErrors = _securityTestUtilities.ApplicationUserRole.GetExpectedRequiredFieldErrors();
 
@@ -434,8 +434,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Delete_Should_Delete_Record()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var recordToDelete = securityTestData.ActiveApplicationUserRoles.FirstOrDefault();   
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var recordToDelete = arrangeTestDataResponse.ActiveApplicationUserRoles.FirstOrDefault();   
 
             // Act
             var result = await _applicationUserRoleLogic.Delete(recordToDelete.ApplicationUserRoleId);
