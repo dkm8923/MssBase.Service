@@ -224,7 +224,7 @@ namespace IntegrationTests.Security.Controller
             await _securityTestUtilities.Role.CreateActiveTestRecords(testRecord.ApplicationId);
             
             // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base + "/" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true), testRecord.ApplicationId);
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base, testRecord.ApplicationId, new BaseServiceGet { IncludeRelated = true });
             
             // Assert
             result.Errors.Should().HaveCount(0);
@@ -245,8 +245,8 @@ namespace IntegrationTests.Security.Controller
             await _securityTestUtilities.Role.CreateActiveTestRecords(testRecord.ApplicationId);
             
             // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base + "/" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(false), testRecord.ApplicationId);
-
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base, testRecord.ApplicationId, new BaseServiceGet { IncludeRelated = false });
+            
             // Assert
             result.Errors.Should().HaveCount(0);
             
