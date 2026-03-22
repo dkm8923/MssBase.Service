@@ -53,9 +53,7 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetAll_Active_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangeRoleTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = $"RoleService_GetAll_0_0";
@@ -73,10 +71,7 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetAll_IncludeInactive_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId);
-            await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangeRoleTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = "RoleService_GetAll_1_0";
@@ -116,15 +111,14 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetById_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var aplicationUser = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangeRoleTestData();
+            var role = arrangeTestDataResponse.ActiveRoles.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"RoleService_GetById_{aplicationUser.RoleId}_0_0";
+            var expectedCacheKey = $"RoleService_GetById_{role.RoleId}_0_0";
 
             // Act
-            var result = await _roleService.GetById(aplicationUser.RoleId, new BaseServiceGet());
+            var result = await _roleService.GetById(role.RoleId, new BaseServiceGet());
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert
@@ -136,15 +130,14 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetById_IncludeInactive_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var aplicationUser = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId, false);
+            var arrangeTestDataResponse = await ArrangeRoleTestData();
+            var role = arrangeTestDataResponse.InactiveRoles.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"RoleService_GetById_{aplicationUser.RoleId}_1_0";
+            var expectedCacheKey = $"RoleService_GetById_{role.RoleId}_1_0";
 
             // Act
-            var result = await _roleService.GetById(aplicationUser.RoleId, new BaseServiceGet { IncludeInactive = true });
+            var result = await _roleService.GetById(role.RoleId, new BaseServiceGet { IncludeInactive = true });
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert
