@@ -53,9 +53,7 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetAll_Active_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = $"ApplicationUserService_GetAll_0_0";
@@ -73,10 +71,7 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetAll_IncludeInactive_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);
-            await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = "ApplicationUserService_GetAll_1_0";
@@ -116,9 +111,8 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetById_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var aplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var aplicationUser = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = $"ApplicationUserService_GetById_{aplicationUser.ApplicationUserId}_0_0";
@@ -136,9 +130,8 @@ namespace IntegrationTests.Security.Service
         public async Task Default_GetById_IncludeInactive_Should_Cache()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var aplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, false);
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var aplicationUser = arrangeTestDataResponse.InactiveApplicationUsers.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var expectedCacheKey = $"ApplicationUserService_GetById_{aplicationUser.ApplicationUserId}_1_0";
@@ -268,6 +261,7 @@ namespace IntegrationTests.Security.Service
            availableCacheKeys.Should().Contain(expectedCacheKeyLastName);
            filterLastNameResult.Response.Should().HaveCount(1);   
            
+           //TODO: Revisit this
         //    availableCacheKeys.Should().Contain(expectedCacheKeyDateofBirth);
         //    filterDateOfBirthResult.Response.Should().HaveCount(1);   
 
