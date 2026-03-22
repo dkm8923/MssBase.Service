@@ -30,26 +30,26 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            await ArrangeSecurityTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
 
             // Act
             var result = await _rolePermissionLogic.GetAll(new BaseLogicGet());
 
             // Assert
-            result.Response.Should().HaveCount(125);
+            result.Response.Should().HaveCount(5);
         }
 
         [Fact]
         public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            await ArrangeSecurityTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
 
             // Act
             var result = await _rolePermissionLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
 
             // Assert
-            result.Response.Should().HaveCount(375);
+            result.Response.Should().HaveCount(10);
         }
 
         [Fact]
@@ -75,8 +75,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetById_Should_Return_Active_Record()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var testRecord = securityTestData.ActiveRolePermissions.FirstOrDefault();  
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var testRecord = arrangeTestDataResponse.ActiveRolePermissions.FirstOrDefault();  
 
             // Act
             var result = await _rolePermissionLogic.GetById(testRecord.RolePermissionId, new BaseLogicGet());
@@ -89,8 +89,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetById_Should_Not_Return_Inactive_Record()
         {
            // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var testRecord = securityTestData.InactiveRolePermissions.FirstOrDefault();  
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var testRecord = arrangeTestDataResponse.InactiveRolePermissions.FirstOrDefault();  
 
             // Act
             var result = await _rolePermissionLogic.GetById(testRecord.RolePermissionId, new BaseLogicGet());
@@ -105,8 +105,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetById_Should_Return_Inactive_Record()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var testRecord = securityTestData.InactiveRolePermissions.FirstOrDefault();  
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var testRecord = arrangeTestDataResponse.InactiveRolePermissions.FirstOrDefault();  
 
             // Act
             var result = await _rolePermissionLogic.GetById(testRecord.RolePermissionId, new BaseLogicGet { IncludeInactive = true });
@@ -123,7 +123,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Return_Active_Data()
         {
             // Arrange
-            await ArrangeSecurityTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
 
             var postReq = new FilterRolePermissionLogicRequest { };
 
@@ -144,7 +144,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Return_Inactive_Data()
         {
             // Arrange
-            await ArrangeSecurityTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
 
             var postReq = new FilterRolePermissionLogicRequest { IncludeInactive = true };
 
@@ -163,12 +163,12 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Filter_Records()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var applicationId = securityTestData.ActiveApplications.FirstOrDefault().ApplicationId;
-            var roleId = securityTestData.ActiveRoles.Where(x => x.ApplicationId == applicationId).FirstOrDefault().RoleId;
-            var permissionId = securityTestData.ActivePermissions.Where(x => x.ApplicationId == applicationId).FirstOrDefault().PermissionId;
-            var rolePermissionId = securityTestData.ActiveRolePermissions.FirstOrDefault().RolePermissionId;
-
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var rolePermission = arrangeTestDataResponse.ActiveRolePermissions.FirstOrDefault();
+            var applicationId = rolePermission.ApplicationId;
+            var roleId = rolePermission.RoleId;
+            var permissionId = rolePermission.PermissionId;
+            
             //create new permission
             var testPermission1 = await _permissionLogic.Insert(new InsertUpdatePermissionRequest
             {
@@ -204,7 +204,7 @@ namespace IntegrationTests.Security.Logic
             var postReqFilterCreatedOnDate = new FilterRolePermissionServiceRequest { CreatedOnDate = todaysUtcDate };
             var postReqFilterUpdatedBy = new FilterRolePermissionServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterRolePermissionServiceRequest { UpdatedOnDate = todaysUtcDate };
-            var postReqFilterRolePermissionIds = new FilterRolePermissionServiceRequest { RolePermissionIds = new List<int> { securityTestData.ActiveRolePermissions[0].RolePermissionId, securityTestData.ActiveRolePermissions[1].RolePermissionId, securityTestData.ActiveRolePermissions[2].RolePermissionId } };
+            var postReqFilterRolePermissionIds = new FilterRolePermissionServiceRequest { RolePermissionIds = new List<int> { arrangeTestDataResponse.ActiveRolePermissions[0].RolePermissionId, arrangeTestDataResponse.ActiveRolePermissions[1].RolePermissionId, arrangeTestDataResponse.ActiveRolePermissions[2].RolePermissionId } };
             var postReqFilterApplicationId = new FilterRolePermissionServiceRequest { ApplicationId = applicationId };
             var postReqFilterPermissionId = new FilterRolePermissionServiceRequest { PermissionId = permissionId };
             
@@ -219,19 +219,19 @@ namespace IntegrationTests.Security.Logic
             
             // Assert
             filterCreatedByResult.Response.Should().HaveCount(1);
-            filterCreatedOnDateResult.Response.Should().HaveCount(126);
+            filterCreatedOnDateResult.Response.Should().HaveCount(6);
             filterUpdatedByResult.Response.Should().HaveCount(1);
-            filterUpdatedOnDateResult.Response.Should().HaveCount(126);
+            filterUpdatedOnDateResult.Response.Should().HaveCount(6);
             filterRolePermissionIdsResult.Response.Should().HaveCount(3);
-            filterApplicationIdResult.Response.Should().HaveCount(26);
-            filterPermissionIdResult.Response.Should().HaveCount(5);
+            filterApplicationIdResult.Response.Should().HaveCount(6);
+            filterPermissionIdResult.Response.Should().HaveCount(1);
         }
 
         [Fact]
         public async Task Default_Filter_Should_Return_Zero_Records()
         {
             // Arrange
-            await ArrangeSecurityTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
 
             var postReqInvalidCreatedBy = new FilterRolePermissionServiceRequest { CreatedBy = "asdfasdf" };
             var postReqInvalidCreatedOnDate = new FilterRolePermissionServiceRequest { CreatedOnDate = new DateOnly(1989, 06, 15) };
@@ -263,8 +263,6 @@ namespace IntegrationTests.Security.Logic
         #endregion
 
         #region Insert
-
-        //securityTestData
 
         [Fact]
         public async Task Default_Insert_Should_Create_Record()
@@ -303,8 +301,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Insert_Should_Not_Create_Record_Unique_Error()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var rolePermission = securityTestData.ActiveRolePermissions.FirstOrDefault();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var rolePermission = arrangeTestDataResponse.ActiveRolePermissions.FirstOrDefault();
             var recordToCreate = _securityTestUtilities.RolePermission.ConvertRolePermissionDtoToInsertUpdateRequest(rolePermission);
 
             var expectedUniqueError = _securityTestUtilities.RolePermission.GetExpectedUniqueFieldErrors();
@@ -362,8 +360,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Update_Should_Update_Record()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var recordToUpdate = securityTestData.ActiveRolePermissions.FirstOrDefault();   
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var recordToUpdate = arrangeTestDataResponse.ActiveRolePermissions.FirstOrDefault();   
 
             var updateReq = new InsertUpdateRolePermissionRequest
             {
@@ -389,9 +387,9 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Update_Should_Not_Update_Record_Unique_Error()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var recordToUpdate = securityTestData.ActiveRolePermissions.FirstOrDefault();   
-            var recordToCopy = securityTestData.ActiveRolePermissions.Skip(1).FirstOrDefault();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var recordToUpdate = arrangeTestDataResponse.ActiveRolePermissions.FirstOrDefault();   
+            var recordToCopy = arrangeTestDataResponse.ActiveRolePermissions.Skip(1).FirstOrDefault();
 
             var updateReq = _securityTestUtilities.RolePermission.ConvertRolePermissionDtoToInsertUpdateRequest(recordToUpdate);
             updateReq.ApplicationId = recordToCopy.ApplicationId;
@@ -412,8 +410,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Update_Should_Not_Update_Record_Required_Field_Errors()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var recordToUpdate = securityTestData.ActiveRolePermissions.FirstOrDefault();   
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var recordToUpdate = arrangeTestDataResponse.ActiveRolePermissions.FirstOrDefault();   
 
             var expectedFieldErrors = _securityTestUtilities.RolePermission.GetExpectedRequiredFieldErrors();
 
@@ -434,8 +432,8 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Delete_Should_Delete_Record()
         {
             // Arrange
-            var securityTestData = await ArrangeSecurityTestData();
-            var recordToDelete = securityTestData.ActiveRolePermissions.FirstOrDefault();   
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var recordToDelete = arrangeTestDataResponse.ActiveRolePermissions.FirstOrDefault();   
 
             // Act
             var result = await _rolePermissionLogic.Delete(recordToDelete.RolePermissionId);
