@@ -20,17 +20,6 @@ public class RoleUtilities : IRoleUtilities
         _applicationLogic = applicationLogic;
     }
 
-    /// <summary>
-    /// Asynchronously clears test data from the Role and Application tables, creates a fresh test application record, 
-    /// and returns the application ID for use in subsequent tests.
-    /// </summary>
-    public async Task<int> ClearTestTablesAndReturnApplicationId(IApplicationUtilities applicationUtilities)
-    {
-        await DeleteAllRecords();
-        await applicationUtilities.DeleteAllRecords();
-        return (await applicationUtilities.CreateActiveTestRecords(1)).FirstOrDefault().ApplicationId;
-    }
-
     public InsertUpdateRoleRequest ConvertRoleDtoToInsertUpdateRequest(RoleDto req)
     {
         return new InsertUpdateRoleRequest

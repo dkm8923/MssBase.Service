@@ -4,7 +4,6 @@ namespace IntegrationTests.Security.Shared.Utilities.Contracts;
 
 public interface IRoleUtilities
 {
-    public Task<int> ClearTestTablesAndReturnApplicationId(IApplicationUtilities applicationUtilities);
     public Task DeleteAllRecords();
     public Task<List<RoleDto>> CreateActiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5);
     public Task<List<RoleDto>> CreateInactiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5);
