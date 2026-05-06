@@ -33,6 +33,7 @@ builder.Services.AddControllers(config =>
     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
     options.JsonSerializerOptions.Converters.Add(new NullableDateOnlyJsonConverter());
+    options.JsonSerializerOptions.Converters.Add(new NullableBoolToFalseJsonConverter());
 });
 
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
