@@ -24,11 +24,11 @@ namespace MssBase.Service.Controllers.Security
         #region GetAll
 
         [HttpGet()]
-        public async Task<IActionResult> GetApplicationUserPermissions([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false)
+        public async Task<IActionResult> GetApplicationUserPermissions([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _applicationUserSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive });
+                var records = await _applicationUserSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)
@@ -42,11 +42,11 @@ namespace MssBase.Service.Controllers.Security
         #region GetById
 
         [HttpGet("{applicationUserId}", Name = "GetApplicationUserPermission")]
-        public async Task<IActionResult> GetApplicationUserPermission(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false)
+        public async Task<IActionResult> GetApplicationUserPermission(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var record = await _applicationUserSvc.GetById(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive });
+                var record = await _applicationUserSvc.GetById(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, cancellationToken);
 
                 if (record.Response == null)
                 {
@@ -66,11 +66,11 @@ namespace MssBase.Service.Controllers.Security
         #region Filter
 
         [HttpPost("Filter")]
-        public async Task<IActionResult> FilterApplicationUserPermissions(FilterApplicationUserPermissionServiceRequest req)
+        public async Task<IActionResult> FilterApplicationUserPermissions(FilterApplicationUserPermissionServiceRequest req, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _applicationUserSvc.Filter(req);
+                var records = await _applicationUserSvc.Filter(req, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)

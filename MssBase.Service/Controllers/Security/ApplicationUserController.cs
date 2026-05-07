@@ -24,11 +24,11 @@ namespace MssBase.Service.Controllers.Security
         #region GetAll
 
         [HttpGet()]
-        public async Task<IActionResult> GetApplicationUsers([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
+        public async Task<IActionResult> GetApplicationUsers([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _applicationUserSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated });
+                var records = await _applicationUserSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)
@@ -42,11 +42,11 @@ namespace MssBase.Service.Controllers.Security
         #region GetById
 
         [HttpGet("{applicationUserId}", Name = "GetApplicationUser")]
-        public async Task<IActionResult> GetApplicationUser(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
+        public async Task<IActionResult> GetApplicationUser(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var record = await _applicationUserSvc.GetById(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated });
+                var record = await _applicationUserSvc.GetById(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
 
                 if (record.Response == null)
                 {
@@ -66,11 +66,11 @@ namespace MssBase.Service.Controllers.Security
         #region Filter
 
         [HttpPost("Filter")]
-        public async Task<IActionResult> FilterApplicationUsers(FilterApplicationUserServiceRequest req)
+        public async Task<IActionResult> FilterApplicationUsers(FilterApplicationUserServiceRequest req, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _applicationUserSvc.Filter(req);
+                var records = await _applicationUserSvc.Filter(req, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)

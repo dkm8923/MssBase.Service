@@ -9,9 +9,9 @@ namespace Contract.Security.RolePermission
 {
     public interface IRolePermissionLogic
     {
-        public Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> GetAll(BaseLogicGet req);
-        public Task<ErrorValidationResult<RolePermissionDto>> GetById(int rolePermissionId, BaseLogicGet req);
-        public Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> Filter(FilterRolePermissionLogicRequest req);
+        public Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default);
+        public Task<ErrorValidationResult<RolePermissionDto>> GetById(int rolePermissionId, BaseLogicGet req, CancellationToken cancellationToken = default);
+        public Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> Filter(FilterRolePermissionLogicRequest req, CancellationToken cancellationToken = default);
         public Task<ErrorValidationResult<RolePermissionDto>> Insert(InsertUpdateRolePermissionRequest req, 
                                                                      IApplicationLogic applicationLogic,
                                                                      IRoleLogic roleLogic,

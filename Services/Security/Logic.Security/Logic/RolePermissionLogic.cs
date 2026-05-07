@@ -41,18 +41,18 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Retrieves a collection of role permissions based on the specified request parameters.
         /// </summary>
-        public async Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> GetAll(BaseLogicGet req)
+        public async Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterRolePermissionLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
+            var ret = await this.Filter(new FilterRolePermissionLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
             return ret;
         }
 
         /// <summary>
         /// Retrieves a role permission by its unique identifier.
         /// </summary>
-        public async Task<ErrorValidationResult<RolePermissionDto>> GetById(int rolePermissionId, BaseLogicGet req)
+        public async Task<ErrorValidationResult<RolePermissionDto>> GetById(int rolePermissionId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterRolePermissionLogicRequest { RolePermissionIds = new List<int> { rolePermissionId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
+            var res = await this.Filter(new FilterRolePermissionLogicRequest { RolePermissionIds = new List<int> { rolePermissionId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
 
             return new ErrorValidationResult<RolePermissionDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -60,7 +60,7 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Filters role permissions based on the specified criteria.
         /// </summary>
-        public async Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> Filter(FilterRolePermissionLogicRequest req)
+        public async Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> Filter(FilterRolePermissionLogicRequest req, CancellationToken cancellationToken = default)
         {
             var errorValidationResult = await _validateRolePermissionFilter(req);
             if (errorValidationResult.Errors.Count > 0)
@@ -100,7 +100,7 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.PermissionId == req.PermissionId);
                 }
 
-                return new ErrorValidationResult<IEnumerable<RolePermissionDto>> { Response = query.ToDtos() };
+                return new ErrorValidationResult<IEnumerable<RolePermissionDto>> { Response = await query.ToDtos(cancellationToken) };
             }
         }
 

@@ -24,19 +24,19 @@ namespace Service.Security.Service
 
         #region GET
 
-        public async Task<ErrorValidationResult<IEnumerable<RoleDto>>> GetAll(BaseServiceGet req)
+        public async Task<ErrorValidationResult<IEnumerable<RoleDto>>> GetAll(BaseServiceGet req, CancellationToken cancellationToken = default)
         {
             var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.GetAll(req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.GetAll(req, cancellationToken));
         }
 
-        public async Task<ErrorValidationResult<RoleDto>> GetById(int roleId, BaseServiceGet req)
+        public async Task<ErrorValidationResult<RoleDto>> GetById(int roleId, BaseServiceGet req, CancellationToken cancellationToken = default)
         {
             var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, roleId, req.IncludeInactive, req.IncludeRelated);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.GetById(roleId, req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.GetById(roleId, req, cancellationToken));
         }
 
-        public async Task<ErrorValidationResult<IEnumerable<RoleDto>>> Filter(FilterRoleServiceRequest req)
+        public async Task<ErrorValidationResult<IEnumerable<RoleDto>>> Filter(FilterRoleServiceRequest req, CancellationToken cancellationToken = default)
         {
             var createdByKey = CacheUtilities.CreateKeyFromString(req.CreatedBy);
             var createdOnKey = CacheUtilities.CreateKeyFromDateOnly(req.CreatedOnDate);
@@ -60,7 +60,7 @@ namespace Service.Security.Service
                 ,includeRelatedKey
             });
 
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.Filter(req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _roleLogic.Filter(req, cancellationToken));
         }
 
         #endregion

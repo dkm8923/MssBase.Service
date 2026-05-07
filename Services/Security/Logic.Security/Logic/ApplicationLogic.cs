@@ -36,16 +36,16 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Retrieves a collection of applications based on the specified request parameters.
         /// </summary>
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> GetAll(BaseLogicGet req)
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterApplicationLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
+            var ret = await this.Filter(new FilterApplicationLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
             return ret;
         }
 
         /// <summary>
         /// Retrieves an application by its unique identifier.
         /// </summary>
-        public async Task<ErrorValidationResult<ApplicationDto>> GetById(int applicationId, BaseLogicGet req)
+        public async Task<ErrorValidationResult<ApplicationDto>> GetById(int applicationId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
             var res = await this.Filter(new FilterApplicationLogicRequest { ApplicationIds = new List<int> { applicationId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
 
@@ -55,9 +55,9 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Filters applications based on the specified criteria.
         /// </summary>
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> Filter(FilterApplicationLogicRequest req)
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> Filter(FilterApplicationLogicRequest req, CancellationToken cancellationToken = default)
         {
-            var errorValidationResult = await _validateApplicationFilter(req);
+            var errorValidationResult = await _validateApplicationFilter(req, cancellationToken);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
@@ -89,7 +89,7 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.Name == req.Name);
                 }
 
-                return new ErrorValidationResult<IEnumerable<ApplicationDto>> { Response = query.ToDtos() };
+                return new ErrorValidationResult<IEnumerable<ApplicationDto>> { Response = await query.ToDtos(cancellationToken) };
             }
         }
 
@@ -167,9 +167,9 @@ namespace Logic.Security.Logic
 
         #region Validation
 
-        private async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> _validateApplicationFilter(FilterApplicationLogicRequest req)
+        private async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> _validateApplicationFilter(FilterApplicationLogicRequest req, CancellationToken cancellationToken = default)
         {
-            ValidationResult result = await _filterApplicationLogicRequestValidator.ValidateAsync(req);
+            ValidationResult result = await _filterApplicationLogicRequestValidator.ValidateAsync(req, cancellationToken);
             var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<IEnumerable<ApplicationDto>>(result);
             return errorValidationResult;
         }

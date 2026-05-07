@@ -1,6 +1,7 @@
 using Data.Security.Models;
 using Dto.Security.ApplicationUserPermission;
 using Shared.Logic.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace Data.Security.Converters
 {
@@ -29,14 +30,14 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static List<ApplicationUserPermissionDto> ToDtos(this IEnumerable<Models.ApplicationUserPermission> source)
+        public static async Task<List<ApplicationUserPermissionDto>> ToDtos(this IQueryable<Models.ApplicationUserPermission> source, CancellationToken cancellationToken = default)
         {
             if (source == null)
             {
                 return null;
             }
 
-            var target = source.Select(src => src.ToDto()).ToList();
+            var target = await source.Select(src => src.ToDto()).ToListAsync(cancellationToken);
 
             return target;
         }

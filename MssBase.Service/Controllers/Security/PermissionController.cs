@@ -24,11 +24,11 @@ namespace MssBase.Service.Controllers.Security
         #region GetAll
 
         [HttpGet()]
-        public async Task<IActionResult> GetPermissions([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false)
+        public async Task<IActionResult> GetPermissions([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _permissionService.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive });
+                var records = await _permissionService.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)
@@ -42,11 +42,11 @@ namespace MssBase.Service.Controllers.Security
         #region GetById
 
         [HttpGet("{permissionId}", Name = "GetPermission")]
-        public async Task<IActionResult> GetPermission(int permissionId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false)
+        public async Task<IActionResult> GetPermission(int permissionId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var record = await _permissionService.GetById(permissionId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive });
+                var record = await _permissionService.GetById(permissionId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, cancellationToken);
 
                 if (record.Response == null)
                 {
@@ -66,11 +66,11 @@ namespace MssBase.Service.Controllers.Security
         #region Filter
 
         [HttpPost("Filter")]
-        public async Task<IActionResult> FilterPermissions(FilterPermissionServiceRequest req)
+        public async Task<IActionResult> FilterPermissions(FilterPermissionServiceRequest req, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _permissionService.Filter(req);
+                var records = await _permissionService.Filter(req, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)

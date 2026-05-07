@@ -37,18 +37,18 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Retrieves a collection of application users based on the specified request parameters.
         /// </summary>
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> GetAll(BaseLogicGet req)
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterApplicationUserLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
+            var ret = await this.Filter(new FilterApplicationUserLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
             return ret;
         }
 
         /// <summary>
         /// Retrieves an application user by its unique identifier.
         /// </summary>
-        public async Task<ErrorValidationResult<ApplicationUserDto>> GetById(int applicationUserId, BaseLogicGet req)
+        public async Task<ErrorValidationResult<ApplicationUserDto>> GetById(int applicationUserId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { applicationUserId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
+            var res = await this.Filter(new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { applicationUserId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
 
             return new ErrorValidationResult<ApplicationUserDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -56,7 +56,7 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Filters application users based on the specified criteria.
         /// </summary>
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> Filter(FilterApplicationUserLogicRequest req)
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> Filter(FilterApplicationUserLogicRequest req, CancellationToken cancellationToken = default)
         {
             var errorValidationResult = await _validateApplicationUserFilter(req);
             if (errorValidationResult.Errors.Count > 0)
@@ -106,7 +106,7 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.ApplicationId == req.ApplicationId);
                 }
 
-                return new ErrorValidationResult<IEnumerable<ApplicationUserDto>> { Response = query.ToDtos() };
+                return new ErrorValidationResult<IEnumerable<ApplicationUserDto>> { Response = await query.ToDtos(cancellationToken) };
             }
         }
 

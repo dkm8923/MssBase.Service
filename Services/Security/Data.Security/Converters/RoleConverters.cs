@@ -1,6 +1,7 @@
 using Data.Security.Models;
 using Dto.Security.Role;
 using Shared.Logic.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace Data.Security.Converters
 {
@@ -29,14 +30,14 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static List<RoleDto> ToDtos(this IEnumerable<Models.Role> source)
+        public static async Task<List<RoleDto>> ToDtos(this IQueryable<Models.Role> source, CancellationToken cancellationToken = default)
         {
             if (source == null)
             {
                 return null;
             }
 
-            var target = source.Select(src => src.ToDto()).ToList();
+            var target = await source.Select(src => src.ToDto()).ToListAsync(cancellationToken);
 
             return target;
         }

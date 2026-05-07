@@ -9,9 +9,9 @@ namespace Contract.Security.ApplicationUserPermission
 {
     public interface IApplicationUserPermissionLogic
     {
-        public Task<ErrorValidationResult<IEnumerable<ApplicationUserPermissionDto>>> GetAll(BaseLogicGet req);
-        public Task<ErrorValidationResult<ApplicationUserPermissionDto>> GetById(int applicationUserPermissionId, BaseLogicGet req);
-        public Task<ErrorValidationResult<IEnumerable<ApplicationUserPermissionDto>>> Filter(FilterApplicationUserPermissionLogicRequest req);
+        public Task<ErrorValidationResult<IEnumerable<ApplicationUserPermissionDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default);
+        public Task<ErrorValidationResult<ApplicationUserPermissionDto>> GetById(int applicationUserPermissionId, BaseLogicGet req, CancellationToken cancellationToken = default);
+        public Task<ErrorValidationResult<IEnumerable<ApplicationUserPermissionDto>>> Filter(FilterApplicationUserPermissionLogicRequest req, CancellationToken cancellationToken = default);
         public Task<ErrorValidationResult<ApplicationUserPermissionDto>> Insert(InsertUpdateApplicationUserPermissionRequest req, IApplicationLogic applicationLogic, IApplicationUserLogic applicationUserLogic, IPermissionLogic permissionLogic);
         public Task<ErrorValidationResult<ApplicationUserPermissionDto>> Update(int applicationUserPermissionId, InsertUpdateApplicationUserPermissionRequest req, IApplicationLogic applicationLogic, IApplicationUserLogic applicationUserLogic, IPermissionLogic permissionLogic);
         public Task<ErrorValidationResult> Delete(int applicationUserPermissionId);

@@ -41,18 +41,18 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Retrieves a collection of application users based on the specified request parameters.
         /// </summary>
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserRoleDto>>> GetAll(BaseLogicGet req)
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserRoleDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterApplicationUserRoleLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser });
+            var ret = await this.Filter(new FilterApplicationUserRoleLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
 
         /// <summary>
         /// Retrieves an application user by its unique identifier.
         /// </summary>
-        public async Task<ErrorValidationResult<ApplicationUserRoleDto>> GetById(int applicationUserRoleId, BaseLogicGet req)
+        public async Task<ErrorValidationResult<ApplicationUserRoleDto>> GetById(int applicationUserRoleId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterApplicationUserRoleLogicRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoleId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser });
+            var res = await this.Filter(new FilterApplicationUserRoleLogicRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoleId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser }, cancellationToken);
 
             return new ErrorValidationResult<ApplicationUserRoleDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -60,7 +60,7 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Filters application users based on the specified criteria.
         /// </summary>
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserRoleDto>>> Filter(FilterApplicationUserRoleLogicRequest req)
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserRoleDto>>> Filter(FilterApplicationUserRoleLogicRequest req, CancellationToken cancellationToken = default)
         {
             var errorValidationResult = await _validateApplicationUserRoleFilter(req);
             if (errorValidationResult.Errors.Count > 0)
@@ -95,7 +95,7 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.RoleId == req.RoleId);
                 }
 
-                return new ErrorValidationResult<IEnumerable<ApplicationUserRoleDto>> { Response = query.ToDtos() };
+                return new ErrorValidationResult<IEnumerable<ApplicationUserRoleDto>> { Response = await query.ToDtos(cancellationToken) };
             }
         }
 

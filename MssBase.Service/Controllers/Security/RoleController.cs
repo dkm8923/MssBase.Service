@@ -24,11 +24,11 @@ namespace MssBase.Service.Controllers.Security
         #region GetAll
 
         [HttpGet()]
-        public async Task<IActionResult> GetRoles([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
+        public async Task<IActionResult> GetRoles([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _roleService.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated });
+                var records = await _roleService.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)
@@ -42,11 +42,11 @@ namespace MssBase.Service.Controllers.Security
         #region GetById
 
         [HttpGet("{roleId}", Name = "GetRole")]
-        public async Task<IActionResult> GetRole(int roleId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false)
+        public async Task<IActionResult> GetRole(int roleId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var record = await _roleService.GetById(roleId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated });
+                var record = await _roleService.GetById(roleId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
 
                 if (record.Response == null)
                 {
@@ -66,11 +66,11 @@ namespace MssBase.Service.Controllers.Security
         #region Filter
 
         [HttpPost("Filter")]
-        public async Task<IActionResult> FilterRoles(FilterRoleServiceRequest req)
+        public async Task<IActionResult> FilterRoles(FilterRoleServiceRequest req, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _roleService.Filter(req);
+                var records = await _roleService.Filter(req, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)

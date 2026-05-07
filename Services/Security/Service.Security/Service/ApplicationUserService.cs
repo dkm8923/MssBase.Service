@@ -24,19 +24,19 @@ namespace Service.Security.Service
 
         #region GET
 
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> GetAll(BaseServiceGet req)
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> GetAll(BaseServiceGet req, CancellationToken cancellationToken = default)
         {
             var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.GetAll(req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.GetAll(req, cancellationToken));
         }
 
-        public async Task<ErrorValidationResult<ApplicationUserDto>> GetById(int applicationUserId, BaseServiceGet req)
+        public async Task<ErrorValidationResult<ApplicationUserDto>> GetById(int applicationUserId, BaseServiceGet req, CancellationToken cancellationToken = default)
         {
             var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, applicationUserId, req.IncludeInactive, req.IncludeRelated);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.GetById(applicationUserId, req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.GetById(applicationUserId, req, cancellationToken));
         }
 
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> Filter(FilterApplicationUserServiceRequest req)
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> Filter(FilterApplicationUserServiceRequest req, CancellationToken cancellationToken = default)
         {
             var createdByKey = CacheUtilities.CreateKeyFromString(req.CreatedBy);
             var createdOnKey = CacheUtilities.CreateKeyFromDateOnly(req.CreatedOnDate);
@@ -67,7 +67,7 @@ namespace Service.Security.Service
                 ,includeRelatedKey
             });
 
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.Filter(req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.Filter(req, cancellationToken));
         }
 
         #endregion

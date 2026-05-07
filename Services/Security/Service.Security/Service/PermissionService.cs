@@ -24,19 +24,19 @@ namespace Service.Security.Service
 
         #region GET
 
-        public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> GetAll(BaseServiceGet req)
+        public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> GetAll(BaseServiceGet req, CancellationToken cancellationToken = default)
         {
             var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.GetAll(req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.GetAll(req, cancellationToken));
         }
 
-        public async Task<ErrorValidationResult<PermissionDto>> GetById(int permissionId, BaseServiceGet req)
+        public async Task<ErrorValidationResult<PermissionDto>> GetById(int permissionId, BaseServiceGet req, CancellationToken cancellationToken = default)
         {
             var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, permissionId, req.IncludeInactive, req.IncludeRelated);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.GetById(permissionId, req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.GetById(permissionId, req, cancellationToken));
         }
 
-        public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> Filter(FilterPermissionServiceRequest req)
+        public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> Filter(FilterPermissionServiceRequest req, CancellationToken cancellationToken = default)
         {
             var createdByKey = CacheUtilities.CreateKeyFromString(req.CreatedBy);
             var createdOnKey = CacheUtilities.CreateKeyFromDateOnly(req.CreatedOnDate);
@@ -58,7 +58,7 @@ namespace Service.Security.Service
                 ,includeInactiveKey
             });
 
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.Filter(req));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.Filter(req, cancellationToken));
         }
 
         #endregion

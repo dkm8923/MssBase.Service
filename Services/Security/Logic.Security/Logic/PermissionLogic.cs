@@ -37,18 +37,18 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Retrieves a collection of Permissions based on the specified request parameters.
         /// </summary>
-        public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> GetAll(BaseLogicGet req)
+        public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterPermissionLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser });
+            var ret = await this.Filter(new FilterPermissionLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
 
         /// <summary>
         /// Retrieves an Permission by its unique identifier.
         /// </summary>
-        public async Task<ErrorValidationResult<PermissionDto>> GetById(int PermissionId, BaseLogicGet req)
+        public async Task<ErrorValidationResult<PermissionDto>> GetById(int PermissionId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterPermissionLogicRequest { PermissionIds = new List<int> { PermissionId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser });
+            var res = await this.Filter(new FilterPermissionLogicRequest { PermissionIds = new List<int> { PermissionId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser }, cancellationToken);
 
             return new ErrorValidationResult<PermissionDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -56,7 +56,7 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Filters Permissions based on the specified criteria.
         /// </summary>
-        public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> Filter(FilterPermissionLogicRequest req)
+        public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> Filter(FilterPermissionLogicRequest req, CancellationToken cancellationToken = default)
         {
             var errorValidationResult = await _validatePermissionFilter(req);
             if (errorValidationResult.Errors.Count > 0)
@@ -86,7 +86,7 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.ApplicationId == req.ApplicationId);
                 }
 
-                return new ErrorValidationResult<IEnumerable<PermissionDto>> { Response = query.ToDtos() };
+                return new ErrorValidationResult<IEnumerable<PermissionDto>> { Response = await query.ToDtos(cancellationToken) };
             }
         }
 
