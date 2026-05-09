@@ -1,6 +1,6 @@
 namespace Dto.Security.Authentication;
 
-public record AuthenticatedResponse
+public record AuthenticationResponse
 {
     public string? Token { get; set; }
 }

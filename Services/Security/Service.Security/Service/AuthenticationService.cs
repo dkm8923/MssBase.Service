@@ -1,0 +1,26 @@
+using Contract.Security.Authentication;
+using Dto.Security.Authentication;
+using Contract.Security.ApplicationUser;
+using Contract.Security.Application;
+using Shared.Models;
+
+namespace Service.Security.Service;
+
+public class AuthenticationService : IAuthenticationService
+{
+    private readonly IAuthenticationLogic _authenticationLogic;
+    private readonly IApplicationUserLogic _applicationUserLogic;
+    private readonly IApplicationLogic _applicationLogic;
+
+    public AuthenticationService(IAuthenticationLogic authenticationLogic, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic)
+    {
+        _authenticationLogic = authenticationLogic;
+        _applicationUserLogic = applicationUserLogic;
+        _applicationLogic = applicationLogic;
+    }
+
+    public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req)
+    {
+        return await _authenticationLogic.Authenticate(req, _applicationUserLogic, _applicationLogic);
+    }
+}

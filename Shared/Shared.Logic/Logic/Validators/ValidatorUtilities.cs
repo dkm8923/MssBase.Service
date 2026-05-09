@@ -68,5 +68,10 @@ namespace Shared.Logic.Validators
         {
             return $"Record still contains child dependencies! IE: {dependencyName}";
         }
+
+        public static string CreateInvalidEmailErrorMessage()
+        {
+            return $"Invalid email address!";
+        }
     }
 }

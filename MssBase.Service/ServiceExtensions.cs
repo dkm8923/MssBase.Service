@@ -55,6 +55,8 @@ using Serilog;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Enums;
 using MssBase.Service.Shared.FluentValidation;
+using Contract.Security.Authentication;
+using Logic.Security.Validators.Authentication;
 
 namespace MssBase.Service
 {
@@ -238,6 +240,16 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterApplicationUserRoleLogicRequest>, FilterApplicationUserRoleLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateApplicationUserRoleRequest>, InsertUpdateApplicationUserRoleRequestValidator>();
+
+            #endregion
+
+            #region Authentication
+
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<IAuthenticationLogic, AuthenticationLogic>();
+            
+            //Configure Fluent Validation Validators
+            services.AddTransient<IValidator<AuthenticationRequest>, AuthenticationRequestValidator>();
 
             #endregion
 

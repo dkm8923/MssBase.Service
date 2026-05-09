@@ -2,6 +2,7 @@ namespace Dto.Security.Authentication;
 
 public record AuthenticationRequest
 {
-    public required string Username { get; set; }
-    public required string Password { get; set; }
+    public int ApplicationId { get; set; }
+    public string EmailAddress { get; set; }
+    public string Password { get; set; }
 }
