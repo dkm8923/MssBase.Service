@@ -21,7 +21,7 @@ public class ApplicationConfiguration : IEntityTypeConfiguration<Application>
 
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);
-        CreateTableData(builder); 
+        //CreateTableData(builder); 
     }
 
     public void SetTableName(EntityTypeBuilder<Application> builder)
