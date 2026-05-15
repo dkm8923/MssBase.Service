@@ -15,7 +15,9 @@ namespace IntegrationTests.Security.Service
     [Collection("SecurityIntegrationTests")]
     public class RoleServiceTests : SecurityTestBase,
                                                IDefaultServiceTestsGetAll,
+                                               IDefaultServiceTestsGetAllIncludeRelated,
                                                IDefaultServiceTestsGetById,
+                                               IDefaultServiceTestsGetByIdIncludeRelated,
                                                IDefaultServiceTestsFilter,
                                                IDefaultServiceTestsInsert,
                                                IDefaultServiceTestsUpdate,
@@ -86,6 +88,24 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
+        public async Task Default_GetAll_IncludeRelated_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = "RoleService_GetAll_0_1";
+
+            // Act
+            var result = await _roleService.GetAll(new BaseServiceGet { IncludeRelated = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().HaveCount(5);
+        }
+
+        [Fact]
         public async Task Default_GetAll_Should_Not_Cache_And_Return_Zero_Records()
         {
             // Arrange
@@ -138,6 +158,25 @@ namespace IntegrationTests.Security.Service
 
             // Act
             var result = await _roleService.GetById(role.RoleId, new BaseServiceGet { IncludeInactive = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task Default_GetById_IncludeRelated_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestData();
+            var role = arrangeTestDataResponse.ActiveRoles.FirstOrDefault();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = $"RoleService_GetById_{role.RoleId}_0_1";
+
+            // Act
+            var result = await _roleService.GetById(role.RoleId, new BaseServiceGet { IncludeRelated = true });
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert

@@ -15,8 +15,11 @@ namespace IntegrationTests.Security.Controller
     public class RoleControllerTests : SecurityTestBase, 
                                                   IClassFixture<WebApplicationFactory<Program>>,
                                                   IDefaultControllerTestsGetAll,
+                                                  IDefaultControllerTestsGetAllIncludeRelated,
                                                   IDefaultControllerTestsGetById,
+                                                  IDefaultControllerTestsGetByIdIncludeRelated,
                                                   IDefaultControllerTestsFilter,
+                                                  IDefaultControllerTestsFilterIncludeRelated,  
                                                   IDefaultControllerTestsInsert,
                                                   IDefaultControllerTestsUpdate,
                                                   IDefaultControllerTestsDelete
@@ -56,6 +59,82 @@ namespace IntegrationTests.Security.Controller
             // Assert
             result.Errors.Should().HaveCount(0);
             result.Response.Should().HaveCount(10);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true));
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+
+            foreach (var role in result.Response)
+            {
+                role.RolePermissions.Should().HaveCount(5);
+
+                foreach (var rolePermission in role.RolePermissions)
+                {
+                    rolePermission.Active.Should().BeTrue();
+                    rolePermission.Permission.Should().NotBeNull();
+                    rolePermission.Permission.Active.Should().BeTrue();
+                }
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true) + "&" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(10);
+
+            foreach (var role in result.Response)
+            {
+                if (role.Active)
+                {
+                    role.RolePermissions.Should().HaveCount(10);
+                }
+                else
+                {
+                    role.RolePermissions.Should().HaveCount(5);
+                }
+
+                foreach (var rolePermission in role.RolePermissions)
+                {
+                    rolePermission.Permission.Should().NotBeNull();
+                }
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base + "?");
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+
+            foreach (var role in result.Response)
+            {
+                role.RolePermissions.Should().BeNull();
+            }
         }
 
         [Fact]
@@ -117,6 +196,68 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.ActiveRoles.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RoleDto>(_client, ApiEndPoints.Security.Role.Base, testRecord.RoleId, new BaseServiceGet { IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeTrue();
+
+            result.Response.RolePermissions.Should().HaveCount(5);
+
+            foreach (var rolePermission in result.Response.RolePermissions)
+            {
+                rolePermission.Active.Should().BeTrue();
+                rolePermission.Permission.Should().NotBeNull();
+                rolePermission.Permission.Active.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.InactiveRoles.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RoleDto>(_client, ApiEndPoints.Security.Role.Base, testRecord.RoleId, new BaseServiceGet { IncludeRelated = true, IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeFalse();
+            result.Response.RolePermissions.Should().HaveCount(5);
+
+            foreach (var rolePermission in result.Response.RolePermissions)
+            {
+                rolePermission.Active.Should().BeFalse();
+                rolePermission.Permission.Should().NotBeNull();
+                rolePermission.Permission.Active.Should().BeFalse();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.ActiveRoles.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RoleDto>(_client, ApiEndPoints.Security.Role.Base, testRecord.RoleId, new BaseServiceGet { IncludeRelated = false });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.RolePermissions.Should().BeNull();
         }
 
         [Fact]
@@ -218,6 +359,91 @@ namespace IntegrationTests.Security.Controller
             result.Response.Should().HaveCount(0);
         }
         
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+            var roles = arrangeTestDataResponse.ActiveRoles.Take(5).ToList();
+            
+            var postReq = new FilterRoleServiceRequest { RoleIds = new List<int> { roles[0].RoleId, roles[1].RoleId }, IncludeRelated = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(2);
+
+            foreach (var r in result.Response)
+            {
+                r.Active.Should().BeTrue();
+                r.RolePermissions.Should().HaveCount(5);
+
+                foreach (var rolePermission in r.RolePermissions)
+                {
+                    rolePermission.Active.Should().BeTrue();
+                    rolePermission.Permission.Should().NotBeNull();
+                    rolePermission.Permission.Active.Should().BeTrue();
+                }
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+            var activeRoles = arrangeTestDataResponse.ActiveRoles.Take(5).ToList();
+            var inactiveRoles = arrangeTestDataResponse.InactiveRoles.Take(5).ToList();
+
+            var postReq = new FilterRoleServiceRequest { RoleIds = new List<int> { activeRoles[0].RoleId, activeRoles[1].RoleId, inactiveRoles[0].RoleId, inactiveRoles[1].RoleId }, IncludeRelated = true, IncludeInactive = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(4);
+
+            foreach (var role in result.Response)
+            {
+                if (role.Active)
+                {
+                    role.RolePermissions.Should().HaveCount(10);
+                }
+                else
+                {
+                    role.RolePermissions.Should().HaveCount(5);
+                }
+
+                foreach (var rolePermission in role.RolePermissions)
+                {
+                    rolePermission.Permission.Should().NotBeNull();
+                }
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+            var postReq = new FilterRoleServiceRequest();
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RoleDto>>(_client, ApiEndPoints.Security.Role.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+
+            foreach (var role in result.Response)
+            {
+                role.RolePermissions.Should().BeNull();
+            }
+        }
+
         [Fact]
         public async Task Default_Filter_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {

@@ -75,10 +75,10 @@ namespace Logic.Security.Logic
                 query = query.ApplyIncludeInactiveFilter(req);
                 query = query.ApplyAuditableFilters(req);
 
-                // if (req.IncludeRelated)
-                // {
-                //     query = query.Include(rolePermission => rolePermission.RolePermissionPermissions);
-                // }
+                if (req.IncludeRelated)
+                {
+                    query = query.Include(rolePermission => rolePermission.Permission);
+                }
 
                 if (req.RolePermissionIds != null && req.RolePermissionIds.Count > 0)
                 {

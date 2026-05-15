@@ -15,7 +15,9 @@ namespace IntegrationTests.Security.Service
     [Collection("SecurityIntegrationTests")]
     public class RolePermissionServiceTests : SecurityTestBase,
                                                IDefaultServiceTestsGetAll,
+                                               IDefaultServiceTestsGetAllIncludeRelated,
                                                IDefaultServiceTestsGetById,
+                                               IDefaultServiceTestsGetByIdIncludeRelated,
                                                IDefaultServiceTestsFilter,
                                                IDefaultServiceTestsInsert,
                                                IDefaultServiceTestsUpdate,
@@ -103,6 +105,24 @@ namespace IntegrationTests.Security.Service
             result.Response.Should().HaveCount(0);
         }
 
+        [Fact]
+        public async Task Default_GetAll_IncludeRelated_Should_Cache() 
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = "RolePermissionService_GetAll_0_1";
+
+            // Act
+            var result = await _rolePermissionService.GetAll(new BaseServiceGet { IncludeRelated = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().HaveCount(5);
+        }
+
         #endregion
 
         #region GetById
@@ -163,6 +183,25 @@ namespace IntegrationTests.Security.Service
             availableCacheKeys.Should().HaveCount(0);
         }
 
+        [Fact]
+        public async Task Default_GetById_IncludeRelated_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var rolePermission = arrangeTestDataResponse.ActiveRolePermissions.FirstOrDefault();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = $"RolePermissionService_GetById_{rolePermission.RolePermissionId}_0_1";
+
+            // Act
+            var result = await _rolePermissionService.GetById(rolePermission.RolePermissionId, new BaseServiceGet { IncludeRelated = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
         #endregion
 
         #region Filter
@@ -203,16 +242,18 @@ namespace IntegrationTests.Security.Service
            var postReqRoleId = new FilterRolePermissionServiceRequest { RoleId = role.RoleId };
            var postReqPermissionId = new FilterRolePermissionServiceRequest { PermissionId = permission.PermissionId };
            var postReqIncludeInactive = new FilterRolePermissionServiceRequest { IncludeInactive = true };
+           var postReqIncludeRelated = new FilterRolePermissionServiceRequest { IncludeRelated = true };
            
-           var expectedCacheKeyCreatedBy = $"RolePermissionService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyCreatedOnDate = $"RolePermissionService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedBy = $"RolePermissionService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedOnDate = $"RolePermissionService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0";
-           var expectedCacheKeyRolePermissionIdsKey = $"RolePermissionService_Filter_0_0_0_0_{(postReqRolePermissionIds.RolePermissionIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0";
-           var expectedCacheKeyApplicationId = $"RolePermissionService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0";
-           var expectedCacheKeyRoleId = $"RolePermissionService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqRoleId.RoleId.ToString())}_0_0";
-           var expectedCacheKeyPermissionId = $"RolePermissionService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqPermissionId.PermissionId.ToString())}_0";
-           var expectedCacheKeyIncludeInactive = $"RolePermissionService_Filter_0_0_0_0_0_0_0_0_1";
+           var expectedCacheKeyCreatedBy = $"RolePermissionService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyCreatedOnDate = $"RolePermissionService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedBy = $"RolePermissionService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedOnDate = $"RolePermissionService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0";
+           var expectedCacheKeyRolePermissionIdsKey = $"RolePermissionService_Filter_0_0_0_0_{(postReqRolePermissionIds.RolePermissionIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0";
+           var expectedCacheKeyApplicationId = $"RolePermissionService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0_0";
+           var expectedCacheKeyRoleId = $"RolePermissionService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqRoleId.RoleId.ToString())}_0_0_0";
+           var expectedCacheKeyPermissionId = $"RolePermissionService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqPermissionId.PermissionId.ToString())}_0_0";
+           var expectedCacheKeyIncludeInactive = $"RolePermissionService_Filter_0_0_0_0_0_0_0_0_1_0";
+           var expectedCacheKeyIncludeRelated = $"RolePermissionService_Filter_0_0_0_0_0_0_0_0_0_1";
            
            // Act
            var filterCreatedByResult = await _rolePermissionService.Filter(postReqCreatedBy);
@@ -224,6 +265,7 @@ namespace IntegrationTests.Security.Service
            var filterRoleIdResult = await _rolePermissionService.Filter(postReqRoleId);
            var filterPermissionIdResult = await _rolePermissionService.Filter(postReqPermissionId);
            var filterIncludeInactiveResult = await _rolePermissionService.Filter(postReqIncludeInactive);
+           var filterIncludeRelatedResult = await _rolePermissionService.Filter(postReqIncludeRelated);
            
            var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
@@ -254,6 +296,9 @@ namespace IntegrationTests.Security.Service
 
            availableCacheKeys.Should().Contain(expectedCacheKeyIncludeInactive);
            filterIncludeInactiveResult.Response.Should().HaveCount(11);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyIncludeRelated);
+           filterIncludeRelatedResult.Response.Should().HaveCount(6);
         }
 
         #endregion
