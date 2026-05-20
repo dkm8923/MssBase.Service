@@ -73,7 +73,8 @@ namespace Logic.Security.Logic
 
                 if (req.IncludeRelated)
                 {
-                    query = query.Include(application => application.ApplicationUserPermissions);
+                    query = query.Include(application => application.ApplicationUserPermissions.Where(aup => req.IncludeInactive || aup.Active)).ThenInclude(rp => rp.Permission)
+                                 .Include(application => application.ApplicationUserRoles.Where(aur => req.IncludeInactive || aur.Active)).ThenInclude(aur => aur.Role);
                 }
 
                 if (req.ApplicationUserIds != null && req.ApplicationUserIds.Count > 0)

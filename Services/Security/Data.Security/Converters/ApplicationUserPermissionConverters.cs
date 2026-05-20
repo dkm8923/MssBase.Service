@@ -1,4 +1,3 @@
-using Data.Security.Models;
 using Dto.Security.ApplicationUserPermission;
 using Shared.Logic.Common;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +25,11 @@ namespace Data.Security.Converters
                 ApplicationUserId = source.ApplicationUserId,
                 PermissionId = source.PermissionId
             };
+
+            if (source.Permission != null)
+            {
+                target.Permission = source.Permission.ToDto();
+            }
 
             return target;
         }

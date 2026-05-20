@@ -186,12 +186,6 @@ public class SecurityTestBase
         ret.ActivePermissions = activePermissions;
         ret.InactivePermissions = inactivePermissions;
 
-        ret.ActiveRolePermissions = activeRolePermissions;
-        ret.InactiveRolePermissions = inactiveRolePermissions;
-
-        ret.ActivePermissions = activePermissions;
-        ret.InactivePermissions = inactivePermissions;
-
         return ret;
     }
 
@@ -223,6 +217,9 @@ public class SecurityTestBase
         ret.ActiveApplicationUserPermissions = activeApplicationUserPermissions;
         ret.InactiveApplicationUserPermissions = inactiveApplicationUserPermissions;
 
+        ret.ActivePermissions = activePermissions;
+        ret.InactivePermissions = inactivePermissions;
+
         return ret;
     }
 
@@ -253,6 +250,9 @@ public class SecurityTestBase
 
         ret.ActiveApplicationUserRoles = activeApplicationUserRoles;
         ret.InactiveApplicationUserRoles = inactiveApplicationUserRoles;
+
+        ret.ActiveRoles = activeRoles;
+        ret.InactiveRoles = inactiveRoles;
 
         return ret;
     }

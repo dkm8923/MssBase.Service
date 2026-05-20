@@ -15,8 +15,11 @@ namespace IntegrationTests.Security.Controller
     public class ApplicationUserRoleControllerTests : SecurityTestBase, 
                                                   IClassFixture<WebApplicationFactory<Program>>,
                                                   IDefaultControllerTestsGetAll,
+                                                  IDefaultControllerTestsGetAllIncludeRelated,
                                                   IDefaultControllerTestsGetById,
+                                                  IDefaultControllerTestsGetByIdIncludeRelated,
                                                   IDefaultControllerTestsFilter,
+                                                  IDefaultControllerTestsFilterIncludeRelated, 
                                                   IDefaultControllerTestsInsert,
                                                   IDefaultControllerTestsUpdate,
                                                   IDefaultControllerTestsDelete
@@ -74,6 +77,66 @@ namespace IntegrationTests.Security.Controller
             // Assert
             result.Errors.Should().HaveCount(0);
             result.Response.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserRoleDto>>(_client, ApiEndPoints.Security.ApplicationUserRole.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true));
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+
+            foreach (var applicationUserRole in result.Response)
+            {
+                applicationUserRole.Should().NotBeNull();
+                applicationUserRole.Active.Should().BeTrue();
+                applicationUserRole.Role.Should().NotBeNull();
+                applicationUserRole.Role.Active.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserRoleDto>>(_client, ApiEndPoints.Security.ApplicationUserRole.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true) + "&" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(10);
+
+            foreach (var applicationUserRole in result.Response)
+            {
+                applicationUserRole.Role.Should().NotBeNull();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserRoleDto>>(_client, ApiEndPoints.Security.ApplicationUserRole.Base);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+
+            foreach (var applicationUserRole in result.Response)
+            {
+                applicationUserRole.Role.Should().BeNull();
+            }
         }
 
         #endregion
@@ -153,6 +216,54 @@ namespace IntegrationTests.Security.Controller
             content.Errors.Count.Should().Be(1);
         }
 
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserRoles.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserRoleDto>(_client, ApiEndPoints.Security.ApplicationUserRole.Base, testRecord.ApplicationUserRoleId, new BaseServiceGet { IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Role.Should().NotBeNull();
+            result.Response.Active.Should().BeTrue();
+            result.Response.Role.Active.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUserRoles.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserRoleDto>(_client, ApiEndPoints.Security.ApplicationUserRole.Base, testRecord.ApplicationUserRoleId, new BaseServiceGet { IncludeInactive = true, IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Role.Should().NotBeNull();
+            result.Response.Active.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserRoles.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserRoleDto>(_client, ApiEndPoints.Security.ApplicationUserRole.Base, testRecord.ApplicationUserRoleId, new BaseServiceGet { IncludeRelated = false });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Role.Should().BeNull();
+        }
+
         #endregion
 
         #region Filter
@@ -223,6 +334,73 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             result.Response.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var applicationUserRoles = arrangeTestDataResponse.ActiveApplicationUserRoles.Take(5).ToList();
+            
+            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoles[0].ApplicationUserRoleId, applicationUserRoles[1].ApplicationUserRoleId }, IncludeRelated = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(_client, ApiEndPoints.Security.ApplicationUserRole.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(2);
+
+            foreach (var r in result.Response)
+            {
+                r.Active.Should().BeTrue();
+                r.Role.Should().NotBeNull();
+                r.Role.Active.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var activeApplicationUserRoles = arrangeTestDataResponse.ActiveApplicationUserRoles.Take(5).ToList();
+            var inactiveApplicationUserRoles = arrangeTestDataResponse.InactiveApplicationUserRoles.Take(5).ToList();
+
+            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { activeApplicationUserRoles[0].ApplicationUserRoleId, activeApplicationUserRoles[1].ApplicationUserRoleId, inactiveApplicationUserRoles[0].ApplicationUserRoleId, inactiveApplicationUserRoles[1].ApplicationUserRoleId }, IncludeRelated = true, IncludeInactive = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(_client, ApiEndPoints.Security.ApplicationUserRole.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(4);
+
+            foreach (var rolePermission in result.Response)
+            {
+                rolePermission.Role.Should().NotBeNull();
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var postReq = new FilterApplicationUserRoleServiceRequest();
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(_client, ApiEndPoints.Security.ApplicationUserRole.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+
+            foreach (var rolePermission in result.Response)
+            {
+                rolePermission.Role.Should().BeNull();
+            }
         }
         
         [Fact]

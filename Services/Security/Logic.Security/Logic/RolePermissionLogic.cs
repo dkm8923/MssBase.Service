@@ -77,7 +77,7 @@ namespace Logic.Security.Logic
 
                 if (req.IncludeRelated)
                 {
-                    query = query.Include(rolePermission => rolePermission.Permission);
+                    query = query.Include(rp => rp.Permission).Where(rp => req.IncludeInactive || rp.Active);
                 }
 
                 if (req.RolePermissionIds != null && req.RolePermissionIds.Count > 0)

@@ -15,8 +15,11 @@ namespace IntegrationTests.Security.Controller
     public class ApplicationUserPermissionControllerTests : SecurityTestBase, 
                                                   IClassFixture<WebApplicationFactory<Program>>,
                                                   IDefaultControllerTestsGetAll,
+                                                  IDefaultControllerTestsGetAllIncludeRelated,
                                                   IDefaultControllerTestsGetById,
+                                                  IDefaultControllerTestsGetByIdIncludeRelated,
                                                   IDefaultControllerTestsFilter,
+                                                  IDefaultControllerTestsFilterIncludeRelated, 
                                                   IDefaultControllerTestsInsert,
                                                   IDefaultControllerTestsUpdate,
                                                   IDefaultControllerTestsDelete
@@ -74,6 +77,66 @@ namespace IntegrationTests.Security.Controller
             // Assert
             result.Errors.Should().HaveCount(0);
             result.Response.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true));
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Should().NotBeNull();
+                applicationUserPermission.Active.Should().BeTrue();
+                applicationUserPermission.Permission.Should().NotBeNull();
+                applicationUserPermission.Permission.Active.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true) + "&" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(10);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().NotBeNull();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().BeNull();
+            }
         }
 
         #endregion
@@ -153,6 +216,54 @@ namespace IntegrationTests.Security.Controller
             content.Errors.Count.Should().Be(1);
         }
 
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, testRecord.ApplicationUserPermissionId, new BaseServiceGet { IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Permission.Should().NotBeNull();
+            result.Response.Active.Should().BeTrue();
+            result.Response.Permission.Active.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUserPermissions.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, testRecord.ApplicationUserPermissionId, new BaseServiceGet { IncludeInactive = true, IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Permission.Should().NotBeNull();
+            result.Response.Active.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, testRecord.ApplicationUserPermissionId, new BaseServiceGet { IncludeRelated = false });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Permission.Should().BeNull();
+        }
+
         #endregion
 
         #region Filter
@@ -223,6 +334,73 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             result.Response.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var applicationUserPermissions = arrangeTestDataResponse.ActiveApplicationUserPermissions.Take(5).ToList();
+            
+            var postReq = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = new List<int> { applicationUserPermissions[0].ApplicationUserPermissionId, applicationUserPermissions[1].ApplicationUserPermissionId }, IncludeRelated = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(2);
+
+            foreach (var r in result.Response)
+            {
+                r.Active.Should().BeTrue();
+                r.Permission.Should().NotBeNull();
+                r.Permission.Active.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var activeApplicationUserPermissions = arrangeTestDataResponse.ActiveApplicationUserPermissions.Take(5).ToList();
+            var inactiveApplicationUserPermissions = arrangeTestDataResponse.InactiveApplicationUserPermissions.Take(5).ToList();
+
+            var postReq = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = new List<int> { activeApplicationUserPermissions[0].ApplicationUserPermissionId, activeApplicationUserPermissions[1].ApplicationUserPermissionId, inactiveApplicationUserPermissions[0].ApplicationUserPermissionId, inactiveApplicationUserPermissions[1].ApplicationUserPermissionId }, IncludeRelated = true, IncludeInactive = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(4);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().NotBeNull();
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var postReq = new FilterApplicationUserPermissionServiceRequest();
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().BeNull();
+            }
         }
         
         [Fact]

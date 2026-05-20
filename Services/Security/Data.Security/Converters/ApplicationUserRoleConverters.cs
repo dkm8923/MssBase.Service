@@ -27,6 +27,11 @@ namespace Data.Security.Converters
                 RoleId = source.RoleId
             };
 
+            if (source.Role != null)
+            {
+                target.Role = source.Role.ToDto();
+            }
+
             return target;
         }
 

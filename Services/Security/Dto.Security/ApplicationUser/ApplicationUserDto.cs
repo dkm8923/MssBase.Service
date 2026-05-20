@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using Dto.Security.ApplicationUserPermission;
+using Dto.Security.ApplicationUserRole;
 using Shared.Models;
 
 namespace Dto.Security.ApplicationUser
@@ -16,6 +18,10 @@ namespace Dto.Security.ApplicationUser
         public DateTime? LastLockoutDate { get; set; }
         public short? FailedPasswordAttemptCount { get; set; }
         public int ApplicationId { get; set; }
+        
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IEnumerable<ApplicationUserPermissionDto> ApplicationUserPermissions { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public IEnumerable<ApplicationUserRoleDto> ApplicationUserRoles { get; set; }
     }
 }

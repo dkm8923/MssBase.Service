@@ -43,7 +43,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<IEnumerable<ApplicationUserPermissionDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterApplicationUserPermissionLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser }, cancellationToken);
+            var ret = await this.Filter(new FilterApplicationUserPermissionLogicRequest { IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
 
@@ -52,7 +52,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<ApplicationUserPermissionDto>> GetById(int applicationUserPermissionId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterApplicationUserPermissionLogicRequest { ApplicationUserPermissionIds = new List<int> { applicationUserPermissionId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser });
+            var res = await this.Filter(new FilterApplicationUserPermissionLogicRequest { ApplicationUserPermissionIds = new List<int> { applicationUserPermissionId }, IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, CurrentUser = req.CurrentUser });
 
             return new ErrorValidationResult<ApplicationUserPermissionDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -74,6 +74,11 @@ namespace Logic.Security.Logic
 
                 query = query.ApplyIncludeInactiveFilter(req);
                 query = query.ApplyAuditableFilters(req);
+
+                if (req.IncludeRelated)
+                {
+                    query = query.Include(aup => aup.Permission).Where(aup => req.IncludeInactive || aup.Active);
+                }
 
                 if (req.ApplicationUserPermissionIds != null && req.ApplicationUserPermissionIds.Count > 0)
                 {

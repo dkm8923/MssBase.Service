@@ -14,8 +14,11 @@ namespace IntegrationTests.Security.Logic
     [Collection("SecurityIntegrationTests")]
     public class ApplicationUserPermissionLogicTests : SecurityTestBase,
                                                        IDefaultLogicTestsGetAll,
+                                                       IDefaultLogicTestsGetAllIncludeRelated,
                                                        IDefaultLogicTestsGetById,
+                                                       IDefaultLogicTestsGetByIdIncludeRelated,
                                                        IDefaultLogicTestsFilter,
+                                                       IDefaultLogicTestsFilterIncludeRelated,  
                                                        IDefaultLogicTestsInsert, 
                                                        IDefaultLogicTestsUpdate,
                                                        IDefaultLogicTestsDelete
@@ -67,6 +70,61 @@ namespace IntegrationTests.Security.Logic
             inactiveResult.Response.Should().HaveCount(0);
         }
 
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+
+            // Act
+            var result = await _applicationUserPermissionLogic.GetAll(new BaseLogicGet { IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().HaveCount(5);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().NotBeNull();
+                applicationUserPermission.Permission.Active.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+
+            // Act
+            var result = await _applicationUserPermissionLogic.GetAll(new BaseLogicGet { IncludeRelated = true, IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().HaveCount(10);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().NotBeNull();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+
+            // Act
+            var result = await _applicationUserPermissionLogic.GetAll(new BaseLogicGet());
+            
+            // Assert
+            result.Response.Should().HaveCount(5);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().BeNull();
+            }
+        }
+
         #endregion
 
         #region GetById
@@ -113,6 +171,54 @@ namespace IntegrationTests.Security.Logic
 
             // Assert
             result.Response.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions.FirstOrDefault();  
+
+            // Act
+            var result = await _applicationUserPermissionLogic.GetById(testRecord.ApplicationUserPermissionId, new BaseLogicGet { IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Permission.Should().NotBeNull();
+            result.Response.Active.Should().BeTrue();
+            result.Response.Permission.Active.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUserPermissions.FirstOrDefault();  
+
+            // Act
+            var result = await _applicationUserPermissionLogic.GetById(testRecord.ApplicationUserPermissionId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Permission.Should().NotBeNull();
+            result.Response.Active.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions.FirstOrDefault();  
+
+            // Act
+            var result = await _applicationUserPermissionLogic.GetById(testRecord.ApplicationUserPermissionId, new BaseLogicGet());
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Permission.Should().BeNull();
         }
 
         #endregion
@@ -225,6 +331,71 @@ namespace IntegrationTests.Security.Logic
             filterApplicationUserPermissionIdsResult.Response.Should().HaveCount(3);
             filterApplicationIdResult.Response.Should().HaveCount(6);
             filterPermissionIdResult.Response.Should().HaveCount(1);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+
+            var postReq = new FilterApplicationUserPermissionLogicRequest { IncludeRelated = true };
+
+            // Act
+            var result = await _applicationUserPermissionLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+            
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Active.Should().BeTrue();
+                applicationUserPermission.Permission.Should().NotBeNull();
+                applicationUserPermission.Permission.Active.Should().BeTrue();
+            }
+        }
+        
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+
+            var postReq = new FilterApplicationUserPermissionLogicRequest { IncludeRelated = true, IncludeInactive = true };
+
+            // Act
+            var result = await _applicationUserPermissionLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(10);
+            
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().NotBeNull();
+            }
+        }
+        
+        [Fact]
+        public async Task Default_Filter_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+
+            var postReq = new FilterApplicationUserPermissionLogicRequest();
+
+            // Act
+            var result = await _applicationUserPermissionLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+            
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().BeNull();
+            }
         }
 
         [Fact]
