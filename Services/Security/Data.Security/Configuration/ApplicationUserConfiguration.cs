@@ -21,7 +21,7 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.Property(t => t.FirstName).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.LastName).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.DateOfBirth).HasPrecision(2);
-        builder.Property(t => t.Password).HasMaxLength(64).IsUnicode(false);
+        builder.Property(t => t.Password).HasMaxLength(256).IsUnicode(true);
         builder.Property(t => t.LastLoginDate).HasPrecision(2);
         builder.Property(t => t.LastPasswordChangeDate).HasPrecision(2);
         builder.Property(t => t.LastLockoutDate).HasPrecision(2);
