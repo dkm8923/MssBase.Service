@@ -15,6 +15,8 @@ builder.Services.ConfigureCache(builder);
 
 builder.Services.AddHttpClient();
 
+builder.Services.ConfigureAuthenticationSettings(builder);
+
 builder.Services.ConfigureJwtAuthentication(builder);
 
 builder.Services.ConfigureControllers(builder);

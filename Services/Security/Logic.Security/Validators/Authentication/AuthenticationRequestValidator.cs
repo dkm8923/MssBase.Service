@@ -9,7 +9,7 @@ public class AuthenticationRequestValidator : AbstractValidator<AuthenticationRe
     private static class EntityFieldNames
     {
         public const string ApplicationId = "ApplicationId";
-        public const string EmailAddress = "EmailAddress";
+        public const string Email = "Email";
         public const string Password = "Password";
     }
 
@@ -20,9 +20,11 @@ public class AuthenticationRequestValidator : AbstractValidator<AuthenticationRe
 
         RuleFor(x => x.ApplicationId).GreaterThan(0).WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationId));
         
-        RuleFor(x => x.EmailAddress).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.EmailAddress))
-            .EmailAddress().WithMessage(ValidatorUtilities.CreateInvalidEmailErrorMessage());
+        RuleFor(x => x.Email).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Email))
+            .EmailAddress().WithMessage(ValidatorUtilities.CreateInvalidEmailErrorMessage())
+            .Length(1, 128).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Email, 128));
         
-        RuleFor(x => x.Password).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Password));
+        RuleFor(x => x.Password).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Password))
+            .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Password, 64));
     }
 }

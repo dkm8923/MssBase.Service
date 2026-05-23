@@ -40,17 +40,20 @@ using Dto.Security.RolePermission.Logic;
 using Logic.Security.Validators.RolePermission;
 using Dto.Security.RolePermission;
 using Data.Security;
-using Microsoft.EntityFrameworkCore;
+using Contract.Security.Authentication;
+using Dto.Security.Authentication;
+using Logic.Security.Validators.Authentication;
 
 namespace IntegrationTests.Security.Shared;
 
 public class SecurityTestBase
 {
     private readonly ISecurityConnectionStrings _connectionStrings;
-    private readonly SecurityDBContextFactory _dbContextFactory;
+    protected readonly SecurityDBContextFactory _dbContextFactory;
     private readonly AppSettingsHelper _configHelper;
     protected readonly ServiceProvider _serviceProvider;
     protected readonly ILoggerService _loggerSvc;
+    protected readonly IAuthenticationLogic _authenticationLogic;
     protected readonly IApplicationLogic _applicationLogic;
     protected readonly IApplicationUserLogic _applicationUserLogic;
     protected readonly IApplicationUserPermissionLogic _applicationUserPermissionLogic;
@@ -59,6 +62,7 @@ public class SecurityTestBase
     protected readonly IRoleLogic _roleLogic;
     protected readonly IRolePermissionLogic _rolePermissionLogic;
     protected readonly ISecurityTestUtilitiesManager _securityTestUtilities;
+    protected readonly IOptionsMonitor<AuthenticationSettingsConfig> _authenticationSettingsConfigMonitor;
     
     public SecurityTestBase()
     {
@@ -73,6 +77,8 @@ public class SecurityTestBase
         _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
 
         _loggerSvc = _serviceProvider.GetService<ILoggerService>();
+        _authenticationSettingsConfigMonitor = _serviceProvider.GetService<IOptionsMonitor<AuthenticationSettingsConfig>>();
+        _authenticationLogic = _serviceProvider.GetService<IAuthenticationLogic>();
         _applicationLogic = _serviceProvider.GetService<IApplicationLogic>();
         _applicationUserLogic = _serviceProvider.GetService<IApplicationUserLogic>();
         _applicationUserPermissionLogic = _serviceProvider.GetService<IApplicationUserPermissionLogic>();
@@ -110,6 +116,8 @@ public class SecurityTestBase
         await ClearAllSecurityTestTableData();
         var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
+        ret.ActiveApplications.Add(application);
+
         ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);;
         ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId);
 
@@ -122,6 +130,8 @@ public class SecurityTestBase
         var ret = new SecurityTestData();
         await ClearAllSecurityTestTableData();
         var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+        ret.ActiveApplications.Add(application);
 
         ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);;
         ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId);
@@ -479,6 +489,7 @@ public class SecurityTestBase
 
         //unit testing dependencies
         services.AddTransient<ISecurityTestUtilitiesManager, SecurityTestUtilitiesManager>();
+        services.AddTransient<IAuthenticationUtilities, AuthenticationUtilities>();
         services.AddTransient<IApplicationUtilities, ApplicationUtilities>();
         services.AddTransient<IApplicationUserUtilities, ApplicationUserUtilities>();
         services.AddTransient<IRoleUtilities, RoleUtilities>();
@@ -492,6 +503,9 @@ public class SecurityTestBase
 
     private ServiceCollection ConfigureSecurityService(ServiceCollection services)
     {
+        services.Configure<AuthenticationSettingsConfig>(_configHelper.Configuration.GetSection("AuthenticationSettingsConfiguration"));
+        services.Configure<JwtAuthenticationConfig>(_configHelper.Configuration.GetSection("JwtAuthConfiguration"));
+        
         services.Configure<SecurityConnectionStrings>(_configHelper.Configuration.GetSection("SecurityConnectionStrings"));
 
         services.AddSingleton<ISecurityConnectionStrings>(sp =>
@@ -516,6 +530,7 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
+        services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
 
         #endregion
 
@@ -539,6 +554,16 @@ public class SecurityTestBase
         services.AddTransient<IValidator<FilterApplicationUserRoleLogicRequest>, FilterApplicationUserRoleLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateApplicationUserRoleRequest>, InsertUpdateApplicationUserRoleRequestValidator>();
 
+        #endregion
+
+        #region Authentication
+
+        services.AddTransient<IAuthenticationService, AuthenticationService>();
+        services.AddTransient<IAuthenticationLogic, AuthenticationLogic>();
+
+        //Configure Fluent Validation Validators
+        services.AddTransient<IValidator<AuthenticationRequest>, AuthenticationRequestValidator>();
+        
         #endregion
 
         #region Role
@@ -574,8 +599,6 @@ public class SecurityTestBase
 
         #endregion
 
-        //service dependencies
-        
         return services;
     }
 }

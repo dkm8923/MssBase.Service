@@ -24,7 +24,7 @@ public class InsertUpdateApplicationUserRequestValidator : AbstractValidator<Ins
 
         RuleFor(v => v.Email)
             .NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Email))
-            .EmailAddress().WithMessage("Email must be in a valid format!")
+            .EmailAddress().WithMessage(ValidatorUtilities.CreateInvalidEmailErrorMessage())
             .Length(1, 128).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Email, 128));
 
         RuleFor(v => v.FirstName)

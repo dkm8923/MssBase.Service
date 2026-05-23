@@ -4,6 +4,7 @@ namespace IntegrationTests.Security.Shared.Utilities;
 
 public class SecurityTestUtilitiesManager : ISecurityTestUtilitiesManager
 {
+    private IAuthenticationUtilities _authenticationUtilities;
     private IApplicationUtilities _applicationUtilities;
     private IApplicationUserUtilities _applicationUserUtilities;
     private IApplicationUserPermissionUtilities _applicationUserPermissionUtilities;
@@ -13,6 +14,7 @@ public class SecurityTestUtilitiesManager : ISecurityTestUtilitiesManager
     private IRolePermissionUtilities _rolePermissionUtilities;
     
     public SecurityTestUtilitiesManager(
+           IAuthenticationUtilities authenticationUtilities,
            IApplicationUtilities applicationUtilities,
            IApplicationUserUtilities applicationUserUtilities,
            IApplicationUserPermissionUtilities applicationUserPermissionUtilities,
@@ -22,6 +24,7 @@ public class SecurityTestUtilitiesManager : ISecurityTestUtilitiesManager
            IRolePermissionUtilities rolePermissionUtilities
         )
     {
+        _authenticationUtilities = authenticationUtilities;
         _applicationUtilities = applicationUtilities;
         _applicationUserUtilities = applicationUserUtilities;
         _applicationUserPermissionUtilities = applicationUserPermissionUtilities;
@@ -29,6 +32,14 @@ public class SecurityTestUtilitiesManager : ISecurityTestUtilitiesManager
         _roleUtilities = roleUtilities;
         _permissionUtilities = permissionUtilities;
         _rolePermissionUtilities = rolePermissionUtilities;
+    }
+
+    public IAuthenticationUtilities Authentication
+    {
+        get
+        {
+            return _authenticationUtilities;
+        }
     }
 
     public IApplicationUtilities Application

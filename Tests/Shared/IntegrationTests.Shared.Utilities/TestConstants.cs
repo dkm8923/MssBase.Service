@@ -7,4 +7,5 @@ public static class TestConstants
     public const string CurrentUser = "IntegrationTest";
     public const string SpecificCurrentUserForInsert = "IntegrationTestInsert";
     public const string SpecificCurrentUserForUpdate = "IntegrationTestUpdate";
+    public const string DefaultNewPassword = "NewTestPassword1!";
 }

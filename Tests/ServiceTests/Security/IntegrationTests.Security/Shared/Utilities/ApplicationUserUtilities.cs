@@ -163,7 +163,7 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     {
         return new Dictionary<string, List<string>>
         {
-            { "Email", new List<string> { "Email must be in a valid format!" } }
+            { "Email", new List<string> { "Invalid email address!" } }
         };
     }
 
@@ -172,6 +172,32 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
         return new Dictionary<string, List<string>>
         {
             { "Email", new List<string> { "Email must be unique!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordRequiredFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "ApplicationUserId", new List<string> { "ApplicationUserId is a required field!" } },
+            { "NewPassword", new List<string> { "NewPassword is a required field!" } },
+            { "CurrentUser", new List<string> { "CurrentUser is a required field!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordInvalidPasswordErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "ChangePassword", new List<string> { "New password must be different from the old password!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordMaxLengthErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "NewPassword", new List<string> { "NewPassword cannot exceed 128 characters!" } }
         };
     }
 

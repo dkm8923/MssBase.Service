@@ -101,6 +101,11 @@ namespace MssBase.Service
             }
         }
 
+        public static void ConfigureAuthenticationSettings(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            services.Configure<AuthenticationSettingsConfig>(builder.Configuration.GetSection("AuthenticationSettingsConfiguration"));
+        }
+
         public static void ConfigureJwtAuthentication(this IServiceCollection services, WebApplicationBuilder builder)
         {
             services.Configure<JwtAuthenticationConfig>(builder.Configuration.GetSection("JwtAuthConfiguration"));
@@ -139,6 +144,8 @@ namespace MssBase.Service
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                 options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
                 options.JsonSerializerOptions.Converters.Add(new NullableDateOnlyJsonConverter());
+                options.JsonSerializerOptions.Converters.Add(new DateTimeJsonConverter());
+                options.JsonSerializerOptions.Converters.Add(new NullableDateTimeJsonConverter());
                 options.JsonSerializerOptions.Converters.Add(new NullableBoolToFalseJsonConverter());
             });
         }
@@ -218,6 +225,7 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
+            services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
 
             #endregion
 

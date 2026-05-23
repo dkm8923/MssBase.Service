@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Shared.Logic.Common
 {
@@ -97,6 +98,40 @@ namespace Shared.Logic.Common
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Generates a random alphanumeric string of the specified length.
+        /// </summary>
+        /// <param name="length">The number of characters in the generated string. Must be non-negative.</param>
+        /// <param name="includeSpecialChars">Indicates whether to include special characters in the generated string.</param>
+        /// <returns>A randomly generated string consisting of uppercase letters, lowercase letters, digits, and optionally special characters. The length of
+        /// the string is equal to the specified value of <paramref name="length"/>.</returns>
+        public static string GenerateRandomAlphaNumericString(int length, bool includeSpecialChars = false)
+        {
+            var regularChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            
+            char[] chars = new char[0];
+
+            if (includeSpecialChars)
+            {
+                var specialChars = "!@#$%^&*()_+-=[]{}|;:',.<>?/";
+                chars = (regularChars + specialChars).ToCharArray();
+            }
+            else
+            {
+                chars = regularChars.ToCharArray();
+            }
+
+            var random = new Random();
+            var result = new StringBuilder(length);
+
+            for (int i = 0; i < length; i++)
+            {
+                result.Append(chars[random.Next(chars.Length)]);
+            }
+
+            return result.ToString();
         }
 
     }

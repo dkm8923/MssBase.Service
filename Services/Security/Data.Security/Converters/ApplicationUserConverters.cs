@@ -7,7 +7,7 @@ namespace Data.Security.Converters
 {
     public static class ApplicationUserConverters
     {
-        public static ApplicationUserDto ToDto(this Models.ApplicationUser source)
+        public static ApplicationUserDto ToDto(this ApplicationUser source)
         {
             if (source == null)
             {
@@ -27,6 +27,7 @@ namespace Data.Security.Converters
                 LastName = source.LastName,
                 DateOfBirth = source.DateOfBirth,
                 Password = source.Password,
+                PasswordResetRequired = source.PasswordResetRequired,
                 LastLoginDate = source.LastLoginDate,
                 LastPasswordChangeDate = source.LastPasswordChangeDate,
                 LastLockoutDate = source.LastLockoutDate,
@@ -47,7 +48,7 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static async Task<List<ApplicationUserDto>> ToDtos(this IQueryable<Models.ApplicationUser> source, CancellationToken cancellationToken = default)
+        public static async Task<List<ApplicationUserDto>> ToDtos(this IQueryable<ApplicationUser> source, CancellationToken cancellationToken = default)
         {
             if (source == null)
             {
@@ -59,25 +60,25 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static Models.ApplicationUser ToEntityOnInsert(this InsertUpdateApplicationUserRequest source)
+        public static ApplicationUser ToEntityOnInsert(this InsertUpdateApplicationUserRequest source)
         {
             if (source == null)
             {
                 return null;
             }
 
-            var target = new Models.ApplicationUser
+            var target = new ApplicationUser
             {
                 Active = source.Active,
                 Email = source.Email,
                 FirstName = source.FirstName,
                 LastName = source.LastName,
                 DateOfBirth = source.DateOfBirth,
-                Password = source.Password,
-                LastLoginDate = source.LastLoginDate,
-                LastPasswordChangeDate = source.LastPasswordChangeDate,
-                LastLockoutDate = source.LastLockoutDate,
-                FailedPasswordAttemptCount = source.FailedPasswordAttemptCount,
+                //Password = source.Password,
+                //LastLoginDate = source.LastLoginDate,
+                //LastPasswordChangeDate = source.LastPasswordChangeDate,
+                //LastLockoutDate = source.LastLockoutDate,
+                //FailedPasswordAttemptCount = source.FailedPasswordAttemptCount,
                 ApplicationId = source.ApplicationId
             };
 
@@ -89,7 +90,7 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static Models.ApplicationUser UpdateEntityFromRequest(this Models.ApplicationUser entity, InsertUpdateApplicationUserRequest source)
+        public static ApplicationUser UpdateEntityFromRequest(this ApplicationUser entity, InsertUpdateApplicationUserRequest source)
         {
             if (source == null || entity == null)
             {

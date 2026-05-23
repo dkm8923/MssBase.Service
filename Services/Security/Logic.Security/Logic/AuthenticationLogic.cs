@@ -1,4 +1,3 @@
-using System;
 using Contract.Security.Authentication;
 using Dto.Security.Authentication;
 using System.IdentityModel.Tokens.Jwt;
@@ -7,27 +6,43 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
 using Contract.Security.ApplicationUser;
-using Dto.Security.ApplicationUser.Service;
-using Dto.Security.ApplicationUser.Logic;
 using FluentValidation;
-using Logic.Security.Validators.Authentication;
 using Shared.Models;
 using FluentValidation.Results;
 using Shared.Logic.Validators;
 using Contract.Security.Application;
+using Data.Security;
+using Microsoft.EntityFrameworkCore;
+using Contract.Security;
+using Shared.Logic.Common;
+using Dto.Security.ApplicationUser.Logic;
 
 namespace Logic.Security.Logic;
 
 public class AuthenticationLogic : IAuthenticationLogic
 {
     private readonly IOptionsMonitor<JwtAuthenticationConfig> _jwtConfigMonitor;
-    
+    private readonly IOptionsMonitor<AuthenticationSettingsConfig> _authenticationSettingsConfigMonitor;
+    private readonly ISecurityConnectionStrings _connectionStrings;
+    private readonly SecurityDBContextFactory _dbContextFactory;
 
     private IValidator<AuthenticationRequest> _authenticationRequestValidator;
 
-    public AuthenticationLogic(IOptionsMonitor<JwtAuthenticationConfig> jwtConfigMonitor, IValidator<AuthenticationRequest> authenticationRequestValidator)
+    private int _maxFailedPasswordAttemptCount => _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount : 5;
+    private int _lockoutDurationInMinutes => _authenticationSettingsConfigMonitor.CurrentValue.LockoutDurationInMinutes > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.LockoutDurationInMinutes : 60;
+    private int _passwordExpiryInDays => _authenticationSettingsConfigMonitor.CurrentValue.PasswordExpiryInDays > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.PasswordExpiryInDays : 90;
+
+    public AuthenticationLogic(
+                    IOptionsMonitor<JwtAuthenticationConfig> jwtConfigMonitor, 
+                    IOptionsMonitor<AuthenticationSettingsConfig> authenticationSettingsConfigMonitor, 
+                    ISecurityConnectionStrings connectionStrings, 
+                    IValidator<AuthenticationRequest> authenticationRequestValidator
+    )
     {
         _jwtConfigMonitor = jwtConfigMonitor;
+        _authenticationSettingsConfigMonitor = authenticationSettingsConfigMonitor;
+        _connectionStrings = connectionStrings;
+        _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
         _authenticationRequestValidator = authenticationRequestValidator;
     }
 
@@ -39,23 +54,139 @@ public class AuthenticationLogic : IAuthenticationLogic
             return errorValidationResult;
         }
 
-        var userFilterRes = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { Email = req.EmailAddress, ApplicationId = req.ApplicationId });
+        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(req);
 
-        var userNotFound = userFilterRes.Errors.Count() > 0 || userFilterRes.Response is null || !userFilterRes.Response.Any();
-        //verify password - this is where you would implement your password hashing and verification logic
-        var invalidPass = !userNotFound && userFilterRes.Response.First().Password != req.Password;
-        
-        if (userNotFound || invalidPass)
+        if (userInfoRes is null)
         {
-            // errorValidationResult.Errors.Add("Authentication", new List<string> { "Invalid email address or password." });
-            // return errorValidationResult;
-            return new ErrorValidationResult<AuthenticationResponse>();
+            //user not found with that email address / application id combo
+            return _createInvalidCredentialsError();
         }
 
-        //auth successful, generate JWT token and return
+        //check if user is currently locked out due to too many failed password attempts. If so, return lockout message instead of invalid credentials message
+        if (userInfoRes.LastLockoutDate.HasValue && userInfoRes.LastLockoutDate.Value.AddMinutes(_lockoutDurationInMinutes) > CommonUtilities.GetDateTimeUtcNow())
+        {
+            //user is currently locked out
+            return _createAccountLockedError();
+        }
+        
+        var isValidPassword = SecurityLogicUtilities.VerifyPasswordMatchesHash(userInfoRes.PasswordHash, req.Password);
+
+        if (!isValidPassword)
+        {
+            var failedPasswordAttemptCount = await _updateFailedPasswordAttemptLogic(userInfoRes.ApplicationUserId);
+
+            if (failedPasswordAttemptCount >= _maxFailedPasswordAttemptCount)
+            {
+                //user is locked out for configuration defined duration, return lockout message instead of invalid credentials message
+                return _createAccountLockedError();
+            }
+
+            return _createInvalidCredentialsError();
+        }
+
+        var pswdChangeRequired = userInfoRes.PasswordResetRequired == true || userInfoRes.LastPasswordChangeDate.Value.AddDays(_passwordExpiryInDays) < CommonUtilities.GetDateTimeUtcNow();
+        
+        if (pswdChangeRequired)
+        {
+            //password change is required, return password change required error
+            return _createPasswordChangeRequiredError();
+        }
+
+        //successful auth occurred, update user accordingly 
+        await _updateApplicationUserOnSuccessfulLogin(userInfoRes.ApplicationUserId);
+
+        //generate JWT token and return
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = _generateJwtToken() } };
     }
 
+    // public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotUserName(string emailAddress, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic, CancellationToken cancellationToken = default)
+    // {
+    //     var userRes = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { Email = emailAddress, CurrentUser = emailAddress  }, cancellationToken);
+
+    //     if (userRes.Errors.Count > 0 || userRes.Response is null || userRes.Response.Count() == 0)
+    //     {
+    //         //to prevent user enumeration attacks, return success message even if email address does not exist in the system
+    //         return new ErrorValidationResult<NotificationMessageResponse> { Response = new NotificationMessageResponse { Message = "If an account with that email address exists, a notification email has been sent with the username." } };
+    //     }
+    // }
+
+    // public record NotificationMessageResponse
+    // {
+    //     public string Message { get; set; }
+    // }
+
+    #region private
+
+    /// <summary>
+    /// Creates an error result indicating that the provided email address or password is invalid. The error is associated with a general "Authentication" key to avoid revealing whether the email address or the password was incorrect, which is a security best practice to prevent user enumeration attacks.
+    /// </summary>
+    /// <returns></returns>
+    private ErrorValidationResult<AuthenticationResponse> _createInvalidCredentialsError()
+    {
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "Authentication", new List<string> { "Invalid email address or password!" } } } };
+    }
+
+    /// <summary>
+    /// Creates an error result indicating that the account is locked due to too many failed login attempts. The error message includes the duration of the lockout period based on the configured lockout duration. This method is used to provide a clear error message to the user when their account is locked, and to inform them of how long they need to wait before they can attempt to log in again.
+    /// </summary>
+    /// <returns></returns>
+    private ErrorValidationResult<AuthenticationResponse> _createAccountLockedError()
+    {
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "Authentication", new List<string> { $"Account is locked due to too many failed login attempts. Please try again after {_lockoutDurationInMinutes} minutes!" } } } };
+    }
+
+    /// <summary>
+    /// Creates an error result indicating that the provided credentials are invalid because a password change is required. The error message informs the user that they need to update their password. This method is used to provide a clear error message to the user when their password has expired and needs to be changed, while still using a general "Authentication" key to avoid revealing that the email address was valid.
+    /// </summary>
+    /// <returns></returns>
+    private ErrorValidationResult<AuthenticationResponse> _createPasswordChangeRequiredError()
+    {
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "Authentication", new List<string> { "Password change is required. Please update your password!" } } } };
+    }
+
+    /// <summary>
+    /// Retrieves the required user info for authentication (application user id, email address, password hash). This is done in a single query for efficiency and to avoid loading unnecessary data. The password hash is needed to verify the provided password.
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    private async Task<RequiredUserInfoForAuthenticationResponse> _retrieveRequiredUserInfoForAuthentication(AuthenticationRequest req)
+    {
+        using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+        {
+            var query = dbContext.ApplicationUsers.AsQueryable().AsNoTracking();
+            var user = await query.Where(x => x.ApplicationId == req.ApplicationId && x.Email == req.Email && x.Active)
+                                  .Select(au => new { 
+                                    au.ApplicationUserId, 
+                                    au.Email, 
+                                    au.Password,
+                                    au.PasswordResetRequired, 
+                                    au.LastLockoutDate, 
+                                    au.LastPasswordChangeDate
+                                  })
+                                  .FirstOrDefaultAsync();
+
+             if (user == null)
+             {
+                 return null;
+             }
+
+             return new RequiredUserInfoForAuthenticationResponse { 
+                ApplicationUserId = user.ApplicationUserId, 
+                Email = user.Email, 
+                PasswordHash = user.Password, 
+                PasswordResetRequired = user.PasswordResetRequired, 
+                LastLockoutDate = user.LastLockoutDate, 
+                LastPasswordChangeDate = user.LastPasswordChangeDate
+            };
+        }
+    }
+
+    /// <summary>
+    /// Validates the authentication request using FluentValidation, and also checks if the provided application id exists. Returns an ErrorValidationResult containing any validation errors. If there are no validation errors, the Errors dictionary will be empty. This method is used to ensure that the authentication request is valid before attempting to authenticate the user.
+    /// </summary>
+    /// <param name="req"></param>
+    /// <param name="applicationLogic"></param>
+    /// <returns></returns>
     private async Task<ErrorValidationResult<AuthenticationResponse>> _validateAuthenticationRequest(AuthenticationRequest req,  IApplicationLogic applicationLogic)
     {
         ValidationResult result = await _authenticationRequestValidator.ValidateAsync(req);
@@ -64,7 +195,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         if (errorValidationResult.Errors.Count == 0)
         {
             // Validate Application exists
-            var applicationIdCheck = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet { CurrentUser = req.EmailAddress});
+            var applicationIdCheck = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet { CurrentUser = req.Email});
                 
             if (applicationIdCheck.Errors.Count > 0 || applicationIdCheck.Response == null)
             {
@@ -75,6 +206,59 @@ public class AuthenticationLogic : IAuthenticationLogic
         return errorValidationResult;
     }
 
+    /// <summary>
+    /// Increments the failed password attempt count for the application user. If the failed password attempt count exceeds the configured maximum, also sets the last lockout date to the current date and time to indicate that the user is locked out. Returns the updated failed password attempt count after incrementing. This method is used to track failed login attempts and lock out users who exceed the maximum allowed attempts to help prevent brute force attacks.
+    /// </summary>
+    /// <param name="applicationUserId"></param>
+    /// <returns></returns>
+    private async Task<short> _updateFailedPasswordAttemptLogic(int applicationUserId)
+    {
+        using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+        {
+            var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
+
+            if (entity != null)
+            {
+                entity.FailedPasswordAttemptCount = (short)(entity.FailedPasswordAttemptCount + 1);
+
+                if (entity.FailedPasswordAttemptCount >= _maxFailedPasswordAttemptCount)
+                {
+                    entity.LastLockoutDate = CommonUtilities.GetDateTimeUtcNow();
+                }
+
+                await dbContext.SaveChangesAsync();
+                return (short)entity.FailedPasswordAttemptCount;
+            }
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Updates the application user's last login date to the current date and time, and resets the failed password attempt count to 0 on successful login.
+    /// </summary>
+    /// <param name="applicationUserId"></param>
+    /// <returns></returns>
+    private async Task _updateApplicationUserOnSuccessfulLogin(int applicationUserId)
+    {
+        using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+        {
+            var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
+
+            if (entity != null)
+            {
+                entity.LastLoginDate = CommonUtilities.GetDateTimeUtcNow();
+                entity.FailedPasswordAttemptCount = 0; //reset failed password attempt count on successful login
+
+                await dbContext.SaveChangesAsync();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Generates a JSON Web Token (JWT) for the authenticated user. The token includes claims, issuer, audience, and expiration information, and is signed using the configured signing key.
+    /// </summary>
+    /// <returns>A JWT as a string.</returns>
     private string _generateJwtToken()
     {
         var jwtConfig = _jwtConfigMonitor.CurrentValue;
@@ -91,4 +275,18 @@ public class AuthenticationLogic : IAuthenticationLogic
 
         return new JwtSecurityTokenHandler().WriteToken(tokeOptions);
     }
+
+    private record RequiredUserInfoForAuthenticationResponse
+    {
+        public int ApplicationUserId { get; set; }
+        public string Email { get; set; }
+        public string PasswordHash { get; set; }
+        public DateTime? LastLockoutDate { get; set; }
+        public DateTime? LastPasswordChangeDate { get; set; }
+        public bool PasswordResetRequired { get; set; }
+    }
+
+    #endregion
+
+    
 }

@@ -2,6 +2,7 @@ namespace IntegrationTests.Security.Shared.Utilities.Contracts;
 
 public interface ISecurityTestUtilitiesManager
 {
+    public IAuthenticationUtilities Authentication { get; }
     public IApplicationUtilities Application { get; }
     public IApplicationUserUtilities ApplicationUser { get; }
     public IApplicationUserPermissionUtilities ApplicationUserPermission { get; }

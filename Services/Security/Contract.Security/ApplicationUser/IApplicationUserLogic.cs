@@ -13,5 +13,7 @@ namespace Contract.Security.ApplicationUser
         public Task<ErrorValidationResult<ApplicationUserDto>> Insert(InsertUpdateApplicationUserRequest req, IApplicationLogic applicationLogic);
         public Task<ErrorValidationResult<ApplicationUserDto>> Update(int applicationUserId, InsertUpdateApplicationUserRequest req, IApplicationLogic applicationLogic);
         public Task<ErrorValidationResult> Delete(int applicationUserId);
+        public Task<ErrorValidationResult<ResetPasswordResponse>> ResetPassword(int applicationUserId);
+        public Task<ErrorValidationResult> ChangePassword(ChangePasswordRequest req);
     }
 }

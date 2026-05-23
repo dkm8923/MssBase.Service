@@ -15,6 +15,7 @@ public partial class ApplicationUser : AuditableEntity
     public DateTime? DateOfBirth { get; set; }
 
     public string? Password { get; set; }
+    public bool PasswordResetRequired { get; set; }
 
     public DateTime? LastLoginDate { get; set; }
 
