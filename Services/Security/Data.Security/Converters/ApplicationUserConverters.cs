@@ -74,11 +74,6 @@ namespace Data.Security.Converters
                 FirstName = source.FirstName,
                 LastName = source.LastName,
                 DateOfBirth = source.DateOfBirth,
-                //Password = source.Password,
-                //LastLoginDate = source.LastLoginDate,
-                //LastPasswordChangeDate = source.LastPasswordChangeDate,
-                //LastLockoutDate = source.LastLockoutDate,
-                //FailedPasswordAttemptCount = source.FailedPasswordAttemptCount,
                 ApplicationId = source.ApplicationId
             };
 
@@ -102,11 +97,6 @@ namespace Data.Security.Converters
             entity.FirstName = source.FirstName;
             entity.LastName = source.LastName;
             entity.DateOfBirth = source.DateOfBirth;
-            entity.Password = source.Password;
-            entity.LastLoginDate = source.LastLoginDate;
-            entity.LastPasswordChangeDate = source.LastPasswordChangeDate;
-            entity.LastLockoutDate = source.LastLockoutDate;
-            entity.FailedPasswordAttemptCount = source.FailedPasswordAttemptCount;
             entity.ApplicationId = source.ApplicationId;
             entity.UpdatedBy = source.CurrentUser;
             entity.UpdatedOn = CommonUtilities.GetDateTimeUtcNow();

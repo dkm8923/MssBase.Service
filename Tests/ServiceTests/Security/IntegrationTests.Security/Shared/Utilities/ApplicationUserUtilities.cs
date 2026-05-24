@@ -28,11 +28,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
             FirstName = req.FirstName,
             LastName = req.LastName,
             DateOfBirth = req.DateOfBirth,
-            Password = req.Password,
-            LastLoginDate = req.LastLoginDate,
-            LastPasswordChangeDate = req.LastPasswordChangeDate,
-            LastLockoutDate = req.LastLockoutDate,
-            FailedPasswordAttemptCount = req.FailedPasswordAttemptCount,
             Active = req.Active,
             ApplicationId = req.ApplicationId,
             CurrentUser = TestConstants.CurrentUser
@@ -46,7 +41,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
             Email = LogicTestUtilities.GenerateRandomString(120) + "@test.com",
             FirstName = LogicTestUtilities.GenerateRandomString(65),
             LastName = LogicTestUtilities.GenerateRandomString(65),
-            Password = LogicTestUtilities.GenerateRandomString(65),
             Active = true,
             ApplicationId = 1,
             CurrentUser = LogicTestUtilities.GenerateRandomString(65)
@@ -60,7 +54,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
             Email = LogicTestUtilities.GenerateRandomString(64) + "@test.com",
             FirstName = LogicTestUtilities.GenerateRandomString(32),
             LastName = LogicTestUtilities.GenerateRandomString(32),
-            Password = LogicTestUtilities.GenerateRandomString(64),
             Active = active,
             ApplicationId = applicationId,
             CurrentUser = TestConstants.CurrentUser
@@ -136,7 +129,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
             { "Email", new List<string> { "Email cannot exceed 128 characters!" } },
             { "FirstName", new List<string> { "FirstName cannot exceed 64 characters!" } },
             { "LastName", new List<string> { "LastName cannot exceed 64 characters!" } },
-            { "Password", new List<string> { "Password cannot exceed 64 characters!" } },
             { "CurrentUser", new List<string> { "CurrentUser cannot exceed 64 characters!" } }
         };
     }

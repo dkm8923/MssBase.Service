@@ -82,11 +82,11 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         
         //Create Application usrs
         var applicationUsersToCreate = new List<InsertUpdateApplicationUserRequest>();
-        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "dmauk@echohealthinc.com", FirstName = "Daniel", LastName = "Mauk", DateOfBirth = new DateTime(1989, 6, 15), Password = "P@ssw0rd1!", LastLoginDate = DateTime.UtcNow.AddDays(-1), LastPasswordChangeDate = DateTime.UtcNow.AddMonths(-2), LastLockoutDate = null, FailedPasswordAttemptCount = 0 });
-        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "rthompson@metrohealth.org", FirstName = "Rachel", LastName = "Thompson", DateOfBirth = new DateTime(1987, 12, 04), Password = "P@ssw0rd2!", LastLoginDate = DateTime.UtcNow.AddDays(-1), LastPasswordChangeDate = DateTime.UtcNow.AddMonths(-2), LastLockoutDate = null, FailedPasswordAttemptCount = 0 });
-        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "PawPatrolOverEverything@gmail.com", FirstName = "Laura", LastName = "Mauk", DateOfBirth = new DateTime(2019, 9, 2), Password = "P@ssw0rd3!", LastLoginDate = DateTime.UtcNow.AddDays(-1), LastPasswordChangeDate = DateTime.UtcNow.AddMonths(-2), LastLockoutDate = null, FailedPasswordAttemptCount = 0 });
-        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "BigTruckPup@yahoo.com", FirstName = "Cameron", LastName = "Mauk", DateOfBirth = new DateTime(2022, 5, 19), Password = "P@ssw0rd4!", LastLoginDate = DateTime.UtcNow.AddDays(-1), LastPasswordChangeDate = DateTime.UtcNow.AddMonths(-2), LastLockoutDate = null, FailedPasswordAttemptCount = 0 });
-        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "SweetWilliam@aol.com", FirstName = "William", LastName = "Mauk", DateOfBirth = new DateTime(2024, 12, 15), Password = "P@ssw0rd5!", LastLoginDate = DateTime.UtcNow.AddDays(-1), LastPasswordChangeDate = DateTime.UtcNow.AddMonths(-2), LastLockoutDate = null, FailedPasswordAttemptCount = 0 });
+        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "dmauk@echohealthinc.com", FirstName = "Daniel", LastName = "Mauk", DateOfBirth = new DateTime(1989, 6, 15) });
+        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "rthompson@metrohealth.org", FirstName = "Rachel", LastName = "Thompson", DateOfBirth = new DateTime(1987, 12, 04) });
+        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "PawPatrolOverEverything@gmail.com", FirstName = "Laura", LastName = "Mauk", DateOfBirth = new DateTime(2019, 9, 2) });
+        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "BigTruckPup@yahoo.com", FirstName = "Cameron", LastName = "Mauk", DateOfBirth = new DateTime(2022, 5, 19) });
+        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "SweetWilliam@aol.com", FirstName = "William", LastName = "Mauk", DateOfBirth = new DateTime(2024, 12, 15) });
         
         var insertedAppUsers = new List<ApplicationUserDto>();
         foreach (var applicationUser in applicationUsersToCreate)
@@ -278,46 +278,46 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         var commissionCalculatorAppId = applications.FirstOrDefault(x => x.Name == "Commission Calculator")?.ApplicationId;
         if (commissionCalculatorAppId != null)
         {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)commissionCalculatorAppId, Email = "alice.johnson@test.com", FirstName = "Alice", LastName = "Johnson", DateOfBirth = new DateTime(1990, 3, 15), Password = "P@ssw0rd1!", LastLoginDate = DateTime.UtcNow.AddDays(-1), LastPasswordChangeDate = DateTime.UtcNow.AddMonths(-2), LastLockoutDate = null, FailedPasswordAttemptCount = 0 });
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)commissionCalculatorAppId, Email = "bob.smith@test.com", FirstName = "Bob", LastName = "Smith", DateOfBirth = new DateTime(1985, 7, 22), Password = "P@ssw0rd2!", LastLoginDate = DateTime.UtcNow.AddDays(-3), LastPasswordChangeDate = DateTime.UtcNow.AddMonths(-1), LastLockoutDate = null, FailedPasswordAttemptCount = 0 });
+            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)commissionCalculatorAppId, Email = "alice.johnson@test.com", FirstName = "Alice", LastName = "Johnson", DateOfBirth = new DateTime(1990, 3, 15) });
+            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)commissionCalculatorAppId, Email = "bob.smith@test.com", FirstName = "Bob", LastName = "Smith", DateOfBirth = new DateTime(1985, 7, 22) });
         }
 
         //Payroll Processing Test Application
         var payrollProcessingAppId = applications.FirstOrDefault(x => x.Name == "Payroll Processing")?.ApplicationId;
         if (payrollProcessingAppId != null)
         {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)payrollProcessingAppId, Email = "carol.white@test.com", FirstName = "Carol", LastName = "White", DateOfBirth = new DateTime(1992, 11, 5), Password = "P@ssw0rd3!", LastLoginDate = DateTime.UtcNow.AddHours(-5), LastPasswordChangeDate = DateTime.UtcNow.AddMonths(-3), LastLockoutDate = null, FailedPasswordAttemptCount = 0 });
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = false, ApplicationId = (int)payrollProcessingAppId, Email = "dan.brown@test.com", FirstName = "Dan", LastName = "Brown", DateOfBirth = new DateTime(1978, 4, 30), Password = "P@ssw0rd4!", LastLoginDate = DateTime.UtcNow.AddDays(-30), LastPasswordChangeDate = DateTime.UtcNow.AddMonths(-6), LastLockoutDate = DateTime.UtcNow.AddDays(-30), FailedPasswordAttemptCount = 5 });
+            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)payrollProcessingAppId, Email = "carol.white@test.com", FirstName = "Carol", LastName = "White", DateOfBirth = new DateTime(1992, 11, 5) });
+            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = false, ApplicationId = (int)payrollProcessingAppId, Email = "dan.brown@test.com", FirstName = "Dan", LastName = "Brown", DateOfBirth = new DateTime(1978, 4, 30) });
         }
 
         //Invoice Manager Test Application
         var invoiceManagerAppId = applications.FirstOrDefault(x => x.Name == "Invoice Manager")?.ApplicationId;
         if (invoiceManagerAppId != null)
         {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)invoiceManagerAppId, Email = "eve.davis@test.com", FirstName = "Eve", LastName = "Davis", DateOfBirth = new DateTime(1995, 9, 18), Password = "P@ssw0rd5!", LastLoginDate = DateTime.UtcNow.AddDays(-2), LastPasswordChangeDate = DateTime.UtcNow.AddMonths(-1), LastLockoutDate = null, FailedPasswordAttemptCount = 1 });
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)invoiceManagerAppId, Email = "frank.miller@test.com", FirstName = "Frank", LastName = "Miller", DateOfBirth = null, Password = "P@ssw0rd6!", LastLoginDate = null, LastPasswordChangeDate = null, LastLockoutDate = null, FailedPasswordAttemptCount = 0 });
+            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)invoiceManagerAppId, Email = "eve.davis@test.com", FirstName = "Eve", LastName = "Davis", DateOfBirth = new DateTime(1995, 9, 18) });
+            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)invoiceManagerAppId, Email = "frank.miller@test.com", FirstName = "Frank", LastName = "Miller", DateOfBirth = null });
         }
 
         //Analytics Dashboard Test Application
         var analyticsDashboardAppId = applications.FirstOrDefault(x => x.Name == "Analytics Dashboard")?.ApplicationId;
         if (analyticsDashboardAppId != null)
         {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)analyticsDashboardAppId, Email = "grace.wilson@test.com", FirstName = "Grace", LastName = "Wilson", DateOfBirth = new DateTime(1988, 1, 25), Password = "P@ssw0rd7!", LastLoginDate = DateTime.UtcNow.AddHours(-1), LastPasswordChangeDate = DateTime.UtcNow.AddDays(-10), LastLockoutDate = null, FailedPasswordAttemptCount = 0 });
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = false, ApplicationId = (int)analyticsDashboardAppId, Email = "henry.moore@test.com", FirstName = "Henry", LastName = "Moore", DateOfBirth = new DateTime(1970, 6, 12), Password = null, LastLoginDate = DateTime.UtcNow.AddDays(-90), LastPasswordChangeDate = DateTime.UtcNow.AddYears(-1), LastLockoutDate = DateTime.UtcNow.AddDays(-60), FailedPasswordAttemptCount = 3 });
+            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)analyticsDashboardAppId, Email = "grace.wilson@test.com", FirstName = "Grace", LastName = "Wilson", DateOfBirth = new DateTime(1988, 1, 25) });
+            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = false, ApplicationId = (int)analyticsDashboardAppId, Email = "henry.moore@test.com", FirstName = "Henry", LastName = "Moore", DateOfBirth = new DateTime(1970, 6, 12) });
         }
 
         //User Access Portal Test Application
         var userAccessPortalAppId = applications.FirstOrDefault(x => x.Name == "User Access Portal")?.ApplicationId;
         if (userAccessPortalAppId != null)
         {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)userAccessPortalAppId, Email = "irene.taylor@test.com", FirstName = "Irene", LastName = "Taylor", DateOfBirth = new DateTime(1993, 8, 8), Password = "P@ssw0rd9!", LastLoginDate = DateTime.UtcNow, LastPasswordChangeDate = DateTime.UtcNow.AddDays(-5), LastLockoutDate = null, FailedPasswordAttemptCount = 0 });
+            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)userAccessPortalAppId, Email = "irene.taylor@test.com", FirstName = "Irene", LastName = "Taylor", DateOfBirth = new DateTime(1993, 8, 8) });
         }
 
         //Audit Log Viewer Test Application
         var auditLogViewerAppId = applications.FirstOrDefault(x => x.Name == "Audit Log Viewer")?.ApplicationId;
         if (auditLogViewerAppId != null)
         {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)auditLogViewerAppId, Email = "jack.anderson@test.com", FirstName = null, LastName = null, DateOfBirth = null, Password = "P@ssw0rd10!", LastLoginDate = DateTime.UtcNow.AddDays(-7), LastPasswordChangeDate = DateTime.UtcNow.AddMonths(-4), LastLockoutDate = null, FailedPasswordAttemptCount = 2 });
+            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)auditLogViewerAppId, Email = "jack.anderson@test.com", FirstName = null, LastName = null, DateOfBirth = null });
         }
 
         foreach (var applicationUser in applicationUsersToCreate)

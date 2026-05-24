@@ -185,7 +185,6 @@ namespace IntegrationTests.Security.Logic
                 FirstName = "TestFirstName1",
                 LastName = "TestLastName1",
                 DateOfBirth = new DateTime(1990, 1, 1),
-                Password = "TestPassword1!",
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic);
@@ -197,7 +196,6 @@ namespace IntegrationTests.Security.Logic
                 FirstName = "TestFirstName2",
                 LastName = "TestLastName2",
                 DateOfBirth = new DateTime(1991, 2, 2),
-                Password = "TestPassword2!",
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic);
@@ -209,7 +207,6 @@ namespace IntegrationTests.Security.Logic
                 FirstName = "TestFirstName2",
                 LastName = "TestLastName2",
                 DateOfBirth = new DateTime(1991, 3, 2),
-                Password = "TestPassword2!",
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, _applicationLogic);
