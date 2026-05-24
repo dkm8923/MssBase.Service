@@ -491,11 +491,12 @@ namespace IntegrationTests.Security.Logic
             //change password to ensure PasswordResetRequired is false before reset password test
             await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
                 ApplicationUserId = testUser.Response.ApplicationUserId, 
-                NewPassword = TestConstants.DefaultNewPassword 
+                NewPassword = TestConstants.DefaultNewPassword,
+                CurrentUser = TestConstants.CurrentUser 
             });
 
             var testUserAfterPasswordChange = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet());
-
+            
             // Act
             var resetPasswordResult = await _applicationUserLogic.ResetPassword(testUser.Response.ApplicationUserId);
             var testUserAfterPasswordReset = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet());
