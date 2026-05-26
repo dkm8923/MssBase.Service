@@ -22,6 +22,7 @@ namespace Dto.Security.ApplicationUser
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IEnumerable<ApplicationUserPermissionDto> ApplicationUserPermissions { get; set; }
+        
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IEnumerable<ApplicationUserRoleDto> ApplicationUserRoles { get; set; }
     }

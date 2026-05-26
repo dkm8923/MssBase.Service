@@ -8,14 +8,18 @@ using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities.Contracts.Logic;
 using IntegrationTests.Shared.Utilities;
 using Shared.Logic.Common;
+using Data.Security.Models;
 
 namespace IntegrationTests.Security.Logic
 {
     [Collection("SecurityIntegrationTests")]
     public class ApplicationUserLogicTests : SecurityTestBase,
                                              IDefaultLogicTestsGetAll,
+                                             IDefaultLogicTestsGetAllIncludeRelated,
                                              IDefaultLogicTestsGetById,
-                                             IDefaultLogicTestsFilter, 
+                                             IDefaultLogicTestsGetByIdIncludeRelated,
+                                             IDefaultLogicTestsFilter,
+                                             IDefaultLogicTestsFilterIncludeRelated,   
                                              IDefaultLogicTestsInsert, 
                                              IDefaultLogicTestsUpdate,
                                              IDefaultLogicTestsDelete
@@ -59,6 +63,61 @@ namespace IntegrationTests.Security.Logic
 
             // Assert
             result.Response.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+
+            // Act
+            var result = await _applicationUserLogic.GetAll(new BaseLogicGet { IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().HaveCount(1);
+
+            foreach (var applicationUser in result.Response)
+            {
+                _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: false);
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+
+            // Act
+            var result = await _applicationUserLogic.GetAll(new BaseLogicGet { IncludeRelated = true, IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().HaveCount(2);
+
+            foreach (var applicationUser in result.Response)
+            {
+                _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: true);
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+
+            // Act
+            var result = await _applicationUserLogic.GetAll(new BaseLogicGet());
+
+            // Assert
+            result.Response.Should().HaveCount(1);
+
+            foreach (var applicationUser in result.Response)
+            {
+                applicationUser.ApplicationUserPermissions.Should().BeNull();
+                applicationUser.ApplicationUserRoles.Should().BeNull();
+            }
         }
 
         #endregion
@@ -105,6 +164,56 @@ namespace IntegrationTests.Security.Logic
 
             // Assert
             result.Response.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();  
+
+            // Act
+            var result = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet { IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeTrue();
+
+             _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(result.Response, includeInactive: false); 
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUsers.FirstOrDefault();  
+
+            // Act
+            var result = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet { IncludeRelated = true, IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeFalse();
+
+            _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(result.Response, includeInactive: true); 
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();  
+
+            // Act
+            var result = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet());
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.ApplicationUserPermissions.Should().BeNull();
+            result.Response.ApplicationUserRoles.Should().BeNull();
         }
 
         #endregion
@@ -247,6 +356,72 @@ namespace IntegrationTests.Security.Logic
             filterLastNameResult.Response.Should().HaveCount(1);
             filterDateOfBirthResult.Response.Should().HaveCount(1);
             filterApplicationIdResult.Response.Should().HaveCount(7);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+
+            var postReq = new FilterApplicationUserLogicRequest { IncludeRelated = true };
+
+            // Act
+            var result = await _applicationUserLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+            
+            foreach (var applicationUser in result.Response)
+            {
+                applicationUser.Active.Should().BeTrue();
+                
+                _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: false); 
+            }
+        }
+        
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+
+            var postReq = new FilterApplicationUserLogicRequest { IncludeRelated = true, IncludeInactive = true };
+
+            // Act
+            var result = await _applicationUserLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(2);
+            
+            foreach (var applicationUser in result.Response)
+            {
+                _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: true);
+            }
+        }
+        
+        [Fact]
+        public async Task Default_Filter_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+
+            var postReq = new FilterApplicationUserLogicRequest();
+
+            // Act
+            var result = await _applicationUserLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(5);
+            
+            foreach (var applicationUser in result.Response)
+            {
+                applicationUser.ApplicationUserPermissions.Should().BeNull();
+                applicationUser.ApplicationUserRoles.Should().BeNull();
+            }
         }
 
         #endregion

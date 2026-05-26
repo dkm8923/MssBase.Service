@@ -12,6 +12,7 @@ public interface IApplicationUserUtilities
     public InsertUpdateApplicationUserRequest CreateInsertUpdateRequestWithRandomValues(int applicationId, bool active = true);
     public InsertUpdateApplicationUserRequest ConvertApplicationUserDtoToInsertUpdateRequest(ApplicationUserDto req);
     public void VerifyTestRecordValuesMatch(ApplicationUserDto recordA, ApplicationUserDto recordB);
+    public void VerifyIncludeRelatedDataOnApplicationUser(ApplicationUserDto applicationUser, bool includeInactive = false);
     public Dictionary<string, List<string>> GetExpectedRecordDoesNotExistErrors();
     public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors();
     public Dictionary<string, List<string>> GetExpectedRequiredFieldErrors();

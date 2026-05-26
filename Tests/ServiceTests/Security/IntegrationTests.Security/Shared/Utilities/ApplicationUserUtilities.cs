@@ -207,4 +207,45 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
         recordA.CreatedBy.Should().Be(recordB.CreatedBy);
         recordA.UpdatedBy.Should().Be(recordB.UpdatedBy);
     }
+
+    /// <summary>
+    /// Verifies that the related data is included and valid on the application user record based on the specified parameters.
+    /// </summary>
+    /// <param name="applicationUser">The application user record to verify.</param>
+    /// <param name="includeInactive">Indicates whether inactive related data should be included in the verification.</param>
+    public void VerifyIncludeRelatedDataOnApplicationUser(ApplicationUserDto applicationUser, bool includeInactive = false)
+    {
+        applicationUser.ApplicationUserPermissions.Should().NotBeNull();
+        applicationUser.ApplicationUserPermissions.Count().Should().Be(5);
+            
+        foreach (var permission in applicationUser.ApplicationUserPermissions)
+        {
+            permission.Permission.Should().NotBeNull();
+            
+            if (!includeInactive)
+            {
+                permission.Permission.Active.Should().BeTrue();
+            }
+        }
+
+        applicationUser.ApplicationUserRoles.Should().NotBeNull();
+        applicationUser.ApplicationUserRoles.Count().Should().Be(1);
+
+        foreach (var applicationUserRole in applicationUser.ApplicationUserRoles)
+        {
+            applicationUserRole.Role.Should().NotBeNull();
+            applicationUserRole.Role.RolePermissions.Should().NotBeNull();
+            applicationUserRole.Role.RolePermissions.Count().Should().Be(5);
+
+            foreach (var rolePermission in applicationUserRole.Role.RolePermissions)
+            {
+                rolePermission.Permission.Should().NotBeNull();
+                
+                if (!includeInactive)
+                {
+                    rolePermission.Permission.Active.Should().BeTrue();
+                }
+            }
+        }
+    } 
 }

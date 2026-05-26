@@ -15,8 +15,11 @@ namespace IntegrationTests.Security.Controller
     public class ApplicationUserControllerTests : SecurityTestBase, 
                                                   IClassFixture<WebApplicationFactory<Program>>,
                                                   IDefaultControllerTestsGetAll,
+                                                  IDefaultControllerTestsGetAllIncludeRelated,
                                                   IDefaultControllerTestsGetById,
+                                                  IDefaultControllerTestsGetByIdIncludeRelated,
                                                   IDefaultControllerTestsFilter,
+                                                  IDefaultControllerTestsFilterIncludeRelated,  
                                                   IDefaultControllerTestsInsert,
                                                   IDefaultControllerTestsUpdate,
                                                   IDefaultControllerTestsDelete
@@ -59,6 +62,64 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true));
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+
+            foreach (var applicationUser in result.Response)
+            {
+                _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: false);
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true) + "&" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(2);
+
+            foreach (var applicationUser in result.Response)
+            {
+                _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: true);
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.Role.Base + "?");
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+
+            foreach (var applicationUser in result.Response)
+            {
+                applicationUser.ApplicationUserPermissions.Should().BeNull();
+                applicationUser.ApplicationUserRoles.Should().BeNull();
+            }
+        }
+
+        [Fact]
         public async Task Default_GetAll_Should_Return_Zero_Records()
         {
             // Arrange
@@ -70,52 +131,6 @@ namespace IntegrationTests.Security.Controller
             // Assert
             result.Errors.Should().HaveCount(0);
             result.Response.Should().HaveCount(0);
-        }
-
-        [Fact]
-        public async Task Default_GetAll_Should_Return_Related_Data()
-        {
-            // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1);
-            var permissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            
-            foreach (var permission in permissions)
-            {
-                await _securityTestUtilities.ApplicationUserPermission.CreateActiveTestRecords(application.ApplicationId, applicationUser.FirstOrDefault().ApplicationUserId, permission.PermissionId, 1);
-            }
-
-            // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true));
-
-            // Assert
-            result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(1);
-            result.Response.FirstOrDefault().ApplicationUserPermissions.Should().HaveCount(5);
-        }
-
-        [Fact]
-        public async Task Default_GetAll_Should_Not_Return_Related_Data()
-        {
-            // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1);
-            var permissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            
-            foreach (var permission in permissions)
-            {
-                await _securityTestUtilities.ApplicationUserPermission.CreateActiveTestRecords(application.ApplicationId, applicationUser.FirstOrDefault().ApplicationUserId, permission.PermissionId, 1);
-            }
-
-            // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(false));
-
-            // Assert
-            result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(1);
-            result.Response.FirstOrDefault().ApplicationUserPermissions.Should().HaveCount(0);
         }
 
         #endregion
@@ -166,6 +181,55 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
+        public async Task Default_GetById_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserDto>(_client, ApiEndPoints.Security.ApplicationUser.Base, testRecord.ApplicationUserId, new BaseServiceGet { IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeTrue();
+
+            _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(result.Response, includeInactive: false);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUsers.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserDto>(_client, ApiEndPoints.Security.ApplicationUser.Base, testRecord.ApplicationUserId, new BaseServiceGet { IncludeRelated = true, IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeFalse();
+            _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(result.Response, includeInactive: true);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserDto>(_client, ApiEndPoints.Security.ApplicationUser.Base, testRecord.ApplicationUserId, new BaseServiceGet { IncludeRelated = false });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.ApplicationUserPermissions.Should().BeNull();
+            result.Response.ApplicationUserRoles.Should().BeNull();
+        }
+
+        [Fact]
         public async Task Default_GetById_Should_Return_NotFound()
         {
             // Arrange
@@ -193,58 +257,6 @@ namespace IntegrationTests.Security.Controller
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             content.Errors.Count.Should().Be(1);
-        }
-
-        [Fact]
-        public async Task Default_GetById_Should_Return_Related_Data()
-        {
-            // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1);
-            var permissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            
-            foreach (var permission in permissions)
-            {
-                await _securityTestUtilities.ApplicationUserPermission.CreateActiveTestRecords(application.ApplicationId, applicationUser.FirstOrDefault().ApplicationUserId, permission.PermissionId, 1);
-            }
-
-            // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserDto>(_client, 
-                                                                                                            ApiEndPoints.Security.ApplicationUser.Base, 
-                                                                                                            applicationUser.FirstOrDefault().ApplicationUserId, 
-                                                                                                            new BaseServiceGet { IncludeRelated = true });
-            
-            // Assert
-            result.Errors.Should().HaveCount(0);
-            result.Response.Should().NotBeNull();
-            result.Response.ApplicationUserPermissions.Should().HaveCount(5);
-        }
-
-        [Fact]
-        public async Task Default_GetById_Should_Not_Return_Related_Data()
-        {
-            // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1);
-            var permissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            
-            foreach (var permission in permissions)
-            {
-                await _securityTestUtilities.ApplicationUserPermission.CreateActiveTestRecords(application.ApplicationId, applicationUser.FirstOrDefault().ApplicationUserId, permission.PermissionId, 1);
-            }
-
-            // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserDto>(_client, 
-                                                                                                            ApiEndPoints.Security.ApplicationUser.Base, 
-                                                                                                            applicationUser.FirstOrDefault().ApplicationUserId, 
-                                                                                                            new BaseServiceGet { IncludeRelated = false });
-            
-            // Assert
-            result.Errors.Should().HaveCount(0);
-            result.Response.Should().NotBeNull();
-            result.Response.ApplicationUserPermissions.Should().HaveCount(0);
         }
 
         #endregion
@@ -317,6 +329,73 @@ namespace IntegrationTests.Security.Controller
         }
         
         [Fact]
+        public async Task Default_Filter_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var applicationUserId = arrangeTestDataResponse.ActiveApplicationUsers[0].ApplicationUserId;
+            
+            var postReq = new FilterApplicationUserServiceRequest { ApplicationUserIds = new List<int> { applicationUserId }, IncludeRelated = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+
+            foreach (var applicationUser in result.Response)
+            {
+                _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: false);
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var applicationUserId = arrangeTestDataResponse.InactiveApplicationUsers[0].ApplicationUserId;
+            
+            var postReq = new FilterApplicationUserServiceRequest { ApplicationUserIds = new List<int> { applicationUserId }, IncludeRelated = true, IncludeInactive = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+
+            foreach (var applicationUser in result.Response)
+            {
+                _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: true);
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var applicationUserId = arrangeTestDataResponse.ActiveApplicationUsers[0].ApplicationUserId;
+            
+            var postReq = new FilterApplicationUserServiceRequest { ApplicationUserIds = new List<int> { applicationUserId } };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base, postReq);
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+
+            foreach (var applicationUser in result.Response)
+            {
+                applicationUser.ApplicationUserPermissions.Should().BeNull();
+                applicationUser.ApplicationUserRoles.Should().BeNull();
+            }
+        }
+
+        [Fact]
         public async Task Default_Filter_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
@@ -341,54 +420,6 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        }
-
-        [Fact]
-        public async Task Default_Filter_Should_Return_Related_Data()
-        {
-            // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1);
-            var permissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            
-            foreach (var permission in permissions)
-            {
-                await _securityTestUtilities.ApplicationUserPermission.CreateActiveTestRecords(application.ApplicationId, applicationUser.FirstOrDefault().ApplicationUserId, permission.PermissionId, 1);
-            }
-
-            var postReq = new FilterApplicationUserServiceRequest { IncludeRelated = true };
-
-            // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base, postReq);
-
-            //Assert
-            result.Response.Should().HaveCountGreaterThan(0);
-            result.Response.FirstOrDefault().ApplicationUserPermissions.Should().HaveCountGreaterThan(0);
-        }
-
-        [Fact]
-        public async Task Default_Filter_Should_Not_Return_Related_Data()
-        {
-            // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1);
-            var permissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-            
-            foreach (var permission in permissions)
-            {
-                await _securityTestUtilities.ApplicationUserPermission.CreateActiveTestRecords(application.ApplicationId, applicationUser.FirstOrDefault().ApplicationUserId, permission.PermissionId, 1);
-            }
-
-            var postReq = new FilterApplicationUserServiceRequest { IncludeRelated = false };
-
-            // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(_client, ApiEndPoints.Security.ApplicationUser.Base, postReq);
-
-            //Assert
-            result.Response.Should().HaveCountGreaterThan(0);
-            result.Response.FirstOrDefault().ApplicationUserPermissions.Should().HaveCount(0);
         }
 
         #endregion

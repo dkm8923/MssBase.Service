@@ -124,6 +124,61 @@ public class SecurityTestBase
         return ret;
     }
 
+    protected async Task<SecurityTestData> ArrangeApplicationUserTestDataWithRelatedData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+        
+        ret.ActiveApplications.Add(application);
+
+        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1);
+        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, 1);
+
+        ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
+        ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId);
+
+        ret.ActiveRoles = await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1);
+        ret.InactiveRoles = await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId, 1);
+
+        //create role and user permissions with active permissions
+        foreach (var activePermission in ret.ActivePermissions)
+        {
+            foreach (var role in ret.ActiveRoles)
+            {
+                ret.ActiveRolePermissions.Add(await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, role.RoleId, activePermission.PermissionId));
+            }
+
+            ret.ActiveApplicationUserPermissions.Add(await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, ret.ActiveApplicationUsers.FirstOrDefault().ApplicationUserId, activePermission.PermissionId));
+        }
+
+        //create role and user permissions with inactive permissions
+        foreach (var inactivePermission in ret.InactivePermissions)
+        {
+            foreach (var role in ret.InactiveRoles)
+            {
+                ret.InactiveRolePermissions.Add(await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, role.RoleId, inactivePermission.PermissionId, false));
+            }
+
+            ret.InactiveApplicationUserPermissions.Add(await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, ret.InactiveApplicationUsers.FirstOrDefault().ApplicationUserId, inactivePermission.PermissionId, false));
+        }
+
+        //attach active role(s) to active user(s)
+        foreach (var activeRole in ret.ActiveRoles)
+        {
+            ret.ActiveApplicationUserRoles.Add(await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(application.ApplicationId, ret.ActiveApplicationUsers.FirstOrDefault().ApplicationUserId, activeRole.RoleId));
+        }
+
+        //attach inactive role(s) to inactive user(s)
+        foreach (var inactiveRole in ret.InactiveRoles)
+        {
+            ret.InactiveApplicationUserRoles.Add(await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(application.ApplicationId, ret.InactiveApplicationUsers.FirstOrDefault().ApplicationUserId, inactiveRole.RoleId, false));
+        }
+
+        return ret;
+    }
+
     protected async Task<SecurityTestData> ArrangePermissionTestData()
     {
         // Arrange
