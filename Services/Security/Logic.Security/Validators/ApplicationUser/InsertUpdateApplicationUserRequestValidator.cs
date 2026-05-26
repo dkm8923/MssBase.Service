@@ -33,11 +33,8 @@ public class InsertUpdateApplicationUserRequestValidator : AbstractValidator<Ins
         RuleFor(v => v.LastName)
             .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.LastName, 64));
 
-        RuleFor(v => v.ApplicationId)
-            .GreaterThan(0).WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationId));
-
-        RuleFor(v => v.CurrentUser)
-            .NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.CurrentUser))
-            .Length(1, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.CurrentUser, 64));
+        RuleFor(v => v.ApplicationId).ValidateApplicationIdIsRequired();
+            
+        RuleFor(v => v.CurrentUser).ValidateCurrentUser();
     }
 }

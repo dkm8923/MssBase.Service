@@ -1,5 +1,6 @@
 ﻿using Shared.Models;
 using FluentValidation.Results;
+using FluentValidation;
 
 namespace Shared.Logic.Validators
 {
@@ -72,6 +73,113 @@ namespace Shared.Logic.Validators
         public static string CreateInvalidEmailErrorMessage()
         {
             return $"Invalid email address!";
+        }
+
+        /// <summary>
+        /// Validate CurrentUser Max Length and NotEmpty. Default Values: FieldName = "CurrentUser", MaxLength = 64
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ruleBuilder"></param>
+        /// <param name="maxLength"></param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, string?> ValidateCurrentUser<T>(
+            this IRuleBuilder<T, string?> ruleBuilder,
+            int maxLength = 64
+        )
+        {
+            return ruleBuilder
+                .NotEmpty().WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.CurrentUser))
+                .Length(1, maxLength).WithMessage(CreateMaxLengthErrorMessage(EntityFieldNames.CurrentUser, maxLength));
+        }
+
+        /// <summary>
+        /// Validate ApplicationId is required and greater than 0. Default Value: FieldName = "ApplicationId"
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ruleBuilder"></param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, int> ValidateApplicationIdIsRequired<T>(this IRuleBuilder<T, int> ruleBuilder)
+        {
+            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationId));
+        }
+
+        /// <summary>
+        /// Validate ApplicationUserId is required and greater than 0. Default Value: FieldName = "ApplicationUserId"
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ruleBuilder"></param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, int> ValidateApplicationUserIdIsRequired<T>(this IRuleBuilder<T, int> ruleBuilder)
+        {
+            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationUserId));
+        }
+
+        /// <summary>
+        /// Validate RoleId is required and greater than 0. Default Value: FieldName = "RoleId"
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ruleBuilder"></param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, int> ValidateRoleIdIsRequired<T>(this IRuleBuilder<T, int> ruleBuilder)
+        {
+            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.RoleId));
+        }
+
+        /// <summary>
+        /// Validate PermissionId is required and greater than 0. Default Value: FieldName = "PermissionId"
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ruleBuilder"></param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, int> ValidatePermissionIdIsRequired<T>(this IRuleBuilder<T, int> ruleBuilder)
+        {
+            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.PermissionId));
+        }
+
+        /// <summary>
+        /// Validate Description Max Length. Default Value: FieldName = "Description", MaxLength = 256
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ruleBuilder"></param>
+        /// <param name="maxLength"></param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, string?> ValidateDescriptionMaxLength<T>(this IRuleBuilder<T, string?> ruleBuilder, int maxLength = 256)
+        {
+            return ruleBuilder.Length(0, maxLength).WithMessage(CreateMaxLengthErrorMessage(EntityFieldNames.Description, maxLength));
+        }
+
+        /// <summary>
+        /// Validate Name is populated
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ruleBuilder"></param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, string?> ValidateNameIsRequired<T>(this IRuleBuilder<T, string?> ruleBuilder)
+        {
+            return ruleBuilder.NotEmpty().WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.Name));
+        }
+
+        /// <summary>
+        /// Validate Name Max Length. Default Value: FieldName = "Name", MaxLength = 64
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ruleBuilder"></param>
+        /// <param name="maxLength"></param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, string?> ValidateNameMaxLength<T>(this IRuleBuilder<T, string?> ruleBuilder, int maxLength = 64)
+        {
+            return ruleBuilder.Length(0, maxLength).WithMessage(CreateMaxLengthErrorMessage(EntityFieldNames.Name, maxLength));
+        }
+
+        private static class EntityFieldNames
+        {
+            public const string Name = "Name";
+            public const string Description = "Description";
+            public const string CurrentUser = "CurrentUser";
+            public const string ApplicationId = "ApplicationId";
+            public const string ApplicationUserId = "ApplicationUserId";
+            public const string RoleId = "RoleId";
+            public const string PermissionId = "PermissionId";
         }
     }
 }
