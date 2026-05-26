@@ -16,6 +16,10 @@ using Microsoft.EntityFrameworkCore;
 using Contract.Security;
 using Shared.Logic.Common;
 using Dto.Security.ApplicationUser.Logic;
+using Dto.Security.ApplicationUser;
+using System.Text.Json;
+using Dto.Security.Application.Logic;
+using Dto.Security.Application;
 
 namespace Logic.Security.Logic;
 
@@ -48,13 +52,15 @@ public class AuthenticationLogic : IAuthenticationLogic
 
     public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic)
     {
-        var errorValidationResult = await _validateAuthenticationRequest(req, applicationLogic);
+        var applicationRes = await _retrieveApplicationInfoForAuthentication(req, applicationLogic);
+
+        var errorValidationResult = await _validateAuthenticationRequest(req, applicationRes);
         if (errorValidationResult.Errors.Count > 0)
         {
             return errorValidationResult;
         }
 
-        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(req);
+        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(req.Email, applicationRes.ApplicationId);
 
         if (userInfoRes is null)
         {
@@ -96,7 +102,11 @@ public class AuthenticationLogic : IAuthenticationLogic
         await _updateApplicationUserOnSuccessfulLogin(userInfoRes.ApplicationUserId);
 
         //generate JWT token and return
-        return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = _generateJwtToken() } };
+        var applicationUserWithRelatedData = await applicationUserLogic.GetById(userInfoRes.ApplicationUserId, new BaseLogicGet { CurrentUser = userInfoRes.Email, IncludeRelated = true });
+        
+        var authCredentials = _extractAuthorizationCredentialsFromApplicationUserResponse(applicationUserWithRelatedData.Response, applicationRes);
+
+        return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = _generateJwtToken(authCredentials) } };
     }
 
     // public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotUserName(string emailAddress, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic, CancellationToken cancellationToken = default)
@@ -145,16 +155,34 @@ public class AuthenticationLogic : IAuthenticationLogic
     }
 
     /// <summary>
+    /// Retrieves the application information for the authentication request based on the provided application name. This is used to validate that the application exists and to retrieve the application id needed for subsequent queries. If the application does not exist or there is an error during retrieval, this method returns null. This method is used as part of the authentication process to ensure that the authentication request is associated with a valid application in the system.
+    /// </summary>
+    /// <param name="req"></param>
+    /// <param name="applicationLogic"></param>
+    /// <returns></returns>
+    private async Task<ApplicationDto> _retrieveApplicationInfoForAuthentication(AuthenticationRequest req, IApplicationLogic applicationLogic)
+    {
+        var applicationRes = await applicationLogic.Filter(new FilterApplicationLogicRequest { Name = req.ApplicationName, CurrentUser = req.Email });
+
+        if (applicationRes.Errors.Count > 0 || applicationRes.Response == null || applicationRes.Response.Count() == 0)
+        {
+            return null;
+        }
+
+        return applicationRes.Response.FirstOrDefault();
+    }
+
+    /// <summary>
     /// Retrieves the required user info for authentication (application user id, email address, password hash). This is done in a single query for efficiency and to avoid loading unnecessary data. The password hash is needed to verify the provided password.
     /// </summary>
     /// <param name="req"></param>
     /// <returns></returns>
-    private async Task<RequiredUserInfoForAuthenticationResponse> _retrieveRequiredUserInfoForAuthentication(AuthenticationRequest req)
+    private async Task<RequiredUserInfoForAuthenticationResponse> _retrieveRequiredUserInfoForAuthentication(string email, int applicationId)
     {
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
             var query = dbContext.ApplicationUsers.AsQueryable().AsNoTracking();
-            var user = await query.Where(x => x.ApplicationId == req.ApplicationId && x.Email == req.Email && x.Active)
+            var user = await query.Where(x => x.ApplicationId == applicationId && x.Email == email && x.Active)
                                   .Select(au => new { 
                                     au.ApplicationUserId, 
                                     au.Email, 
@@ -185,9 +213,9 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// Validates the authentication request using FluentValidation, and also checks if the provided application id exists. Returns an ErrorValidationResult containing any validation errors. If there are no validation errors, the Errors dictionary will be empty. This method is used to ensure that the authentication request is valid before attempting to authenticate the user.
     /// </summary>
     /// <param name="req"></param>
-    /// <param name="applicationLogic"></param>
+    /// <param name="applicationRes"></param>
     /// <returns></returns>
-    private async Task<ErrorValidationResult<AuthenticationResponse>> _validateAuthenticationRequest(AuthenticationRequest req,  IApplicationLogic applicationLogic)
+    private async Task<ErrorValidationResult<AuthenticationResponse>> _validateAuthenticationRequest(AuthenticationRequest req,  ApplicationDto applicationRes)
     {
         ValidationResult result = await _authenticationRequestValidator.ValidateAsync(req);
         var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<AuthenticationResponse>(result);
@@ -195,11 +223,9 @@ public class AuthenticationLogic : IAuthenticationLogic
         if (errorValidationResult.Errors.Count == 0)
         {
             // Validate Application exists
-            var applicationIdCheck = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet { CurrentUser = req.Email});
-                
-            if (applicationIdCheck.Errors.Count > 0 || applicationIdCheck.Response == null)
+            if (applicationRes == null)
             {
-                errorValidationResult.Errors.Add("ApplicationId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+                errorValidationResult.Errors.Add("ApplicationName", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationName") });
             }
         }
 
@@ -255,25 +281,85 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
     }
     
+    private AuthorizationCredentialsResponse _extractAuthorizationCredentialsFromApplicationUserResponse(ApplicationUserDto applicationUser, ApplicationDto applicationRes)
+    {
+        var permissions = new List<string>();
+        var roles = new List<string>();
+        
+        if (applicationUser.ApplicationUserPermissions != null)
+        {
+            foreach (var aup in applicationUser.ApplicationUserPermissions)
+            {
+                permissions.Add(aup.Permission.Name);
+            }
+        }
+        
+        if (applicationUser.ApplicationUserRoles != null)
+        {
+            foreach (var aur in applicationUser.ApplicationUserRoles)
+            {
+                roles.Add(aur.Role.Name);
+
+                if (aur.Role.RolePermissions != null)
+                {
+                    foreach (var p in aur.Role.RolePermissions)
+                    {
+                        permissions.Add(p.Permission.Name);
+                    }
+                }
+            }
+        }
+        
+        permissions = permissions.Distinct().ToList();
+        roles = roles.Distinct().ToList();
+
+        return new AuthorizationCredentialsResponse
+        {
+            ApplicationName = applicationRes.Name,
+            Email = applicationUser.Email,
+            Permissions = permissions,
+            Roles = roles
+        };
+    }
+
     /// <summary>
     /// Generates a JSON Web Token (JWT) for the authenticated user. The token includes claims, issuer, audience, and expiration information, and is signed using the configured signing key.
     /// </summary>
     /// <returns>A JWT as a string.</returns>
-    private string _generateJwtToken()
+    private string _generateJwtToken(AuthorizationCredentialsResponse authCredentials)
     {
         var jwtConfig = _jwtConfigMonitor.CurrentValue;
+
+        var applications = new List<string> { authCredentials.ApplicationName };
+
+        var claims = new List<Claim>
+        {
+            // Keep them as separate arrays in the token payload
+            new("user", JsonSerializer.Serialize(new { email = authCredentials.Email }), JsonClaimValueTypes.Json),
+            new("applications", JsonSerializer.Serialize(applications ?? new List<string>()), JsonClaimValueTypes.JsonArray),
+            new("roles", JsonSerializer.Serialize(authCredentials.Roles ?? new List<string>()), JsonClaimValueTypes.JsonArray),
+            new("permissions", JsonSerializer.Serialize(authCredentials.Permissions ?? new List<string>()), JsonClaimValueTypes.JsonArray)
+        };
 
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.IssuerSigningKey));
         var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
         var tokeOptions = new JwtSecurityToken(
             issuer: jwtConfig.ValidIssuer,
             audience: jwtConfig.ValidAudience,
-            claims: new List<Claim>(),
+            claims: claims,
             expires: DateTime.Now.AddMinutes(jwtConfig.TokenExpiryInMinutes),
             signingCredentials: signinCredentials
         );
 
         return new JwtSecurityTokenHandler().WriteToken(tokeOptions);
+    }
+
+    private record AuthorizationCredentialsResponse
+    {
+        public string ApplicationName { get; set; }
+        public string Email { get; set; }
+        public List<string> Permissions { get; set; }
+        public List<string> Roles { get; set; }
     }
 
     private record RequiredUserInfoForAuthenticationResponse

@@ -34,7 +34,7 @@ namespace IntegrationTests.Security.Logic
             });
 
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, testUser.Response.Email, newPassword);
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, newPassword);
 
             var testUserAfterSuccessfulAuthentication = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet());
 
@@ -45,6 +45,8 @@ namespace IntegrationTests.Security.Logic
             testUserAfterSuccessfulAuthentication.Response.LastPasswordChangeDate.Should().NotBeNull();
             testUserAfterSuccessfulAuthentication.Response.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
             testUserAfterSuccessfulAuthentication.Response.LastLoginDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+
+            //TODO: Decrypt token and verify claims once we have a way to do that in our tests
         }
 
         [Fact]
@@ -56,7 +58,7 @@ namespace IntegrationTests.Security.Logic
             var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
             
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, "InvalidEmail@example.com", testUser.Response.Password);
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, "InvalidEmail@example.com", testUser.Response.Password);
 
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedInvalidCredentialsErrors();
 
@@ -75,7 +77,7 @@ namespace IntegrationTests.Security.Logic
             var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
             
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, testUser.Response.Email, "InvalidPassword");
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, "InvalidPassword");
 
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedInvalidCredentialsErrors();
 
@@ -94,7 +96,7 @@ namespace IntegrationTests.Security.Logic
             var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
             
             // Act
-            var result = await _authenticate(99, testUser.Response.Email, testUser.Response.Password);
+            var result = await _authenticate("InvalidApplicationName", testUser.Response.Email, testUser.Response.Password);
 
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedInvalidApplicationIdFieldErrors();
 
@@ -115,7 +117,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedPasswordChangeRequiredErrors();
 
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, testUser.Response.Email, testUser.Response.Password);
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, testUser.Response.Password);
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -134,7 +136,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRequiredFieldErrors();
 
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, null, null);
+            var result = await _authenticate(null, null, null);
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -153,7 +155,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedMaxLengthFieldErrors();
 
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, LogicTestUtilities.GenerateRandomString(120) + "@test.com", LogicTestUtilities.GenerateRandomString(65));
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, LogicTestUtilities.GenerateRandomString(120) + "@test.com", LogicTestUtilities.GenerateRandomString(65));
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -182,11 +184,11 @@ namespace IntegrationTests.Security.Logic
             //attempt to authenticate with invalid password until account is locked
             for (int i = 0; i < _maxFailedPasswordAttemptCount; i++)
             {                
-                await _authenticate(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, testUser.Response.Email, "InvalidPassword");
+                await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, "InvalidPassword");
             }
 
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, testUser.Response.Email, newPassword);
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, newPassword);
             
             var testUserAfterFailedAuthenticationAttempt = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet());
 
@@ -229,7 +231,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedPasswordChangeRequiredErrors();
 
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, testUser.Response.Email, newPassword);
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, newPassword);
             
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -239,10 +241,10 @@ namespace IntegrationTests.Security.Logic
 
         #region Private
 
-        private async Task<ErrorValidationResult<AuthenticationResponse>> _authenticate(int applicationId, string email, string password)
+        private async Task<ErrorValidationResult<AuthenticationResponse>> _authenticate(string applicationName, string email, string password)
         {
             return await _authenticationLogic.Authenticate(new AuthenticationRequest { 
-                ApplicationId = applicationId, 
+                ApplicationName = applicationName, 
                 Email = email, 
                 Password = password
             }, _applicationUserLogic, _applicationLogic);

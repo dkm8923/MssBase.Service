@@ -97,6 +97,9 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
             if (insertedAppUser.Response != null)
             {
                 insertedAppUsers.Add(insertedAppUser.Response);
+
+                //change password for users so they can be used for authentication testing...
+                await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = insertedAppUser.Response.ApplicationUserId, NewPassword = "Test@1234", CurrentUser = TestConstants.CurrentUser });
             }
         }
 

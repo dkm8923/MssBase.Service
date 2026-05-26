@@ -33,6 +33,7 @@ public class AuthenticationUtilities : IAuthenticationUtilities
     {
         return new Dictionary<string, List<string>>
         {
+            { "ApplicationName", new List<string> { "ApplicationName is a required field!" } },
             { "Email", new List<string> { "Email is a required field!" } },
             { "Password", new List<string> { "Password is a required field!" } }
         };
@@ -50,7 +51,7 @@ public class AuthenticationUtilities : IAuthenticationUtilities
     {
         return new Dictionary<string, List<string>>
         {
-            { "ApplicationId", new List<string> { "Record does not exist for specified ApplicationId!" } }
+            { "ApplicationName", new List<string> { "Record does not exist for specified ApplicationName!" } }
         };
     }
 }

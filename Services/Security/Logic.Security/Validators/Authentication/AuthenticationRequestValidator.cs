@@ -8,7 +8,7 @@ public class AuthenticationRequestValidator : AbstractValidator<AuthenticationRe
 {
     private static class EntityFieldNames
     {
-        public const string ApplicationId = "ApplicationId";
+        public const string ApplicationName = "ApplicationName";
         public const string Email = "Email";
         public const string Password = "Password";
     }
@@ -18,7 +18,7 @@ public class AuthenticationRequestValidator : AbstractValidator<AuthenticationRe
         // Set cascade mode per rule (stops after first failure within each RuleFor)
         RuleLevelCascadeMode = CascadeMode.Stop;
 
-        RuleFor(x => x.ApplicationId).GreaterThan(0).WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationId));
+        RuleFor(x => x.ApplicationName).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationName));
         
         RuleFor(x => x.Email).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Email))
             .EmailAddress().WithMessage(ValidatorUtilities.CreateInvalidEmailErrorMessage())
