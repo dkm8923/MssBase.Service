@@ -18,7 +18,8 @@ public class AuthenticationRequestValidator : AbstractValidator<AuthenticationRe
         // Set cascade mode per rule (stops after first failure within each RuleFor)
         RuleLevelCascadeMode = CascadeMode.Stop;
 
-        RuleFor(x => x.ApplicationName).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationName));
+        RuleFor(x => x.ApplicationName).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationName))
+            .Length(1, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.ApplicationName, 64));
         
         RuleFor(x => x.Email).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Email))
             .EmailAddress().WithMessage(ValidatorUtilities.CreateInvalidEmailErrorMessage())

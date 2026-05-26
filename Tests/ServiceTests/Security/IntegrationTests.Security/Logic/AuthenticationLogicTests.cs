@@ -155,7 +155,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedMaxLengthFieldErrors();
 
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, LogicTestUtilities.GenerateRandomString(120) + "@test.com", LogicTestUtilities.GenerateRandomString(65));
+            var result = await _authenticate(LogicTestUtilities.GenerateRandomString(65), LogicTestUtilities.GenerateRandomString(120) + "@test.com", LogicTestUtilities.GenerateRandomString(65));
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);

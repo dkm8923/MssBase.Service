@@ -24,6 +24,7 @@ public class AuthenticationUtilities : IAuthenticationUtilities
     {
         return new Dictionary<string, List<string>>
         {
+            { "ApplicationName", new List<string> { "ApplicationName cannot exceed 64 characters!" } },
             { "Email", new List<string> { "Email cannot exceed 128 characters!" } },
             { "Password", new List<string> { "Password cannot exceed 64 characters!" } }
         };
