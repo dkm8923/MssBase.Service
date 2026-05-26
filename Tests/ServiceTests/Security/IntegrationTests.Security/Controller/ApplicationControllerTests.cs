@@ -23,11 +23,6 @@ namespace IntegrationTests.Security.Controller
     {
         private readonly HttpClient _client;
 
-        //TODO: Include Related Testing
-        //TODO: Clear all redis keys on each test run to ensure cache is not interfering with tests
-        //TODO: DeleteCache Testing
-        //TODO: When Logging is working, verify errors get logged after controller error
-
         public ApplicationControllerTests(WebApplicationFactory<Program> factory)
         {
             _client = factory.CreateClient();
@@ -470,14 +465,14 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var insertReq = _securityTestUtilities.Application.CreateInsertUpdateRequestWithRandomValues();
 
             // Act
-            var insertedRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-
-            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base, insertedRecord.ApplicationId);
+            var insertResult = await ControllerTestUtilities.CreateRecordWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base, insertReq);
+            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(_client, ApiEndPoints.Security.Application.Base, insertResult.Response.ApplicationId);
 
             //Assert
-            _securityTestUtilities.Application.VerifyTestRecordValuesMatch(insertedRecord, insertCheck.Response);
+            _securityTestUtilities.Application.VerifyTestRecordValuesMatch(insertResult.Response, insertCheck.Response);
         }
 
         [Fact]

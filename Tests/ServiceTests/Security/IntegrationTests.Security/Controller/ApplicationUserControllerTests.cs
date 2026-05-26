@@ -398,17 +398,17 @@ namespace IntegrationTests.Security.Controller
         [Fact]
         public async Task Default_Insert_Should_Create_Record()
         {
-            //TODO: Make this insert at controller level
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            
+            var insertReq = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId);
+
             // Act
-            var insertedRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
-            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserDto>(_client, ApiEndPoints.Security.ApplicationUser.Base, insertedRecord.ApplicationUserId);
+            var insertResult = await ControllerTestUtilities.CreateRecordWithValidationResult<ApplicationUserDto>(_client, ApiEndPoints.Security.ApplicationUser.Base, insertReq);
+            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserDto>(_client, ApiEndPoints.Security.ApplicationUser.Base, insertResult.Response.ApplicationUserId);
 
             // Assert
-            _securityTestUtilities.ApplicationUser.VerifyTestRecordValuesMatch(insertedRecord, insertCheck.Response);
+            _securityTestUtilities.ApplicationUser.VerifyTestRecordValuesMatch(insertResult.Response, insertCheck.Response);
         }
 
         [Fact]

@@ -255,13 +255,14 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            
+            var insertReq = _securityTestUtilities.Permission.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId);
+
             // Act
-            var insertedRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
-            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<PermissionDto>(_client, ApiEndPoints.Security.Permission.Base, insertedRecord.PermissionId);
+            var insertResult = await ControllerTestUtilities.CreateRecordWithValidationResult<PermissionDto>(_client, ApiEndPoints.Security.Permission.Base, insertReq);
+            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<PermissionDto>(_client, ApiEndPoints.Security.Permission.Base, insertResult.Response.PermissionId);
 
             // Assert
-            _securityTestUtilities.Permission.VerifyTestRecordValuesMatch(insertedRecord, insertCheck.Response);
+            _securityTestUtilities.Permission.VerifyTestRecordValuesMatch(insertResult.Response, insertCheck.Response);
         }
 
         [Fact]

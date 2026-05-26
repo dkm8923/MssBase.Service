@@ -481,13 +481,14 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            
+            var insertReq = _securityTestUtilities.Role.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId);
+
             // Act
-            var insertedRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
-            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RoleDto>(_client, ApiEndPoints.Security.Role.Base, insertedRecord.RoleId);
+            var insertResult = await ControllerTestUtilities.CreateRecordWithValidationResult<RoleDto>(_client, ApiEndPoints.Security.Role.Base, insertReq);
+            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RoleDto>(_client, ApiEndPoints.Security.Role.Base, insertResult.Response.RoleId);
 
             // Assert
-            _securityTestUtilities.Role.VerifyTestRecordValuesMatch(insertedRecord, insertCheck.Response);
+            _securityTestUtilities.Role.VerifyTestRecordValuesMatch(insertResult.Response, insertCheck.Response);
         }
 
         [Fact]
