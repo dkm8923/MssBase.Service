@@ -48,6 +48,17 @@ namespace Data.Security.Converters
             return target;
         }
 
+        public static ApplicationUserDto ToDtoWithoutPassword(this ApplicationUser source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            source.Password = null;
+            return source.ToDto();
+        }
+
         public static async Task<List<ApplicationUserDto>> ToDtos(this IQueryable<ApplicationUser> source, CancellationToken cancellationToken = default)
         {
             if (source == null)
@@ -56,6 +67,18 @@ namespace Data.Security.Converters
             }
 
             var target = await source.Select(src => src.ToDto()).ToListAsync(cancellationToken);
+
+            return target;
+        }
+
+        public static async Task<List<ApplicationUserDto>> ToDtosWithoutPassword(this IQueryable<ApplicationUser> source, CancellationToken cancellationToken = default)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            var target = await source.Select(src => src.ToDtoWithoutPassword()).ToListAsync(cancellationToken);
 
             return target;
         }

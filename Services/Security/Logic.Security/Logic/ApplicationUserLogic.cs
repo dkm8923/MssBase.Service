@@ -116,7 +116,7 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.ApplicationId == req.ApplicationId);
                 }
 
-                return new ErrorValidationResult<IEnumerable<ApplicationUserDto>> { Response = await query.ToDtos(cancellationToken) };
+                return new ErrorValidationResult<IEnumerable<ApplicationUserDto>> { Response = await query.ToDtosWithoutPassword(cancellationToken) };
             }
         }
 
@@ -168,7 +168,7 @@ namespace Logic.Security.Logic
                 {
                     entity = entity.UpdateEntityFromRequest(req);
                     await dbContext.SaveChangesAsync();
-                    return new ErrorValidationResult<ApplicationUserDto> { Response = entity.ToDto() };
+                    return new ErrorValidationResult<ApplicationUserDto> { Response = entity.ToDtoWithoutPassword() };
                 }
                 else
                 {
