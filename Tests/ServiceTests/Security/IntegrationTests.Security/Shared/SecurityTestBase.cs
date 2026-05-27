@@ -621,6 +621,7 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<AuthenticationRequest>, AuthenticationRequestValidator>();
         services.AddTransient<IValidator<RefreshTokenRequest>, RefreshTokenRequestValidator>();
+        services.AddTransient<IValidator<RevokeTokenRequest>, RevokeTokenRequestValidator>();
 
         #endregion
 

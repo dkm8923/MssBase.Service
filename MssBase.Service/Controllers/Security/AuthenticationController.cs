@@ -28,12 +28,6 @@ namespace MssBase.Service.Controllers.Security
                 return BadRequest(result);
             }
 
-            if (result.Response == null)
-            {
-                //TODO: Verify if this is needed
-                return NotFound();
-            }
-            
             return Ok(result);
         }
 
@@ -47,12 +41,19 @@ namespace MssBase.Service.Controllers.Security
                 return BadRequest(result);
             }
 
-            if (result.Response == null)
-            {
-                //TODO: Verify if this is needed
-                return NotFound();
-            }
+            return Ok(result);
+        }
+
+        [HttpPost("RevokeToken")]
+        public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest req)
+        {
+            var result = await _authenticationService.RevokeToken(req);
             
+            if (result.Errors.Count > 0)
+            {
+                return BadRequest(result);
+            }
+
             return Ok(result);
         }
     }

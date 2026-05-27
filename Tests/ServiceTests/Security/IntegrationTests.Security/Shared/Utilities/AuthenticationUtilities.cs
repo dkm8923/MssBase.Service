@@ -104,4 +104,13 @@ public class AuthenticationUtilities : IAuthenticationUtilities
             { "RefreshToken", new List<string> { "Refresh Token Expired!" } }
         };
     }
+
+    public Dictionary<string, List<string>> GetExpectedRevokeTokenRequiredFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Email", new List<string> { "Email is a required field!" } },
+            { "CurrentUser", new List<string> { "CurrentUser is a required field!" } }
+        };
+    }
 }

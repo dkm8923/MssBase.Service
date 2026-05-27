@@ -33,8 +33,9 @@ public class AuthenticationLogic : IAuthenticationLogic
 
     private IValidator<AuthenticationRequest> _authenticationRequestValidator;
     private IValidator<RefreshTokenRequest> _refreshTokenRequestValidator;
+    private IValidator<RevokeTokenRequest> _revokeTokenRequestValidator;
     
-private int _maxFailedPasswordAttemptCount => _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount : 5;
+    private int _maxFailedPasswordAttemptCount => _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount : 5;
     private int _lockoutDurationInMinutes => _authenticationSettingsConfigMonitor.CurrentValue.LockoutDurationInMinutes > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.LockoutDurationInMinutes : 60;
     private int _passwordExpiryInDays => _authenticationSettingsConfigMonitor.CurrentValue.PasswordExpiryInDays > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.PasswordExpiryInDays : 90;
 
@@ -43,7 +44,8 @@ private int _maxFailedPasswordAttemptCount => _authenticationSettingsConfigMonit
                     IOptionsMonitor<AuthenticationSettingsConfig> authenticationSettingsConfigMonitor, 
                     ISecurityConnectionStrings connectionStrings, 
                     IValidator<AuthenticationRequest> authenticationRequestValidator,
-                    IValidator<RefreshTokenRequest> refreshTokenRequestValidator
+                    IValidator<RefreshTokenRequest> refreshTokenRequestValidator,
+                    IValidator<RevokeTokenRequest> revokeTokenRequestValidator
     )
     {
         _jwtConfigMonitor = jwtConfigMonitor;
@@ -52,6 +54,7 @@ private int _maxFailedPasswordAttemptCount => _authenticationSettingsConfigMonit
         _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
         _authenticationRequestValidator = authenticationRequestValidator;
         _refreshTokenRequestValidator = refreshTokenRequestValidator;
+        _revokeTokenRequestValidator = revokeTokenRequestValidator;
     }
 
     public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic)
@@ -167,6 +170,24 @@ private int _maxFailedPasswordAttemptCount => _authenticationSettingsConfigMonit
         await _updateApplicationUserOnSuccessfulTokenRefresh(userInfoRes.ApplicationUserId, refreshToken);
 
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
+    }
+
+    public async Task<ErrorValidationResult> RevokeToken(RevokeTokenRequest req)
+    {
+        ValidationResult result = await _revokeTokenRequestValidator.ValidateAsync(req);
+        var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<object>(result);
+        
+        if (errorValidationResult.Errors.Count > 0)
+        {
+            //required fields are missing or invalid
+            return errorValidationResult;
+        }
+
+        //TODO: Do we care about this logic actually checking integrity of anything?
+
+        await _revokeApplicationUserAuthToken(req.Email);
+
+        return new ErrorValidationResult();
     }
 
     // public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotUserName(string emailAddress, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic, CancellationToken cancellationToken = default)
@@ -397,6 +418,24 @@ private int _maxFailedPasswordAttemptCount => _authenticationSettingsConfigMonit
             {
                 entity.RefreshToken = refreshToken;
                 entity.RefreshTokenExpiryTime = DateTime.Now.AddDays(jwtConfig.RefreshTokenExpiryInDays);
+
+                await dbContext.SaveChangesAsync();
+            }
+        }
+    }
+
+    private async Task _revokeApplicationUserAuthToken(string email)
+    {
+        var jwtConfig = _jwtConfigMonitor.CurrentValue;
+        
+        using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+        {
+            var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.Email == email);
+
+            if (entity != null)
+            {
+                entity.RefreshToken = null;
+                entity.RefreshTokenExpiryTime = null;
 
                 await dbContext.SaveChangesAsync();
             }

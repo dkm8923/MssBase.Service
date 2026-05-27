@@ -232,18 +232,9 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
-            var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, true);
-            var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
-            var newPassword = TestConstants.DefaultNewPassword;
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
             
-            //change password after initial user creation
-            await _applicationUserLogic.ChangePassword(new ChangePasswordRequest {
-                ApplicationUserId = testUser.Response.ApplicationUserId,
-                NewPassword = newPassword,
-                CurrentUser = TestConstants.CurrentUser
-            });
-
-            var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, newPassword);
+            var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
 
             // Act
             var refreshTokenResult = await _authenticationLogic.RefreshToken(new RefreshTokenRequest { 
@@ -355,7 +346,7 @@ namespace IntegrationTests.Security.Logic
 
             // Assert
             updateTestUserResponse.Errors.Should().BeNullOrEmpty();
-            
+
             refreshTokenResult.Errors.Should().HaveCount(expectedFieldErrors.Count);
 
             LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, refreshTokenResult.Errors);
@@ -451,6 +442,52 @@ namespace IntegrationTests.Security.Logic
             refreshTokenResult.Errors.Should().HaveCount(expectedFieldErrors.Count);
 
             LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, refreshTokenResult.Errors);
+        }
+
+        #endregion
+
+        #region RevokeToken
+
+        [Fact]
+        public async Task RevokeToken_Should_Revoke()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
+            
+            var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
+
+            // Act
+            var revokeTokenResult = await _authenticationLogic.RevokeToken(new RevokeTokenRequest { 
+                Email = testUser.Email, 
+                CurrentUser = TestConstants.CurrentUser
+            });
+
+            // Assert
+            revokeTokenResult.Errors.Should().BeNullOrEmpty();
+            
+            //verify refresh token info is nulled out on user
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
+                entity.RefreshToken.Should().BeNull();
+                entity.RefreshTokenExpiryTime.Should().BeNull();
+            }
+        }
+
+        [Fact]
+        public async Task RevokeToken_Should_Not_Revoke_Required_Field_Errors()
+        {
+            // Arrange
+            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRevokeTokenRequiredFieldErrors();
+
+            // Act
+            var revokeTokenResult = await _authenticationLogic.RevokeToken(new RevokeTokenRequest ());
+
+            // Assert
+            revokeTokenResult.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, revokeTokenResult.Errors);
         }
 
         #endregion

@@ -260,6 +260,8 @@ namespace MssBase.Service
             services.AddTransient<IValidator<AuthenticationRequest>, AuthenticationRequestValidator>();
             services.AddTransient<IValidator<AuthenticationRequest>, AuthenticationRequestValidator>();
             services.AddTransient<IValidator<RefreshTokenRequest>, RefreshTokenRequestValidator>();
+            services.AddTransient<IValidator<RevokeTokenRequest>, RevokeTokenRequestValidator>();
+
             #endregion
 
             #region Role

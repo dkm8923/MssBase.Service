@@ -14,5 +14,5 @@ public interface IAuthenticationUtilities
     public Dictionary<string, List<string>> GetExpectedRefreshTokenInvalidAuthTokenErrors();
     public Dictionary<string, List<string>> GetExpectedRefreshTokenInvalidRefreshTokenErrors();
     public Dictionary<string, List<string>> GetExpectedRefreshTokenExpiredErrors();
-
+    public Dictionary<string, List<string>> GetExpectedRevokeTokenRequiredFieldErrors();
 }

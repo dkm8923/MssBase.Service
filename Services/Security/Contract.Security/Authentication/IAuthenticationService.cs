@@ -7,4 +7,5 @@ public interface IAuthenticationService
 {
     public Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req);
     public Task<ErrorValidationResult<AuthenticationResponse>> RefreshToken(RefreshTokenRequest req);
+    public Task<ErrorValidationResult> RevokeToken(RevokeTokenRequest req);
 }
