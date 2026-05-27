@@ -5,5 +5,6 @@ namespace Contract.Security.Authentication;
 
 public interface IAuthenticationService
 {
-    Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req);
+    public Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req);
+    public Task<ErrorValidationResult<AuthenticationResponse>> RefreshToken(RefreshTokenRequest req);
 }

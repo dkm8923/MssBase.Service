@@ -20,6 +20,7 @@ using Dto.Security.ApplicationUser;
 using System.Text.Json;
 using Dto.Security.Application.Logic;
 using Dto.Security.Application;
+using System.Security.Cryptography;
 
 namespace Logic.Security.Logic;
 
@@ -31,8 +32,9 @@ public class AuthenticationLogic : IAuthenticationLogic
     private readonly SecurityDBContextFactory _dbContextFactory;
 
     private IValidator<AuthenticationRequest> _authenticationRequestValidator;
-
-    private int _maxFailedPasswordAttemptCount => _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount : 5;
+    private IValidator<RefreshTokenRequest> _refreshTokenRequestValidator;
+    
+private int _maxFailedPasswordAttemptCount => _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount : 5;
     private int _lockoutDurationInMinutes => _authenticationSettingsConfigMonitor.CurrentValue.LockoutDurationInMinutes > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.LockoutDurationInMinutes : 60;
     private int _passwordExpiryInDays => _authenticationSettingsConfigMonitor.CurrentValue.PasswordExpiryInDays > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.PasswordExpiryInDays : 90;
 
@@ -40,7 +42,8 @@ public class AuthenticationLogic : IAuthenticationLogic
                     IOptionsMonitor<JwtAuthenticationConfig> jwtConfigMonitor, 
                     IOptionsMonitor<AuthenticationSettingsConfig> authenticationSettingsConfigMonitor, 
                     ISecurityConnectionStrings connectionStrings, 
-                    IValidator<AuthenticationRequest> authenticationRequestValidator
+                    IValidator<AuthenticationRequest> authenticationRequestValidator,
+                    IValidator<RefreshTokenRequest> refreshTokenRequestValidator
     )
     {
         _jwtConfigMonitor = jwtConfigMonitor;
@@ -48,6 +51,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         _connectionStrings = connectionStrings;
         _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
         _authenticationRequestValidator = authenticationRequestValidator;
+        _refreshTokenRequestValidator = refreshTokenRequestValidator;
     }
 
     public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic)
@@ -98,15 +102,71 @@ public class AuthenticationLogic : IAuthenticationLogic
             return _createPasswordChangeRequiredError();
         }
 
+        //generate JWT token and return
+        var applicationUserWithRelatedData = await applicationUserLogic.GetById(userInfoRes.ApplicationUserId, new BaseLogicGet { CurrentUser = userInfoRes.Email, IncludeRelated = true });
+        
+        var authCredentials = _extractAuthorizationCredentialsFromApplicationUserResponse(applicationUserWithRelatedData.Response, applicationRes);
+
+        var jwtToken = _generateJwtToken(authCredentials);
+        var refreshToken = _generateRefreshToken();
+    
         //successful auth occurred, update user accordingly 
-        await _updateApplicationUserOnSuccessfulLogin(userInfoRes.ApplicationUserId);
+        await _updateApplicationUserOnSuccessfulLogin(userInfoRes.ApplicationUserId, refreshToken);
+
+        return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
+    }
+
+    public async Task<ErrorValidationResult<AuthenticationResponse>> RefreshToken(RefreshTokenRequest req, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic)
+    {
+        ValidationResult result = await _refreshTokenRequestValidator.ValidateAsync(req);
+        var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<AuthenticationResponse>(result);
+        
+        if (errorValidationResult.Errors.Count > 0)
+        {
+            //required fields are missing or invalid
+            return errorValidationResult;
+        }
+
+        var principal = _getPrincipalFromExpiredToken(req.Token);
+
+        if (principal == null)
+        {
+            return _createInvalidAuthTokenError();
+        }
+
+        var email = principal.Identity.Name;
+        var applicationClaim = principal.Claims.FirstOrDefault(c => c.Type == Constants.ApplicationsClaim);
+
+        var applicationRes = await _retrieveApplicationInfoForAuthentication(new AuthenticationRequest { ApplicationName = applicationClaim?.Value, Email = email }, applicationLogic);
+        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(email, applicationRes.ApplicationId);
+
+        if (userInfoRes is null)
+        {
+            return _createUserNotFoundError();
+        }
+
+        if (userInfoRes.RefreshToken != req.RefreshToken)
+        {
+            return _createInvalidRefreshTokenError();
+        }
+
+        if (userInfoRes.RefreshTokenExpiryTime <= DateTime.Now)
+        {
+            return _createExpiredRefreshTokenError();
+        }
 
         //generate JWT token and return
         var applicationUserWithRelatedData = await applicationUserLogic.GetById(userInfoRes.ApplicationUserId, new BaseLogicGet { CurrentUser = userInfoRes.Email, IncludeRelated = true });
         
         var authCredentials = _extractAuthorizationCredentialsFromApplicationUserResponse(applicationUserWithRelatedData.Response, applicationRes);
 
-        return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = _generateJwtToken(authCredentials) } };
+        var jwtToken = _generateJwtToken(authCredentials);
+        var refreshToken = _generateRefreshToken();
+    
+        //successful auth occurred, update user accordingly 
+        await _updateApplicationUserOnSuccessfulTokenRefresh(userInfoRes.ApplicationUserId, refreshToken);
+
+        return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
     }
 
     // public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotUserName(string emailAddress, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic, CancellationToken cancellationToken = default)
@@ -155,6 +215,42 @@ public class AuthenticationLogic : IAuthenticationLogic
     }
 
     /// <summary>
+    /// Creates an error result indicating that the user was not found. This is used in the refresh token flow when the user associated with the provided refresh token cannot be found. The error is associated with the "RefreshToken" key to indicate that the error occurred during the refresh token process. This method is used to provide a clear error message when the user cannot be found during the refresh token process, which could occur if the user was deleted or if there is an issue with the database.
+    /// </summary>
+    /// <returns></returns>
+    private ErrorValidationResult<AuthenticationResponse> _createUserNotFoundError()
+    {
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "User Not Found!" } } } };
+    }
+
+    /// <summary>
+    /// Creates an error result indicating that the provided token is invalid. This is used in the refresh token flow when the provided JWT token cannot be validated, which could indicate that the token was tampered with or that there is an issue with the token validation configuration. The error is associated with the "Token" key to indicate that the error occurred during the token validation process. This method is used to provide a clear error message when the provided JWT token is invalid, without revealing whether the email address or the token was incorrect to help prevent user enumeration attacks.
+    /// </summary>
+    /// <returns></returns>
+    private ErrorValidationResult<AuthenticationResponse> _createInvalidAuthTokenError()
+    {
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "Invalid Token!" } } } };
+    }
+
+    /// <summary>
+    /// Creates an error result indicating that the provided refresh token is invalid. This is used in the refresh token flow when the provided refresh token does not match the one stored for the user, which could indicate that the refresh token was tampered with or that there is an issue with the database. The error is associated with the "RefreshToken" key to indicate that the error occurred during the refresh token process. This method is used to provide a clear error message when the provided refresh token is invalid, without revealing whether the email address or the refresh token was incorrect to help prevent user enumeration attacks.
+    /// </summary>
+    /// <returns></returns>
+    private ErrorValidationResult<AuthenticationResponse> _createInvalidRefreshTokenError()
+    {
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "Invalid Refresh Token!" } } } };
+    }
+
+    /// <summary>
+    /// Creates an error result indicating that the provided refresh token has expired. This is used in the refresh token flow when the provided refresh token is no longer valid due to expiration. The error is associated with the "RefreshToken" key to indicate that the error occurred during the refresh token process. This method is used to provide a clear error message when the provided refresh token has expired, without revealing whether the email address or the refresh token was incorrect to help prevent user enumeration attacks.
+    /// </summary>
+    /// <returns></returns>
+    private ErrorValidationResult<AuthenticationResponse> _createExpiredRefreshTokenError()
+    {
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "Refresh Token Expired!" } } } };
+    }
+
+    /// <summary>
     /// Retrieves the application information for the authentication request based on the provided application name. This is used to validate that the application exists and to retrieve the application id needed for subsequent queries. If the application does not exist or there is an error during retrieval, this method returns null. This method is used as part of the authentication process to ensure that the authentication request is associated with a valid application in the system.
     /// </summary>
     /// <param name="req"></param>
@@ -189,7 +285,9 @@ public class AuthenticationLogic : IAuthenticationLogic
                                     au.Password,
                                     au.PasswordResetRequired, 
                                     au.LastLockoutDate, 
-                                    au.LastPasswordChangeDate
+                                    au.LastPasswordChangeDate,
+                                    au.RefreshToken,
+                                    au.RefreshTokenExpiryTime
                                   })
                                   .FirstOrDefaultAsync();
 
@@ -204,7 +302,9 @@ public class AuthenticationLogic : IAuthenticationLogic
                 PasswordHash = user.Password, 
                 PasswordResetRequired = user.PasswordResetRequired, 
                 LastLockoutDate = user.LastLockoutDate, 
-                LastPasswordChangeDate = user.LastPasswordChangeDate
+                LastPasswordChangeDate = user.LastPasswordChangeDate,
+                RefreshToken = user.RefreshToken,
+                RefreshTokenExpiryTime = user.RefreshTokenExpiryTime
             };
         }
     }
@@ -265,8 +365,10 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// </summary>
     /// <param name="applicationUserId"></param>
     /// <returns></returns>
-    private async Task _updateApplicationUserOnSuccessfulLogin(int applicationUserId)
+    private async Task _updateApplicationUserOnSuccessfulLogin(int applicationUserId, string refreshToken)
     {
+        var jwtConfig = _jwtConfigMonitor.CurrentValue;
+        
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
             var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
@@ -275,6 +377,26 @@ public class AuthenticationLogic : IAuthenticationLogic
             {
                 entity.LastLoginDate = CommonUtilities.GetDateTimeUtcNow();
                 entity.FailedPasswordAttemptCount = 0; //reset failed password attempt count on successful login
+                entity.RefreshToken = refreshToken;
+                entity.RefreshTokenExpiryTime = DateTime.Now.AddDays(jwtConfig.RefreshTokenExpiryInDays);
+
+                await dbContext.SaveChangesAsync();
+            }
+        }
+    }
+
+    private async Task _updateApplicationUserOnSuccessfulTokenRefresh(int applicationUserId, string refreshToken)
+    {
+        var jwtConfig = _jwtConfigMonitor.CurrentValue;
+        
+        using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+        {
+            var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
+
+            if (entity != null)
+            {
+                entity.RefreshToken = refreshToken;
+                entity.RefreshTokenExpiryTime = DateTime.Now.AddDays(jwtConfig.RefreshTokenExpiryInDays);
 
                 await dbContext.SaveChangesAsync();
             }
@@ -335,10 +457,12 @@ public class AuthenticationLogic : IAuthenticationLogic
         var claims = new List<Claim>
         {
             // Keep them as separate arrays in the token payload
-            new("user", JsonSerializer.Serialize(new { email = authCredentials.Email }), JsonClaimValueTypes.Json),
-            new("applications", JsonSerializer.Serialize(applications ?? new List<string>()), JsonClaimValueTypes.JsonArray),
-            new("roles", JsonSerializer.Serialize(authCredentials.Roles ?? new List<string>()), JsonClaimValueTypes.JsonArray),
-            new("permissions", JsonSerializer.Serialize(authCredentials.Permissions ?? new List<string>()), JsonClaimValueTypes.JsonArray)
+            new Claim(ClaimTypes.Name, authCredentials.Email),
+            new Claim(ClaimTypes.NameIdentifier, authCredentials.Email),
+            //new("user", JsonSerializer.Serialize(new { email = authCredentials.Email }), JsonClaimValueTypes.Json),
+            new Claim(Constants.ApplicationsClaim, JsonSerializer.Serialize(applications ?? new List<string>()), JsonClaimValueTypes.JsonArray),
+            new Claim(Constants.RolesClaim, JsonSerializer.Serialize(authCredentials.Roles ?? new List<string>()), JsonClaimValueTypes.JsonArray),
+            new Claim(Constants.PermissionsClaim, JsonSerializer.Serialize(authCredentials.Permissions ?? new List<string>()), JsonClaimValueTypes.JsonArray)
         };
 
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.IssuerSigningKey));
@@ -352,6 +476,51 @@ public class AuthenticationLogic : IAuthenticationLogic
         );
 
         return new JwtSecurityTokenHandler().WriteToken(tokeOptions);
+    }
+
+    private string _generateRefreshToken()
+    {
+        var randomNumber = new byte[32];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
+    }
+
+    public ClaimsPrincipal _getPrincipalFromExpiredToken(string token)
+    {
+        var jwtConfig = _jwtConfigMonitor.CurrentValue;
+
+        var tokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = true,
+            ValidateIssuer = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtConfig.ValidIssuer,
+            ValidAudience = jwtConfig.ValidAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.IssuerSigningKey)),
+            ValidateLifetime = false
+        };
+
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+            var jwtSecurityToken = securityToken as JwtSecurityToken;
+            
+            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return null;
+            }
+
+            return principal;
+        }
+        catch (SecurityTokenInvalidSignatureException)
+        {
+            // specifically catches bad signature / malformed signature cases
+            return null;
+        }
     }
 
     private record AuthorizationCredentialsResponse
@@ -370,6 +539,8 @@ public class AuthenticationLogic : IAuthenticationLogic
         public DateTime? LastLockoutDate { get; set; }
         public DateTime? LastPasswordChangeDate { get; set; }
         public bool PasswordResetRequired { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
     }
 
     #endregion

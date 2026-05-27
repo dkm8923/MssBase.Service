@@ -23,4 +23,9 @@ public class AuthenticationService : IAuthenticationService
     {
         return await _authenticationLogic.Authenticate(req, _applicationUserLogic, _applicationLogic);
     }
+    
+    public async Task<ErrorValidationResult<AuthenticationResponse>> RefreshToken(RefreshTokenRequest req)
+    {
+        return await _authenticationLogic.RefreshToken(req, _applicationUserLogic, _applicationLogic);
+    }
 }

@@ -63,7 +63,8 @@ public class SecurityTestBase
     protected readonly IRolePermissionLogic _rolePermissionLogic;
     protected readonly ISecurityTestUtilitiesManager _securityTestUtilities;
     protected readonly IOptionsMonitor<AuthenticationSettingsConfig> _authenticationSettingsConfigMonitor;
-    
+    protected readonly IOptionsMonitor<JwtAuthenticationConfig> _jwtAuthenticationConfigMonitor;
+
     public SecurityTestBase()
     {
         //set environment variable to key off of in program.cs
@@ -78,6 +79,7 @@ public class SecurityTestBase
 
         _loggerSvc = _serviceProvider.GetService<ILoggerService>();
         _authenticationSettingsConfigMonitor = _serviceProvider.GetService<IOptionsMonitor<AuthenticationSettingsConfig>>();
+        _jwtAuthenticationConfigMonitor = _serviceProvider.GetService<IOptionsMonitor<JwtAuthenticationConfig>>();
         _authenticationLogic = _serviceProvider.GetService<IAuthenticationLogic>();
         _applicationLogic = _serviceProvider.GetService<IApplicationLogic>();
         _applicationUserLogic = _serviceProvider.GetService<IApplicationUserLogic>();
@@ -618,7 +620,8 @@ public class SecurityTestBase
 
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<AuthenticationRequest>, AuthenticationRequestValidator>();
-        
+        services.AddTransient<IValidator<RefreshTokenRequest>, RefreshTokenRequestValidator>();
+
         #endregion
 
         #region Role

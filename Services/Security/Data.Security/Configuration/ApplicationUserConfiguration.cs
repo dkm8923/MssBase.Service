@@ -28,6 +28,8 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.Property(t => t.LastLockoutDate).HasPrecision(2);
         builder.Property(t => t.FailedPasswordAttemptCount).HasDefaultValue((short)0);
         builder.Property(t => t.ApplicationId).IsRequired();
+        builder.Property(t => t.RefreshToken).HasMaxLength(2048).IsUnicode(false);
+        builder.Property(t => t.RefreshTokenExpiryTime).HasPrecision(2);
 
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);

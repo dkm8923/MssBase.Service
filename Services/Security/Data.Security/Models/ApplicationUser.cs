@@ -26,6 +26,8 @@ public partial class ApplicationUser : AuditableEntity
     public short? FailedPasswordAttemptCount { get; set; }
 
     public int ApplicationId { get; set; }
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiryTime { get; set; }
 
     public virtual Application Application { get; set; } = null!;
     public virtual ICollection<ApplicationUserPermission> ApplicationUserPermissions { get; set; } = new List<ApplicationUserPermission>();

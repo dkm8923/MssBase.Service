@@ -30,6 +30,26 @@ namespace MssBase.Service.Controllers.Security
 
             if (result.Response == null)
             {
+                //TODO: Verify if this is needed
+                return NotFound();
+            }
+            
+            return Ok(result);
+        }
+
+        [HttpPost("RefreshToken")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest req)
+        {
+            var result = await _authenticationService.RefreshToken(req);
+            
+            if (result.Errors.Count > 0)
+            {
+                return BadRequest(result);
+            }
+
+            if (result.Response == null)
+            {
+                //TODO: Verify if this is needed
                 return NotFound();
             }
             

@@ -6,4 +6,5 @@ public class JwtAuthenticationConfig
     public string ValidAudience { get; set; }
     public string IssuerSigningKey { get; set; }
     public int TokenExpiryInMinutes { get; set; }
+    public int RefreshTokenExpiryInDays { get; set; }
 }

@@ -6,6 +6,7 @@ using IntegrationTests.Shared.Utilities;
 using Dto.Security.Authentication;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
+using Dto.Security.ApplicationUser;
 
 namespace IntegrationTests.Security.Logic
 {
@@ -14,6 +15,7 @@ namespace IntegrationTests.Security.Logic
     {
         private int _maxFailedPasswordAttemptCount => _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount;
         private int _passwordExpiryInDays => _authenticationSettingsConfigMonitor.CurrentValue.PasswordExpiryInDays;
+        private int _refreshTokenExpiryInDays => _jwtAuthenticationConfigMonitor.CurrentValue.RefreshTokenExpiryInDays;
 
         #region Authenticate
 
@@ -168,29 +170,20 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
-            var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, true);
-            var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
-            var newPassword = TestConstants.DefaultNewPassword;
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
             
-            //change password after initial user creation
-            await _applicationUserLogic.ChangePassword(new ChangePasswordRequest {
-                ApplicationUserId = testUser.Response.ApplicationUserId,
-                NewPassword = newPassword,
-                CurrentUser = TestConstants.CurrentUser
-            });
-
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedAccountLockedErrors();
 
             //attempt to authenticate with invalid password until account is locked
             for (int i = 0; i < _maxFailedPasswordAttemptCount; i++)
             {                
-                await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, "InvalidPassword");
+                await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, "InvalidPassword");
             }
 
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, newPassword);
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
             
-            var testUserAfterFailedAuthenticationAttempt = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet());
+            var testUserAfterFailedAuthenticationAttempt = await _applicationUserLogic.GetById(testUser.ApplicationUserId, new BaseLogicGet());
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -206,6 +199,39 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
+            
+            //manually update last password change date to be past expiry threshold
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
+                if (entity != null)
+                {
+                    entity.LastPasswordChangeDate = DateTime.UtcNow.AddDays(-(_passwordExpiryInDays + 1));
+                    await dbContext.SaveChangesAsync();
+                }
+            }
+
+            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedPasswordChangeRequiredErrors();
+
+            // Act
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
+            
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        #endregion
+
+        #region RefreshToken
+
+        [Fact]
+        public async Task RefreshToken_Should_Refresh()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
             var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, true);
             var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
             var newPassword = TestConstants.DefaultNewPassword;
@@ -217,29 +243,236 @@ namespace IntegrationTests.Security.Logic
                 CurrentUser = TestConstants.CurrentUser
             });
 
-            //manually update last password change date to be past expiry threshold
+            var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, newPassword);
+
+            // Act
+            var refreshTokenResult = await _authenticationLogic.RefreshToken(new RefreshTokenRequest { 
+                Token = authenticationResult.Response.Token, 
+                RefreshToken = authenticationResult.Response.RefreshToken }, 
+                _applicationUserLogic, 
+                _applicationLogic
+            );
+
+            // Assert
+            refreshTokenResult.Errors.Should().BeNullOrEmpty();
+            refreshTokenResult.Response.Token.Should().NotBeNullOrEmpty();
+            refreshTokenResult.Response.RefreshToken.Should().NotBeNullOrEmpty();
+        }
+
+        [Fact]
+        public async Task RefreshToken_Should_Not_Refresh_Required_Field_Errors()
+        {
+            // Arrange
+            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRefreshTokenRequiredFieldErrors();
+
+            // Act
+            var refreshTokenResult = await _authenticationLogic.RefreshToken(new RefreshTokenRequest(), 
+                _applicationUserLogic, 
+                _applicationLogic
+            );
+
+            // Assert
+            refreshTokenResult.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, refreshTokenResult.Errors);
+        }
+
+        [Fact]
+        public async Task RefreshToken_Should_Not_Refresh_Max_Length_Errors()
+        {
+            // Arrange
+            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRefreshTokenMaxLengthFieldErrors();
+
+            // Act
+            var refreshTokenResult = await _authenticationLogic.RefreshToken(new RefreshTokenRequest { 
+                Token = "ValidToken", 
+                RefreshToken = LogicTestUtilities.GenerateRandomString(2049) }, 
+                _applicationUserLogic, 
+                _applicationLogic
+            );
+
+            // Assert
+            refreshTokenResult.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, refreshTokenResult.Errors);
+        }
+
+        [Fact]
+        public async Task RefreshToken_Should_Not_Refresh_Invalid_Token()
+        {
+            // Arrange
+            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRefreshTokenInvalidAuthTokenErrors();
+
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
+            
+            var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
+
+            // Act
+            var refreshTokenResult = await _authenticationLogic.RefreshToken(new RefreshTokenRequest { 
+                Token = authenticationResult.Response.Token + "asfasdf", //make token invalid by appending random string, 
+                RefreshToken = authenticationResult.Response.RefreshToken }, 
+                _applicationUserLogic, 
+                _applicationLogic
+            );
+
+            // Assert
+            refreshTokenResult.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, refreshTokenResult.Errors);
+        }
+
+        [Fact]
+        public async Task RefreshToken_Should_Not_Refresh_User_Inactive()
+        {
+            // Arrange
+            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRefreshTokenUserNotFoundErrors();
+
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
+
+            var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
+
+            //deactivate user after successful authentication to set up scenario where token is valid but user is inactive
+            var updateTestUserResponse = await _applicationUserLogic.Update(testUser.ApplicationUserId, new InsertUpdateApplicationUserRequest {
+                Active = false,
+                Email = testUser.Email,
+                FirstName = testUser.FirstName,
+                LastName = testUser.LastName,
+                DateOfBirth = testUser.DateOfBirth,
+                ApplicationId = testUser.ApplicationId,
+                CurrentUser = TestConstants.CurrentUser
+            }, _applicationLogic);
+
+            // Act
+            var refreshTokenResult = await _authenticationLogic.RefreshToken(new RefreshTokenRequest { 
+                Token = authenticationResult.Response.Token,
+                RefreshToken = authenticationResult.Response.RefreshToken }, 
+                _applicationUserLogic, 
+                _applicationLogic
+            );
+
+            // Assert
+            updateTestUserResponse.Errors.Should().BeNullOrEmpty();
+            
+            refreshTokenResult.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, refreshTokenResult.Errors);
+        }
+
+        [Fact]
+        public async Task RefreshToken_Should_Not_Refresh_User_Deleted()
+        {
+            // Arrange
+            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRefreshTokenUserNotFoundErrors();
+
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
+
+            var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
+
+            //delete user after successful authentication to set up scenario where token is valid but user is deleted
+            await _applicationUserLogic.Delete(testUser.ApplicationUserId);
+
+            // Act
+            var refreshTokenResult = await _authenticationLogic.RefreshToken(new RefreshTokenRequest { 
+                Token = authenticationResult.Response.Token,
+                RefreshToken = authenticationResult.Response.RefreshToken }, 
+                _applicationUserLogic, 
+                _applicationLogic
+            );
+
+            // Assert
+            refreshTokenResult.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, refreshTokenResult.Errors);
+        }
+
+        [Fact]
+        public async Task RefreshToken_Should_Not_Refresh_Invalid_Refresh_Token()
+        {
+            // Arrange
+            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRefreshTokenInvalidRefreshTokenErrors();
+
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
+
+            var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
+
+            // Act
+            var refreshTokenResult = await _authenticationLogic.RefreshToken(new RefreshTokenRequest { 
+                Token = authenticationResult.Response.Token,
+                RefreshToken = authenticationResult.Response.RefreshToken + "asfasdf" }, //make refresh token invalid by appending random string
+                _applicationUserLogic, 
+                _applicationLogic
+            );
+
+            // Assert
+            refreshTokenResult.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, refreshTokenResult.Errors);
+        }
+
+        [Fact]
+        public async Task RefreshToken_Should_Not_Refresh_Expired_Refresh_Token()
+        {
+            // Arrange
+            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRefreshTokenExpiredErrors();
+
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
+
+            var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
+
+            //manually update refresh token last updated date to be past expiry threshold
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.Response.ApplicationUserId);
+                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
                 if (entity != null)
                 {
-                    entity.LastPasswordChangeDate = DateTime.UtcNow.AddDays(-(_passwordExpiryInDays + 1));
+                    entity.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(-(_refreshTokenExpiryInDays + 1));
                     await dbContext.SaveChangesAsync();
                 }
             }
 
-            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedPasswordChangeRequiredErrors();
-
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, newPassword);
-            
-            // Assert
-            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+            var refreshTokenResult = await _authenticationLogic.RefreshToken(new RefreshTokenRequest { 
+                Token = authenticationResult.Response.Token,
+                RefreshToken = authenticationResult.Response.RefreshToken },
+                _applicationUserLogic, 
+                _applicationLogic
+            );
 
-            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+            // Assert
+            refreshTokenResult.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, refreshTokenResult.Errors);
         }
 
+        #endregion
+
         #region Private
+
+        private async Task<ApplicationUserDto> _setupTestUserForAuthentication(int applicationId)
+        {
+            var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(applicationId, true);
+            var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+            
+            //change password after initial user creation
+            await _applicationUserLogic.ChangePassword(new ChangePasswordRequest {
+                ApplicationUserId = testUser.Response.ApplicationUserId,
+                NewPassword = TestConstants.DefaultNewPassword,
+                CurrentUser = TestConstants.CurrentUser
+            });
+            
+            testUser.Response.Password = TestConstants.DefaultNewPassword;
+
+            return testUser.Response;
+        }
 
         private async Task<ErrorValidationResult<AuthenticationResponse>> _authenticate(string applicationName, string email, string password)
         {
@@ -251,12 +484,6 @@ namespace IntegrationTests.Security.Logic
         }
 
         #endregion
-
-        #endregion
-
-        
-
-        
     
         
 

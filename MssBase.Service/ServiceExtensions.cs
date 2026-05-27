@@ -258,7 +258,8 @@ namespace MssBase.Service
             
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<AuthenticationRequest>, AuthenticationRequestValidator>();
-
+            services.AddTransient<IValidator<AuthenticationRequest>, AuthenticationRequestValidator>();
+            services.AddTransient<IValidator<RefreshTokenRequest>, RefreshTokenRequestValidator>();
             #endregion
 
             #region Role
