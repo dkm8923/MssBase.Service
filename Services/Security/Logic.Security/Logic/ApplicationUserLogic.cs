@@ -13,6 +13,7 @@ using Shared.Logic;
 using Shared.Logic.Validators;
 using Shared.Logic.Common;
 using Microsoft.AspNetCore.Identity;
+using Dto.Security.Authentication;
 
 namespace Logic.Security.Logic
 {

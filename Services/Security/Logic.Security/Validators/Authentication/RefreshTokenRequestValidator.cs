@@ -1,3 +1,4 @@
+using Dto.Security.Authentication;
 using FluentValidation;
 using Shared.Logic.Validators;
 

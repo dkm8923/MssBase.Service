@@ -4,14 +4,14 @@ using Shared.Logic.Validators;
 
 namespace Logic.Security.Validators.Authentication;
 
-public class RevokeTokenRequestValidator : AbstractValidator<RevokeTokenRequest>
+public class ForgotPasswordRequestValidator : AbstractValidator<ForgotPasswordRequest>
 {
     private static class EntityFieldNames
     {
         public const string Email = "Email";
     }
 
-    public RevokeTokenRequestValidator()
+    public ForgotPasswordRequestValidator()
     {
         // Set cascade mode per rule (stops after first failure within each RuleFor)
         RuleLevelCascadeMode = CascadeMode.Stop;

@@ -33,4 +33,9 @@ public class AuthenticationService : IAuthenticationService
     {
         return await _authenticationLogic.RevokeToken(req);
     }
+
+    public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotPassword(ForgotPasswordRequest req)
+    {
+        return await _authenticationLogic.ForgotPassword(req, _applicationUserLogic);
+    }
 }

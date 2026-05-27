@@ -113,4 +113,13 @@ public class AuthenticationUtilities : IAuthenticationUtilities
             { "CurrentUser", new List<string> { "CurrentUser is a required field!" } }
         };
     }
+
+    public Dictionary<string, List<string>> GetExpectedForgotPasswordRequiredFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Email", new List<string> { "Email is a required field!" } },
+            { "CurrentUser", new List<string> { "CurrentUser is a required field!" } }
+        };
+    }
 }

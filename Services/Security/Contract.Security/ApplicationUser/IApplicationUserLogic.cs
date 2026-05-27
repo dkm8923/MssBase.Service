@@ -2,6 +2,7 @@ using Dto.Security.ApplicationUser;
 using Dto.Security.ApplicationUser.Logic;
 using Shared.Models;
 using Contract.Security.Application;
+using Dto.Security.Authentication;
 
 namespace Contract.Security.ApplicationUser
 {

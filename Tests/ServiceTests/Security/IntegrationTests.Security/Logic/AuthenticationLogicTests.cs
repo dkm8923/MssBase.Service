@@ -492,6 +492,53 @@ namespace IntegrationTests.Security.Logic
 
         #endregion
 
+        #region ForgotPassword
+
+        [Fact]
+        public async Task ForgotPassword_Should_Reset_Password()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
+            
+            var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
+
+            // Act
+            var forgotPasswordResult = await _authenticationLogic.ForgotPassword(new ForgotPasswordRequest { 
+                Email = testUser.Email, 
+                CurrentUser = TestConstants.CurrentUser
+            }, _applicationUserLogic);
+
+            // Assert
+            forgotPasswordResult.Errors.Should().BeNullOrEmpty();
+            
+            //verify password was reset on user
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
+                //entity.Password.Should().NotBe(testUser.Password); //TODO: Decrypt password and verify it was changed once we have a way to do that in our tests
+                entity.PasswordResetRequired.Should().BeTrue();
+                entity.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+            }
+        }
+
+        [Fact]
+        public async Task ForgotPassword_Should_Not_Reset_Password_Required_Field_Errors()
+        {
+            // Arrange
+            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedForgotPasswordRequiredFieldErrors();
+
+            // Act
+            var forgotPasswordResult = await _authenticationLogic.ForgotPassword(new ForgotPasswordRequest (), _applicationUserLogic);
+
+            // Assert
+            forgotPasswordResult.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, forgotPasswordResult.Errors);
+        }
+
+        #endregion
+
         #region Private
 
         private async Task<ApplicationUserDto> _setupTestUserForAuthentication(int applicationId)

@@ -56,5 +56,18 @@ namespace MssBase.Service.Controllers.Security
 
             return Ok(result);
         }
+
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest req)
+        {
+            var result = await _authenticationService.ForgotPassword(req);
+            
+            if (result.Errors.Count > 0)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
     }
 }

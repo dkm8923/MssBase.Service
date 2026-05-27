@@ -622,6 +622,7 @@ public class SecurityTestBase
         services.AddTransient<IValidator<AuthenticationRequest>, AuthenticationRequestValidator>();
         services.AddTransient<IValidator<RefreshTokenRequest>, RefreshTokenRequestValidator>();
         services.AddTransient<IValidator<RevokeTokenRequest>, RevokeTokenRequestValidator>();
+        services.AddTransient<IValidator<ForgotPasswordRequest>, ForgotPasswordRequestValidator>();
 
         #endregion
 

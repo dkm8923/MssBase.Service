@@ -34,6 +34,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     private IValidator<AuthenticationRequest> _authenticationRequestValidator;
     private IValidator<RefreshTokenRequest> _refreshTokenRequestValidator;
     private IValidator<RevokeTokenRequest> _revokeTokenRequestValidator;
+    private IValidator<ForgotPasswordRequest> _forgotPasswordRequestValidator;
     
     private int _maxFailedPasswordAttemptCount => _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.MaxFailedPasswordAttemptCount : 5;
     private int _lockoutDurationInMinutes => _authenticationSettingsConfigMonitor.CurrentValue.LockoutDurationInMinutes > 0 ? _authenticationSettingsConfigMonitor.CurrentValue.LockoutDurationInMinutes : 60;
@@ -45,7 +46,8 @@ public class AuthenticationLogic : IAuthenticationLogic
                     ISecurityConnectionStrings connectionStrings, 
                     IValidator<AuthenticationRequest> authenticationRequestValidator,
                     IValidator<RefreshTokenRequest> refreshTokenRequestValidator,
-                    IValidator<RevokeTokenRequest> revokeTokenRequestValidator
+                    IValidator<RevokeTokenRequest> revokeTokenRequestValidator,
+                    IValidator<ForgotPasswordRequest> forgotPasswordRequestValidator
     )
     {
         _jwtConfigMonitor = jwtConfigMonitor;
@@ -55,6 +57,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         _authenticationRequestValidator = authenticationRequestValidator;
         _refreshTokenRequestValidator = refreshTokenRequestValidator;
         _revokeTokenRequestValidator = revokeTokenRequestValidator;
+        _forgotPasswordRequestValidator = forgotPasswordRequestValidator;
     }
 
     public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic)
@@ -190,23 +193,44 @@ public class AuthenticationLogic : IAuthenticationLogic
         return new ErrorValidationResult();
     }
 
-    // public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotUserName(string emailAddress, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic, CancellationToken cancellationToken = default)
-    // {
-    //     var userRes = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { Email = emailAddress, CurrentUser = emailAddress  }, cancellationToken);
+    public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotPassword(ForgotPasswordRequest req, IApplicationUserLogic applicationUserLogic)
+    {
+        ValidationResult result = await _forgotPasswordRequestValidator.ValidateAsync(req);
+        var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<NotificationMessageResponse>(result);
+        
+        if (errorValidationResult.Errors.Count > 0)
+        {
+            //required fields are missing or invalid
+            return errorValidationResult;
+        }
 
-    //     if (userRes.Errors.Count > 0 || userRes.Response is null || userRes.Response.Count() == 0)
-    //     {
-    //         //to prevent user enumeration attacks, return success message even if email address does not exist in the system
-    //         return new ErrorValidationResult<NotificationMessageResponse> { Response = new NotificationMessageResponse { Message = "If an account with that email address exists, a notification email has been sent with the username." } };
-    //     }
-    // }
+        var userRes = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { Email = req.Email, CurrentUser = req.CurrentUser  });
 
-    // public record NotificationMessageResponse
-    // {
-    //     public string Message { get; set; }
-    // }
+        if (userRes.Errors.Count > 0 || userRes.Response is null || userRes.Response.Count() == 0)
+        {
+            //to prevent user enumeration attacks, return success message even if email address does not exist in the system
+            return _createForgotPasswordResponseMessage();
+        }
+
+        //reset password to a new random password and email to user
+        var resetPasswordResponse = await applicationUserLogic.ResetPassword(userRes.Response.First().ApplicationUserId);
+
+        //TODO: Actually email user...
+
+        return _createForgotPasswordResponseMessage();
+    }
 
     #region private
+
+    /// <summary>
+    /// Creates a success response message for the forgot password flow. This message is returned regardless of whether the email address exists in the system or not, to help prevent user enumeration attacks. The message informs the user that if an account with the provided email address exists, a notification email has been sent with the newly reset password. This method is used to provide a consistent response for the forgot password flow without revealing whether the email address was valid or not.
+    /// </summary>
+    /// <returns></returns>
+    private ErrorValidationResult<NotificationMessageResponse> _createForgotPasswordResponseMessage()
+    {
+        var responseMsg = "If an account with that email address exists, a notification email has been sent with the newly reset password.";
+        return new ErrorValidationResult<NotificationMessageResponse> {  Response = new NotificationMessageResponse { Message = responseMsg } };
+    }
 
     /// <summary>
     /// Creates an error result indicating that the provided email address or password is invalid. The error is associated with a general "Authentication" key to avoid revealing whether the email address or the password was incorrect, which is a security best practice to prevent user enumeration attacks.
