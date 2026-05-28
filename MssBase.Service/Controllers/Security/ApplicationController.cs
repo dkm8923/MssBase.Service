@@ -1,17 +1,21 @@
 using Contract.Security.Application;
 using Dto.Security.Application;
 using Dto.Security.Application.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
+using MssBase.Service.Shared.Authorization;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
 namespace MssBase.Service.Controllers.Security
 {
+    
     [Route("api/security/[controller]")]
     [ApiController]
     [Tags("Application")]
     [AutoValidationAttribute]
+    [Authorize]
     public class ApplicationController : ApiBaseController
     {
         //TODO: Global exception handling?
@@ -23,8 +27,9 @@ namespace MssBase.Service.Controllers.Security
         }
 
         // GET: api/Security/Application
-
+        
         [HttpGet()]
+        [RequiredPermission(UserApiPermissions.ApplicationRead)] 
         public async Task<IActionResult> GetApplications([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
@@ -40,8 +45,9 @@ namespace MssBase.Service.Controllers.Security
 
         // GET: api/Security/Application/{applicationId}
 
-        [HttpGet("{applicationId}", Name = "GetApplication")]
-        public async Task<IActionResult> GetApplication(int applicationId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
+        [HttpGet("{applicationId}", Name = "GetApplicationById")]
+        [RequiredPermission(UserApiPermissions.ApplicationRead)]
+        public async Task<IActionResult> GetApplicationById(int applicationId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -63,6 +69,7 @@ namespace MssBase.Service.Controllers.Security
         // POST: api/Security/Application/Filter
 
         [HttpPost("Filter")]
+        [RequiredPermission(UserApiPermissions.ApplicationRead)]
         public async Task<IActionResult> FilterApplications(FilterApplicationServiceRequest req, CancellationToken cancellationToken = default)
         {
             try
@@ -79,18 +86,19 @@ namespace MssBase.Service.Controllers.Security
         // POST: api/Security/Application
 
         [HttpPost()]
+        [RequiredPermission(UserApiPermissions.ApplicationInsert)]
         public async Task<IActionResult> InsertApplication(InsertUpdateApplicationRequest req)
         {
             try
             {
                 var result = await _applicationSvc.Insert(req);
 
-                if (result.Errors.Count > 0)
+                if (result.Errors.Count > 0 || result.Response is null)
                 {
                     return BadRequest(result);
                 }
 
-                return CreatedAtRoute("GetApplication", new { applicationId = result.Response.ApplicationId }, result);
+                return CreatedAtRoute("GetApplicationById", new { applicationId = result.Response.ApplicationId }, result);
             }
             catch (Exception ex)
             {
@@ -101,11 +109,17 @@ namespace MssBase.Service.Controllers.Security
         // PUT: api/Security/Application
 
         [HttpPut("{applicationId}")]
-        public async Task<IActionResult> UpdateApplication(int applicationId, InsertUpdateApplicationRequest req)
+        [RequiredPermission(UserApiPermissions.ApplicationUpdate)]
+        public async Task<IActionResult> UpdateApplication(int applicationId, InsertUpdateApplicationRequest? req)
         {
             try
             {
-                var result = await _applicationSvc.Update(applicationId, req);
+                if (req is null)
+                {
+                    return BadRequest();
+                }
+
+                var result = await _applicationSvc.Update(applicationId, req!);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -117,6 +131,7 @@ namespace MssBase.Service.Controllers.Security
         // DELETE: api/Security/Application
 
         [HttpDelete("{applicationId}")]
+        [RequiredPermission(UserApiPermissions.ApplicationDelete)]
         public async Task<IActionResult> DeleteApplication(int applicationId)
         {
             try

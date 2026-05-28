@@ -1,6 +1,7 @@
 using Contract.Security.RolePermission;
 using Dto.Security.RolePermission;
 using Dto.Security.RolePermission.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
 using Shared.Models;
@@ -12,6 +13,7 @@ namespace MssBase.Service.Controllers.Security
     [ApiController]
     [Tags("RolePermission")]
     [AutoValidationAttribute]
+    [Authorize]
     public class RolePermissionController : ApiBaseController
     {
         private readonly IRolePermissionService _rolePermissionSvc;
@@ -41,8 +43,8 @@ namespace MssBase.Service.Controllers.Security
 
         #region GetById
 
-        [HttpGet("{applicationUserId}", Name = "GetRolePermission")]
-        public async Task<IActionResult> GetRolePermission(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
+        [HttpGet("{applicationUserId}", Name = "GetRolePermissionById")]
+        public async Task<IActionResult> GetRolePermissionById(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -95,7 +97,7 @@ namespace MssBase.Service.Controllers.Security
                     return BadRequest(result);
                 }
 
-                return CreatedAtRoute("GetRolePermission", new { applicationUserId = result.Response.RolePermissionId }, result);
+                return CreatedAtRoute("GetRolePermissionById", new { applicationUserId = result.Response.RolePermissionId }, result);
             }
             catch (Exception ex)
             {

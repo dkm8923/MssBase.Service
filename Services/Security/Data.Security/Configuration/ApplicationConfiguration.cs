@@ -41,12 +41,13 @@ public class ApplicationConfiguration : IEntityTypeConfiguration<Application>
     public void CreateTableData(EntityTypeBuilder<Application> builder) 
     {
         var dataArr = new List<Application>();
-        dataArr.Add(new Application { ApplicationId = 1, Name = "EOS", Description = "Enterprise Dispatch and Monitoring System for Logistic Operations", Active = true });
-        dataArr.Add(new Application { ApplicationId = 2, Name = "EPC", Description = "Enterprise Financial System for Processing Pricing & Commissions", Active = true });
-        dataArr.Add(new Application { ApplicationId = 3, Name = "EBS", Description = "Enterprise User Permission Management System", Active = true });
-        dataArr.Add(new Application { ApplicationId = 4, Name = "Bet-t", Description = "Interchange Configuration Tool", Active = true });
-        dataArr.Add(new Application { ApplicationId = 5, Name = "MyPortfolio", Description = "Agent Analytics / Reporting Portal", Active = true });
-        dataArr.Add(new Application { ApplicationId = 6, Name = "AIME", Description = "Agent Management Platform", Active = true });
+        dataArr.Add(new Application { ApplicationId = 1, Name = "MSS Security", Description = "Enterprise application security management for Mauk Software Solutions LLC.", Active = true });
+        dataArr.Add(new Application { ApplicationId = 2, Name = "EOS", Description = "Enterprise Dispatch and Monitoring System for Logistic Operations", Active = true });
+        dataArr.Add(new Application { ApplicationId = 3, Name = "EPC", Description = "Enterprise Financial System for Processing Pricing & Commissions", Active = true });
+        dataArr.Add(new Application { ApplicationId = 4, Name = "EBS", Description = "Enterprise User Permission Management System", Active = true });
+        dataArr.Add(new Application { ApplicationId = 5, Name = "Bet-t", Description = "Interchange Configuration Tool", Active = true });
+        dataArr.Add(new Application { ApplicationId = 6, Name = "MyPortfolio", Description = "Agent Analytics / Reporting Portal", Active = true });
+        dataArr.Add(new Application { ApplicationId = 7, Name = "AIME", Description = "Agent Management Platform", Active = true });
 
         DataUtilities.SetAuditFields(dataArr);
 

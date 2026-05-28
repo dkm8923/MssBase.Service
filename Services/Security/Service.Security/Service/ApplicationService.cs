@@ -21,6 +21,7 @@ namespace Service.Security.Service
 
         #region GET
 
+        
         public async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> GetAll(BaseServiceGet req, CancellationToken cancellationToken = default)
         {
             var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated);

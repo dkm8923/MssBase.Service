@@ -1,8 +1,10 @@
 using Contract.Security.Permission;
 using Dto.Security.Permission;
 using Dto.Security.Permission.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
+using MssBase.Service.Shared.Authorization;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
@@ -12,6 +14,7 @@ namespace MssBase.Service.Controllers.Security
     [ApiController]
     [Tags("Permission")]
     [AutoValidationAttribute]
+    [Authorize]
     public class PermissionController : ApiBaseController
     {
         private readonly IPermissionService _permissionService;
@@ -24,6 +27,7 @@ namespace MssBase.Service.Controllers.Security
         #region GetAll
 
         [HttpGet()]
+        [RequiredPermission(UserApiPermissions.PermissionRead)] 
         public async Task<IActionResult> GetPermissions([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
         {
             try
@@ -41,8 +45,9 @@ namespace MssBase.Service.Controllers.Security
 
         #region GetById
 
-        [HttpGet("{permissionId}", Name = "GetPermission")]
-        public async Task<IActionResult> GetPermission(int permissionId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
+        [HttpGet("{permissionId}", Name = "GetPermissionById")]
+        [RequiredPermission(UserApiPermissions.PermissionRead)] 
+        public async Task<IActionResult> GetPermissionById(int permissionId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -66,6 +71,7 @@ namespace MssBase.Service.Controllers.Security
         #region Filter
 
         [HttpPost("Filter")]
+        [RequiredPermission(UserApiPermissions.PermissionRead)] 
         public async Task<IActionResult> FilterPermissions(FilterPermissionServiceRequest req, CancellationToken cancellationToken = default)
         {
             try
@@ -84,6 +90,7 @@ namespace MssBase.Service.Controllers.Security
         #region Insert
 
         [HttpPost()]
+        [RequiredPermission(UserApiPermissions.PermissionInsert)]
         public async Task<IActionResult> InsertPermission(InsertUpdatePermissionRequest req)
         {
             try
@@ -95,7 +102,7 @@ namespace MssBase.Service.Controllers.Security
                     return BadRequest(result);
                 }
 
-                return CreatedAtRoute("GetPermission", new { permissionId = result.Response.PermissionId }, result);
+                return CreatedAtRoute("GetPermissionById", new { permissionId = result.Response.PermissionId }, result);
             }
             catch (Exception ex)
             {
@@ -108,6 +115,7 @@ namespace MssBase.Service.Controllers.Security
         #region Update
 
         [HttpPut("{permissionId}")]
+        [RequiredPermission(UserApiPermissions.PermissionUpdate)]
         public async Task<IActionResult> UpdatePermission(int permissionId, InsertUpdatePermissionRequest req)
         {
             try
@@ -126,6 +134,7 @@ namespace MssBase.Service.Controllers.Security
         #region Delete
 
         [HttpDelete("{permissionId}")]
+        [RequiredPermission(UserApiPermissions.PermissionDelete)]
         public async Task<IActionResult> DeletePermission(int permissionId)
         {
             try

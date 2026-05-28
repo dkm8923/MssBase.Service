@@ -39,6 +39,7 @@
     <ProjectReference Include="..\Services\Logger\Service.Logger\Service.Logger.csproj" />
     <ProjectReference Include="..\Shared\Shared.Contracts\Shared.Contracts.csproj" />
     <ProjectReference Include="..\Shared\Shared.Service\Shared.Service.csproj" />
+    <ProjectReference Include="..\Shared\Shared.Logic\Shared.Logic.csproj" />
   </ItemGroup>
 
   <ItemGroup>

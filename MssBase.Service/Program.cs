@@ -18,6 +18,7 @@ builder.Services.AddHttpClient();
 builder.Services.ConfigureAuthenticationSettings(builder);
 
 builder.Services.ConfigureJwtAuthentication(builder);
+builder.Services.AddPermissionAuthorization();
 
 builder.Services.ConfigureControllers(builder);
 

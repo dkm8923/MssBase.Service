@@ -57,6 +57,8 @@ using SharpGrip.FluentValidation.AutoValidation.Mvc.Enums;
 using MssBase.Service.Shared.FluentValidation;
 using Contract.Security.Authentication;
 using Logic.Security.Validators.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using MssBase.Service.Shared.Authorization;
 
 namespace MssBase.Service
 {
@@ -131,6 +133,13 @@ namespace MssBase.Service
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.IssuerSigningKey))
                     };
                 });
+        }
+
+        public static void AddPermissionAuthorization(this IServiceCollection services)
+        {
+            services.AddAuthorization();
+            services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+            services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
         }
 
         public static void ConfigureControllers(this IServiceCollection services, WebApplicationBuilder builder)
