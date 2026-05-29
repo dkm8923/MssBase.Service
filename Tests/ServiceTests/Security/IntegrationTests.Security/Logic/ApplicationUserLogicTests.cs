@@ -663,7 +663,7 @@ namespace IntegrationTests.Security.Logic
             //change password to ensure PasswordResetRequired is false before reset password test
             await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
                 ApplicationUserId = testUser.Response.ApplicationUserId, 
-                NewPassword = TestConstants.DefaultNewPassword,
+                NewPassword = TestConstants.DefaultTestUserPassword,
                 CurrentUser = TestConstants.CurrentUser 
             });
 
@@ -724,7 +724,7 @@ namespace IntegrationTests.Security.Logic
             // Act
             var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
                 ApplicationUserId = testUser.Response.ApplicationUserId, 
-                NewPassword = TestConstants.DefaultNewPassword,
+                NewPassword = TestConstants.DefaultTestUserPassword,
                 CurrentUser = TestConstants.CurrentUser 
             });
             
@@ -772,7 +772,7 @@ namespace IntegrationTests.Security.Logic
             // Act
             var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
                 ApplicationUserId = 999, 
-                NewPassword = TestConstants.DefaultNewPassword,
+                NewPassword = TestConstants.DefaultTestUserPassword,
                 CurrentUser = TestConstants.CurrentUser 
             });
             

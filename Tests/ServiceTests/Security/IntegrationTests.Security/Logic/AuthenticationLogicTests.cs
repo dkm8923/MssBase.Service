@@ -26,7 +26,7 @@ namespace IntegrationTests.Security.Logic
             var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
             var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, true);
             var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
-            var newPassword = TestConstants.DefaultNewPassword;
+            var newPassword = TestConstants.DefaultTestUserPassword;
             
             //change password after initial user creation
             await _applicationUserLogic.ChangePassword(new ChangePasswordRequest {
@@ -549,11 +549,11 @@ namespace IntegrationTests.Security.Logic
             //change password after initial user creation
             await _applicationUserLogic.ChangePassword(new ChangePasswordRequest {
                 ApplicationUserId = testUser.Response.ApplicationUserId,
-                NewPassword = TestConstants.DefaultNewPassword,
+                NewPassword = TestConstants.DefaultTestUserPassword,
                 CurrentUser = TestConstants.CurrentUser
             });
             
-            testUser.Response.Password = TestConstants.DefaultNewPassword;
+            testUser.Response.Password = TestConstants.DefaultTestUserPassword;
 
             return testUser.Response;
         }

@@ -43,6 +43,7 @@ using Data.Security;
 using Contract.Security.Authentication;
 using Dto.Security.Authentication;
 using Logic.Security.Validators.Authentication;
+using Shared.Models;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -109,6 +110,103 @@ public class SecurityTestBase
             await dbContext.Database.EnsureDeletedAsync();
             await dbContext.Database.EnsureCreatedAsync();
         }
+    }
+
+    protected async Task<ApplicationUserDto> CreateTestUserWithPermissions(int applicationId, AssignRoleRequest req)
+    {
+        var testUser = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest { 
+            Active = true, 
+            ApplicationId = applicationId, 
+            Email = TestConstants.DefaultTestUserEmail, 
+            FirstName = "Bob", 
+            LastName = "Smith", 
+            DateOfBirth = new DateTime(1987, 2, 12),
+            CurrentUser = TestConstants.CurrentUser 
+        }, _applicationLogic);
+
+        if (testUser.Response != null)
+        {
+            //change password for users so they can be used for authentication testing...
+            await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = testUser.Response.ApplicationUserId, NewPassword = TestConstants.DefaultTestUserPassword, CurrentUser = TestConstants.CurrentUser });
+        }
+
+        var applicationUserId = testUser.Response.ApplicationUserId;
+
+        if (req.ApplicationAdmin || req.ApplicationReadOnly)
+        {
+            var applicationRolesWithPermissions = await CreateDefaultApplicationRolesWithPermissions(applicationId);
+            var roleId = req.ApplicationAdmin ? applicationRolesWithPermissions.Where(x => x.Name == "ApplicationAdmin").FirstOrDefault().RoleId 
+                : applicationRolesWithPermissions.Where(x => x.Name == "ApplicationReadOnly").FirstOrDefault().RoleId;
+
+            await AssignRoleToUser(applicationId, applicationUserId, roleId);
+        }
+
+        var ret = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet { IncludeRelated = true });
+
+        return ret.Response;
+    }
+
+    private async Task<List<RoleDto>> CreateDefaultApplicationRolesWithPermissions(int applicationId)
+    {
+        var permissionsToCreate = new List<InsertUpdatePermissionRequest>();
+        
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationRead, Description = "Allows for retrieving all application data in a read only state" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationInsert, Description = "Allows for creating new application data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUpdate, Description = "Allows for updating existing application data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationDelete, Description = "Allows for deleting application data" });
+
+        var createdPermissions = await CreatePermissions(permissionsToCreate);
+
+        var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = "ApplicationAdmin", Description = "Full Access to all Application Functionality." });
+        var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = "ApplicationReadOnly", Description = "ReadOnly Access to Application Functionality." });
+        var readOnlyPermissions = createdPermissions.Where(x => x.Name == UserApiPermissions.ApplicationRead).ToList();
+
+        // create admin role permissions
+        await CreateRolePermissions(applicationId, createdPermissions, adminRole.RoleId);
+
+        // create readonly role permissions
+        await CreateRolePermissions(applicationId, readOnlyPermissions, readOnlyRole.RoleId);
+        
+        var ret = await _roleLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { adminRole.RoleId, readOnlyRole.RoleId }, IncludeRelated = true });
+        return ret.Response.ToList();
+    }
+
+    protected async Task<SecurityTestData> ArrangeApplicationTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        
+        ret.ActiveApplications = await _securityTestUtilities.Application.CreateActiveTestRecords();
+        ret.InactiveApplications = await _securityTestUtilities.Application.CreateInactiveTestRecords();
+
+        return ret;
+    }
+
+    protected async Task<SecurityTestData> ArrangeApplicationTestDataWithRelatedData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        
+        ret.ActiveApplications = await _securityTestUtilities.Application.CreateActiveTestRecords(1);
+        ret.InactiveApplications = await _securityTestUtilities.Application.CreateInactiveTestRecords(1);
+
+        foreach (var activeApplication in ret.ActiveApplications)
+        {
+            ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(activeApplication.ApplicationId);
+            ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(activeApplication.ApplicationId);
+            ret.ActiveRoles = await _securityTestUtilities.Role.CreateActiveTestRecords(activeApplication.ApplicationId);
+        }
+
+        foreach (var inactiveApplication in ret.InactiveApplications)
+        {
+            ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(inactiveApplication.ApplicationId);
+            ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(inactiveApplication.ApplicationId);
+            ret.InactiveRoles = await _securityTestUtilities.Role.CreateInactiveTestRecords(inactiveApplication.ApplicationId);
+        }
+
+        return ret;
     }
 
     protected async Task<SecurityTestData> ArrangeApplicationUserTestData()
@@ -661,4 +759,78 @@ public class SecurityTestBase
 
         return services;
     }
+
+    #region models
+
+    protected record AssignRoleRequest
+    {
+        public bool ApplicationAdmin { get; set; } = false;
+        public bool ApplicationReadOnly { get; set; } = false;
+        public bool ApplicationUserAdmin { get; set; } = false;
+        public bool ApplicationUserReadOnly { get; set; } = false;
+        public bool ApplicationUserPermissionAdmin { get; set; } = false;
+        public bool ApplicationUserPermissionReadOnly { get; set; } = false;
+        public bool ApplicationUserRoleAdmin { get; set; } = false;
+        public bool ApplicationUserRoleReadOnly { get; set; } = false;
+        public bool PermissionAdmin { get; set; } = false;
+        public bool PermissionReadOnly { get; set; } = false;
+        public bool RoleAdmin { get; set; } = false;
+        public bool RoleReadOnly { get; set; } = false;
+        public bool RolePermissionAdmin { get; set; } = false;  
+        public bool RolePermissionReadOnly { get; set; } = false;
+    }
+
+    #endregion
+
+    #region utils
+
+    private async Task<List<PermissionDto>> CreatePermissions(List<InsertUpdatePermissionRequest> permissionsToCreate)
+    {
+        var createdPermissions = new List<PermissionDto>();
+
+        foreach (var permission in permissionsToCreate)
+        {
+            permission.CurrentUser = TestConstants.CurrentUser;
+            var result = await _permissionLogic.Insert(permission, _applicationLogic);
+            createdPermissions.Add(result.Response);
+        }
+
+        return createdPermissions;
+    }
+
+    private async Task<RoleDto> CreateRole(InsertUpdateRoleRequest req)
+    {
+        req.CurrentUser = TestConstants.CurrentUser;
+        var result = await _roleLogic.Insert(req, _applicationLogic);
+        return result.Response;
+    }
+
+    private async Task CreateRolePermissions(int applicationId, List<PermissionDto> permissions, int roleId)
+    {
+        foreach (var permission in permissions)
+        {
+            await CreateRolePermission(new InsertUpdateRolePermissionRequest { Active = true, ApplicationId = applicationId, RoleId = roleId, PermissionId = permission.PermissionId });
+        }
+    }
+
+    private async Task<RolePermissionDto> CreateRolePermission(InsertUpdateRolePermissionRequest req)
+    {
+        req.CurrentUser = TestConstants.CurrentUser;
+        var result = await _rolePermissionLogic.Insert(req, _applicationLogic, _roleLogic, _permissionLogic);
+        return result.Response;
+    }
+
+    private async Task<ApplicationUserRoleDto> CreateApplicationUserRole(InsertUpdateApplicationUserRoleRequest req)
+    {
+        req.CurrentUser = TestConstants.CurrentUser;
+        var result = await _applicationUserRoleLogic.Insert(req, _applicationLogic, _applicationUserLogic, _roleLogic);
+        return result.Response;
+    }
+
+    private async Task AssignRoleToUser(int applicationId, int applicationUserId, int roleId)
+    {
+        await CreateApplicationUserRole(new InsertUpdateApplicationUserRoleRequest { Active = true, ApplicationId = applicationId, ApplicationUserId = applicationUserId, RoleId = roleId });
+    }
+
+    #endregion
 }

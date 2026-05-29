@@ -66,6 +66,7 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         await CreateSpecificTestDataForSingleUser(sudoUser, new CreateTestDataRequest { 
             ApplicationAdmin = true,
             ApplicationUserAdmin = true,
+            ApplicationUserPermissionAdmin = true, 
             ApplicationUserRoleAdmin = true, 
             PermissionAdmin = true,
             RoleAdmin = true,
@@ -90,6 +91,7 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         await CreateSpecificTestDataForSingleUser(readOnlyUser, new CreateTestDataRequest { 
             ApplicationReadOnly = true,
             ApplicationUserReadOnly = true,
+            ApplicationUserPermissionReadOnly = true, 
             ApplicationUserRoleReadOnly = true, 
             PermissionReadOnly = true,
             RoleReadOnly = true,
@@ -328,6 +330,8 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         public bool ApplicationReadOnly { get; set; } = false;
         public bool ApplicationUserAdmin { get; set; } = false;
         public bool ApplicationUserReadOnly { get; set; } = false;
+        public bool ApplicationUserPermissionAdmin { get; set; } = false;
+        public bool ApplicationUserPermissionReadOnly { get; set; } = false;
         public bool ApplicationUserRoleAdmin { get; set; } = false;
         public bool ApplicationUserRoleReadOnly { get; set; } = false;
         public bool PermissionAdmin { get; set; } = false;
@@ -368,6 +372,7 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
 
         var applicationRolesWithPermissions = await CreateDefaultApplicationRolesWithPermissions(applicationUser.ApplicationId);
         var applicationUserRolesWithPermissions = await CreateDefaultApplicationUserRolesWithPermissions(applicationUser.ApplicationId);
+        var applicationUserPermissionRolesWithPermissions = await CreateDefaultApplicationUserPermissionRolesWithPermissions(applicationUser.ApplicationId);
         var applicationUserRoleRolesWithPermissions = await CreateDefaultApplicationUserRoleRolesWithPermissions(applicationUser.ApplicationId);
         var permissionRolesWithPermissions = await CreateDefaultPermissionRolesWithPermissions(applicationUser.ApplicationId);
         var roleRolesWithPermissions = await CreateDefaultRoleRolesWithPermissions(applicationUser.ApplicationId);
@@ -394,6 +399,16 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         if (req.ApplicationUserReadOnly)
         {
             await AssignRoleToUser(applicationId, applicationUserId, applicationUserRolesWithPermissions.Where(x => x.Name == "ApplicationUserReadOnly").FirstOrDefault().RoleId);
+        }
+
+        if (req.ApplicationUserPermissionAdmin)
+        {
+            await AssignRoleToUser(applicationId, applicationUserId, applicationUserPermissionRolesWithPermissions.Where(x => x.Name == "ApplicationUserPermissionAdmin").FirstOrDefault().RoleId);
+        }
+
+        if (req.ApplicationUserPermissionReadOnly)
+        {
+            await AssignRoleToUser(applicationId, applicationUserId, applicationUserPermissionRolesWithPermissions.Where(x => x.Name == "ApplicationUserPermissionReadOnly").FirstOrDefault().RoleId);
         }
 
         if (req.ApplicationUserRoleAdmin)

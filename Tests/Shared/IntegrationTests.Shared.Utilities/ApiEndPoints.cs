@@ -17,6 +17,10 @@
 
         public class Security 
         {
+            public class Authentication
+            {
+                public const string Base = "/api/Security/Authentication";
+            }
             public class Application
             {
                 public const string Base = "/api/Security/Application";

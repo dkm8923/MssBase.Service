@@ -6,7 +6,7 @@ using MssBase.Service.Controllers.Shared;
 
 namespace MssBase.Service.Controllers.Security
 {
-    [Route("api/[controller]")]
+    [Route("api/security/[controller]")]
     [ApiController]
     [Tags("Authentication")]
     [AutoValidationAttribute]
