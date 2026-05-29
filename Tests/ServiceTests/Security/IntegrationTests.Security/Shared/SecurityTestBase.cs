@@ -136,8 +136,62 @@ public class SecurityTestBase
         if (req.ApplicationAdmin || req.ApplicationReadOnly)
         {
             var applicationRolesWithPermissions = await CreateDefaultApplicationRolesWithPermissions(applicationId);
-            var roleId = req.ApplicationAdmin ? applicationRolesWithPermissions.Where(x => x.Name == "ApplicationAdmin").FirstOrDefault().RoleId 
-                : applicationRolesWithPermissions.Where(x => x.Name == "ApplicationReadOnly").FirstOrDefault().RoleId;
+            var roleId = req.ApplicationAdmin ? applicationRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationAdmin).FirstOrDefault().RoleId 
+                : applicationRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationReadOnly).FirstOrDefault().RoleId;
+
+            await AssignRoleToUser(applicationId, applicationUserId, roleId);
+        }
+
+        if (req.ApplicationUserAdmin || req.ApplicationUserReadOnly)
+        {
+            var applicationUserRolesWithPermissions = await CreateDefaultApplicationUserRolesWithPermissions(applicationId);
+            var roleId = req.ApplicationUserAdmin ? applicationUserRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserAdmin).FirstOrDefault().RoleId 
+                : applicationUserRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserReadOnly).FirstOrDefault().RoleId;
+
+            await AssignRoleToUser(applicationId, applicationUserId, roleId);
+        }
+
+        if (req.ApplicationUserPermissionAdmin || req.ApplicationUserPermissionReadOnly)
+        {
+            var applicationUserPermissionRolesWithPermissions = await CreateDefaultApplicationUserPermissionRolesWithPermissions(applicationId);
+            var roleId = req.ApplicationUserPermissionAdmin ? applicationUserPermissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserPermissionAdmin).FirstOrDefault().RoleId 
+                : applicationUserPermissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserPermissionReadOnly).FirstOrDefault().RoleId;
+
+            await AssignRoleToUser(applicationId, applicationUserId, roleId);
+        }
+
+        if (req.ApplicationUserRoleAdmin || req.ApplicationUserRoleReadOnly)
+        {
+            var applicationUserRoleRolesWithPermissions = await CreateDefaultApplicationUserRoleRolesWithPermissions(applicationId);
+            var roleId = req.ApplicationUserRoleAdmin ? applicationUserRoleRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserRoleAdmin).FirstOrDefault().RoleId 
+                : applicationUserRoleRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserRoleReadOnly).FirstOrDefault().RoleId;
+
+            await AssignRoleToUser(applicationId, applicationUserId, roleId);
+        }
+
+        if (req.PermissionAdmin || req.PermissionReadOnly)
+        {
+            var permissionRolesWithPermissions = await CreateDefaultPermissionRolesWithPermissions(applicationId);
+            var roleId = req.PermissionAdmin ? permissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.PermissionAdmin).FirstOrDefault().RoleId 
+                : permissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.PermissionReadOnly).FirstOrDefault().RoleId;
+
+            await AssignRoleToUser(applicationId, applicationUserId, roleId);
+        }
+
+        if (req.RoleAdmin || req.RoleReadOnly)
+        {
+            var roleRolesWithPermissions = await CreateDefaultRoleRolesWithPermissions(applicationId);
+            var roleId = req.RoleAdmin ? roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RoleAdmin).FirstOrDefault().RoleId 
+                : roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RoleReadOnly).FirstOrDefault().RoleId;
+
+            await AssignRoleToUser(applicationId, applicationUserId, roleId);
+        }
+
+        if (req.RolePermissionAdmin || req.RolePermissionReadOnly)
+        {
+            var roleRolesWithPermissions = await CreateDefaultRoleRolesWithPermissions(applicationId);
+            var roleId = req.RolePermissionAdmin ? roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RolePermissionAdmin).FirstOrDefault().RoleId 
+                : roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RolePermissionReadOnly).FirstOrDefault().RoleId;
 
             await AssignRoleToUser(applicationId, applicationUserId, roleId);
         }
@@ -151,16 +205,166 @@ public class SecurityTestBase
     {
         var permissionsToCreate = new List<InsertUpdatePermissionRequest>();
         
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationRead, Description = "Allows for retrieving all application data in a read only state" });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationInsert, Description = "Allows for creating new application data" });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUpdate, Description = "Allows for updating existing application data" });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationDelete, Description = "Allows for deleting application data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationRead, Description = "Allows for retrieving all Application data in a read only state" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationInsert, Description = "Allows for creating new Application data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUpdate, Description = "Allows for updating existing Application data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationDelete, Description = "Allows for deleting Application data" });
 
         var createdPermissions = await CreatePermissions(permissionsToCreate);
 
         var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationAdmin, Description = "Full Access to all Application Functionality." });
         var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationReadOnly, Description = "ReadOnly Access to Application Functionality." });
         var readOnlyPermissions = createdPermissions.Where(x => x.Name == UserApiPermissions.ApplicationRead).ToList();
+
+        // create admin role permissions
+        await CreateRolePermissions(applicationId, createdPermissions, adminRole.RoleId);
+
+        // create readonly role permissions
+        await CreateRolePermissions(applicationId, readOnlyPermissions, readOnlyRole.RoleId);
+        
+        var ret = await _roleLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { adminRole.RoleId, readOnlyRole.RoleId }, IncludeRelated = true });
+        return ret.Response.ToList();
+    }
+
+    private async Task<List<RoleDto>> CreateDefaultApplicationUserRolesWithPermissions(int applicationId)
+    {
+        var permissionsToCreate = new List<InsertUpdatePermissionRequest>();
+        
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserRead, Description = "Allows for retrieving all ApplicationUser data in a read only state" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserInsert, Description = "Allows for creating new ApplicationUser data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserUpdate, Description = "Allows for updating existing ApplicationUser data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserDelete, Description = "Allows for deleting ApplicationUser data" });
+
+        var createdPermissions = await CreatePermissions(permissionsToCreate);
+
+        var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationUserAdmin, Description = "Full Access to all ApplicationUser Functionality." });
+        var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationUserReadOnly, Description = "ReadOnly Access to all ApplicationUser Functionality." });
+        var readOnlyPermissions = createdPermissions.Where(x => x.Name == UserApiPermissions.ApplicationUserRead).ToList();
+
+        // create admin role permissions
+        await CreateRolePermissions(applicationId, createdPermissions, adminRole.RoleId);
+
+        // create readonly role permissions
+        await CreateRolePermissions(applicationId, readOnlyPermissions, readOnlyRole.RoleId);
+        
+        var ret = await _roleLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { adminRole.RoleId, readOnlyRole.RoleId }, IncludeRelated = true });
+        return ret.Response.ToList();
+    }
+
+    private async Task<List<RoleDto>> CreateDefaultApplicationUserPermissionRolesWithPermissions(int applicationId)
+    {
+        var permissionsToCreate = new List<InsertUpdatePermissionRequest>();
+        
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserPermissionRead, Description = "Allows for retrieving all ApplicationUserPermission data in a read only state" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserPermissionInsert, Description = "Allows for creating new ApplicationUserPermission data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserPermissionUpdate, Description = "Allows for updating existing ApplicationUserPermission data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserPermissionDelete, Description = "Allows for deleting ApplicationUserPermission data" });
+
+        var createdPermissions = await CreatePermissions(permissionsToCreate);
+
+        var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationUserPermissionAdmin, Description = "Full Access to all ApplicationUserPermission Functionality." });
+        var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationUserPermissionReadOnly, Description = "ReadOnly Access to all ApplicationUserPermission Functionality." });
+        var readOnlyPermissions = createdPermissions.Where(x => x.Name == UserApiPermissions.ApplicationUserPermissionRead).ToList();
+
+        // create admin role permissions
+        await CreateRolePermissions(applicationId, createdPermissions, adminRole.RoleId);
+
+        // create readonly role permissions
+        await CreateRolePermissions(applicationId, readOnlyPermissions, readOnlyRole.RoleId);
+        
+        var ret = await _roleLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { adminRole.RoleId, readOnlyRole.RoleId }, IncludeRelated = true });
+        return ret.Response.ToList();
+    }
+
+    private async Task<List<RoleDto>> CreateDefaultApplicationUserRoleRolesWithPermissions(int applicationId)
+    {
+        var permissionsToCreate = new List<InsertUpdatePermissionRequest>();
+        
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserRoleRead, Description = "Allows for retrieving all ApplicationUserRole data in a read only state" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserRoleInsert, Description = "Allows for creating new ApplicationUserRole data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserRoleUpdate, Description = "Allows for updating existing ApplicationUserRole data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserRoleDelete, Description = "Allows for deleting ApplicationUserRole data" });
+
+        var createdPermissions = await CreatePermissions(permissionsToCreate);
+
+        var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationUserRoleAdmin, Description = "Full Access to all ApplicationUserRole Functionality." });
+        var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationUserRoleReadOnly, Description = "ReadOnly Access to all ApplicationUserRole Functionality." });
+        var readOnlyPermissions = createdPermissions.Where(x => x.Name == UserApiPermissions.ApplicationUserRoleRead).ToList();
+
+        // create admin role permissions
+        await CreateRolePermissions(applicationId, createdPermissions, adminRole.RoleId);
+
+        // create readonly role permissions
+        await CreateRolePermissions(applicationId, readOnlyPermissions, readOnlyRole.RoleId);
+        
+        var ret = await _roleLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { adminRole.RoleId, readOnlyRole.RoleId }, IncludeRelated = true });
+        return ret.Response.ToList();
+    }
+
+    private async Task<List<RoleDto>> CreateDefaultPermissionRolesWithPermissions(int applicationId)
+    {
+        var permissionsToCreate = new List<InsertUpdatePermissionRequest>();
+        
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.PermissionRead, Description = "Allows for retrieving all Permission data in a read only state" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.PermissionInsert, Description = "Allows for creating new Permission data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.PermissionUpdate, Description = "Allows for updating existing Permission data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.PermissionDelete, Description = "Allows for deleting Permission data" });
+
+        var createdPermissions = await CreatePermissions(permissionsToCreate);
+
+        var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.PermissionAdmin, Description = "Full Access to all Permission Functionality." });
+        var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.PermissionReadOnly, Description = "ReadOnly Access to all Permission Functionality." });
+        var readOnlyPermissions = createdPermissions.Where(x => x.Name == UserApiPermissions.PermissionRead).ToList();
+
+        // create admin role permissions
+        await CreateRolePermissions(applicationId, createdPermissions, adminRole.RoleId);
+
+        // create readonly role permissions
+        await CreateRolePermissions(applicationId, readOnlyPermissions, readOnlyRole.RoleId);
+        
+        var ret = await _roleLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { adminRole.RoleId, readOnlyRole.RoleId }, IncludeRelated = true });
+        return ret.Response.ToList();
+    }
+
+    private async Task<List<RoleDto>> CreateDefaultRoleRolesWithPermissions(int applicationId)
+    {
+        var permissionsToCreate = new List<InsertUpdatePermissionRequest>();
+        
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.RoleRead, Description = "Allows for retrieving all Role data in a read only state" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.RoleInsert, Description = "Allows for creating new Role data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.RoleUpdate, Description = "Allows for updating existing Role data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.RoleDelete, Description = "Allows for deleting Role data" });
+
+        var createdPermissions = await CreatePermissions(permissionsToCreate);
+
+        var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.RoleAdmin, Description = "Full Access to all Role Functionality." });
+        var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.RoleReadOnly, Description = "ReadOnly Access to all Role Functionality." });
+        var readOnlyPermissions = createdPermissions.Where(x => x.Name == UserApiPermissions.RoleRead).ToList();
+
+        // create admin role permissions
+        await CreateRolePermissions(applicationId, createdPermissions, adminRole.RoleId);
+
+        // create readonly role permissions
+        await CreateRolePermissions(applicationId, readOnlyPermissions, readOnlyRole.RoleId);
+        
+        var ret = await _roleLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { adminRole.RoleId, readOnlyRole.RoleId }, IncludeRelated = true });
+        return ret.Response.ToList();
+    }
+
+    private async Task<List<RoleDto>> CreateDefaultRolePermissionRolesWithPermissions(int applicationId)
+    {
+        var permissionsToCreate = new List<InsertUpdatePermissionRequest>();
+        
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.RolePermissionRead, Description = "Allows for retrieving all RolePermission data in a read only state" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.RolePermissionInsert, Description = "Allows for creating new RolePermission data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.RolePermissionUpdate, Description = "Allows for updating existing RolePermission data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.RolePermissionDelete, Description = "Allows for deleting RolePermission data" });
+
+        var createdPermissions = await CreatePermissions(permissionsToCreate);
+
+        var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.RolePermissionAdmin, Description = "Full Access to all RolePermission Functionality." });
+        var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.RolePermissionReadOnly, Description = "ReadOnly Access to all RolePermission Functionality." });
+        var readOnlyPermissions = createdPermissions.Where(x => x.Name == UserApiPermissions.RolePermissionRead).ToList();
 
         // create admin role permissions
         await CreateRolePermissions(applicationId, createdPermissions, adminRole.RoleId);
