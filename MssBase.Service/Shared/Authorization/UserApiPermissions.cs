@@ -1,3 +1,5 @@
+namespace MssBase.Service.Shared.Authorization;
+
 public static class UserApiPermissions
 {
     //Application Permissions

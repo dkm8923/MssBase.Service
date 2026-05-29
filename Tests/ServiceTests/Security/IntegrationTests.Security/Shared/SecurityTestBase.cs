@@ -44,6 +44,7 @@ using Contract.Security.Authentication;
 using Dto.Security.Authentication;
 using Logic.Security.Validators.Authentication;
 using Shared.Models;
+using MssBase.Service.Shared.Authorization;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -157,8 +158,8 @@ public class SecurityTestBase
 
         var createdPermissions = await CreatePermissions(permissionsToCreate);
 
-        var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = "ApplicationAdmin", Description = "Full Access to all Application Functionality." });
-        var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = "ApplicationReadOnly", Description = "ReadOnly Access to Application Functionality." });
+        var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationAdmin, Description = "Full Access to all Application Functionality." });
+        var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationReadOnly, Description = "ReadOnly Access to Application Functionality." });
         var readOnlyPermissions = createdPermissions.Where(x => x.Name == UserApiPermissions.ApplicationRead).ToList();
 
         // create admin role permissions
