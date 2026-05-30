@@ -570,7 +570,7 @@ namespace IntegrationTests.Security.Controller
         //TODO: Create Readonly User Tests
         private async Task<string> CreateAuthenticatedReadOnlyTestUserAndReturnToken(ApplicationDto application)
         {
-            return await CreateAuthenticatedTestUserAndReturnToken(application, new AssignRoleRequest { ApplicationReadOnly = true });
+            return await CreateAuthenticatedTestUserAndReturnToken(application, new AssignRoleRequest { PermissionReadOnly = true });
         }
 
         private async Task<string> CreateAuthenticatedTestUserAndReturnToken(ApplicationDto application, AssignRoleRequest assignRoleRequest)

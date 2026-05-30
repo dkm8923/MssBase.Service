@@ -8,6 +8,7 @@ using Shared.Models;
 using System.Net;
 using IntegrationTests.Shared.Utilities;
 using IntegrationTests.Shared.Utilities.Contracts.Controller;
+using Dto.Security.Application;
 
 namespace IntegrationTests.Security.Controller
 {
@@ -616,6 +617,30 @@ namespace IntegrationTests.Security.Controller
             getResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
+        }
+
+        #endregion
+
+        #region Private
+
+        private async Task<string> CreateAuthenticatedAdminTestUserAndReturnToken(ApplicationDto application)
+        {
+            return await CreateAuthenticatedTestUserAndReturnToken(application, new AssignRoleRequest { ApplicationUserRoleAdmin = true });
+        }
+
+        //TODO: Create Readonly User Tests
+        private async Task<string> CreateAuthenticatedReadOnlyTestUserAndReturnToken(ApplicationDto application)
+        {
+            return await CreateAuthenticatedTestUserAndReturnToken(application, new AssignRoleRequest { ApplicationUserRoleReadOnly = true });
+        }
+
+        private async Task<string> CreateAuthenticatedTestUserAndReturnToken(ApplicationDto application, AssignRoleRequest assignRoleRequest)
+        {
+            //authenticate test user and receive token to be used in authorized controller calls
+            var testUser = await CreateTestUserWithPermissions(application.ApplicationId, assignRoleRequest);
+            var authResult = await ControllerTestUtilities.AuthenticateTestUserAndReturnAuthToken(_client, testUser.Email, TestConstants.DefaultTestUserPassword, application.Name);
+            
+            return authResult.Token;
         }
 
         #endregion
