@@ -246,7 +246,7 @@ namespace IntegrationTests.Security.Controller
             var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var id = "asfasdfasdfasdf";
-            var apiEndpoint = ApiEndPoints.Security.Application.Base + "/" + id;
+            var apiEndpoint = _defaultApplicationApiEndPoint + "/" + id;
 
             // Act
             var result = await ControllerTestUtilities.GetRecordByIdBadRequestReturned<ApplicationDto>(_client,
@@ -326,7 +326,7 @@ namespace IntegrationTests.Security.Controller
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms
             {
                 Client = _client,
-                ApiEndPoint = ApiEndPoints.Security.Application.Base,
+                ApiEndPoint = _defaultApplicationApiEndPoint,
                 Token = token,
                 RequestObject = postReq
             });
@@ -349,7 +349,7 @@ namespace IntegrationTests.Security.Controller
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms
             {
                 Client = _client,
-                ApiEndPoint = ApiEndPoints.Security.Application.Base,
+                ApiEndPoint = _defaultApplicationApiEndPoint,
                 Token = token,
                 RequestObject = postReq
             });
@@ -451,7 +451,7 @@ namespace IntegrationTests.Security.Controller
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecords(_client, _defaultApplicationApiEndPoint,null, token);
+            var result = await ControllerTestUtilities.GetFilteredRecords(_client, _defaultApplicationApiEndPoint, null, token);
             
             //Assert
             result.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
@@ -537,7 +537,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Insert_Should_Create_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             var insertReq = _securityTestUtilities.Application.CreateInsertUpdateRequestWithRandomValues();
@@ -566,11 +566,11 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Insert_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultApplicationApiEndPoint,null, token);
+            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultApplicationApiEndPoint, null, token);
 
             //Assert
             insertResult.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
@@ -580,11 +580,11 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Insert_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultApplicationApiEndPoint,"", token);
+            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultApplicationApiEndPoint, "", token);
             
             //assert
             insertResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -598,7 +598,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Update_Should_Update_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var insertedRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
@@ -631,11 +631,11 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Update_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultApplicationApiEndPoint,null, 1, token);
+            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultApplicationApiEndPoint, null, 1, token);
 
             //Assert
             updateResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -645,11 +645,11 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Update_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultApplicationApiEndPoint,"", 1, token);
+            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultApplicationApiEndPoint, "", 1, token);
 
             //Assert
             updateResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -663,7 +663,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Delete_Should_Delete_Record()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
@@ -680,7 +680,7 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Delete_Should_Not_Delete_Record_Id_Does_Not_Exist()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var applicationId = -1;
 
@@ -701,14 +701,14 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Delete_Should_Return_Bad_Request_Invalid_Id()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var applicationId = "asdfasfdasdfasfdas";
 
-            using var getRequest = new HttpRequestMessage(HttpMethod.Get, ApiEndPoints.Security.Application.Base + "/" + applicationId);
+            using var getRequest = new HttpRequestMessage(HttpMethod.Get, _defaultApplicationApiEndPoint + "/" + applicationId);
             ControllerTestUtilities.AddAuthorizationHeaderIfApplicable(getRequest, token);
             
-            using var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, ApiEndPoints.Security.Application.Base + "/" + applicationId);
+            using var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, _defaultApplicationApiEndPoint + "/" + applicationId);
             ControllerTestUtilities.AddAuthorizationHeaderIfApplicable(deleteRequest, token);
 
             // Act
