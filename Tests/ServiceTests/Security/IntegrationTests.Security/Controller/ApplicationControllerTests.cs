@@ -246,16 +246,15 @@ namespace IntegrationTests.Security.Controller
             var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var id = "asfasdfasdfasdf";
-            var apiEndpoint = _defaultApplicationApiEndPoint + "/" + id;
 
+            using var getByIdRequest = new HttpRequestMessage(HttpMethod.Get, _defaultApplicationApiEndPoint + "/" + id);
+            ControllerTestUtilities.AddAuthorizationHeaderIfApplicable(getByIdRequest, token);
+            
             // Act
-            var result = await ControllerTestUtilities.GetRecordByIdBadRequestReturned<ApplicationDto>(_client,
-                apiEndpoint,
-                token
-            );
-
+            var getResponse = await _client.SendAsync(getByIdRequest);
+            
             // Assert
-            result.Should().BeTrue();
+            getResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         [Fact]

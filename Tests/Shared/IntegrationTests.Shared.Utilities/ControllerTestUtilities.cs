@@ -119,19 +119,6 @@ namespace IntegrationTests.Shared
             return ret;
         }
 
-        public static async Task<bool> GetRecordByIdBadRequestReturned<TResponse>(HttpClient client, string apiEndPoint, string token)
-        {
-            var response = await ExecuteDefaultGetRequest(new HttpGetRequestParms { 
-                Client = client, 
-                ApiEndPoint = apiEndPoint, 
-                Token = token
-            });
-
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            
-            return response.StatusCode == HttpStatusCode.BadRequest ? true : false;
-        }
-
         public static async Task<ErrorValidationResult<TResponse>> GetRecordByIdWithValidationResult<TResponse>(HttpClient client, string apiEndPoint, int id, bool deleteCache = true)
         {
             apiEndPoint = apiEndPoint + "/" + id;
