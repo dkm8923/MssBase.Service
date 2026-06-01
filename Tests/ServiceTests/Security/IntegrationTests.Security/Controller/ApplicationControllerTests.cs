@@ -364,14 +364,14 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationTestData();
-            await _securityTestUtilities.Application.CreateSingleApplicationTestRecordWithSpecificValues();
+            var testRecord = arrangeTestDataResponse.ActiveApplications[0];
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             var postReqCreatedBy = new FilterApplicationServiceRequest { CreatedBy = TestConstants.CurrentUser };
             var postReqCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
             var postReqUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = TestConstants.CurrentUser };
             var postReqUpdatedOnDate = new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-            var postReqName = new FilterApplicationServiceRequest { Name = "Test Application Name" };   
+            var postReqName = new FilterApplicationServiceRequest { Name = testRecord.Name };
             
             // Act
             var filterCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint,Token = token, RequestObject = postReqCreatedBy });
@@ -599,7 +599,7 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var insertedRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var insertedRecord = arrangeTestDataResponse.ActiveApplications[0];
 
             var updateReq = new InsertUpdateApplicationRequest
             {
@@ -664,7 +664,7 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = arrangeTestDataResponse.ActiveApplications.Last();
 
             // Act
             var deleteResult = await ControllerTestUtilities.DeleteRecord(_client, _defaultApplicationApiEndPoint,testRecord.ApplicationId, token);

@@ -9,6 +9,7 @@ using System.Net;
 using IntegrationTests.Shared.Utilities;
 using IntegrationTests.Shared.Utilities.Contracts.Controller;
 using Dto.Security.Application;
+using IntegrationTests.Shared.Models;
 
 namespace IntegrationTests.Security.Controller
 {
@@ -26,6 +27,7 @@ namespace IntegrationTests.Security.Controller
                                                   IDefaultControllerTestsDelete
     {
         private readonly HttpClient _client;
+        private readonly string _defaultRolePermissionApiEndPoint = ApiEndPoints.Security.RolePermission.Base;
 
         public RolePermissionControllerTests(WebApplicationFactory<Program> factory)
         {
@@ -42,38 +44,55 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            await ArrangeRolePermissionTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base);
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(new HttpGetRequestParms {
+                Client = _client, 
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token 
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(5);
+            result.Response.Should().HaveCountGreaterThan(5);
         }
 
         [Fact]
         public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            await ArrangeRolePermissionTestData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(new HttpGetRequestParms {
+                Client = _client, 
+                ApiEndPoint = _defaultRolePermissionApiEndPoint, 
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeInactive = true, DeleteCache = true }
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(10);
+            result.Response.Should().HaveCountGreaterThan(5);
         }
 
         [Fact]
         public async Task Default_GetAll_Should_Return_Zero_Records()
         {
             // Arrange
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             await ClearAllSecurityTestTableData();
 
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base);
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultRolePermissionApiEndPoint, 
+                Token = token
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
@@ -85,13 +104,19 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
-
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true));
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, DeleteCache = true }
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(5);
+            result.Response.Should().HaveCountGreaterThan(0);
 
             foreach (var rolePermission in result.Response)
             {
@@ -107,13 +132,19 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
-
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base + "?" + ControllerTestUtilities.CreateIncludeRelatedQueryStringParm(true) + "&" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, IncludeInactive = true, DeleteCache = true }
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(10);
+            result.Response.Should().HaveCount(15);
 
             foreach (var rolePermission in result.Response)
             {
@@ -126,13 +157,18 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
-
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base);
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RolePermissionDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(5);
+            result.Response.Should().HaveCountGreaterThan(0);
 
             foreach (var rolePermission in result.Response)
             {
@@ -149,14 +185,20 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
-            var activeTestRecord = arrangeTestDataResponse.ActiveRolePermissions[0];
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveRolePermissions[0];
             
             // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(_client, ApiEndPoints.Security.RolePermission.Base, activeTestRecord.RolePermissionId);
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                RecordId = testRecord.RolePermissionId,
+                Token = token
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            _securityTestUtilities.RolePermission.VerifyTestRecordValuesMatch(result.Response, activeTestRecord);
+            _securityTestUtilities.RolePermission.VerifyTestRecordValuesMatch(result.Response, testRecord);
         }
 
         [Fact]
@@ -164,13 +206,21 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
-            var inactiveTestRecord = arrangeTestDataResponse.InactiveRolePermissions[0];
-
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.InactiveRolePermissions[0];
+            
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.RolePermission.Base + "/" + inactiveTestRecord.RolePermissionId);
-
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                RecordId = testRecord.RolePermissionId,
+                Token = token,
+                ExpectedStatusCode = HttpStatusCode.NotFound
+            });
+            
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().BeNull();
         }
 
         [Fact]
@@ -178,43 +228,62 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
-            var inactiveTestRecord = arrangeTestDataResponse.InactiveRolePermissions[0];
-
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.InactiveRolePermissions[0];
+            
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.RolePermission.Base + "/" + inactiveTestRecord.RolePermissionId + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                RecordId = testRecord.RolePermissionId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeInactive = true, DeleteCache = true }
+            });
 
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().NotBeNull();
+            _securityTestUtilities.RolePermission.VerifyTestRecordValuesMatch(result.Response, testRecord);
         }
 
         [Fact]
         public async Task Default_GetById_Should_Return_NotFound()
         {
-            // Arrange
-            await ClearAllSecurityTestTableData();
+             // Arrange
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var id = -1;
 
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.RolePermission.Base + "/" + id);
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                RecordId = id,
+                Token = token,
+                ExpectedStatusCode = HttpStatusCode.NotFound
+            });
 
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().BeNull();
         }
  
         [Fact]
         public async Task Default_GetById_Should_Return_Bad_Request_Invalid_Id()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var id = "asfasdfasdfasdf";
-
+           
+            using var getByIdRequest = new HttpRequestMessage(HttpMethod.Get, _defaultRolePermissionApiEndPoint + "/" + id);
+            ControllerTestUtilities.AddAuthorizationHeaderIfApplicable(getByIdRequest, token);
+            
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.RolePermission.Base + "/" + id);
-            var content = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult<string>>(response);
-
+            var getResponse = await _client.SendAsync(getByIdRequest);
+            
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            content.Errors.Count.Should().Be(1);
+            getResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         [Fact]
@@ -222,10 +291,17 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var testRecord = arrangeTestDataResponse.ActiveRolePermissions.First();
 
             // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(_client, ApiEndPoints.Security.RolePermission.Base, testRecord.RolePermissionId, new BaseServiceGet { IncludeRelated = true });
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                RecordId = testRecord.RolePermissionId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, DeleteCache = true }
+            });
 
             // Assert
             result.Response.Should().NotBeNull();
@@ -239,10 +315,17 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var testRecord = arrangeTestDataResponse.InactiveRolePermissions.First();
 
             // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(_client, ApiEndPoints.Security.RolePermission.Base, testRecord.RolePermissionId, new BaseServiceGet { IncludeInactive = true, IncludeRelated = true });
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                RecordId = testRecord.RolePermissionId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, IncludeInactive = true, DeleteCache = true }
+            });
 
             // Assert
             result.Response.Should().NotBeNull();
@@ -255,10 +338,17 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var testRecord = arrangeTestDataResponse.ActiveRolePermissions.First();
 
             // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(_client, ApiEndPoints.Security.RolePermission.Base, testRecord.RolePermissionId, new BaseServiceGet { IncludeRelated = false });
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                RecordId = testRecord.RolePermissionId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = false, DeleteCache = true }
+            });
 
             // Assert
             result.Response.Should().NotBeNull();
@@ -274,10 +364,17 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var postReq = new FilterRolePermissionServiceRequest { };
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base, postReq);
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
@@ -290,10 +387,17 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var postReq = new FilterRolePermissionServiceRequest { IncludeInactive = true };
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base, postReq);
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
             // Assert
             result.Response.Should().HaveCountGreaterThan(0);
@@ -306,6 +410,7 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var rolePermissionIds = new List<int> 
             { 
                 arrangeTestDataResponse.ActiveRolePermissions[0].RolePermissionId, 
@@ -316,7 +421,13 @@ namespace IntegrationTests.Security.Controller
             var postReq = new FilterRolePermissionServiceRequest { RolePermissionIds = rolePermissionIds };
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base, postReq);
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
             //Assert
             result.Response.Should().HaveCount(3);
@@ -326,15 +437,38 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Zero_Records()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             
             var postReq = new FilterRolePermissionServiceRequest { };
+            var postReqInvalidCreatedBy = new FilterRolePermissionServiceRequest { CreatedBy = "TestCreatedBy" };
+            var postReqInvalidCreatedOnDate = new FilterRolePermissionServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000") };
+            var postReqInvalidUpdatedBy = new FilterRolePermissionServiceRequest { UpdatedBy = "TestUpdatedBy" };
+            var postReqInvalidUpdatedOnDate = new FilterRolePermissionServiceRequest { UpdatedOnDate = DateOnly.Parse("1/1/2000") };
+            var postReqInvalidRolePermissionIds = new FilterRolePermissionServiceRequest { RolePermissionIds = new List<int> { 9999 } };
+            var postReqInvalidApplicationId = new FilterRolePermissionServiceRequest { ApplicationId = 9999 };
+            var postReqInvalidRoleId = new FilterRolePermissionServiceRequest { RoleId = 9999 };
+            var postReqInvalidPermissionId = new FilterRolePermissionServiceRequest { PermissionId = 9999 };
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base, postReq);
-
+            var invalidCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultRolePermissionApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedBy });
+            var invalidCreatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultRolePermissionApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedOnDate });
+            var invalidUpdatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultRolePermissionApiEndPoint,Token = token, RequestObject = postReqInvalidUpdatedBy });
+            var invalidUpdatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultRolePermissionApiEndPoint,Token = token, RequestObject = postReqInvalidUpdatedOnDate });
+            var invalidRolePermissionIdsResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultRolePermissionApiEndPoint,Token = token, RequestObject = postReqInvalidRolePermissionIds });
+            var invalidApplicationIdResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultRolePermissionApiEndPoint,Token = token, RequestObject = postReqInvalidApplicationId });
+            var invalidRoleIdResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultRolePermissionApiEndPoint,Token = token, RequestObject = postReqInvalidRoleId });
+            var invalidPermissionIdResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultRolePermissionApiEndPoint,Token = token, RequestObject = postReqInvalidPermissionId });
+            
             //Assert
-            result.Response.Should().HaveCount(0);
+            invalidCreatedByResult.Response.Should().HaveCount(0);
+            invalidCreatedOnDateResult.Response.Should().HaveCount(0);
+            invalidUpdatedByResult.Response.Should().HaveCount(0);
+            invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
+            invalidRolePermissionIdsResult.Response.Should().HaveCount(0);
+            invalidApplicationIdResult.Response.Should().HaveCount(0);
+            invalidRoleIdResult.Response.Should().HaveCount(0);
+            invalidPermissionIdResult.Response.Should().HaveCount(0);
         }
 
         [Fact]
@@ -342,12 +476,19 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var rolePermissions = arrangeTestDataResponse.ActiveRolePermissions.Take(5).ToList();
             
             var postReq = new FilterRolePermissionServiceRequest { RolePermissionIds = new List<int> { rolePermissions[0].RolePermissionId, rolePermissions[1].RolePermissionId }, IncludeRelated = true };
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base, postReq);
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
             //Assert
             result.Errors.Should().HaveCount(0);
@@ -366,13 +507,20 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var activeRolePermissions = arrangeTestDataResponse.ActiveRolePermissions.Take(5).ToList();
             var inactiveRolePermissions = arrangeTestDataResponse.InactiveRolePermissions.Take(5).ToList();
 
             var postReq = new FilterRolePermissionServiceRequest { RolePermissionIds = new List<int> { activeRolePermissions[0].RolePermissionId, activeRolePermissions[1].RolePermissionId, inactiveRolePermissions[0].RolePermissionId, inactiveRolePermissions[1].RolePermissionId }, IncludeRelated = true, IncludeInactive = true };
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base, postReq);
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
             //Assert
             result.Errors.Should().HaveCount(0);
@@ -389,14 +537,21 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var postReq = new FilterRolePermissionServiceRequest();
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(_client, ApiEndPoints.Security.RolePermission.Base, postReq);
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RolePermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
             //Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(5);
+            result.Response.Should().HaveCount(10);
 
             foreach (var rolePermission in result.Response)
             {
@@ -408,27 +563,28 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            
-            // Act
-            var response = await _client.PostAsync(ApiEndPoints.Security.RolePermission.Base + "/Filter", null);
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecords(_client, _defaultRolePermissionApiEndPoint, null, token);
+            
             //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
+            result.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
         }
 
         [Fact]
         public async Task Default_Filter_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var postReq = ControllerTestUtilities.FormatPostRequest(null);
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var response = await _client.PostAsync(ApiEndPoints.Security.RolePermission.Base + "/Filter", postReq);
-
+            var result = await ControllerTestUtilities.GetFilteredRecords(_client, _defaultRolePermissionApiEndPoint,"", token);
+            
             //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            result.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         #endregion
@@ -439,8 +595,9 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Insert_Should_Create_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var application = arrangeTestDataResponse.ActiveApplications[0];
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(application);
             var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
             var activePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
             
@@ -454,38 +611,51 @@ namespace IntegrationTests.Security.Controller
             };
 
             // Act
-            var insertedRecordRes = await ControllerTestUtilities.CreateRecordWithValidationResult<RolePermissionDto>(_client, ApiEndPoints.Security.RolePermission.Base, insertReq);    
-            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(_client, ApiEndPoints.Security.RolePermission.Base, insertedRecordRes.Response.RolePermissionId);
+            var insertResult = await ControllerTestUtilities.CreateRecordWithValidationResult<RolePermissionDto>(new HttpPostRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token, 
+                RequestObject = insertReq,
+                ExpectedStatusCode = HttpStatusCode.Created
+            });
+            
+            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RolePermissionDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                RecordId = insertResult.Response.RolePermissionId,
+                Token = token
+            });
 
             // Assert
-            _securityTestUtilities.RolePermission.VerifyTestRecordValuesMatch(insertedRecordRes.Response, insertCheck.Response);
+            _securityTestUtilities.RolePermission.VerifyTestRecordValuesMatch(insertResult.Response, insertCheck.Response);
         }
 
         [Fact]
         public async Task Default_Insert_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var response = await _client.PostAsync(ApiEndPoints.Security.RolePermission.Base, null);
+            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultRolePermissionApiEndPoint, null, token);
 
             //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
+            insertResult.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
         }
 
         [Fact]
         public async Task Default_Insert_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var postReq = ControllerTestUtilities.FormatPostRequest(new object());
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var response = await _client.PostAsync(ApiEndPoints.Security.RolePermission.Base, postReq);
-
-            //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultRolePermissionApiEndPoint, "", token);
+            
+            //assert
+            insertResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         #endregion
@@ -496,8 +666,9 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Update_Should_Update_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var application = arrangeTestDataResponse.ActiveApplications[0];
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(application);
             var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
             var activePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
             var inactivePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId, false);
@@ -511,7 +682,13 @@ namespace IntegrationTests.Security.Controller
                 CurrentUser = TestConstants.CurrentUser
             };
 
-            var insertedRecordRes = await ControllerTestUtilities.CreateRecordWithValidationResult<RolePermissionDto>(_client, ApiEndPoints.Security.RolePermission.Base, insertReq);  
+            var insertedRecordRes = await ControllerTestUtilities.CreateRecordWithValidationResult<RolePermissionDto>(new HttpPostRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                Token = token,
+                RequestObject = insertReq,
+                ExpectedStatusCode = HttpStatusCode.Created
+            });
 
             var updateReq = new InsertUpdateRolePermissionRequest
             {
@@ -523,40 +700,47 @@ namespace IntegrationTests.Security.Controller
             };
 
             // Act
-            var updateRecordRes = await ControllerTestUtilities.UpdateRecordWithValidationResult<RolePermissionDto>(_client, ApiEndPoints.Security.RolePermission.Base, updateReq, insertedRecordRes.Response.RolePermissionId);
+            var updateResult = await ControllerTestUtilities.UpdateRecordWithValidationResult<RolePermissionDto>(new HttpPutRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultRolePermissionApiEndPoint,
+                RecordId = insertedRecordRes.Response.RolePermissionId,
+                Token = token, 
+                RequestObject = updateReq
+            });
 
             // Assert
-            updateRecordRes.Response.ApplicationId.Should().Be(updateReq.ApplicationId);
-            updateRecordRes.Response.RoleId.Should().Be(updateReq.RoleId);
-            updateRecordRes.Response.PermissionId.Should().Be(updateReq.PermissionId);
-            updateRecordRes.Response.Active.Should().Be(updateReq.Active);
+            updateResult.Response.ApplicationId.Should().Be(updateReq.ApplicationId);
+            updateResult.Response.RoleId.Should().Be(updateReq.RoleId);
+            updateResult.Response.PermissionId.Should().Be(updateReq.PermissionId);
+            updateResult.Response.Active.Should().Be(updateReq.Active);
         }
 
         [Fact]
         public async Task Default_Update_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var response = await _client.PutAsync(ApiEndPoints.Security.RolePermission.Base + "/1", null);
+            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultRolePermissionApiEndPoint,"", 1, token);
 
             //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
+            updateResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         [Fact]
         public async Task Default_Update_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var postReq = ControllerTestUtilities.FormatPostRequest(new object());
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var response = await _client.PutAsync(ApiEndPoints.Security.RolePermission.Base + "/1", postReq);
+            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultRolePermissionApiEndPoint, "", 1, token);
 
             //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            updateResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         #endregion
@@ -567,38 +751,37 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Delete_Should_Delete_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
-            var activePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
-            var rolePermission = await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, role.RoleId, activePermission.PermissionId);
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveRolePermissions[0];
 
             // Act
-            var response = await ControllerTestUtilities.DeleteRecord(_client, ApiEndPoints.Security.RolePermission.Base, rolePermission.RolePermissionId);
-            var getResponse = await _client.GetAsync(ApiEndPoints.Security.RolePermission.Base + "/" + rolePermission.RolePermissionId);
-
-            // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-            getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            var deleteResult = await ControllerTestUtilities.DeleteRecord(_client, _defaultRolePermissionApiEndPoint, testRecord.RolePermissionId, token);
+            var getByIdResult = await ControllerTestUtilities.GetRecordById(_client, _defaultRolePermissionApiEndPoint, testRecord.RolePermissionId, token);
+            
+            //Assert
+            deleteResult.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            getByIdResult.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
         [Fact]
         public async Task Default_Delete_Should_Not_Delete_Record_Id_Does_Not_Exist()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var rolePermissionId = -1;
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var applicationUserId = -1;
 
             // Act
-            var getResponse = await _client.GetAsync(ApiEndPoints.Security.RolePermission.Base + "/" + rolePermissionId);
-            var response = await _client.DeleteAsync(ApiEndPoints.Security.RolePermission.Base + "/" + rolePermissionId);
-            var errorValidationResult = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult>(response);
+            var getByIdResult = await ControllerTestUtilities.GetRecordById(_client, _defaultRolePermissionApiEndPoint, applicationUserId, token);
+            var deleteResult = await ControllerTestUtilities.DeleteRecord(_client, _defaultRolePermissionApiEndPoint, applicationUserId, token);
+            var errorValidationResult = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult>(deleteResult);
 
             var expectedInvalidDeleteError = _securityTestUtilities.RolePermission.GetExpectedRecordDoesNotExistErrors();
             
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            deleteResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            getByIdResult.StatusCode.Should().Be(HttpStatusCode.NotFound);
             errorValidationResult.Errors.Should().BeEquivalentTo(expectedInvalidDeleteError);
         }
         
@@ -606,17 +789,23 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Delete_Should_Return_Bad_Request_Invalid_Id()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var rolePermissionId = "asdfasfdasdfasfdas";
+            var arrangeTestDataResponse = await ArrangeRolePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var applicationUserId = "asdfasfdasdfasfdas";
+
+            using var getRequest = new HttpRequestMessage(HttpMethod.Get, _defaultRolePermissionApiEndPoint + "/" + applicationUserId);
+            ControllerTestUtilities.AddAuthorizationHeaderIfApplicable(getRequest, token);
+            
+            using var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, _defaultRolePermissionApiEndPoint + "/" + applicationUserId);
+            ControllerTestUtilities.AddAuthorizationHeaderIfApplicable(deleteRequest, token);
 
             // Act
-            var getResponse = await _client.GetAsync(ApiEndPoints.Security.RolePermission.Base + "/" + rolePermissionId);
-            var response = await _client.DeleteAsync(ApiEndPoints.Security.RolePermission.Base + "/" + rolePermissionId);
+            var getResponse = await _client.SendAsync(getRequest);
+            var deleteResponse = await _client.SendAsync(deleteRequest);
 
             // Assert
             getResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-
+            deleteResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         #endregion

@@ -40,24 +40,6 @@ namespace IntegrationTests.Shared
 
         #region Get
 
-        public static async Task<ErrorValidationResult<TResponse>> GetAllRecordsWithValidationResult<TResponse>(HttpClient client, string apiEndPoint, bool deleteCache = true, string jwtToken = "")
-        {
-            apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateDeleteCacheQueryStringParm(deleteCache));
-
-            using var request = new HttpRequestMessage(HttpMethod.Get, apiEndPoint);
-
-            AddAuthorizationHeaderIfApplicable(request, jwtToken);
-
-            var response = await client.SendAsync(request);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            var ret = await GetResponseContent<ErrorValidationResult<TResponse>>(response);
-
-            Assert.IsType<ErrorValidationResult<TResponse>>(ret);
-
-            return ret;
-        }
-
         public static async Task<ErrorValidationResult<TResponse>> GetAllRecordsWithValidationResult<TResponse>(HttpGetRequestParms req)
         {
             var response = await ExecuteDefaultGetRequest(req);
@@ -91,20 +73,6 @@ namespace IntegrationTests.Shared
             return ret;
         }
 
-        public static async Task<ErrorValidationResult<TResponse>> GetFilteredRecordsWithValidationResult<TResponse>(HttpClient client, string apiEndPoint, object req)
-        {
-            var postReq = FormatPostRequest(req);
-
-            var response = await client.PostAsync(apiEndPoint + "/Filter", postReq);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            var ret = await GetResponseContent<ErrorValidationResult<TResponse>>(response);
-
-            Assert.IsType<ErrorValidationResult<TResponse>>(ret);
-
-            return ret;
-        }
-
         public static async Task<ErrorValidationResult<TResponse>> GetRecordByIdWithValidationResult<TResponse>(HttpGetRequestParms req)
         {
             req.ApiEndPoint = req.ApiEndPoint + "/" + req.RecordId;
@@ -119,51 +87,7 @@ namespace IntegrationTests.Shared
             return ret;
         }
 
-        public static async Task<ErrorValidationResult<TResponse>> GetRecordByIdWithValidationResult<TResponse>(HttpClient client, string apiEndPoint, int id, bool deleteCache = true)
-        {
-            apiEndPoint = apiEndPoint + "/" + id;
-            apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateDeleteCacheQueryStringParm(deleteCache));
-
-            var response = await client.GetAsync(apiEndPoint);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            var ret = await GetResponseContent<ErrorValidationResult<TResponse>>(response);
-
-            Assert.IsType<ErrorValidationResult<TResponse>>(ret);
-
-            return ret;
-        }
-
-        public static async Task<ErrorValidationResult<TResponse>> GetRecordByIdWithValidationResult<TResponse>(HttpClient client, string apiEndPoint, int id, BaseServiceGet req)
-        {
-            apiEndPoint = apiEndPoint + "/" + id;
-
-            if (req.DeleteCache) 
-            {
-                apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateDeleteCacheQueryStringParm(req.DeleteCache));
-            }
-            
-            if (req.IncludeInactive) 
-            {
-                apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateIncludeInactiveQueryStringParm(req.IncludeInactive));
-            }
-
-            if (req.IncludeRelated) 
-            {
-                apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateIncludeRelatedQueryStringParm(req.IncludeRelated));
-            }
-
-            var response = await client.GetAsync(apiEndPoint);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            var ret = await GetResponseContent<ErrorValidationResult<TResponse>>(response);
-
-            Assert.IsType<ErrorValidationResult<TResponse>>(ret);
-
-            return ret;
-        }
-
-        public static async Task<HttpResponseMessage> GetRecordById(HttpClient client, string apiEndPoint, int id, string token)
+       public static async Task<HttpResponseMessage> GetRecordById(HttpClient client, string apiEndPoint, int id, string token)
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, apiEndPoint + "/" + id);
 
@@ -192,35 +116,6 @@ namespace IntegrationTests.Shared
             return response;
         }
 
-        public static async Task<T[]> GetFilteredRecords<T>(HttpClient client, string apiEndPoint, object req)
-        {
-            var postReq = FormatPostRequest(req);
-
-            var response = await client.PostAsync(apiEndPoint + "/Filter", postReq);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            var ret = await GetResponseContent<T[]>(response);
-
-            Assert.IsType<T[]>(ret);
-
-            return ret;
-        }
-
-        public static async Task<T> GetRecordById<T>(HttpClient client, string apiEndPoint, int id, bool deleteCache = true)
-        {
-            apiEndPoint = apiEndPoint + "/" + id;
-            apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateDeleteCacheQueryStringParm(deleteCache));
-
-            var response = await client.GetAsync(apiEndPoint);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            var ret = await GetResponseContent<T>(response);
-
-            Assert.IsType<T>(ret);
-
-            return ret;
-        }
-
         #endregion
 
         #region Post
@@ -241,20 +136,6 @@ namespace IntegrationTests.Shared
             var response = await client.SendAsync(request);
             
             return response;
-        }
-
-        public static async Task<ErrorValidationResult<TResponse>> CreateRecordWithValidationResult<TResponse>(HttpClient client, string apiEndPoint, object req)
-        {
-            var postReq = FormatPostRequest(req);
-
-            var response = await client.PostAsync(apiEndPoint, postReq);
-            response.StatusCode.Should().Be(HttpStatusCode.Created);
-
-            var ret = await GetResponseContent<ErrorValidationResult<TResponse>>(response);
-
-            Assert.IsType<ErrorValidationResult<TResponse>>(ret);
-
-            return ret;
         }
 
         public static async Task<ErrorValidationResult<TResponse>> CreateRecordWithValidationResult<TResponse>(HttpPostRequestParms req)
@@ -278,20 +159,6 @@ namespace IntegrationTests.Shared
 
         #region Put
 
-        public static async Task<T> UpdateRecord<T>(HttpClient client, string apiEndPoint, object req, int id)
-        {
-            var putReq = FormatPostRequest(req);
-
-            var response = await client.PutAsync(apiEndPoint + "/" + id, putReq);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            var ret = await GetResponseContent<T>(response);
-
-            Assert.IsType<T>(ret);
-
-            return ret;
-        }
-
         public static async Task<ErrorValidationResult<TResponse>> UpdateRecordWithValidationResult<TResponse>(HttpPutRequestParms req)
         {
             req.ApiEndPoint += "/" + req.RecordId;
@@ -303,20 +170,6 @@ namespace IntegrationTests.Shared
             {
                 return new ErrorValidationResult<TResponse>();
             }
-
-            var ret = await GetResponseContent<ErrorValidationResult<TResponse>>(response);
-
-            Assert.IsType<ErrorValidationResult<TResponse>>(ret);
-
-            return ret;
-        }
-
-        public static async Task<ErrorValidationResult<TResponse>> UpdateRecordWithValidationResult<TResponse>(HttpClient client, string apiEndPoint, object req, int id)
-        {
-            var putReq = FormatPostRequest(req);
-
-            var response = await client.PutAsync(apiEndPoint + "/" + id, putReq);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var ret = await GetResponseContent<ErrorValidationResult<TResponse>>(response);
 
@@ -354,16 +207,6 @@ namespace IntegrationTests.Shared
             AddAuthorizationHeaderIfApplicable(request, token);
 
             var response = await client.SendAsync(request);
-
-            return response;
-        }
-
-        public static async Task<HttpResponseMessage> DeleteRecord(HttpClient client, string apiEndPoint, int id)
-        {
-            var response = await client.DeleteAsync(apiEndPoint + "/" + id);
-
-            //assert
-            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
             return response;
         }
