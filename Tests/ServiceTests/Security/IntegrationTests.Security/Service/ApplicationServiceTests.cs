@@ -16,7 +16,9 @@ namespace IntegrationTests.Security.Service
     [Collection("SecurityIntegrationTests")]
     public class ApplicationServiceTests : SecurityTestBase,
                                            IDefaultServiceTestsGetAll,
+                                           IDefaultServiceTestsGetAllIncludeRelated,
                                            IDefaultServiceTestsGetById,
+                                           IDefaultServiceTestsGetByIdIncludeRelated,
                                            IDefaultServiceTestsFilter,
                                            IDefaultServiceTestsInsert,
                                            IDefaultServiceTestsUpdate,
@@ -110,6 +112,24 @@ namespace IntegrationTests.Security.Service
             result.Response.Should().HaveCount(0);
         }
 
+        [Fact]
+        public async Task Default_GetAll_IncludeRelated_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = "ApplicationService_GetAll_0_1";
+
+            // Act
+            var result = await _applicationService.GetAll(new BaseServiceGet { IncludeRelated = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().HaveCount(1);
+        }
+
         #endregion
 
         #region GetById
@@ -170,6 +190,25 @@ namespace IntegrationTests.Security.Service
             // Assert
             result.Response.Should().BeNull();
             availableCacheKeys.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_GetById_IncludeRelated_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var application = arrangeTestDataResponse.ActiveApplications.FirstOrDefault();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = $"ApplicationService_GetById_{application.ApplicationId}_0_1";
+
+            // Act
+            var result = await _applicationService.GetById(application.ApplicationId, new BaseServiceGet { IncludeRelated = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
         }
 
         #endregion

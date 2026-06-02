@@ -16,8 +16,11 @@ namespace IntegrationTests.Security.Controller
     public class ApplicationControllerTests : SecurityTestBase, 
                                               IClassFixture<WebApplicationFactory<Program>>,
                                               IDefaultControllerTestsGetAll,
+                                              IDefaultControllerTestsGetAllIncludeRelated,
                                               IDefaultControllerTestsGetById,
+                                              IDefaultControllerTestsGetByIdIncludeRelated,
                                               IDefaultControllerTestsFilter,
+                                              IDefaultControllerTestsFilterIncludeRelated,  
                                               IDefaultControllerTestsInsert,
                                               IDefaultControllerTestsUpdate,
                                               IDefaultControllerTestsDelete
@@ -96,58 +99,6 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task Default_GetAll_Should_Return_Related_Data()
-        {
-            // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
-            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            
-            // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(new HttpGetRequestParms { 
-                Client = _client, 
-                ApiEndPoint = _defaultApplicationApiEndPoint,
-                Token = token,
-                QueryStringParms = new BaseServiceGet { IncludeRelated = true, DeleteCache = true }
-            });
-
-            // Assert
-            result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(1);
-
-            foreach (var applicationWithRelatedData in result.Response)
-            {
-                applicationWithRelatedData.ApplicationUsers.Should().HaveCountGreaterThan(0);
-                applicationWithRelatedData.Permissions.Should().HaveCountGreaterThan(0);
-                applicationWithRelatedData.Roles.Should().HaveCountGreaterThan(0);
-            }
-        }
-
-        [Fact]
-        public async Task Default_GetAll_Should_Not_Return_Related_Data()
-        {
-            // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
-            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-
-            // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(new HttpGetRequestParms { 
-                Client = _client, 
-                ApiEndPoint = _defaultApplicationApiEndPoint,
-                Token = token,
-                QueryStringParms = new BaseServiceGet { IncludeRelated = false, DeleteCache = true }
-            });
-
-            // Assert
-            result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(1);
-
-            var applicationWithRelatedData = result.Response.Where(x => x.ApplicationId == arrangeTestDataResponse.ActiveApplications[0].ApplicationId).FirstOrDefault();
-            applicationWithRelatedData.ApplicationUsers.Should().HaveCount(0);
-            applicationWithRelatedData.Permissions.Should().HaveCount(0);
-            applicationWithRelatedData.Roles.Should().HaveCount(0);
-        }
-
-        [Fact]
         public async Task Default_GetAll_Should_Return_Unauthorized()
         {
             // Arrange
@@ -173,6 +124,84 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             getAllResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationApiEndPoint,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, DeleteCache = true }
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+
+            foreach (var application in result.Response)
+            {
+                _securityTestUtilities.Application.VerifyIncludeRelatedDataOnApplication(application, includeInactive: false);
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationApiEndPoint,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, IncludeInactive = true, DeleteCache = true }
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(2);
+
+            foreach (var application in result.Response)
+            {
+                _securityTestUtilities.Application.VerifyIncludeRelatedDataOnApplication(application, includeInactive: true);
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationApiEndPoint,
+                Token = token
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+
+            foreach (var application in result.Response)
+            {
+                application.ApplicationUsers.Should().BeNull();
+                application.Permissions.Should().BeNull();
+                application.Roles.Should().BeNull();
+                application.RolePermissions.Should().BeNull();
+                application.ApplicationUserPermissions.Should().BeNull();
+            }
         }
 
         #endregion
@@ -332,9 +361,11 @@ namespace IntegrationTests.Security.Controller
             // Assert
             result.Errors.Should().HaveCount(0);
             
-            result.Response.ApplicationUsers.Should().HaveCount(0);
-            result.Response.Permissions.Should().HaveCount(0);
-            result.Response.Roles.Should().HaveCount(0);
+            result.Response.ApplicationUsers.Should().BeNull();
+            result.Response.Permissions.Should().BeNull();
+            result.Response.Roles.Should().BeNull();
+            result.Response.RolePermissions.Should().BeNull();
+            result.Response.ApplicationUserPermissions.Should().BeNull();
         }
 
         [Fact]
@@ -365,6 +396,53 @@ namespace IntegrationTests.Security.Controller
             getByIdResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveApplications.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationApiEndPoint,
+                RecordId = testRecord.ApplicationId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, DeleteCache = true }
+            });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeTrue();
+
+            _securityTestUtilities.Application.VerifyIncludeRelatedDataOnApplication(result.Response, includeInactive: false);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.InactiveApplications.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationApiEndPoint,
+                RecordId = testRecord.ApplicationId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, IncludeInactive = true, DeleteCache = true }
+            });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeFalse();
+            _securityTestUtilities.Application.VerifyIncludeRelatedDataOnApplication(result.Response, includeInactive: true);
+        }
+        
         #endregion
 
         #region Filter
@@ -579,9 +657,11 @@ namespace IntegrationTests.Security.Controller
             result.Response.Should().HaveCountGreaterThan(0);
 
             var applicationWithRelatedData = result.Response.Where(x => x.ApplicationId == applicationId).FirstOrDefault();
-            applicationWithRelatedData.ApplicationUsers.Should().HaveCount(0);
-            applicationWithRelatedData.Permissions.Should().HaveCount(0);
-            applicationWithRelatedData.Roles.Should().HaveCount(0);
+            applicationWithRelatedData.ApplicationUsers.Should().BeNull();
+            applicationWithRelatedData.Permissions.Should().BeNull();
+            applicationWithRelatedData.Roles.Should().BeNull();
+            applicationWithRelatedData.RolePermissions.Should().BeNull();
+            applicationWithRelatedData.ApplicationUserPermissions.Should().BeNull();
         }
 
         [Fact]
@@ -610,6 +690,64 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             filterResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var applicationId = arrangeTestDataResponse.ActiveApplications[0].ApplicationId;
+            
+            var postReq = new FilterApplicationServiceRequest { ApplicationIds = new List<int> { applicationId }, IncludeRelated = true, DeleteCache = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+
+            foreach (var application in result.Response)
+            {
+                _securityTestUtilities.Application.VerifyIncludeRelatedDataOnApplication(application, includeInactive: false);
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var applicationId = arrangeTestDataResponse.InactiveApplications[0].ApplicationId;
+            
+            var postReq = new FilterApplicationServiceRequest { ApplicationIds = new List<int> { applicationId }, IncludeRelated = true, IncludeInactive = true, DeleteCache = true};
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+
+            foreach (var application in result.Response)
+            {
+                _securityTestUtilities.Application.VerifyIncludeRelatedDataOnApplication(application, includeInactive: true);
+            }
         }
 
         #endregion
