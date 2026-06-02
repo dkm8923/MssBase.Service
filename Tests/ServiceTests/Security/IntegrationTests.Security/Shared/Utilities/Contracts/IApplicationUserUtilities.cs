@@ -19,6 +19,10 @@ public interface IApplicationUserUtilities
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors();
     public Dictionary<string, List<string>> GetExpectedInvalidEmailFieldErrors();
     public Dictionary<string, List<string>> GetExpectedChangePasswordRequiredFieldErrors();
-    public Dictionary<string, List<string>> GetExpectedChangePasswordMaxLengthErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordMinMaxLengthErrors();
     public Dictionary<string, List<string>> GetExpectedChangePasswordInvalidPasswordErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordUpperCaseRequiredErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordLowerCaseRequiredErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordSpecialCharacterRequiredErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordNumberRequiredErrors();
 }

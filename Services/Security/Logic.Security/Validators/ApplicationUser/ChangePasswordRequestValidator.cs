@@ -19,7 +19,11 @@ public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRe
 
         RuleFor(v => v.NewPassword)
             .NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.NewPassword))
-            .Length(1, 128).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.NewPassword, 128));
+            .Length(12, 128).WithMessage(ValidatorUtilities.CreateMinMaxLengthErrorMessage(EntityFieldNames.NewPassword, 12, 128))
+            .Matches("[a-z]").WithMessage($"{EntityFieldNames.NewPassword} must contain at least one lowercase letter!")
+            .Matches("[A-Z]").WithMessage($"{EntityFieldNames.NewPassword} must contain at least one uppercase letter!")
+            .Matches("[^a-zA-Z0-9]").WithMessage($"{EntityFieldNames.NewPassword} must contain at least one special character!")
+            .Matches("[0-9]").WithMessage($"{EntityFieldNames.NewPassword} must contain at least one number!");
 
         RuleFor(v => v.CurrentUser).ValidateCurrentUser();
     }

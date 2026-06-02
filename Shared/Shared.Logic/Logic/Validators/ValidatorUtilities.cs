@@ -18,7 +18,7 @@ namespace Shared.Logic.Validators
 
         public static string CreateMinMaxLengthErrorMessage(string fieldName, int minLength, int maxLength)
         {
-            return $"{fieldName} cannot exceed {maxLength} characters!";
+            return $"{fieldName} must be between {minLength} and {maxLength} characters!";
         }
 
         public static string CreateRequiredCharactersErrorMessage(string fieldName, int characterCount)

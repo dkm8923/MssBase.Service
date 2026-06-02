@@ -186,11 +186,43 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
         };
     }
 
-    public Dictionary<string, List<string>> GetExpectedChangePasswordMaxLengthErrors()
+    public Dictionary<string, List<string>> GetExpectedChangePasswordMinMaxLengthErrors()
     {
         return new Dictionary<string, List<string>>
         {
-            { "NewPassword", new List<string> { "NewPassword cannot exceed 128 characters!" } }
+            { "NewPassword", new List<string> { "NewPassword must be between 12 and 128 characters!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordUpperCaseRequiredErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "NewPassword", new List<string> { "NewPassword must contain at least one uppercase letter!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordLowerCaseRequiredErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "NewPassword", new List<string> { "NewPassword must contain at least one lowercase letter!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordSpecialCharacterRequiredErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "NewPassword", new List<string> { "NewPassword must contain at least one special character!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordNumberRequiredErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "NewPassword", new List<string> { "NewPassword must contain at least one number!" } }
         };
     }
 
