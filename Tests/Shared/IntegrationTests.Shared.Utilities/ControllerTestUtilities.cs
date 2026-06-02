@@ -40,6 +40,17 @@ namespace IntegrationTests.Shared
 
         #region Get
 
+        public static async Task<HttpResponseMessage> GetAllRecords(HttpClient client, string apiEndPoint, string token)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, apiEndPoint);
+
+            AddAuthorizationHeaderIfApplicable(request, token);
+
+            var response = await client.SendAsync(request);
+
+            return response;
+        }
+
         public static async Task<ErrorValidationResult<TResponse>> GetAllRecordsWithValidationResult<TResponse>(HttpGetRequestParms req)
         {
             var response = await ExecuteDefaultGetRequest(req);
@@ -88,7 +99,7 @@ namespace IntegrationTests.Shared
         }
 
        public static async Task<HttpResponseMessage> GetRecordById(HttpClient client, string apiEndPoint, int id, string token)
-        {
+       {
             using var request = new HttpRequestMessage(HttpMethod.Get, apiEndPoint + "/" + id);
 
             AddAuthorizationHeaderIfApplicable(request, token);

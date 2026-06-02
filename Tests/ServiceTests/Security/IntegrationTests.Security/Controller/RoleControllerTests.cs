@@ -188,6 +188,34 @@ namespace IntegrationTests.Security.Controller
             result.Response.Should().HaveCount(0);
         }
 
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var getAllResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultRoleApiEndPoint, invalidToken);
+
+            //Assert
+            getAllResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+            
+            // Act
+            var getAllResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultRoleApiEndPoint, token);
+
+            //Assert
+            getAllResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
         #endregion
 
         #region GetById
@@ -379,6 +407,34 @@ namespace IntegrationTests.Security.Controller
             
             // Assert
             getResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var getByIdResult = await ControllerTestUtilities.GetRecordById(_client, _defaultRoleApiEndPoint, 1, invalidToken);
+
+            //Assert
+            getByIdResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+
+            // Act
+            var getByIdResult = await ControllerTestUtilities.GetRecordById(_client, _defaultRoleApiEndPoint, 1, token);
+
+            //Assert
+            getByIdResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         #endregion
@@ -624,6 +680,34 @@ namespace IntegrationTests.Security.Controller
             result.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
+        [Fact]
+        public async Task Default_Filter_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var filterResult = await ControllerTestUtilities.GetFilteredRecords(_client, _defaultRoleApiEndPoint, new FilterRoleServiceRequest(), invalidToken);
+
+            //Assert
+            filterResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+
+            // Act
+            var filterResult = await ControllerTestUtilities.GetFilteredRecords(_client, _defaultRoleApiEndPoint, new FilterRoleServiceRequest(), token);
+
+            //Assert
+            filterResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
         #endregion
 
         #region Insert
@@ -684,6 +768,34 @@ namespace IntegrationTests.Security.Controller
             
             //assert
             insertResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task Default_Insert_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultRoleApiEndPoint, new InsertUpdateApplicationRequest(), invalidToken);
+
+            //Assert
+            insertResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_Insert_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+
+            // Act
+            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultRoleApiEndPoint, new InsertUpdateApplicationRequest(), token);
+
+            //Assert
+            insertResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         #endregion
@@ -752,6 +864,34 @@ namespace IntegrationTests.Security.Controller
             updateResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
+        [Fact]
+        public async Task Default_Update_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultRoleApiEndPoint, new InsertUpdateApplicationRequest(), 1, invalidToken);
+
+            //Assert
+            updateResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_Update_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+
+            // Act
+            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultRoleApiEndPoint, new InsertUpdateApplicationRequest(), 1, token);
+
+            //Assert
+            updateResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
         #endregion
 
         #region Delete
@@ -815,6 +955,34 @@ namespace IntegrationTests.Security.Controller
             // Assert
             getResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             deleteResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task Default_Delete_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var deleteResult = await ControllerTestUtilities.DeleteRecord(_client, _defaultRoleApiEndPoint, 1, invalidToken);
+
+            //Assert
+            deleteResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_Delete_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+
+            // Act
+            var deleteResult = await ControllerTestUtilities.DeleteRecord(_client, _defaultRoleApiEndPoint, 1, token);
+
+            //Assert
+            deleteResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         #endregion
