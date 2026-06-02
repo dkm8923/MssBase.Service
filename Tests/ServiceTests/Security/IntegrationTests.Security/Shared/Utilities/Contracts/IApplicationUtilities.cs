@@ -19,4 +19,5 @@ namespace IntegrationTests.Security.Shared.Utilities.Contracts;
         public Dictionary<string, List<string>> GetExpectedRequiredFieldErrors();
         public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors();
         public Dictionary<string, List<string>> GetExpectedForeignKeyErrors();
+        public void VerifyIncludeRelatedDataOnApplication(ApplicationDto application, bool includeInactive = false);
     }

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Models;
 using Shared.Logic;
 using Shared.Logic.Validators;
+using Shared.Logic.Common;
 
 namespace Logic.Security.Logic
 {
@@ -208,31 +209,31 @@ namespace Logic.Security.Logic
             }
 
             //verify no dependencies exist on application record
-            if (applicationErrorValidationResult.Response.ApplicationUsers.Count() > 0)
+            if (applicationErrorValidationResult.Response.ApplicationUsers.NotNullAndHasRecords())
             {
                 applicationErrorValidationResult.Errors.Add("ApplicationUsers", new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage("ApplicationUsers") });
             }
 
-            if (applicationErrorValidationResult.Response.Permissions.Count() > 0)
+            if (applicationErrorValidationResult.Response.Permissions.NotNullAndHasRecords())
             {
                 applicationErrorValidationResult.Errors.Add("Permissions", new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage("Permissions") });
             }
 
-            if (applicationErrorValidationResult.Response.Roles.Count() > 0)
+            if (applicationErrorValidationResult.Response.Roles.NotNullAndHasRecords())
             {
                 applicationErrorValidationResult.Errors.Add("Roles", new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage("Roles") });
             }
 
-            if (applicationErrorValidationResult.Response.RolePermissions.Count() > 0)
+            if (applicationErrorValidationResult.Response.RolePermissions.NotNullAndHasRecords())
             {
                 applicationErrorValidationResult.Errors.Add("RolePermissions", new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage("RolePermissions") });
             }
 
-            if (applicationErrorValidationResult.Response.ApplicationUserPermissions.Count() > 0)
+            if (applicationErrorValidationResult.Response.ApplicationUserPermissions.NotNullAndHasRecords())
             {
                 applicationErrorValidationResult.Errors.Add("ApplicationUserPermissions", new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage("ApplicationUserPermissions") });
             }
-
+            
             return applicationErrorValidationResult;
         }
 

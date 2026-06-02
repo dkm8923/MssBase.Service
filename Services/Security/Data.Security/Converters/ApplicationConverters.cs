@@ -26,27 +26,27 @@ namespace Data.Security.Converters
                 Description = source.Description
             };
 
-            if (source.ApplicationUsers != null)
+            if (source.ApplicationUsers.NotNullAndHasRecords())
             {
                 target.ApplicationUsers = source.ApplicationUsers.Select(au => au.ToDto());
             }
 
-            if (source.Permissions != null)
+            if (source.Permissions.NotNullAndHasRecords())
             {
                 target.Permissions = source.Permissions.Select(p => p.ToDto());
             }
 
-            if (source.Roles != null)
+            if (source.Roles.NotNullAndHasRecords())
             {
                 target.Roles = source.Roles.Select(r => r.ToDto());
             }
 
-            if (source.RolePermissions != null)
+            if (source.RolePermissions.NotNullAndHasRecords())
             {
                 target.RolePermissions = source.RolePermissions.Select(rp => rp.ToDto());
             }
 
-            if (source.ApplicationUserPermissions != null)
+            if (source.ApplicationUserPermissions.NotNullAndHasRecords())
             {
                 target.ApplicationUserPermissions = source.ApplicationUserPermissions.Select(aup => aup.ToDto());
             }

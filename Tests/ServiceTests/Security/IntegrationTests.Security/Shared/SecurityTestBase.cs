@@ -470,6 +470,25 @@ public class SecurityTestBase
             ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(activeApplication.ApplicationId);
             ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(activeApplication.ApplicationId);
             ret.ActiveRoles = await _securityTestUtilities.Role.CreateActiveTestRecords(activeApplication.ApplicationId);
+
+            foreach (var activeRole in ret.ActiveRoles)
+            {
+                foreach (var activePermission in ret.ActivePermissions)
+                {
+                    ret.ActiveRolePermissions.Add(await CreateRolePermission(new InsertUpdateRolePermissionRequest { Active = true, ApplicationId = activeApplication.ApplicationId, RoleId = activeRole.RoleId, PermissionId = activePermission.PermissionId }));
+                }
+            }
+
+            var activePermissionsForApplicationUser = await _securityTestUtilities.Permission.CreateActiveTestRecords(activeApplication.ApplicationId, 1);
+            foreach (var activePermission in activePermissionsForApplicationUser)
+            {
+                foreach (var activeApplicationUser in ret.ActiveApplicationUsers)
+                {
+                    ret.ActiveApplicationUserPermissions.Add(await CreateApplicationUserPermission(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = activeApplication.ApplicationId, ApplicationUserId = activeApplicationUser.ApplicationUserId, PermissionId = activePermission.PermissionId }));
+                }
+
+                ret.ActivePermissions.Add(activePermission);
+            }
         }
 
         foreach (var inactiveApplication in ret.InactiveApplications)
@@ -477,6 +496,25 @@ public class SecurityTestBase
             ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(inactiveApplication.ApplicationId);
             ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(inactiveApplication.ApplicationId);
             ret.InactiveRoles = await _securityTestUtilities.Role.CreateInactiveTestRecords(inactiveApplication.ApplicationId);
+
+            foreach (var inactiveRole in ret.InactiveRoles)
+            {
+                foreach (var inactivePermission in ret.InactivePermissions)
+                {
+                    ret.InactiveRolePermissions.Add(await CreateRolePermission(new InsertUpdateRolePermissionRequest { Active = false, ApplicationId = inactiveApplication.ApplicationId, RoleId = inactiveRole.RoleId, PermissionId = inactivePermission.PermissionId }));
+                }
+            }
+
+            var inactivePermissionsForApplicationUser = await _securityTestUtilities.Permission.CreateInactiveTestRecords(inactiveApplication.ApplicationId, 1);
+            foreach (var inactivePermission in inactivePermissionsForApplicationUser)
+            {
+                foreach (var inactiveApplicationUser in ret.InactiveApplicationUsers)
+                {
+                    ret.InactiveApplicationUserPermissions.Add(await CreateApplicationUserPermission(new InsertUpdateApplicationUserPermissionRequest { Active = false, ApplicationId = inactiveApplication.ApplicationId, ApplicationUserId = inactiveApplicationUser.ApplicationUserId, PermissionId = inactivePermission.PermissionId }));
+                }
+
+                ret.InactivePermissions.Add(inactivePermission);
+            }
         }
 
         return ret;
@@ -1099,6 +1137,13 @@ public class SecurityTestBase
     {
         req.CurrentUser = TestConstants.CurrentUser;
         var result = await _rolePermissionLogic.Insert(req, _applicationLogic, _roleLogic, _permissionLogic);
+        return result.Response;
+    }
+
+    private async Task<ApplicationUserPermissionDto> CreateApplicationUserPermission(InsertUpdateApplicationUserPermissionRequest req)
+    {
+        req.CurrentUser = TestConstants.CurrentUser;
+        var result = await _applicationUserPermissionLogic.Insert(req, _applicationLogic, _applicationUserLogic, _permissionLogic);
         return result.Response;
     }
 

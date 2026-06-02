@@ -12,6 +12,7 @@ namespace Dto.Security.ApplicationUser
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public DateTime? DateOfBirth { get; set; }
+        
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Password { get; set; }
         public bool PasswordResetRequired { get; set; }

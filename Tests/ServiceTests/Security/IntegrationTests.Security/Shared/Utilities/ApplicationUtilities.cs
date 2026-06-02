@@ -247,5 +247,35 @@ public class ApplicationUtilities : IApplicationUtilities
         //recordA.UpdatedOn.Should().Be(recordB.UpdatedOn);
     }
 
-    
+    /// <summary>
+    /// Verifies that the related data is included and valid on the application record based on the specified parameters.
+    /// </summary>
+    /// <param name="application">The application record to verify.</param>
+    /// <param name="includeInactive">Indicates whether inactive related data should be included in the verification.</param>
+    public void VerifyIncludeRelatedDataOnApplication(ApplicationDto application, bool includeInactive = false)
+    {
+        application.ApplicationUsers.Should().NotBeNull();
+        application.ApplicationUsers.Count().Should().BeGreaterThan(0);
+
+        application.Permissions.Should().NotBeNull();
+        application.Permissions.Count().Should().BeGreaterThan(0);
+
+        application.Roles.Should().NotBeNull();
+        application.Roles.Count().Should().BeGreaterThan(0);
+
+        application.RolePermissions.Should().NotBeNull();
+        application.RolePermissions.Count().Should().BeGreaterThan(0);
+
+        application.ApplicationUserPermissions.Should().NotBeNull();
+        application.ApplicationUserPermissions.Count().Should().BeGreaterThan(0);
+            
+        if (!includeInactive)
+        {
+            application.ApplicationUsers.Should().OnlyContain(x => x.Active);
+            application.Permissions.Should().OnlyContain(x => x.Active);
+            application.Roles.Should().OnlyContain(x => x.Active);
+            application.RolePermissions.Should().OnlyContain(x => x.Active);
+            application.ApplicationUserPermissions.Should().OnlyContain(x => x.Active);
+        }
+    } 
 }

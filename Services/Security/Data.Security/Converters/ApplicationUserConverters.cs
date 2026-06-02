@@ -35,12 +35,12 @@ namespace Data.Security.Converters
                 ApplicationId = source.ApplicationId
             };
 
-            if (source.ApplicationUserPermissions != null && source.ApplicationUserPermissions.Count > 0)
+            if (source.ApplicationUserPermissions.NotNullAndHasRecords())
             {
                 target.ApplicationUserPermissions = source.ApplicationUserPermissions.Select(au => au.ToDto());
             }
 
-            if (source.ApplicationUserRoles != null && source.ApplicationUserRoles.Count > 0)
+            if (source.ApplicationUserRoles.NotNullAndHasRecords())
             {
                 target.ApplicationUserRoles = source.ApplicationUserRoles.Select(au => au.ToDto());
             }
