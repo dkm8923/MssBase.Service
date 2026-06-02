@@ -370,3 +370,7 @@ obj/
 *.cache
 *.vs/
 .idea/.idea.MssBase.Service/.idea/vcs.xml
+
+# Ignore accidental Windows-style output folder names created on Unix (literal backslash in name)
+**/bin\\Debug/
+MssBase.Service/bin\\Debug/
