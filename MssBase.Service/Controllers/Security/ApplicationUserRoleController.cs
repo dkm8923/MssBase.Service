@@ -1,8 +1,10 @@
 using Contract.Security.ApplicationUserRole;
 using Dto.Security.ApplicationUserRole;
 using Dto.Security.ApplicationUserRole.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
+using MssBase.Service.Shared.Authorization;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
@@ -12,6 +14,7 @@ namespace MssBase.Service.Controllers.Security
     [ApiController]
     [Tags("ApplicationUserRole")]
     [AutoValidationAttribute]
+    [Authorize]
     public class ApplicationUserRoleController : ApiBaseController
     {
         private readonly IApplicationUserRoleService _applicationUserSvc;
@@ -24,11 +27,12 @@ namespace MssBase.Service.Controllers.Security
         #region GetAll
 
         [HttpGet()]
-        public async Task<IActionResult> GetApplicationUserRoles([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
+        [RequiredPermission(UserApiPermissions.ApplicationUserRoleRead)]
+        public async Task<IActionResult> GetApplicationUserRoles([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _applicationUserSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, cancellationToken);
+                var records = await _applicationUserSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)
@@ -41,12 +45,13 @@ namespace MssBase.Service.Controllers.Security
 
         #region GetById
 
-        [HttpGet("{applicationUserId}", Name = "GetApplicationUserRole")]
-        public async Task<IActionResult> GetApplicationUserRole(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
+        [HttpGet("{applicationUserId}", Name = "GetApplicationUserRoleById")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserRoleRead)]
+        public async Task<IActionResult> GetApplicationUserRoleById(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var record = await _applicationUserSvc.GetById(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, cancellationToken);
+                var record = await _applicationUserSvc.GetById(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
 
                 if (record.Response == null)
                 {
@@ -66,6 +71,7 @@ namespace MssBase.Service.Controllers.Security
         #region Filter
 
         [HttpPost("Filter")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserRoleRead)]
         public async Task<IActionResult> FilterApplicationUserRoles(FilterApplicationUserRoleServiceRequest req, CancellationToken cancellationToken = default)
         {
             try
@@ -84,6 +90,7 @@ namespace MssBase.Service.Controllers.Security
         #region Insert
 
         [HttpPost()]
+        [RequiredPermission(UserApiPermissions.ApplicationUserRoleInsert)]
         public async Task<IActionResult> InsertApplicationUserRole(InsertUpdateApplicationUserRoleRequest req)
         {
             try
@@ -95,7 +102,7 @@ namespace MssBase.Service.Controllers.Security
                     return BadRequest(result);
                 }
 
-                return CreatedAtRoute("GetApplicationUserRole", new { applicationUserId = result.Response.ApplicationUserRoleId }, result);
+                return CreatedAtRoute("GetApplicationUserRoleById", new { applicationUserId = result.Response.ApplicationUserRoleId }, result);
             }
             catch (Exception ex)
             {
@@ -108,6 +115,7 @@ namespace MssBase.Service.Controllers.Security
         #region Update
 
         [HttpPut("{applicationUserId}")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserRoleUpdate)]
         public async Task<IActionResult> UpdateApplicationUserRole(int applicationUserId, InsertUpdateApplicationUserRoleRequest req)
         {
             try
@@ -126,6 +134,7 @@ namespace MssBase.Service.Controllers.Security
         #region Delete
 
         [HttpDelete("{applicationUserId}")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserRoleDelete)]
         public async Task<IActionResult> DeleteApplicationUserRole(int applicationUserId)
         {
             try

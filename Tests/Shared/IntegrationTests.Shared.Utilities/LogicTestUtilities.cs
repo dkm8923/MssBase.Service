@@ -89,5 +89,54 @@ namespace IntegrationTests.Shared
         {
             return new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day);
         }
+
+        /// <summary>
+        /// Returns a randomly generated date within the specified year.
+        /// </summary>
+        /// <param name="year">The year for which to generate a random date.</param>
+        /// <returns>A randomly generated <see cref="DateOnly"/> within the specified year.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public static DateOnly GetRandomDateForYear(int year)
+        {
+            // Ensure the year is valid to prevent exceptions
+            if (year < DateOnly.MinValue.Year || year > DateOnly.MaxValue.Year)
+            {
+                throw new ArgumentOutOfRangeException(nameof(year), "Year is out of the supported range.");
+            }
+
+            // Determine the start of the year (January 1)
+            var startOfYear = new DateOnly(year, 1, 1);
+
+            // Determine the end of the year, accounting for leap years
+            int daysInYear = DateTime.IsLeapYear(year) ? 366 : 365;
+
+            // Generate a random number of days to add (0 to daysInYear - 1)
+            int randomDays = Random.Shared.Next(daysInYear);
+
+            return startOfYear.AddDays(randomDays);
+        }
+
+        /// <summary>
+        /// Generates a random DateTime value for a specific year including random time components.
+        /// </summary>
+        /// <param name="year">The target year (e.g., 2026).</param>
+        /// <returns>A random DateTime within the specified year.</returns>
+        public static DateTime GetRandomDateTime(int year)
+        {
+            // 1. Define the exact start of the year
+            DateTime startOfYear = new DateTime(year, 1, 1);
+            
+            // 2. Determine if it is a leap year to get the correct total days (365 or 366)
+            int totalDaysInYear = DateTime.IsLeapYear(year) ? 366 : 365;
+            
+            // 3. Convert the maximum range into seconds to allow for random time components
+            int totalSecondsInYear = totalDaysInYear * 24 * 60 * 60;
+            
+            // 4. Generate a random second offset (upper bound is exclusive)
+            int randomSecondsOffset = Random.Shared.Next(0, totalSecondsInYear);
+            
+            // 5. Return the resulting random DateTime
+            return startOfYear.AddSeconds(randomSecondsOffset);
+        }
     }
 }

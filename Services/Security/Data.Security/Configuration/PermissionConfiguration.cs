@@ -23,7 +23,7 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);
         CreateForeignKeys(builder);
-        CreateTableData(builder); 
+        //CreateTableData(builder); 
     }
 
     public void SetTableName(EntityTypeBuilder<Permission> builder)

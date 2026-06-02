@@ -8,6 +8,8 @@ using Shared.Models;
 using System.Net;
 using IntegrationTests.Shared.Utilities;
 using IntegrationTests.Shared.Utilities.Contracts.Controller;
+using Dto.Security.Application;
+using IntegrationTests.Shared.Models;
 
 namespace IntegrationTests.Security.Controller
 {
@@ -15,13 +17,17 @@ namespace IntegrationTests.Security.Controller
     public class ApplicationUserPermissionControllerTests : SecurityTestBase, 
                                                   IClassFixture<WebApplicationFactory<Program>>,
                                                   IDefaultControllerTestsGetAll,
+                                                  IDefaultControllerTestsGetAllIncludeRelated,
                                                   IDefaultControllerTestsGetById,
+                                                  IDefaultControllerTestsGetByIdIncludeRelated,
                                                   IDefaultControllerTestsFilter,
+                                                  IDefaultControllerTestsFilterIncludeRelated, 
                                                   IDefaultControllerTestsInsert,
                                                   IDefaultControllerTestsUpdate,
                                                   IDefaultControllerTestsDelete
     {
         private readonly HttpClient _client;
+        private readonly string _defaultApplicationUserPermissionApiEndPoint = ApiEndPoints.Security.ApplicationUserPermission.Base;
 
         public ApplicationUserPermissionControllerTests(WebApplicationFactory<Program> factory)
         {
@@ -38,42 +44,164 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_GetAll_Should_Return_Active_Data()
         {
             // Arrange
-            await ArrangeApplicationUserPermissionTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base);
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpGetRequestParms {
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token 
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(5);
+            result.Response.Should().HaveCountGreaterThan(5);
         }
 
         [Fact]
         public async Task Default_GetAll_Should_Return_Inactive_Data()
         {
             // Arrange
-            await ArrangeApplicationUserPermissionTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpGetRequestParms {
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint, 
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeInactive = true, DeleteCache = true }
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(10);
+            result.Response.Should().HaveCountGreaterThan(5);
         }
 
         [Fact]
         public async Task Default_GetAll_Should_Return_Zero_Records()
         {
             // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             await ClearAllSecurityTestTableData();
 
             // Act
-            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base);
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint, 
+                Token = token
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
             result.Response.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, DeleteCache = true }
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Should().NotBeNull();
+                applicationUserPermission.Active.Should().BeTrue();
+                applicationUserPermission.Permission.Should().NotBeNull();
+                applicationUserPermission.Permission.Active.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, IncludeInactive = true, DeleteCache = true }
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(10);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().NotBeNull();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().BeNull();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var getAllResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationUserPermissionApiEndPoint, invalidToken);
+
+            //Assert
+            getAllResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+            
+            // Act
+            var getAllResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationUserPermissionApiEndPoint, token);
+
+            //Assert
+            getAllResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         #endregion
@@ -85,14 +213,20 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
-            var activeTestRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions[0];
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions[0];
             
             // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, activeTestRecord.ApplicationUserPermissionId);
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                RecordId = testRecord.ApplicationUserPermissionId,
+                Token = token
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            _securityTestUtilities.ApplicationUserPermission.VerifyTestRecordValuesMatch(result.Response, activeTestRecord);
+            _securityTestUtilities.ApplicationUserPermission.VerifyTestRecordValuesMatch(result.Response, testRecord);
         }
 
         [Fact]
@@ -100,13 +234,21 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
-            var inactiveTestRecord = arrangeTestDataResponse.InactiveApplicationUserPermissions[0];
-
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUserPermissions[0];
+            
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/" + inactiveTestRecord.ApplicationUserPermissionId);
-
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                RecordId = testRecord.ApplicationUserPermissionId,
+                Token = token,
+                ExpectedStatusCode = HttpStatusCode.NotFound
+            });
+            
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().BeNull();
         }
 
         [Fact]
@@ -114,43 +256,159 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
-            var inactiveTestRecord = arrangeTestDataResponse.InactiveApplicationUserPermissions[0];
-
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUserPermissions[0];
+            
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/" + inactiveTestRecord.ApplicationUserPermissionId + "?" + ControllerTestUtilities.CreateIncludeInactiveQueryStringParm(true));
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                RecordId = testRecord.ApplicationUserPermissionId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeInactive = true, DeleteCache = true }
+            });
 
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().NotBeNull();
+            _securityTestUtilities.ApplicationUserPermission.VerifyTestRecordValuesMatch(result.Response, testRecord);
         }
 
         [Fact]
         public async Task Default_GetById_Should_Return_NotFound()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var id = -1;
 
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/" + id);
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                RecordId = id,
+                Token = token,
+                ExpectedStatusCode = HttpStatusCode.NotFound
+            });
 
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().BeNull();
         }
  
         [Fact]
         public async Task Default_GetById_Should_Return_Bad_Request_Invalid_Id()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var id = "asfasdfasdfasdf";
+           
+            using var getByIdRequest = new HttpRequestMessage(HttpMethod.Get, _defaultApplicationUserPermissionApiEndPoint + "/" + id);
+            ControllerTestUtilities.AddAuthorizationHeaderIfApplicable(getByIdRequest, token);
+            
+            // Act
+            var getResponse = await _client.SendAsync(getByIdRequest);
+            
+            // Assert
+            getResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions.First();
 
             // Act
-            var response = await _client.GetAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/" + id);
-            var content = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult<string>>(response);
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                RecordId = testRecord.ApplicationUserPermissionId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, DeleteCache = true }
+            });
 
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            content.Errors.Count.Should().Be(1);
+            result.Response.Should().NotBeNull();
+            result.Response.Permission.Should().NotBeNull();
+            result.Response.Active.Should().BeTrue();
+            result.Response.Permission.Active.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUserPermissions.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                RecordId = testRecord.ApplicationUserPermissionId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, IncludeInactive = true, DeleteCache = true }
+            });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Permission.Should().NotBeNull();
+            result.Response.Active.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions.First();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                RecordId = testRecord.ApplicationUserPermissionId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = false, DeleteCache = true }
+            });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Permission.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var getByIdResult = await ControllerTestUtilities.GetRecordById(_client, _defaultApplicationUserPermissionApiEndPoint, 1, invalidToken);
+
+            //Assert
+            getByIdResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+
+            // Act
+            var getByIdResult = await ControllerTestUtilities.GetRecordById(_client, _defaultApplicationUserPermissionApiEndPoint, 1, token);
+
+            //Assert
+            getByIdResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         #endregion
@@ -162,10 +420,17 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var postReq = new FilterApplicationUserPermissionServiceRequest { };
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, postReq);
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
             // Assert
             result.Errors.Should().HaveCount(0);
@@ -178,10 +443,17 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var postReq = new FilterApplicationUserPermissionServiceRequest { IncludeInactive = true };
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, postReq);
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
             // Assert
             result.Response.Should().HaveCountGreaterThan(0);
@@ -194,6 +466,7 @@ namespace IntegrationTests.Security.Controller
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var applicationUserPermissionIds = new List<int> 
             { 
                 arrangeTestDataResponse.ActiveApplicationUserPermissions[0].ApplicationUserPermissionId, 
@@ -204,7 +477,13 @@ namespace IntegrationTests.Security.Controller
             var postReq = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = applicationUserPermissionIds };
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, postReq);
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
             //Assert
             result.Response.Should().HaveCount(3);
@@ -214,42 +493,181 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Filter_Should_Return_Zero_Records()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             
-            var postReq = new FilterApplicationUserPermissionServiceRequest { };
+            var postReqInvalidCreatedBy = new FilterApplicationUserPermissionServiceRequest { CreatedBy = "TestCreatedBy" };
+            var postReqInvalidCreatedOnDate = new FilterApplicationUserPermissionServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000") };
+            var postReqInvalidUpdatedBy = new FilterApplicationUserPermissionServiceRequest { UpdatedBy = "TestUpdatedBy" };
+            var postReqInvalidUpdatedOnDate = new FilterApplicationUserPermissionServiceRequest { UpdatedOnDate = DateOnly.Parse("1/1/2000") };
+            var postReqInvalidApplicationUserPermissionIds = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = new List<int> { 9999 } };
+            var postReqInvalidApplicationId = new FilterApplicationUserPermissionServiceRequest { ApplicationId = 9999 };
+            var postReqInvalidApplicationUserIds = new FilterApplicationUserPermissionServiceRequest { ApplicationUserId = 9999 };
+            var postReqInvalidPermissionIds = new FilterApplicationUserPermissionServiceRequest { PermissionId = 9999 };
 
             // Act
-            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, postReq);
+            var invalidCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedBy });
+            var invalidCreatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedOnDate });
+            var invalidUpdatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,Token = token, RequestObject = postReqInvalidUpdatedBy });
+            var invalidUpdatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,Token = token, RequestObject = postReqInvalidUpdatedOnDate });
+            var invalidApplicationUserPermissionIdsResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,Token = token, RequestObject = postReqInvalidApplicationUserPermissionIds });
+            var invalidApplicationIdResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,Token = token, RequestObject = postReqInvalidApplicationId });
+            var invalidApplicationUserIdsResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,Token = token, RequestObject = postReqInvalidApplicationUserIds });
+            var invalidPermissionIdsResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,Token = token, RequestObject = postReqInvalidPermissionIds });
 
             //Assert
-            result.Response.Should().HaveCount(0);
+            invalidCreatedByResult.Response.Should().HaveCount(0);
+            invalidCreatedOnDateResult.Response.Should().HaveCount(0);
+            invalidUpdatedByResult.Response.Should().HaveCount(0);
+            invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
+            invalidApplicationUserPermissionIdsResult.Response.Should().HaveCount(0);
+            invalidApplicationIdResult.Response.Should().HaveCount(0);
+            invalidApplicationUserIdsResult.Response.Should().HaveCount(0);
+            invalidPermissionIdsResult.Response.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var applicationUserPermissions = arrangeTestDataResponse.ActiveApplicationUserPermissions.Take(5).ToList();
+            
+            var postReq = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = new List<int> { applicationUserPermissions[0].ApplicationUserPermissionId, applicationUserPermissions[1].ApplicationUserPermissionId }, IncludeRelated = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(2);
+
+            foreach (var r in result.Response)
+            {
+                r.Active.Should().BeTrue();
+                r.Permission.Should().NotBeNull();
+                r.Permission.Active.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var activeApplicationUserPermissions = arrangeTestDataResponse.ActiveApplicationUserPermissions.Take(5).ToList();
+            var inactiveApplicationUserPermissions = arrangeTestDataResponse.InactiveApplicationUserPermissions.Take(5).ToList();
+
+            var postReq = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = new List<int> { activeApplicationUserPermissions[0].ApplicationUserPermissionId, activeApplicationUserPermissions[1].ApplicationUserPermissionId, inactiveApplicationUserPermissions[0].ApplicationUserPermissionId, inactiveApplicationUserPermissions[1].ApplicationUserPermissionId }, IncludeRelated = true, IncludeInactive = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(4);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().NotBeNull();
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var postReq = new FilterApplicationUserPermissionServiceRequest();
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
+
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(10);
+
+            foreach (var applicationUserPermission in result.Response)
+            {
+                applicationUserPermission.Permission.Should().BeNull();
+            }
         }
         
         [Fact]
         public async Task Default_Filter_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            
-            // Act
-            var response = await _client.PostAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/Filter", null);
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecords(_client, _defaultApplicationUserPermissionApiEndPoint, null, token);
+            
             //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
+            result.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
         }
 
         [Fact]
         public async Task Default_Filter_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var postReq = ControllerTestUtilities.FormatPostRequest(null);
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var response = await _client.PostAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/Filter", postReq);
+            var result = await ControllerTestUtilities.GetFilteredRecords(_client, _defaultApplicationUserPermissionApiEndPoint,"", token);
+            
+            //Assert
+            result.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var filterResult = await ControllerTestUtilities.GetFilteredRecords(_client, _defaultApplicationUserPermissionApiEndPoint, new FilterApplicationUserPermissionServiceRequest(), invalidToken);
 
             //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            filterResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+
+            // Act
+            var filterResult = await ControllerTestUtilities.GetFilteredRecords(_client, _defaultApplicationUserPermissionApiEndPoint, new FilterApplicationUserPermissionServiceRequest(), token);
+
+            //Assert
+            filterResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         #endregion
@@ -260,8 +678,9 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Insert_Should_Create_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var application = arrangeTestDataResponse.ActiveApplications[0];
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(application);
             var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
             var activePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
             
@@ -275,38 +694,79 @@ namespace IntegrationTests.Security.Controller
             };
 
             // Act
-            var insertedRecordRes = await ControllerTestUtilities.CreateRecordWithValidationResult<ApplicationUserPermissionDto>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, insertReq);    
-            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, insertedRecordRes.Response.ApplicationUserPermissionId);
+            var insertResult = await ControllerTestUtilities.CreateRecordWithValidationResult<ApplicationUserPermissionDto>(new HttpPostRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token, 
+                RequestObject = insertReq,
+                ExpectedStatusCode = HttpStatusCode.Created
+            });
+            
+            var insertCheck = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationUserPermissionDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                RecordId = insertResult.Response.ApplicationUserPermissionId,
+                Token = token
+            });
 
             // Assert
-            _securityTestUtilities.ApplicationUserPermission.VerifyTestRecordValuesMatch(insertedRecordRes.Response, insertCheck.Response);
+            _securityTestUtilities.ApplicationUserPermission.VerifyTestRecordValuesMatch(insertResult.Response, insertCheck.Response);
         }
 
         [Fact]
         public async Task Default_Insert_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var response = await _client.PostAsync(ApiEndPoints.Security.ApplicationUserPermission.Base, null);
+            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultApplicationUserPermissionApiEndPoint, null, token);
 
             //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
+            insertResult.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
         }
 
         [Fact]
         public async Task Default_Insert_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var postReq = ControllerTestUtilities.FormatPostRequest(new object());
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var response = await _client.PostAsync(ApiEndPoints.Security.ApplicationUserPermission.Base, postReq);
+            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultApplicationUserPermissionApiEndPoint, "", token);
+            
+            //assert
+            insertResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task Default_Insert_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultApplicationUserPermissionApiEndPoint, new InsertUpdateApplicationRequest(), invalidToken);
 
             //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            insertResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_Insert_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+
+            // Act
+            var insertResult = await ControllerTestUtilities.CreateRecord(_client, _defaultApplicationUserPermissionApiEndPoint, new InsertUpdateApplicationRequest(), token);
+
+            //Assert
+            insertResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         #endregion
@@ -317,8 +777,9 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Update_Should_Update_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var application = arrangeTestDataResponse.ActiveApplications[0];
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(application);
             var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
             var activePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
             var inactivePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId, false);
@@ -332,7 +793,13 @@ namespace IntegrationTests.Security.Controller
                 CurrentUser = TestConstants.CurrentUser
             };
 
-            var insertedRecordRes = await ControllerTestUtilities.CreateRecordWithValidationResult<ApplicationUserPermissionDto>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, insertReq);  
+            var insertedRecordRes = await ControllerTestUtilities.CreateRecordWithValidationResult<ApplicationUserPermissionDto>(new HttpPostRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                Token = token,
+                RequestObject = insertReq,
+                ExpectedStatusCode = HttpStatusCode.Created
+            });
 
             var updateReq = new InsertUpdateApplicationUserPermissionRequest
             {
@@ -344,7 +811,13 @@ namespace IntegrationTests.Security.Controller
             };
 
             // Act
-            var updateRecordRes = await ControllerTestUtilities.UpdateRecordWithValidationResult<ApplicationUserPermissionDto>(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, updateReq, insertedRecordRes.Response.ApplicationUserPermissionId);
+            var updateRecordRes = await ControllerTestUtilities.UpdateRecordWithValidationResult<ApplicationUserPermissionDto>(new HttpPutRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultApplicationUserPermissionApiEndPoint,
+                RecordId = insertedRecordRes.Response.ApplicationUserPermissionId,
+                Token = token,
+                RequestObject = updateReq
+            });
 
             // Assert
             updateRecordRes.Response.ApplicationId.Should().Be(updateReq.ApplicationId);
@@ -357,27 +830,56 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Update_Should_Return_Unsupported_Media_Type_Null_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var response = await _client.PutAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/1", null);
+            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultApplicationUserPermissionApiEndPoint,"", 1, token);
 
             //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
+            updateResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         [Fact]
         public async Task Default_Update_Should_Return_Bad_Request_Blank_JSON_Obj_Request_Body()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var postReq = ControllerTestUtilities.FormatPostRequest(new object());
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
             // Act
-            var response = await _client.PutAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/1", postReq);
+            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultApplicationUserPermissionApiEndPoint, "", 1, token);
 
             //Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            updateResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task Default_Update_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultApplicationUserPermissionApiEndPoint, new InsertUpdateApplicationRequest(), 1, invalidToken);
+
+            //Assert
+            updateResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_Update_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+
+            // Act
+            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultApplicationUserPermissionApiEndPoint, new InsertUpdateApplicationRequest(), 1, token);
+
+            //Assert
+            updateResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
         #endregion
@@ -388,38 +890,37 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Delete_Should_Delete_Record()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
-            var activePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
-            var applicationUserPermission = await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, activePermission.PermissionId);
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions[0];
 
             // Act
-            var response = await ControllerTestUtilities.DeleteRecord(_client, ApiEndPoints.Security.ApplicationUserPermission.Base, applicationUserPermission.ApplicationUserPermissionId);
-            var getResponse = await _client.GetAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/" + applicationUserPermission.ApplicationUserPermissionId);
-
-            // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-            getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            var deleteResult = await ControllerTestUtilities.DeleteRecord(_client, _defaultApplicationUserPermissionApiEndPoint, testRecord.ApplicationUserPermissionId, token);
+            var getByIdResult = await ControllerTestUtilities.GetRecordById(_client, _defaultApplicationUserPermissionApiEndPoint, testRecord.ApplicationUserPermissionId, token);
+            
+            //Assert
+            deleteResult.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            getByIdResult.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
         [Fact]
         public async Task Default_Delete_Should_Not_Delete_Record_Id_Does_Not_Exist()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var applicationUserPermissionId = -1;
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var applicationUserId = -1;
 
             // Act
-            var getResponse = await _client.GetAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/" + applicationUserPermissionId);
-            var response = await _client.DeleteAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/" + applicationUserPermissionId);
-            var errorValidationResult = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult>(response);
+            var getByIdResult = await ControllerTestUtilities.GetRecordById(_client, _defaultApplicationUserPermissionApiEndPoint, applicationUserId, token);
+            var deleteResult = await ControllerTestUtilities.DeleteRecord(_client, _defaultApplicationUserPermissionApiEndPoint, applicationUserId, token);
+            var errorValidationResult = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult>(deleteResult);
 
             var expectedInvalidDeleteError = _securityTestUtilities.ApplicationUserPermission.GetExpectedRecordDoesNotExistErrors();
             
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            deleteResult.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            getByIdResult.StatusCode.Should().Be(HttpStatusCode.NotFound);
             errorValidationResult.Errors.Should().BeEquivalentTo(expectedInvalidDeleteError);
         }
         
@@ -427,17 +928,76 @@ namespace IntegrationTests.Security.Controller
         public async Task Default_Delete_Should_Return_Bad_Request_Invalid_Id()
         {
             // Arrange
-            await ClearAllSecurityTestTableData();
-            var applicationUserPermissionId = "asdfasfdasdfasfdas";
+            var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var applicationUserId = "asdfasfdasdfasfdas";
+
+            using var getRequest = new HttpRequestMessage(HttpMethod.Get, _defaultApplicationUserPermissionApiEndPoint + "/" + applicationUserId);
+            ControllerTestUtilities.AddAuthorizationHeaderIfApplicable(getRequest, token);
+            
+            using var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, _defaultApplicationUserPermissionApiEndPoint + "/" + applicationUserId);
+            ControllerTestUtilities.AddAuthorizationHeaderIfApplicable(deleteRequest, token);
 
             // Act
-            var getResponse = await _client.GetAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/" + applicationUserPermissionId);
-            var response = await _client.DeleteAsync(ApiEndPoints.Security.ApplicationUserPermission.Base + "/" + applicationUserPermissionId);
+            var getResponse = await _client.SendAsync(getRequest);
+            var deleteResponse = await _client.SendAsync(deleteRequest);
 
             // Assert
             getResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            deleteResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
+        }
+
+        [Fact]
+        public async Task Default_Delete_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var deleteResult = await ControllerTestUtilities.DeleteRecord(_client, _defaultApplicationUserPermissionApiEndPoint, 1, invalidToken);
+
+            //Assert
+            deleteResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_Delete_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+
+            // Act
+            var deleteResult = await ControllerTestUtilities.DeleteRecord(_client, _defaultApplicationUserPermissionApiEndPoint, 1, token);
+
+            //Assert
+            deleteResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        #endregion
+
+        #region Private
+
+        private async Task<string> CreateAuthenticatedAdminTestUserAndReturnToken(ApplicationDto application)
+        {
+            return await CreateAuthenticatedTestUserAndReturnToken(application, new AssignRoleRequest { ApplicationUserPermissionAdmin = true });
+        }
+
+        //TODO: Create Readonly User Tests
+        private async Task<string> CreateAuthenticatedReadOnlyTestUserAndReturnToken(ApplicationDto application)
+        {
+            return await CreateAuthenticatedTestUserAndReturnToken(application, new AssignRoleRequest { ApplicationUserPermissionReadOnly = true });
+        }
+
+        private async Task<string> CreateAuthenticatedTestUserAndReturnToken(ApplicationDto application, AssignRoleRequest assignRoleRequest)
+        {
+            //authenticate test user and receive token to be used in authorized controller calls
+            var testUser = await CreateTestUserWithPermissions(application.ApplicationId, assignRoleRequest);
+            var authResult = await ControllerTestUtilities.AuthenticateTestUserAndReturnAuthToken(_client, testUser.Email, TestConstants.DefaultTestUserPassword, application.Name);
+            
+            return authResult.Token;
         }
 
         #endregion

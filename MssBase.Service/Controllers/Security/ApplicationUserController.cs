@@ -1,8 +1,10 @@
 using Contract.Security.ApplicationUser;
 using Dto.Security.ApplicationUser;
 using Dto.Security.ApplicationUser.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
+using MssBase.Service.Shared.Authorization;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
@@ -12,6 +14,7 @@ namespace MssBase.Service.Controllers.Security
     [ApiController]
     [Tags("ApplicationUser")]
     [AutoValidationAttribute]
+    [Authorize]
     public class ApplicationUserController : ApiBaseController
     {
         private readonly IApplicationUserService _applicationUserSvc;
@@ -24,6 +27,7 @@ namespace MssBase.Service.Controllers.Security
         #region GetAll
 
         [HttpGet()]
+        [RequiredPermission(UserApiPermissions.ApplicationUserRead)]
         public async Task<IActionResult> GetApplicationUsers([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
@@ -41,8 +45,9 @@ namespace MssBase.Service.Controllers.Security
 
         #region GetById
 
-        [HttpGet("{applicationUserId}", Name = "GetApplicationUser")]
-        public async Task<IActionResult> GetApplicationUser(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
+        [HttpGet("{applicationUserId}", Name = "GetApplicationUserById")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserRead)]
+        public async Task<IActionResult> GetApplicationUserById(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -66,6 +71,7 @@ namespace MssBase.Service.Controllers.Security
         #region Filter
 
         [HttpPost("Filter")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserRead)]
         public async Task<IActionResult> FilterApplicationUsers(FilterApplicationUserServiceRequest req, CancellationToken cancellationToken = default)
         {
             try
@@ -84,6 +90,7 @@ namespace MssBase.Service.Controllers.Security
         #region Insert
 
         [HttpPost()]
+        [RequiredPermission(UserApiPermissions.ApplicationUserInsert)]
         public async Task<IActionResult> InsertApplicationUser(InsertUpdateApplicationUserRequest req)
         {
             try
@@ -95,7 +102,7 @@ namespace MssBase.Service.Controllers.Security
                     return BadRequest(result);
                 }
 
-                return CreatedAtRoute("GetApplicationUser", new { applicationUserId = result.Response.ApplicationUserId }, result);
+                return CreatedAtRoute("GetApplicationUserById", new { applicationUserId = result.Response.ApplicationUserId }, result);
             }
             catch (Exception ex)
             {
@@ -108,6 +115,7 @@ namespace MssBase.Service.Controllers.Security
         #region Update
 
         [HttpPut("{applicationUserId}")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserUpdate)]
         public async Task<IActionResult> UpdateApplicationUser(int applicationUserId, InsertUpdateApplicationUserRequest req)
         {
             try
@@ -126,6 +134,7 @@ namespace MssBase.Service.Controllers.Security
         #region Delete
 
         [HttpDelete("{applicationUserId}")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserDelete)]
         public async Task<IActionResult> DeleteApplicationUser(int applicationUserId)
         {
             try

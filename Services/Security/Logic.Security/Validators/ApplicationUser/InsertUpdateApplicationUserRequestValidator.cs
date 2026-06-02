@@ -24,7 +24,7 @@ public class InsertUpdateApplicationUserRequestValidator : AbstractValidator<Ins
 
         RuleFor(v => v.Email)
             .NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Email))
-            .EmailAddress().WithMessage("Email must be in a valid format!")
+            .EmailAddress().WithMessage(ValidatorUtilities.CreateInvalidEmailErrorMessage())
             .Length(1, 128).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Email, 128));
 
         RuleFor(v => v.FirstName)
@@ -33,14 +33,8 @@ public class InsertUpdateApplicationUserRequestValidator : AbstractValidator<Ins
         RuleFor(v => v.LastName)
             .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.LastName, 64));
 
-        RuleFor(v => v.Password)
-            .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Password, 64));
-
-        RuleFor(v => v.ApplicationId)
-            .GreaterThan(0).WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationId));
-
-        RuleFor(v => v.CurrentUser)
-            .NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.CurrentUser))
-            .Length(1, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.CurrentUser, 64));
+        RuleFor(v => v.ApplicationId).ValidateApplicationIdIsRequired();
+            
+        RuleFor(v => v.CurrentUser).ValidateCurrentUser();
     }
 }

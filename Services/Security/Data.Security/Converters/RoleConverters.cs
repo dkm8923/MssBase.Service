@@ -27,6 +27,11 @@ namespace Data.Security.Converters
                 ApplicationId = source.ApplicationId
             };
 
+            if (source.RolePermissions != null && source.RolePermissions.Count > 0)
+            {
+                target.RolePermissions = source.RolePermissions.Select(rp => rp.ToDto()).ToList();
+            }
+
             return target;
         }
 

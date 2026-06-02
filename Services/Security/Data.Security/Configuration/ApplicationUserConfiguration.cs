@@ -21,17 +21,20 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.Property(t => t.FirstName).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.LastName).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.DateOfBirth).HasPrecision(2);
-        builder.Property(t => t.Password).HasMaxLength(64).IsUnicode(false);
+        builder.Property(t => t.Password).HasMaxLength(256).IsUnicode(true);
+        builder.Property(t => t.PasswordResetRequired).IsRequired();
         builder.Property(t => t.LastLoginDate).HasPrecision(2);
         builder.Property(t => t.LastPasswordChangeDate).HasPrecision(2);
         builder.Property(t => t.LastLockoutDate).HasPrecision(2);
         builder.Property(t => t.FailedPasswordAttemptCount).HasDefaultValue((short)0);
         builder.Property(t => t.ApplicationId).IsRequired();
+        builder.Property(t => t.RefreshToken).HasMaxLength(2048).IsUnicode(false);
+        builder.Property(t => t.RefreshTokenExpiryTime).HasPrecision(2);
 
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);
         CreateForeignKeys(builder);
-        CreateTableData(builder);
+        //CreateTableData(builder);
     }
         
     public void SetTableName(EntityTypeBuilder<ApplicationUser> builder)

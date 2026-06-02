@@ -1,6 +1,5 @@
 using Dto.Security.Role;
 using Dto.Security.Role.Logic;
-using Dto.Security.Role.Service;
 using FluentAssertions;
 using IntegrationTests.Security.Shared;
 using Shared.Models;
@@ -13,8 +12,11 @@ namespace IntegrationTests.Security.Logic
     [Collection("SecurityIntegrationTests")]
     public class RoleLogicTests : SecurityTestBase, 
                                   IDefaultLogicTestsGetAll,
+                                  IDefaultLogicTestsGetAllIncludeRelated,
                                   IDefaultLogicTestsGetById,
-                                  IDefaultLogicTestsFilter, 
+                                  IDefaultLogicTestsGetByIdIncludeRelated,
+                                  IDefaultLogicTestsFilter,
+                                  IDefaultLogicTestsFilterIncludeRelated,  
                                   IDefaultLogicTestsInsert, 
                                   IDefaultLogicTestsUpdate,
                                   IDefaultLogicTestsDelete
@@ -58,6 +60,79 @@ namespace IntegrationTests.Security.Logic
 
             // Assert
             result.Response.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+
+            // Act
+            var result = await _roleLogic.GetAll(new BaseLogicGet { IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().HaveCount(5);
+
+            foreach (var role in result.Response)
+            {
+                role.RolePermissions.Should().HaveCount(5);
+
+                foreach (var rolePermission in role.RolePermissions)
+                {
+                    rolePermission.Active.Should().BeTrue();
+                    rolePermission.Permission.Should().NotBeNull();
+                    rolePermission.Permission.Active.Should().BeTrue();
+                }
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+
+            // Act
+            var result = await _roleLogic.GetAll(new BaseLogicGet { IncludeRelated = true, IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().HaveCount(10);
+
+            foreach (var role in result.Response)
+            {
+                if (role.Active)
+                {
+                    role.RolePermissions.Should().HaveCount(10);
+                }
+                else
+                {
+                    role.RolePermissions.Should().HaveCount(5);
+                }
+
+                foreach (var rolePermission in role.RolePermissions)
+                {
+                    rolePermission.Permission.Should().NotBeNull();
+                }
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+
+            // Act
+            var result = await _roleLogic.GetAll(new BaseLogicGet());
+
+            // Assert
+            result.Response.Should().HaveCount(5);
+
+            foreach (var role in result.Response)
+            {
+                role.RolePermissions.Should().BeNull();
+            }
         }
 
         #endregion
@@ -104,6 +179,69 @@ namespace IntegrationTests.Security.Logic
 
             // Assert
             result.Response.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.ActiveRoles.First();
+
+            // Act
+            var result = await _roleLogic.GetById(testRecord.RoleId, new BaseLogicGet { IncludeRelated = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeTrue();
+
+            result.Response.RolePermissions.Should().HaveCount(5);
+
+            foreach (var rolePermission in result.Response.RolePermissions)
+            {
+                rolePermission.Active.Should().BeTrue();
+                rolePermission.Permission.Should().NotBeNull();
+                rolePermission.Permission.Active.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.InactiveRoles.First();
+            
+            // Act
+            var result = await _roleLogic.GetById(testRecord.RoleId, new BaseLogicGet { IncludeRelated = true, IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeFalse();
+
+            result.Response.RolePermissions.Should().HaveCount(5);
+
+            foreach (var rolePermission in result.Response.RolePermissions)
+            {
+                rolePermission.Active.Should().BeFalse();
+                rolePermission.Permission.Should().NotBeNull();
+                rolePermission.Permission.Active.Should().BeFalse();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.ActiveRoles.First();
+
+            // Act
+            var result = await _roleLogic.GetById(testRecord.RoleId, new BaseLogicGet { IncludeRelated = false });
+
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.RolePermissions.Should().BeNull();
         }
 
         #endregion
@@ -231,6 +369,88 @@ namespace IntegrationTests.Security.Logic
             filterRoleIdsResult.Response.Should().HaveCount(3);
             filterNameResult.Response.Should().HaveCount(1);
             filterApplicationIdResult.Response.Should().HaveCount(7);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+
+            var postReq = new FilterRoleLogicRequest { IncludeRelated = true };
+
+            // Act
+            var result = await _roleLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+            
+            foreach (var r in result.Response)
+            {
+                r.Active.Should().BeTrue();
+                r.RolePermissions.Should().HaveCount(5);
+
+                foreach (var rolePermission in r.RolePermissions)
+                {
+                    rolePermission.Active.Should().BeTrue();
+                    rolePermission.Permission.Should().NotBeNull();
+                    rolePermission.Permission.Active.Should().BeTrue();
+                }
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+
+            var postReq = new FilterRoleLogicRequest { IncludeRelated = true, IncludeInactive = true };
+
+            // Act
+            var result = await _roleLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+            
+            foreach (var role in result.Response)
+            {
+                if (role.Active)
+                {
+                    role.RolePermissions.Should().HaveCount(10);
+                }
+                else
+                {
+                    role.RolePermissions.Should().HaveCount(5);
+                }
+
+                foreach (var rolePermission in role.RolePermissions)
+                {
+                    rolePermission.Permission.Should().NotBeNull();
+                }
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
+
+            var postReq = new FilterRoleLogicRequest();
+
+            // Act
+            var result = await _roleLogic.Filter(postReq);
+
+            // Assert
+            result.Response.Should().HaveCount(5);
+
+            foreach (var role in result.Response)
+            {
+                role.RolePermissions.Should().BeNull();
+            }
         }
 
         #endregion

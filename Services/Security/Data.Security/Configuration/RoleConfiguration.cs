@@ -23,7 +23,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);
         CreateForeignKeys(builder);
-        CreateTableData(builder); 
+        //CreateTableData(builder); 
     }
 
     public void SetTableName(EntityTypeBuilder<Role> builder)

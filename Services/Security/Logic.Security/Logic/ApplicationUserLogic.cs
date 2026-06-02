@@ -11,6 +11,9 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Models;
 using Shared.Logic;
 using Shared.Logic.Validators;
+using Shared.Logic.Common;
+using Microsoft.AspNetCore.Identity;
+using Dto.Security.Authentication;
 
 namespace Logic.Security.Logic
 {
@@ -21,17 +24,20 @@ namespace Logic.Security.Logic
 
         private IValidator<FilterApplicationUserLogicRequest> _filterApplicationUserLogicRequestValidator;
         private IValidator<InsertUpdateApplicationUserRequest> _insertUpdateApplicationUserRequestValidator;
+        private IValidator<ChangePasswordRequest> _changePasswordRequestValidator;
 
         public ApplicationUserLogic(
                             ISecurityConnectionStrings connectionStrings,
                             IValidator<FilterApplicationUserLogicRequest> filterApplicationUserLogicRequestValidator,
-                            IValidator<InsertUpdateApplicationUserRequest> insertUpdateApplicationUserRequestValidator
+                            IValidator<InsertUpdateApplicationUserRequest> insertUpdateApplicationUserRequestValidator,
+                            IValidator<ChangePasswordRequest> changePasswordRequestValidator
         )
         {
             _connectionStrings = connectionStrings;
             _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
             _filterApplicationUserLogicRequestValidator = filterApplicationUserLogicRequestValidator;
             _insertUpdateApplicationUserRequestValidator = insertUpdateApplicationUserRequestValidator;
+            _changePasswordRequestValidator = changePasswordRequestValidator;
         }
 
         /// <summary>
@@ -73,7 +79,12 @@ namespace Logic.Security.Logic
 
                 if (req.IncludeRelated)
                 {
-                    query = query.Include(application => application.ApplicationUserPermissions);
+                    query = query.Include(application => application.ApplicationUserPermissions.Where(aup => req.IncludeInactive || aup.Active)).ThenInclude(rp => rp.Permission)
+                                 .Include(application => application.ApplicationUserRoles
+                                    .Where(aur => req.IncludeInactive || aur.Active))
+                                    .ThenInclude(aur => aur.Role)
+                                    .ThenInclude(r => r.RolePermissions)
+                                    .ThenInclude(rp => rp.Permission);
                 }
 
                 if (req.ApplicationUserIds != null && req.ApplicationUserIds.Count > 0)
@@ -106,7 +117,7 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.ApplicationId == req.ApplicationId);
                 }
 
-                return new ErrorValidationResult<IEnumerable<ApplicationUserDto>> { Response = await query.ToDtos(cancellationToken) };
+                return new ErrorValidationResult<IEnumerable<ApplicationUserDto>> { Response = await query.ToDtosWithoutPassword(cancellationToken) };
             }
         }
 
@@ -125,8 +136,15 @@ namespace Logic.Security.Logic
             {
                 var entity = req.ToEntityOnInsert();
 
+                var randomPassword = _generateRandomPassword();
+
+                entity.Password = _hashPassword(randomPassword);
+                entity.PasswordResetRequired = true;
+
                 await dbContext.ApplicationUsers.AddAsync(entity);
                 await dbContext.SaveChangesAsync();
+
+                entity.Password = randomPassword;
 
                 return new ErrorValidationResult<ApplicationUserDto> { Response = entity.ToDto() };
             }
@@ -151,12 +169,11 @@ namespace Logic.Security.Logic
                 {
                     entity = entity.UpdateEntityFromRequest(req);
                     await dbContext.SaveChangesAsync();
-                    return new ErrorValidationResult<ApplicationUserDto> { Response = entity.ToDto() };
+                    return new ErrorValidationResult<ApplicationUserDto> { Response = entity.ToDtoWithoutPassword() };
                 }
                 else
                 {
-                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
-                    return errorValidationResult;
+                    return _createUserNotFoundError<ApplicationUserDto>(null);
                 }
             }
         }
@@ -169,21 +186,108 @@ namespace Logic.Security.Logic
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
                 var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
-                var errorValidationResult = new ErrorValidationResult();
-
+                
                 if (entity != null)
                 {
                     dbContext.ApplicationUsers.Remove(entity);
 
                     await dbContext.SaveChangesAsync();
+                    
+                    return new ErrorValidationResult();
                 }
                 else
                 {
-                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
+                    return _createUserNotFoundError<object?>();
                 }
+            }
+        }
 
+        public async Task<ErrorValidationResult<ResetPasswordResponse>> ResetPassword(int applicationUserId)
+        {
+            //TODO: Send email to user with new password instead of returning in response
+
+            var newPassword = _generateRandomPassword();
+            
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
+                
+                if (entity != null)
+                {
+                    var newHashedPassword = _hashPassword(newPassword);
+                    entity.Password = newHashedPassword;
+                    entity.PasswordResetRequired = true;
+                    entity.LastPasswordChangeDate = CommonUtilities.GetDateTimeUtcNow();
+                    
+                    await dbContext.SaveChangesAsync();
+
+                    var ret = new ResetPasswordResponse { NewPassword = newPassword };
+                    return new ErrorValidationResult<ResetPasswordResponse> { Response = ret };
+                }
+                else
+                {
+                    return _createUserNotFoundError<ResetPasswordResponse>(null);
+                }
+            }
+        }
+
+        public async Task<ErrorValidationResult> ChangePassword(ChangePasswordRequest req)
+        {
+            ValidationResult result = await _changePasswordRequestValidator.ValidateAsync(req);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<object>(result);
+
+            if (errorValidationResult.Errors.Count > 0) 
+            {
                 return errorValidationResult;
             }
+            
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == req.ApplicationUserId);
+                
+                if (entity is null) 
+                {
+                    return _createUserNotFoundError<object?>();
+                }
+
+                var passwordsMatch = SecurityLogicUtilities.VerifyPasswordMatchesHash(entity.Password, req.NewPassword);
+
+                if (passwordsMatch)
+                {
+                    return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { "ChangePassword", new List<string> { $"New password must be different from the old password!" } } } };
+                }
+
+                entity.Password = _hashPassword(req.NewPassword);
+                entity.PasswordResetRequired = false;
+                entity.LastPasswordChangeDate = CommonUtilities.GetDateTimeUtcNow();
+                await dbContext.SaveChangesAsync();
+
+                return new ErrorValidationResult();
+            }
+        }
+
+        #region Private Methods
+
+        /// <summary>
+        /// Generates a random 16 character alphanumeric password.
+        /// </summary>
+        /// <returns></returns>
+        private string _generateRandomPassword()
+        {
+            var randomPassword = CommonUtilities.GenerateRandomAlphaNumericString(16, true);
+            return randomPassword;
+        }
+
+        /// <summary>
+        /// Generates a hashed password using ASP.NET Core Identity's PasswordHasher.
+        /// </summary>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        private string _hashPassword(string password)
+        {
+            var hasher = new PasswordHasher<object>();
+            string passwordHash = hasher.HashPassword(user: null, password: password);
+            return passwordHash;
         }
 
         #region Validation
@@ -226,12 +330,22 @@ namespace Logic.Security.Logic
             return errorValidationResult;
         }
 
-        private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
+        private ErrorValidationResult<T> _createUserNotFoundError<T>(T? response = default)
         {
-            errors.Add("ApplicationUser", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserId") });
-            return errors;
+            return new ErrorValidationResult<T>
+            {
+                Response = response,
+                Errors = new Dictionary<string, List<string>>
+                {
+                    { "ApplicationUser", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserId") } }
+                }
+            };
         }
 
         #endregion
+
+        #endregion
+
+        
     }
 }

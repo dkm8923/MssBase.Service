@@ -84,8 +84,7 @@ namespace IntegrationTests.Shared
                 return default;
             }
 
-            //return JsonSerializer.Deserialize<T>(cachedJson);
-            return JsonSerializer.Deserialize<T>((string)cachedJson); //fix for .NET 10 upgrade
+            return JsonSerializer.Deserialize<T>((string)cachedJson);
         }
 
         public async Task DeleteAllKeyData()

@@ -7,7 +7,7 @@ namespace Data.Security.Converters
 {
     public static class ApplicationUserConverters
     {
-        public static ApplicationUserDto ToDto(this Models.ApplicationUser source)
+        public static ApplicationUserDto ToDto(this ApplicationUser source)
         {
             if (source == null)
             {
@@ -27,6 +27,7 @@ namespace Data.Security.Converters
                 LastName = source.LastName,
                 DateOfBirth = source.DateOfBirth,
                 Password = source.Password,
+                PasswordResetRequired = source.PasswordResetRequired,
                 LastLoginDate = source.LastLoginDate,
                 LastPasswordChangeDate = source.LastPasswordChangeDate,
                 LastLockoutDate = source.LastLockoutDate,
@@ -34,15 +35,31 @@ namespace Data.Security.Converters
                 ApplicationId = source.ApplicationId
             };
 
-            if (source.ApplicationUserPermissions != null)
+            if (source.ApplicationUserPermissions != null && source.ApplicationUserPermissions.Count > 0)
             {
                 target.ApplicationUserPermissions = source.ApplicationUserPermissions.Select(au => au.ToDto());
+            }
+
+            if (source.ApplicationUserRoles != null && source.ApplicationUserRoles.Count > 0)
+            {
+                target.ApplicationUserRoles = source.ApplicationUserRoles.Select(au => au.ToDto());
             }
 
             return target;
         }
 
-        public static async Task<List<ApplicationUserDto>> ToDtos(this IQueryable<Models.ApplicationUser> source, CancellationToken cancellationToken = default)
+        public static ApplicationUserDto ToDtoWithoutPassword(this ApplicationUser source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            source.Password = null;
+            return source.ToDto();
+        }
+
+        public static async Task<List<ApplicationUserDto>> ToDtos(this IQueryable<ApplicationUser> source, CancellationToken cancellationToken = default)
         {
             if (source == null)
             {
@@ -54,25 +71,32 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static Models.ApplicationUser ToEntityOnInsert(this InsertUpdateApplicationUserRequest source)
+        public static async Task<List<ApplicationUserDto>> ToDtosWithoutPassword(this IQueryable<ApplicationUser> source, CancellationToken cancellationToken = default)
         {
             if (source == null)
             {
                 return null;
             }
 
-            var target = new Models.ApplicationUser
+            var target = await source.Select(src => src.ToDtoWithoutPassword()).ToListAsync(cancellationToken);
+
+            return target;
+        }
+
+        public static ApplicationUser ToEntityOnInsert(this InsertUpdateApplicationUserRequest source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            var target = new ApplicationUser
             {
                 Active = source.Active,
                 Email = source.Email,
                 FirstName = source.FirstName,
                 LastName = source.LastName,
                 DateOfBirth = source.DateOfBirth,
-                Password = source.Password,
-                LastLoginDate = source.LastLoginDate,
-                LastPasswordChangeDate = source.LastPasswordChangeDate,
-                LastLockoutDate = source.LastLockoutDate,
-                FailedPasswordAttemptCount = source.FailedPasswordAttemptCount,
                 ApplicationId = source.ApplicationId
             };
 
@@ -84,7 +108,7 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static Models.ApplicationUser UpdateEntityFromRequest(this Models.ApplicationUser entity, InsertUpdateApplicationUserRequest source)
+        public static ApplicationUser UpdateEntityFromRequest(this ApplicationUser entity, InsertUpdateApplicationUserRequest source)
         {
             if (source == null || entity == null)
             {
@@ -96,11 +120,6 @@ namespace Data.Security.Converters
             entity.FirstName = source.FirstName;
             entity.LastName = source.LastName;
             entity.DateOfBirth = source.DateOfBirth;
-            entity.Password = source.Password;
-            entity.LastLoginDate = source.LastLoginDate;
-            entity.LastPasswordChangeDate = source.LastPasswordChangeDate;
-            entity.LastLockoutDate = source.LastLockoutDate;
-            entity.FailedPasswordAttemptCount = source.FailedPasswordAttemptCount;
             entity.ApplicationId = source.ApplicationId;
             entity.UpdatedBy = source.CurrentUser;
             entity.UpdatedOn = CommonUtilities.GetDateTimeUtcNow();

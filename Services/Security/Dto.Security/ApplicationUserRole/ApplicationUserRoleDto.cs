@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Dto.Security.Role;
 using Shared.Models;
 
 namespace Dto.Security.ApplicationUserRole
@@ -8,5 +10,8 @@ namespace Dto.Security.ApplicationUserRole
         public int ApplicationId { get; set; }
         public int ApplicationUserId { get; set; }
         public int RoleId { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public RoleDto Role { get; set; }
     }
 }

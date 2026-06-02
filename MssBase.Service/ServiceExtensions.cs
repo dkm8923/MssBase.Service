@@ -45,11 +45,31 @@ using Contract.Security.RolePermission;
 using Dto.Security.RolePermission.Logic;
 using Logic.Security.Validators.RolePermission;
 using Dto.Security.RolePermission;
+using Dto.Security.Authentication;
+using Microsoft.AspNetCore.Mvc;
+using MssBase.Service.Shared.JsonConverters;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Serilog;
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Enums;
+using MssBase.Service.Shared.FluentValidation;
+using Contract.Security.Authentication;
+using Logic.Security.Validators.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using MssBase.Service.Shared.Authorization;
 
 namespace MssBase.Service
 {
     public static class ServiceExtensions
     {
+        public static void ConfigureLogging(this WebApplicationBuilder builder)
+        {
+            builder.Host.UseSerilog((context, configuration) =>
+                configuration.ReadFrom.Configuration(context.Configuration));
+        }
+
         private static void ConfigureRedis(this IServiceCollection services, WebApplicationBuilder builder)
         {
             var redisServerUrl = builder.Configuration.GetSection("RedisConfiguration")?.GetSection("ConnectionString").Value;
@@ -83,7 +103,79 @@ namespace MssBase.Service
             }
         }
 
-        private static void ConfigureLoggerService(this IServiceCollection services, WebApplicationBuilder builder, string environmentName)
+        public static void ConfigureAuthenticationSettings(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            services.Configure<AuthenticationSettingsConfig>(builder.Configuration.GetSection("AuthenticationSettingsConfiguration"));
+        }
+
+        public static void ConfigureJwtAuthentication(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            services.Configure<JwtAuthenticationConfig>(builder.Configuration.GetSection("JwtAuthConfiguration"));
+
+            builder.Services.AddAuthentication(opt => {
+                opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer();
+
+            services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+                .Configure<IOptionsMonitor<JwtAuthenticationConfig>>((jwtBearerOptions, jwtConfigMonitor) =>
+                {
+                    var jwtConfig = jwtConfigMonitor.CurrentValue;
+                    jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = jwtConfig.ValidIssuer,
+                        ValidAudience = jwtConfig.ValidAudience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.IssuerSigningKey))
+                    };
+                });
+        }
+
+        public static void AddPermissionAuthorization(this IServiceCollection services)
+        {
+            services.AddAuthorization();
+            services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+            services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        }
+
+        public static void ConfigureControllers(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            builder.Services.AddControllers(config =>
+            {
+                config.Filters.Add(new ProducesAttribute("application/json"));
+            })
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+                options.JsonSerializerOptions.Converters.Add(new NullableDateOnlyJsonConverter());
+                options.JsonSerializerOptions.Converters.Add(new DateTimeJsonConverter());
+                options.JsonSerializerOptions.Converters.Add(new NullableDateTimeJsonConverter());
+                options.JsonSerializerOptions.Converters.Add(new NullableBoolToFalseJsonConverter());
+            });
+        }
+
+        public static void ConfigureCors(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
+
+            builder.Services.AddCors(options =>
+{
+                options.AddPolicy("AppPolicy", policy =>
+                {
+                    policy.WithOrigins(allowedOrigins)
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
+            });
+        }
+
+        public static void ConfigureLoggerService(this IServiceCollection services, WebApplicationBuilder builder, string environmentName)
         {
             if (environmentName == "IntegrationTest")
             {
@@ -99,11 +191,6 @@ namespace MssBase.Service
 
                 services.AddSingleton<ILoggerService, LoggerService>();
             }
-        }
-
-        public static void ConfigureBaseDependencies(this IServiceCollection services, WebApplicationBuilder builder, string environmentName)
-        {
-            ConfigureLoggerService(services, builder, environmentName);
         }
 
         public static void ConfigureCommonService(this IServiceCollection services, WebApplicationBuilder builder)
@@ -147,6 +234,7 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
+            services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
 
             #endregion
 
@@ -169,6 +257,20 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterApplicationUserRoleLogicRequest>, FilterApplicationUserRoleLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateApplicationUserRoleRequest>, InsertUpdateApplicationUserRoleRequestValidator>();
+
+            #endregion
+
+            #region Authentication
+
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<IAuthenticationLogic, AuthenticationLogic>();
+            
+            //Configure Fluent Validation Validators
+            services.AddTransient<IValidator<AuthenticationRequest>, AuthenticationRequestValidator>();
+            services.AddTransient<IValidator<AuthenticationRequest>, AuthenticationRequestValidator>();
+            services.AddTransient<IValidator<RefreshTokenRequest>, RefreshTokenRequestValidator>();
+            services.AddTransient<IValidator<RevokeTokenRequest>, RevokeTokenRequestValidator>();
+            services.AddTransient<IValidator<ForgotPasswordRequest>, ForgotPasswordRequestValidator>();
 
             #endregion
 
@@ -204,6 +306,36 @@ namespace MssBase.Service
             services.AddTransient<IValidator<InsertUpdateRolePermissionRequest>, InsertUpdateRolePermissionRequestValidator>();
 
             #endregion
+        }
+
+        public static void ConfigureFluentValidationAutoValidation(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            builder.Services.AddFluentValidationAutoValidation(configuration =>
+            {
+                // Disable the built-in .NET model (data annotations) validation.
+                configuration.DisableBuiltInModelValidation = true;
+
+                // Only validate controllers decorated with the `AutoValidation` attribute.
+                configuration.ValidationStrategy = ValidationStrategy.Annotations;
+
+                // Enable validation for parameters bound from `BindingSource.Body` binding sources.
+                configuration.EnableBodyBindingSourceAutomaticValidation = true;
+
+                // Enable validation for parameters bound from `BindingSource.Form` binding sources.
+                configuration.EnableFormBindingSourceAutomaticValidation = true;
+
+                // Enable validation for parameters bound from `BindingSource.Query` binding sources.
+                configuration.EnableQueryBindingSourceAutomaticValidation = true;
+
+                // Enable validation for parameters bound from `BindingSource.Path` binding sources.
+                configuration.EnablePathBindingSourceAutomaticValidation = true;
+
+                // Enable validation for parameters bound from 'BindingSource.Custom' binding sources.
+                configuration.EnableCustomBindingSourceAutomaticValidation = true;
+
+                // Replace the default result factory with a custom implementation.
+                configuration.OverrideDefaultResultFactoryWith<FluentValidationCustomResultFactory>();
+            });
         }
     }
 }

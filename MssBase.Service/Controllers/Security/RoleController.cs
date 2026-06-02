@@ -1,8 +1,10 @@
 using Contract.Security.Role;
 using Dto.Security.Role;
 using Dto.Security.Role.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
+using MssBase.Service.Shared.Authorization;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
@@ -12,6 +14,7 @@ namespace MssBase.Service.Controllers.Security
     [ApiController]
     [Tags("Role")]
     [AutoValidationAttribute]
+    [Authorize]
     public class RoleController : ApiBaseController
     {
         private readonly IRoleService _roleService;
@@ -24,6 +27,7 @@ namespace MssBase.Service.Controllers.Security
         #region GetAll
 
         [HttpGet()]
+        [RequiredPermission(UserApiPermissions.RoleRead)]
         public async Task<IActionResult> GetRoles([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
@@ -41,8 +45,9 @@ namespace MssBase.Service.Controllers.Security
 
         #region GetById
 
-        [HttpGet("{roleId}", Name = "GetRole")]
-        public async Task<IActionResult> GetRole(int roleId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
+        [HttpGet("{roleId}", Name = "GetRoleById")]
+        [RequiredPermission(UserApiPermissions.RoleRead)]
+        public async Task<IActionResult> GetRoleById(int roleId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -66,6 +71,7 @@ namespace MssBase.Service.Controllers.Security
         #region Filter
 
         [HttpPost("Filter")]
+        [RequiredPermission(UserApiPermissions.RoleRead)]
         public async Task<IActionResult> FilterRoles(FilterRoleServiceRequest req, CancellationToken cancellationToken = default)
         {
             try
@@ -84,6 +90,7 @@ namespace MssBase.Service.Controllers.Security
         #region Insert
 
         [HttpPost()]
+        [RequiredPermission(UserApiPermissions.RoleInsert)]
         public async Task<IActionResult> InsertRole(InsertUpdateRoleRequest req)
         {
             try
@@ -95,7 +102,7 @@ namespace MssBase.Service.Controllers.Security
                     return BadRequest(result);
                 }
 
-                return CreatedAtRoute("GetRole", new { roleId = result.Response.RoleId }, result);
+                return CreatedAtRoute("GetRoleById", new { roleId = result.Response.RoleId }, result);
             }
             catch (Exception ex)
             {
@@ -108,6 +115,7 @@ namespace MssBase.Service.Controllers.Security
         #region Update
 
         [HttpPut("{roleId}")]
+        [RequiredPermission(UserApiPermissions.RoleUpdate)]
         public async Task<IActionResult> UpdateRole(int roleId, InsertUpdateRoleRequest req)
         {
             try
@@ -126,6 +134,7 @@ namespace MssBase.Service.Controllers.Security
         #region Delete
 
         [HttpDelete("{roleId}")]
+        [RequiredPermission(UserApiPermissions.RoleDelete)]
         public async Task<IActionResult> DeleteRole(int roleId)
         {
             try

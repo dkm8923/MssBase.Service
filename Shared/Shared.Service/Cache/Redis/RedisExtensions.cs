@@ -77,8 +77,7 @@ namespace Shared.Service.Cache.Redis
                 return validationResult;
             }
 
-            //return new ErrorValidationResult<TResponse> { Response = JsonSerializer.Deserialize<TResponse>(cachedJson) };
-            return new ErrorValidationResult<TResponse> { Response = JsonSerializer.Deserialize<TResponse>((string)cachedJson) }; //fix for .NET 10 upgrade
+            return new ErrorValidationResult<TResponse> { Response = JsonSerializer.Deserialize<TResponse>((string)cachedJson) };
         }
 
         /// <summary>

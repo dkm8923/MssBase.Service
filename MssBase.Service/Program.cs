@@ -1,12 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
 using MssBase.Service;
-using MssBase.Service.Shared.FluentValidation;
-using MssBase.Service.Shared.JsonConverters;
 using Scalar.AspNetCore;
-//using Microsoft.OpenApi.Models;
-using Serilog;
-using SharpGrip.FluentValidation.AutoValidation.Mvc.Enums;
-using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,73 +8,28 @@ var environment = builder.Environment.EnvironmentName;
 // Configure OpenApi
 builder.Services.AddOpenApi();
 
-// Configure Serilog
-builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
+builder.ConfigureLogging();
 
 // Add services to the container.
 builder.Services.ConfigureCache(builder);
 
 builder.Services.AddHttpClient();
 
-builder.Services.AddControllers(config =>
-{
-    config.Filters.Add(new ProducesAttribute("application/json"));
-})
-.AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
-    options.JsonSerializerOptions.Converters.Add(new NullableDateOnlyJsonConverter());
-    options.JsonSerializerOptions.Converters.Add(new NullableBoolToFalseJsonConverter());
-});
+builder.Services.ConfigureAuthenticationSettings(builder);
 
-var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
-    ?? new[] { "http://localhost:4200" };
+builder.Services.ConfigureJwtAuthentication(builder);
+builder.Services.AddPermissionAuthorization();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AppPolicy", policy =>
-    {
-        policy.WithOrigins(allowedOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
+builder.Services.ConfigureControllers(builder);
 
-builder.Services.ConfigureBaseDependencies(builder, environment);
+builder.Services.ConfigureCors(builder);
+
+builder.Services.ConfigureLoggerService(builder, environment);
 
 //builder.Services.ConfigureCommonService(builder);
-
 builder.Services.ConfigureSecurityService(builder);
 
-builder.Services.AddFluentValidationAutoValidation(configuration =>
-{
-    // Disable the built-in .NET model (data annotations) validation.
-    configuration.DisableBuiltInModelValidation = true;
-
-    // Only validate controllers decorated with the `AutoValidation` attribute.
-    configuration.ValidationStrategy = ValidationStrategy.Annotations;
-
-    // Enable validation for parameters bound from `BindingSource.Body` binding sources.
-    configuration.EnableBodyBindingSourceAutomaticValidation = true;
-
-    // Enable validation for parameters bound from `BindingSource.Form` binding sources.
-    configuration.EnableFormBindingSourceAutomaticValidation = true;
-
-    // Enable validation for parameters bound from `BindingSource.Query` binding sources.
-    configuration.EnableQueryBindingSourceAutomaticValidation = true;
-
-    // Enable validation for parameters bound from `BindingSource.Path` binding sources.
-    configuration.EnablePathBindingSourceAutomaticValidation = true;
-
-    // Enable validation for parameters bound from 'BindingSource.Custom' binding sources.
-    configuration.EnableCustomBindingSourceAutomaticValidation = true;
-
-    // Replace the default result factory with a custom implementation.
-    configuration.OverrideDefaultResultFactoryWith<FluentValidationCustomResultFactory>();
-});
+builder.Services.ConfigureFluentValidationAutoValidation(builder);
 
 // Add MicroElements FluentValidation -> Swagger mapping
 //builder.Services.AddFluentValidationRulesToSwagger();
@@ -101,6 +49,7 @@ app.UseRouting(); // - Required for CORS to work properly
 
 app.UseCors("AppPolicy");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -43,7 +43,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<IEnumerable<ApplicationUserRoleDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterApplicationUserRoleLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser }, cancellationToken);
+            var ret = await this.Filter(new FilterApplicationUserRoleLogicRequest { IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
 
@@ -52,7 +52,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<ApplicationUserRoleDto>> GetById(int applicationUserRoleId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterApplicationUserRoleLogicRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoleId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser }, cancellationToken);
+            var res = await this.Filter(new FilterApplicationUserRoleLogicRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoleId }, IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, CurrentUser = req.CurrentUser }, cancellationToken);
 
             return new ErrorValidationResult<ApplicationUserRoleDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -74,6 +74,11 @@ namespace Logic.Security.Logic
 
                 query = query.ApplyIncludeInactiveFilter(req);
                 query = query.ApplyAuditableFilters(req);
+
+                if (req.IncludeRelated)
+                {
+                    query = query.Include(aur => aur.Role).Where(aur => req.IncludeInactive || aur.Active);
+                }
 
                 if (req.ApplicationUserRoleIds != null && req.ApplicationUserRoleIds.Count > 0)
                 {
@@ -105,10 +110,10 @@ namespace Logic.Security.Logic
         public async Task<ErrorValidationResult<ApplicationUserRoleDto>> Insert(InsertUpdateApplicationUserRoleRequest req, 
                                                                                       IApplicationLogic applicationLogic,
                                                                                       IApplicationUserLogic applicationUserLogic,
-                                                                                      IRoleLogic permissionLogic
+                                                                                      IRoleLogic roleLogic
                                                                                      )
         {
-            var errorValidationResult = await _validateApplicationUserRoleOnInsertUpdate(applicationLogic, applicationUserLogic, permissionLogic, req);
+            var errorValidationResult = await _validateApplicationUserRoleOnInsertUpdate(applicationLogic, applicationUserLogic, roleLogic, req);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
@@ -131,11 +136,11 @@ namespace Logic.Security.Logic
         public async Task<ErrorValidationResult<ApplicationUserRoleDto>> Update(int applicationUserRoleId, 
                                                                                       InsertUpdateApplicationUserRoleRequest req, 
                                                                                       IApplicationLogic applicationLogic,
-                                                                                      IApplicationUserLogic applicationUserRoleLogic,
-                                                                                      IRoleLogic permissionLogic
+                                                                                      IApplicationUserLogic applicationUserLogic,
+                                                                                      IRoleLogic roleLogic
                                                                                      )
         {
-            var errorValidationResult = await _validateApplicationUserRoleOnInsertUpdate(applicationLogic, applicationUserRoleLogic, permissionLogic, req, applicationUserRoleId);
+            var errorValidationResult = await _validateApplicationUserRoleOnInsertUpdate(applicationLogic, applicationUserLogic, roleLogic, req, applicationUserRoleId);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;

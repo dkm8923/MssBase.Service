@@ -35,6 +35,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../../../MssBase.Service/MssBase.Service.csproj" />
+    <ProjectReference Include="../../../../Services/Security/Data.Security/Data.Security.csproj" />
     <ProjectReference Include="../../../../Shared/Shared.Logic/Shared.Logic.csproj" />
     <ProjectReference Include="../../../Shared/IntegrationTests.Shared.Utilities/IntegrationTests.Shared.Utilities.csproj" />
   </ItemGroup>

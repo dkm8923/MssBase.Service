@@ -12,9 +12,17 @@ public interface IApplicationUserUtilities
     public InsertUpdateApplicationUserRequest CreateInsertUpdateRequestWithRandomValues(int applicationId, bool active = true);
     public InsertUpdateApplicationUserRequest ConvertApplicationUserDtoToInsertUpdateRequest(ApplicationUserDto req);
     public void VerifyTestRecordValuesMatch(ApplicationUserDto recordA, ApplicationUserDto recordB);
+    public void VerifyIncludeRelatedDataOnApplicationUser(ApplicationUserDto applicationUser, bool includeInactive = false);
     public Dictionary<string, List<string>> GetExpectedRecordDoesNotExistErrors();
     public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors();
     public Dictionary<string, List<string>> GetExpectedRequiredFieldErrors();
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors();
     public Dictionary<string, List<string>> GetExpectedInvalidEmailFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordRequiredFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordMinMaxLengthErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordInvalidPasswordErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordUpperCaseRequiredErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordLowerCaseRequiredErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordSpecialCharacterRequiredErrors();
+    public Dictionary<string, List<string>> GetExpectedChangePasswordNumberRequiredErrors();
 }

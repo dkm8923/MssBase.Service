@@ -27,6 +27,11 @@ namespace Data.Security.Converters
                 PermissionId = source.PermissionId
             };
 
+            if (source.Permission != null)
+            {
+                target.Permission = source.Permission.ToDto();
+            }
+
             return target;
         }
 

@@ -28,11 +28,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
             FirstName = req.FirstName,
             LastName = req.LastName,
             DateOfBirth = req.DateOfBirth,
-            Password = req.Password,
-            LastLoginDate = req.LastLoginDate,
-            LastPasswordChangeDate = req.LastPasswordChangeDate,
-            LastLockoutDate = req.LastLockoutDate,
-            FailedPasswordAttemptCount = req.FailedPasswordAttemptCount,
             Active = req.Active,
             ApplicationId = req.ApplicationId,
             CurrentUser = TestConstants.CurrentUser
@@ -46,7 +41,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
             Email = LogicTestUtilities.GenerateRandomString(120) + "@test.com",
             FirstName = LogicTestUtilities.GenerateRandomString(65),
             LastName = LogicTestUtilities.GenerateRandomString(65),
-            Password = LogicTestUtilities.GenerateRandomString(65),
             Active = true,
             ApplicationId = 1,
             CurrentUser = LogicTestUtilities.GenerateRandomString(65)
@@ -60,7 +54,7 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
             Email = LogicTestUtilities.GenerateRandomString(64) + "@test.com",
             FirstName = LogicTestUtilities.GenerateRandomString(32),
             LastName = LogicTestUtilities.GenerateRandomString(32),
-            Password = LogicTestUtilities.GenerateRandomString(64),
+            DateOfBirth = LogicTestUtilities.GetRandomDateTime(2000),
             Active = active,
             ApplicationId = applicationId,
             CurrentUser = TestConstants.CurrentUser
@@ -136,7 +130,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
             { "Email", new List<string> { "Email cannot exceed 128 characters!" } },
             { "FirstName", new List<string> { "FirstName cannot exceed 64 characters!" } },
             { "LastName", new List<string> { "LastName cannot exceed 64 characters!" } },
-            { "Password", new List<string> { "Password cannot exceed 64 characters!" } },
             { "CurrentUser", new List<string> { "CurrentUser cannot exceed 64 characters!" } }
         };
     }
@@ -163,7 +156,7 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     {
         return new Dictionary<string, List<string>>
         {
-            { "Email", new List<string> { "Email must be in a valid format!" } }
+            { "Email", new List<string> { "Invalid email address!" } }
         };
     }
 
@@ -172,6 +165,64 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
         return new Dictionary<string, List<string>>
         {
             { "Email", new List<string> { "Email must be unique!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordRequiredFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "ApplicationUserId", new List<string> { "ApplicationUserId is a required field!" } },
+            { "NewPassword", new List<string> { "NewPassword is a required field!" } },
+            { "CurrentUser", new List<string> { "CurrentUser is a required field!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordInvalidPasswordErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "ChangePassword", new List<string> { "New password must be different from the old password!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordMinMaxLengthErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "NewPassword", new List<string> { "NewPassword must be between 12 and 128 characters!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordUpperCaseRequiredErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "NewPassword", new List<string> { "NewPassword must contain at least one uppercase letter!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordLowerCaseRequiredErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "NewPassword", new List<string> { "NewPassword must contain at least one lowercase letter!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordSpecialCharacterRequiredErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "NewPassword", new List<string> { "NewPassword must contain at least one special character!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedChangePasswordNumberRequiredErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "NewPassword", new List<string> { "NewPassword must contain at least one number!" } }
         };
     }
 
@@ -189,4 +240,45 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
         recordA.CreatedBy.Should().Be(recordB.CreatedBy);
         recordA.UpdatedBy.Should().Be(recordB.UpdatedBy);
     }
+
+    /// <summary>
+    /// Verifies that the related data is included and valid on the application user record based on the specified parameters.
+    /// </summary>
+    /// <param name="applicationUser">The application user record to verify.</param>
+    /// <param name="includeInactive">Indicates whether inactive related data should be included in the verification.</param>
+    public void VerifyIncludeRelatedDataOnApplicationUser(ApplicationUserDto applicationUser, bool includeInactive = false)
+    {
+        applicationUser.ApplicationUserPermissions.Should().NotBeNull();
+        applicationUser.ApplicationUserPermissions.Count().Should().BeGreaterThan(0);
+            
+        foreach (var permission in applicationUser.ApplicationUserPermissions)
+        {
+            permission.Permission.Should().NotBeNull();
+            
+            if (!includeInactive)
+            {
+                permission.Permission.Active.Should().BeTrue();
+            }
+        }
+
+        applicationUser.ApplicationUserRoles.Should().NotBeNull();
+        applicationUser.ApplicationUserRoles.Count().Should().BeGreaterThan(0);
+
+        foreach (var applicationUserRole in applicationUser.ApplicationUserRoles)
+        {
+            applicationUserRole.Role.Should().NotBeNull();
+            applicationUserRole.Role.RolePermissions.Should().NotBeNull();
+            applicationUserRole.Role.RolePermissions.Count().Should().BeGreaterThan(0);
+
+            foreach (var rolePermission in applicationUserRole.Role.RolePermissions)
+            {
+                rolePermission.Permission.Should().NotBeNull();
+                
+                if (!includeInactive)
+                {
+                    rolePermission.Permission.Active.Should().BeTrue();
+                }
+            }
+        }
+    } 
 }

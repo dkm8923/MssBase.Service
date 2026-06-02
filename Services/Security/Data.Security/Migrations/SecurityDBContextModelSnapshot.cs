@@ -71,74 +71,6 @@ namespace Data.Security.Migrations
                         .HasDatabaseName("UQ_Application_Name");
 
                     b.ToTable("Application", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            ApplicationId = 1,
-                            Active = true,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Enterprise Dispatch and Monitoring System for Logistic Operations",
-                            Name = "EOS",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            ApplicationId = 2,
-                            Active = true,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Enterprise Financial System for Processing Pricing & Commissions",
-                            Name = "EPC",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            ApplicationId = 3,
-                            Active = true,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Enterprise User Permission Management System",
-                            Name = "EBS",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            ApplicationId = 4,
-                            Active = true,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Interchange Configuration Tool",
-                            Name = "Bet-t",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            ApplicationId = 5,
-                            Active = true,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Agent Analytics / Reporting Portal",
-                            Name = "MyPortfolio",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            ApplicationId = 6,
-                            Active = true,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Agent Management Platform",
-                            Name = "AIME",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        });
                 });
 
             modelBuilder.Entity("Data.Security.Models.ApplicationUser", b =>
@@ -203,9 +135,21 @@ namespace Data.Security.Migrations
                         .HasColumnType("datetime2(2)");
 
                     b.Property<string>("Password")
-                        .HasMaxLength(64)
+                        .HasMaxLength(256)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("PasswordResetRequired")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("RefreshToken")
+                        .HasMaxLength(2048)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(64)");
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
 
                     b.Property<string>("UpdatedBy")
                         .IsRequired()
@@ -226,34 +170,6 @@ namespace Data.Security.Migrations
                         .HasDatabaseName("UQ_ApplicationUser_Email");
 
                     b.ToTable("ApplicationUser", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            ApplicationUserId = 1,
-                            Active = true,
-                            ApplicationId = 2,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "dkm8923@gmail.com",
-                            FirstName = "Dan",
-                            LastName = "Mauk",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            ApplicationUserId = 2,
-                            Active = true,
-                            ApplicationId = 1,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "thompsonswartz@gmail.com",
-                            FirstName = "Rachel",
-                            LastName = "Thompson",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        });
                 });
 
             modelBuilder.Entity("Data.Security.Models.ApplicationUserPermission", b =>
@@ -307,20 +223,6 @@ namespace Data.Security.Migrations
                         .HasDatabaseName("UQ_ApplicationUserPermission_ApplicationId_ApplicationUserId_PermissionId");
 
                     b.ToTable("ApplicationUserPermission", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            ApplicationUserPermissionId = 1,
-                            Active = true,
-                            ApplicationId = 2,
-                            ApplicationUserId = 1,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            PermissionId = 2,
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        });
                 });
 
             modelBuilder.Entity("Data.Security.Models.ApplicationUserRole", b =>
@@ -430,68 +332,6 @@ namespace Data.Security.Migrations
                         .HasDatabaseName("UQ_Permission_Name");
 
                     b.ToTable("Permission", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            PermissionId = 1,
-                            Active = true,
-                            ApplicationId = 1,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Default Base Permission for EOS Application",
-                            Name = "EosDefaultUser",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            PermissionId = 2,
-                            Active = true,
-                            ApplicationId = 2,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Default Base Permission for EPC Application",
-                            Name = "EpcDefaultUser",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            PermissionId = 3,
-                            Active = true,
-                            ApplicationId = 2,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Default Base Permission for Commission Reviewer UI / Services",
-                            Name = "CommissionReviewer",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            PermissionId = 4,
-                            Active = true,
-                            ApplicationId = 2,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Permission for Allowing Access to Change Contractor on Commission Reviewer UI / Services",
-                            Name = "CommissionReviewerChangeContractor",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            PermissionId = 5,
-                            Active = true,
-                            ApplicationId = 2,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Permission for Adjusting Contractor Rates on Commission Reviewer UI / Services",
-                            Name = "CommissionReviewerAdjustRate",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        });
                 });
 
             modelBuilder.Entity("Data.Security.Models.Role", b =>
@@ -548,32 +388,6 @@ namespace Data.Security.Migrations
                         .HasDatabaseName("UQ_Role_Name");
 
                     b.ToTable("Role", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            RoleId = 1,
-                            Active = true,
-                            ApplicationId = 2,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Super User Role for EPC Application",
-                            Name = "DataAnalyst",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            RoleId = 2,
-                            Active = true,
-                            ApplicationId = 2,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Read Only Role for EPC Application",
-                            Name = "OfficeUser",
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        });
                 });
 
             modelBuilder.Entity("Data.Security.Models.RolePermission", b =>
@@ -627,20 +441,6 @@ namespace Data.Security.Migrations
                         .HasDatabaseName("UQ_RolePermission_ApplicationId_RoleId_PermissionId");
 
                     b.ToTable("RolePermission", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            RolePermissionId = 1,
-                            Active = true,
-                            ApplicationId = 2,
-                            CreatedBy = "MssBase.Service",
-                            CreatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            PermissionId = 2,
-                            RoleId = 1,
-                            UpdatedBy = "MssBase.Service",
-                            UpdatedOn = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        });
                 });
 
             modelBuilder.Entity("Data.Security.Models.ApplicationUser", b =>

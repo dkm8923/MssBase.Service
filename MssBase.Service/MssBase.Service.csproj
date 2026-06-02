@@ -7,10 +7,17 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/bin/**;**/obj/**;**/bin\**;**/obj\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="bin/**;obj/**;bin\**;obj\**" />
+    <None Remove="bin/**;obj/**;bin\**;obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
 	<PackageReference Include="MicroElements.Swashbuckle.FluentValidation" Version="7.0.4" />
+	<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
 	<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
 	<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
 	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -32,6 +39,7 @@
     <ProjectReference Include="..\Services\Logger\Service.Logger\Service.Logger.csproj" />
     <ProjectReference Include="..\Shared\Shared.Contracts\Shared.Contracts.csproj" />
     <ProjectReference Include="..\Shared\Shared.Service\Shared.Service.csproj" />
+    <ProjectReference Include="..\Shared\Shared.Logic\Shared.Logic.csproj" />
   </ItemGroup>
 
   <ItemGroup>
