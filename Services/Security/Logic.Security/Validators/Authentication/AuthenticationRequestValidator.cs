@@ -9,7 +9,6 @@ public class AuthenticationRequestValidator : AbstractValidator<AuthenticationRe
     private static class EntityFieldNames
     {
         public const string ApplicationName = "ApplicationName";
-        public const string Email = "Email";
         public const string Password = "Password";
     }
 
@@ -21,9 +20,7 @@ public class AuthenticationRequestValidator : AbstractValidator<AuthenticationRe
         RuleFor(x => x.ApplicationName).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationName))
             .Length(1, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.ApplicationName, 64));
         
-        RuleFor(x => x.Email).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Email))
-            .EmailAddress().WithMessage(ValidatorUtilities.CreateInvalidEmailErrorMessage())
-            .Length(1, 128).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Email, 128));
+        RuleFor(x => x.Email).ValidateEmail();
         
         RuleFor(x => x.Password).NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Password))
             .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Password, 64));

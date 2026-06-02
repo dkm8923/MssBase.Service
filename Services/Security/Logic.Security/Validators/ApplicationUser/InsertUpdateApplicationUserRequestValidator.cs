@@ -8,7 +8,6 @@ public class InsertUpdateApplicationUserRequestValidator : AbstractValidator<Ins
 {
     private static class EntityFieldNames
     {
-        public const string Email = "Email";
         public const string FirstName = "FirstName";
         public const string LastName = "LastName";
         public const string DateOfBirth = "DateOfBirth";
@@ -22,10 +21,7 @@ public class InsertUpdateApplicationUserRequestValidator : AbstractValidator<Ins
         // Set cascade mode per rule (stops after first failure within each RuleFor)
         RuleLevelCascadeMode = CascadeMode.Stop;
 
-        RuleFor(v => v.Email)
-            .NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(EntityFieldNames.Email))
-            .EmailAddress().WithMessage(ValidatorUtilities.CreateInvalidEmailErrorMessage())
-            .Length(1, 128).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.Email, 128));
+        RuleFor(v => v.Email).ValidateEmail();
 
         RuleFor(v => v.FirstName)
             .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(EntityFieldNames.FirstName, 64));

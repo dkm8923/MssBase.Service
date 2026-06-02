@@ -171,9 +171,24 @@ namespace Shared.Logic.Validators
             return ruleBuilder.Length(0, maxLength).WithMessage(CreateMaxLengthErrorMessage(EntityFieldNames.Name, maxLength));
         }
 
+        /// <summary>
+        /// Validate Name Max Length. Default Value: FieldName = "Name", MaxLength = 64
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ruleBuilder"></param>
+        /// <param name="maxLength"></param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, string?> ValidateEmail<T>(this IRuleBuilder<T, string?> ruleBuilder, int maxLength = 128)
+        {
+            return ruleBuilder.NotEmpty().WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.Email))
+                .EmailAddress().WithMessage(CreateInvalidEmailErrorMessage())
+                .Length(1, maxLength).WithMessage(CreateMaxLengthErrorMessage(EntityFieldNames.Email, maxLength));
+        }
+
         private static class EntityFieldNames
         {
             public const string Name = "Name";
+            public const string Email = "Email";
             public const string Description = "Description";
             public const string CurrentUser = "CurrentUser";
             public const string ApplicationId = "ApplicationId";
