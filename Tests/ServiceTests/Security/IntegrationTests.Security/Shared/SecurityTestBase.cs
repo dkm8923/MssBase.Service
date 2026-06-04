@@ -302,6 +302,9 @@ public class SecurityTestBase
         permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserInsert, Description = "Allows for creating new ApplicationUser data" });
         permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserUpdate, Description = "Allows for updating existing ApplicationUser data" });
         permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserDelete, Description = "Allows for deleting ApplicationUser data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserResetPassword, Description = "Allows for resetting ApplicationUser password" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserChangePassword, Description = "Allows for changing ApplicationUser password" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.ApplicationUserPasswordChangeHistoryRead, Description = "Allows for reading ApplicationUser password change history" });
 
         var createdPermissions = await CreatePermissions(permissionsToCreate);
 
@@ -533,6 +536,12 @@ public class SecurityTestBase
         ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId);
 
         return ret;
+    }
+
+    protected async Task<ErrorValidationResult> ArrangeApplicationUserPasswordChangeHistoryTestData(int applicationUserId)
+    {
+        var passwordChangeResponse = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = applicationUserId, NewPassword = TestConstants.DefaultTestUserPassword + "1", CurrentUser = TestConstants.CurrentUser });
+        return passwordChangeResponse;
     }
 
     protected async Task<SecurityTestData> ArrangeApplicationUserTestDataWithRelatedData()

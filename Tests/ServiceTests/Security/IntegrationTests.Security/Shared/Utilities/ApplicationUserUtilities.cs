@@ -6,6 +6,9 @@ using IntegrationTests.Security.Shared.Utilities.Contracts;
 using IntegrationTests.Shared;
 using Shared.Models;
 using IntegrationTests.Shared.Utilities;
+using Data.Security;
+using Microsoft.EntityFrameworkCore;
+using Contract.Security;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
@@ -13,11 +16,14 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
 {
     protected readonly IApplicationUserLogic _applicationUserLogic;
     protected readonly IApplicationLogic _applicationLogic;
-    
-    public ApplicationUserUtilities(IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic) 
+    private readonly ISecurityConnectionStrings _connectionStrings;
+    private readonly SecurityDBContextFactory _dbContextFactory;
+    public ApplicationUserUtilities(IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic, ISecurityConnectionStrings connectionStrings) 
     {
         _applicationUserLogic = applicationUserLogic;
         _applicationLogic = applicationLogic;
+        _connectionStrings = connectionStrings;
+        _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
     }
 
     public InsertUpdateApplicationUserRequest ConvertApplicationUserDtoToInsertUpdateRequest(ApplicationUserDto req)
@@ -116,11 +122,17 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     public async Task DeleteAllRecords()
     {
         var recordsToDelete = await _applicationUserLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
+        var applicationUserIdsToDelete = recordsToDelete.Response.Select(x => x.ApplicationUserId).ToList();
 
-        foreach (var record in recordsToDelete.Response)
+        //deleting password changes requests through dbContext directly. No app functionality requires a dedicated delete endpoint
+        using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            await _applicationUserLogic.Delete(record.ApplicationUserId);
+            await dbContext.ApplicationUserLogChangePasswords
+                .Where(x => applicationUserIdsToDelete.Contains(x.ApplicationUserId))
+                .ExecuteDeleteAsync();
         }
+
+        applicationUserIdsToDelete.ForEach(async id => await _applicationUserLogic.Delete(id));
     }
 
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors()

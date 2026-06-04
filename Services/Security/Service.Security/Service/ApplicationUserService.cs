@@ -2,6 +2,7 @@ using Contract.Security.Application;
 using Contract.Security.ApplicationUser;
 using Dto.Security.ApplicationUser;
 using Dto.Security.ApplicationUser.Service;
+using Dto.Security.Authentication;
 using Shared.Contracts;
 using Shared.Models;
 using Shared.Service.Cache;
@@ -34,6 +35,12 @@ namespace Service.Security.Service
         {
             var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, applicationUserId, req.IncludeInactive, req.IncludeRelated);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.GetById(applicationUserId, req, cancellationToken));
+        }
+
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>> GetPasswordChangeHistoryByApplicationUserId(int applicationUserId, bool deleteCache = false, CancellationToken cancellationToken = default)
+        {
+            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName + "_PasswordChangeHistory", applicationUserId);
+            return await _cacheService.GetByKeyAsync(deleteCache, cacheKeyName, () => _applicationUserLogic.GetPasswordChangeHistoryByApplicationUserId(applicationUserId, cancellationToken));
         }
 
         public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> Filter(FilterApplicationUserServiceRequest req, CancellationToken cancellationToken = default)
@@ -104,5 +111,15 @@ namespace Service.Security.Service
         }
 
         #endregion
+
+        public async Task<ErrorValidationResult<ResetPasswordResponse>> ResetPassword(int applicationUserId)
+        {
+            return await _applicationUserLogic.ResetPassword(applicationUserId);
+        }
+
+        public async Task<ErrorValidationResult> ChangePassword(ChangePasswordRequest req)
+        {
+            return await _applicationUserLogic.ChangePassword(req);
+        }
     }
 }

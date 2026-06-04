@@ -202,6 +202,26 @@ namespace IntegrationTests.Security.Service
             availableCacheKeys.Should().HaveCount(0);
         }
 
+        [Fact]
+        public async Task PasswordChangeHistory_GetById_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var applicationUser = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
+            await _cacheTestUtilities.DeleteAllKeyData();
+            var pswdChangeHistoryResponse = await ArrangeApplicationUserPasswordChangeHistoryTestData(applicationUser.ApplicationUserId);
+
+            var expectedCacheKey = $"ApplicationUserService_PasswordChangeHistory_GetById_{applicationUser.ApplicationUserId}_0_0";
+
+            // Act
+            var result = await _applicationUserService.GetPasswordChangeHistoryByApplicationUserId(applicationUser.ApplicationUserId);
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
         #endregion
 
         #region Filter

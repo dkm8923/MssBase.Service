@@ -48,7 +48,7 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
     }
     public void CreateUniqueKey(EntityTypeBuilder<ApplicationUser> builder)
     {
-        builder.HasIndex(e => e.Email).IsUnique().HasDatabaseName( DataUtilities.CreateUniqueKey(_tableName, "Email"));
+        builder.HasIndex(e => e.Email).IsUnique().HasDatabaseName(DataUtilities.CreateUniqueKey(_tableName, "Email"));
     }
 
     public void CreateForeignKeys(EntityTypeBuilder<ApplicationUser> builder) 

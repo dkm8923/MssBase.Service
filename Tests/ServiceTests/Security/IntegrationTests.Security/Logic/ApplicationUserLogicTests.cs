@@ -216,6 +216,38 @@ namespace IntegrationTests.Security.Logic
             result.Response.ApplicationUserRoles.Should().BeNull();
         }
 
+        [Fact]
+        public async Task PasswordChangeHistory_GetByApplicationUserId_Should_Return_Record()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
+            var pswdChangeHistoryResponse = await ArrangeApplicationUserPasswordChangeHistoryTestData(testRecord.ApplicationUserId);
+
+            // Act
+            var result = await _applicationUserLogic.GetPasswordChangeHistoryByApplicationUserId(testRecord.ApplicationUserId);
+
+            // Assert
+            result.Errors.Count.Should().Be(0);
+            result.Response.Should().NotBeNull();
+            result.Response.Should().HaveCount(1);
+        }
+
+        [Fact]
+        public async Task PasswordChangeHistory_GetByApplicationUserId_Should_Not_Return_Record_Invalid_Id()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidApplicationUserId = -1;
+
+            // Act
+            var result = await _applicationUserLogic.GetPasswordChangeHistoryByApplicationUserId(invalidApplicationUserId);
+
+            // Assert
+            result.Errors.Count.Should().Be(0);
+            result.Response.Should().HaveCount(0);
+        }
+
         #endregion
 
         #region Filter

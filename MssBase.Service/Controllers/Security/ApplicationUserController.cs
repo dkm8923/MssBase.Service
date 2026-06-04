@@ -66,6 +66,21 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        [HttpGet("PasswordChangeHistory/{applicationUserId}")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserPasswordChangeHistoryRead)]
+        public async Task<IActionResult> GetPasswordChangeHistory(int applicationUserId, [FromQuery] bool deleteCache = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var records = await _applicationUserSvc.GetPasswordChangeHistoryByApplicationUserId(applicationUserId, deleteCache, cancellationToken);
+                return Ok(records);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
         #endregion
 
         #region Filter
@@ -154,5 +169,45 @@ namespace MssBase.Service.Controllers.Security
         }
 
         #endregion
+
+        [HttpPost("ResetPassword/{applicationUserId}")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserResetPassword)]
+        public async Task<IActionResult> ResetPassword(int applicationUserId)
+        {
+            try
+            {
+                var result = await _applicationUserSvc.ResetPassword(applicationUserId);
+                if (result.Errors.Count > 0)                
+                {
+                    return BadRequest(result);
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
+        [HttpPost("ChangePassword")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserChangePassword)]
+        public async Task<IActionResult> ChangePassword(ChangePasswordRequest req)
+        {
+            try
+            {
+                var result = await _applicationUserSvc.ChangePassword(req);
+                if (result.Errors.Count > 0)                
+                {
+                    return BadRequest(result);
+                }
+                
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
     }
 }

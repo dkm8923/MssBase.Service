@@ -1,0 +1,17 @@
+using Shared.Data.Models;
+
+namespace Data.Security.Models;
+
+public partial class ApplicationUserLogChangePassword
+{
+    public int ApplicationUserLogChangePasswordId { get; set; }
+
+    public int ApplicationUserId { get; set; }
+    public int ApplicationId { get; set; }
+    public string OldPassword { get; set; }
+    public DateTime CreatedOn { get; set; }
+    public string CreatedBy { get; set; }
+
+    public virtual Application Application { get; set; } = null!;
+    public virtual ApplicationUser ApplicationUser { get; set; } = null!;
+}

@@ -8,6 +8,6 @@ public static class TestConstants
     public const string SpecificCurrentUserForInsert = "IntegrationTestInsert";
     public const string SpecificCurrentUserForUpdate = "IntegrationTestUpdate";
     public const string DefaultTestUserEmail = "IntegrationTest@example.com";
-    public const string DefaultTestUserPassword = "NewTestPassword1!";
+    public const string DefaultTestUserPassword = "!0TestPassword1230!";
     public const string DefaultTestUserApplicationName = "MSS Security";
 }

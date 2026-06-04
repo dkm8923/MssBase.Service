@@ -14,6 +14,7 @@ using Shared.Logic.Validators;
 using Shared.Logic.Common;
 using Microsoft.AspNetCore.Identity;
 using Dto.Security.Authentication;
+using Data.Security.Models;
 
 namespace Logic.Security.Logic
 {
@@ -57,6 +58,21 @@ namespace Logic.Security.Logic
             var res = await this.Filter(new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { applicationUserId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
 
             return new ErrorValidationResult<ApplicationUserDto> { Response = res.Response.FirstOrDefault() };
+        }
+
+        /// <summary>
+        /// Retrieves the password change history for a specific application user by their unique identifier. This includes a list of previous password changes, along with details such as the old password (hashed), the date of the change, and who initiated the change.
+        /// </summary>
+        /// <param name="applicationUserId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>> GetPasswordChangeHistoryByApplicationUserId(int applicationUserId, CancellationToken cancellationToken = default)
+        {
+            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
+            {
+                var query = dbContext.ApplicationUserLogChangePasswords.AsQueryable().AsNoTracking().Where(log => log.ApplicationUserId == applicationUserId);
+                return new ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>> { Response = await query.ToDtos(cancellationToken) };
+            }
         }
 
         /// <summary>
@@ -219,6 +235,16 @@ namespace Logic.Security.Logic
                     entity.PasswordResetRequired = true;
                     entity.LastPasswordChangeDate = CommonUtilities.GetDateTimeUtcNow();
                     
+                    //log password change
+                    await dbContext.ApplicationUserLogChangePasswords.AddAsync(new ApplicationUserLogChangePassword
+                    {
+                        ApplicationUserId = entity.ApplicationUserId,
+                        ApplicationId = entity.ApplicationId,
+                        OldPassword = entity.Password,
+                        CreatedBy = "ApplicationUserLogic.ResetPassword",
+                        CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+                    });
+
                     await dbContext.SaveChangesAsync();
 
                     var ret = new ResetPasswordResponse { NewPassword = newPassword };
@@ -243,23 +269,47 @@ namespace Logic.Security.Logic
             
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == req.ApplicationUserId);
+                var applicationUserEntity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == req.ApplicationUserId);
                 
-                if (entity is null) 
+                if (applicationUserEntity is null) 
                 {
                     return _createUserNotFoundError<object?>();
                 }
 
-                var passwordsMatch = SecurityLogicUtilities.VerifyPasswordMatchesHash(entity.Password, req.NewPassword);
+                var passwordsMatch = SecurityLogicUtilities.VerifyPasswordMatchesHash(applicationUserEntity.Password, req.NewPassword);
 
                 if (passwordsMatch)
                 {
                     return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { "ChangePassword", new List<string> { $"New password must be different from the old password!" } } } };
                 }
 
-                entity.Password = _hashPassword(req.NewPassword);
-                entity.PasswordResetRequired = false;
-                entity.LastPasswordChangeDate = CommonUtilities.GetDateTimeUtcNow();
+                //verify new password is not the same as last 5 passwords
+                var oldPasswords = dbContext.ApplicationUserLogChangePasswords.Where(log => log.ApplicationUserId == req.ApplicationUserId)
+                    .OrderByDescending(log => log.CreatedOn)
+                    .Take(5)
+                    .Select(log => log.OldPassword)
+                    .ToList();
+
+                if (oldPasswords.Any(oldPassword => SecurityLogicUtilities.VerifyPasswordMatchesHash(oldPassword, req.NewPassword)))
+                {
+                    return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { "ChangePassword", new List<string> { $"New password must be different from the last 5 passwords!" } } } };
+                }
+
+                //log password change
+                await dbContext.ApplicationUserLogChangePasswords.AddAsync(new ApplicationUserLogChangePassword
+                {
+                    ApplicationUserId = req.ApplicationUserId,
+                    ApplicationId = applicationUserEntity.ApplicationId,
+                    OldPassword = applicationUserEntity.Password,
+                    CreatedBy = req.CurrentUser,
+                    CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+                });
+
+                //change password
+                applicationUserEntity.Password = _hashPassword(req.NewPassword);
+                applicationUserEntity.PasswordResetRequired = false;
+                applicationUserEntity.LastPasswordChangeDate = CommonUtilities.GetDateTimeUtcNow();
+                
                 await dbContext.SaveChangesAsync();
 
                 return new ErrorValidationResult();

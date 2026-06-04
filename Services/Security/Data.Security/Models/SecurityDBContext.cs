@@ -26,6 +26,7 @@ public partial class SecurityDBContext : DbContext
 
     public virtual DbSet<ApplicationUserPermission> ApplicationUserPermissions { get; set; }
     public virtual DbSet<ApplicationUserRole> ApplicationUserRoles { get; set; }
+    public virtual DbSet<ApplicationUserLogChangePassword> ApplicationUserLogChangePasswords { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 {
@@ -54,5 +55,6 @@ public partial class SecurityDBContext : DbContext
         modelBuilder.ApplyConfiguration(new RolePermissionConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserRoleConfiguration());
+        modelBuilder.ApplyConfiguration(new ApplicationUserLogChangePasswordConfiguration());
     }
 }

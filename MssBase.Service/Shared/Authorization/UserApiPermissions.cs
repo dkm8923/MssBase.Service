@@ -16,9 +16,12 @@ public static class UserApiPermissions
     #region Application User Permissions
 
     public const string ApplicationUserRead = "ApplicationUserRead";
+    public const string ApplicationUserPasswordChangeHistoryRead = "ApplicationUserPasswordChangeHistoryRead";
     public const string ApplicationUserInsert = "ApplicationUserInsert";
     public const string ApplicationUserUpdate = "ApplicationUserUpdate";
     public const string ApplicationUserDelete = "ApplicationUserDelete";
+    public const string ApplicationUserResetPassword = "ApplicationUserResetPassword";
+    public const string ApplicationUserChangePassword = "ApplicationUserChangePassword";
 
     #endregion
 

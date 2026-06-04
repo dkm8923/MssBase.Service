@@ -198,6 +198,106 @@ namespace IntegrationTests.Security.Controller
             getAllResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
+        [Fact]
+        public async Task PasswordChangeHistory_GetAllByApplicationUserId_Should_Return_Record()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers[0];
+            var pswdChangeHistoryResponse = await ArrangeApplicationUserPasswordChangeHistoryTestData(testRecord.ApplicationUserId);
+            
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserApiEndPoint + "/PasswordChangeHistory",
+                RecordId = testRecord.ApplicationUserId,
+                Token = token
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+            
+            foreach (var record in result.Response)
+            {
+                record.ApplicationUserId.Should().Be(testRecord.ApplicationUserId);
+                record.OldPassword.Should().NotBeNullOrEmpty();
+                record.CreatedBy.Should().NotBeNullOrEmpty();
+                record.CreatedOn.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(5));
+            }
+        }
+
+        [Fact]
+        public async Task PasswordChangeHistory_GetAllByApplicationUserId_Should_Not_Return_Record_Invalid_Id()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers[0];
+            var pswdChangeHistoryResponse = await ArrangeApplicationUserPasswordChangeHistoryTestData(testRecord.ApplicationUserId);
+            var invalidApplicationUserId = "asdfasfdasdfasfdas";
+            using var getRequest = new HttpRequestMessage(HttpMethod.Get, _defaultApplicationUserApiEndPoint + "/PasswordChangeHistory/" + invalidApplicationUserId);
+            ControllerTestUtilities.AddAuthorizationHeaderIfApplicable(getRequest, token);
+
+            // Act
+            var getResponse = await _client.SendAsync(getRequest);
+            
+            // Assert
+            getResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task PasswordChangeHistory_GetAllByApplicationUserId_Should_Not_Return_Record_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var getAllResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationUserApiEndPoint + "/PasswordChangeHistory/1", invalidToken);
+
+            //Assert
+            getAllResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task PasswordChangeHistory_GetAllByApplicationUserId_Should_Not_Return_Record_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+            
+            // Act
+            var getAllResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationUserApiEndPoint + "/PasswordChangeHistory/1", token);
+
+            //Assert
+            getAllResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task PasswordChangeHistory_GetAllByApplicationUserId_Should_Not_Return_Record_NotFound()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers[0];
+            var pswdChangeHistoryResponse = await ArrangeApplicationUserPasswordChangeHistoryTestData(testRecord.ApplicationUserId);
+            var invalidApplicationUserId = -1;
+            
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserApiEndPoint + "/PasswordChangeHistory",
+                RecordId = invalidApplicationUserId,
+                Token = token
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(0);
+        }
+
         #endregion
 
         #region GetById

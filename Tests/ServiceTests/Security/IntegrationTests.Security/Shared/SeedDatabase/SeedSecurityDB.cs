@@ -20,6 +20,7 @@ namespace IntegrationTests.Security.Shared.SeedDatabase;
 [Collection("SecurityIntegrationTests")]
 public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFactory<Program>>
 {
+    //TODO: Refactor this to allow for using from netpad
     private readonly HttpClient _client;
 
     public SeedSecurityDB(WebApplicationFactory<Program> factory)
@@ -61,18 +62,18 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         await DropDatabaseAndRecreate();
 
         var insertedApplication = await _applicationLogic.Insert(new InsertUpdateApplicationRequest { CurrentUser = TestConstants.CurrentUser, Active = true, Name = "MSS Security", Description = "Enterprise application security management for Mauk Software Solutions LLC." });
-        var sudoUser = await CreateApplicationUserWithPasswordReset(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = insertedApplication.Response.ApplicationId, Email = "dmauk@echohealthinc.com", FirstName = "Daniel", LastName = "Mauk", DateOfBirth = new DateTime(1989, 6, 15) });
         
-        await CreateSpecificTestDataForSingleUser(sudoUser, new CreateTestDataRequest { 
-            ApplicationAdmin = true,
-            ApplicationUserAdmin = true,
-            ApplicationUserPermissionAdmin = true, 
-            ApplicationUserRoleAdmin = true, 
-            PermissionAdmin = true,
-            RoleAdmin = true,
-            RolePermissionAdmin = true,
+        var sudoUser = await CreateTestUserWithPermissions(insertedApplication.Response.ApplicationId, new AssignRoleRequest
+        {
+                ApplicationAdmin = true,
+                ApplicationUserAdmin = true,
+                ApplicationUserPermissionAdmin = true, 
+                ApplicationUserRoleAdmin = true, 
+                PermissionAdmin = true,
+                RoleAdmin = true,
+                RolePermissionAdmin = true,
         });
-
+        
         // Assert
         1.Should().Be(1);
     }
@@ -86,16 +87,16 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         await DropDatabaseAndRecreate();
 
         var insertedApplication = await _applicationLogic.Insert(new InsertUpdateApplicationRequest { CurrentUser = TestConstants.CurrentUser, Active = true, Name = "MSS Security", Description = "Enterprise application security management for Mauk Software Solutions LLC." });
-        var readOnlyUser = await CreateApplicationUserWithPasswordReset(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = insertedApplication.Response.ApplicationId, Email = "dmauk@echohealthinc.com", FirstName = "Bob", LastName = "Smith", DateOfBirth = new DateTime(1987, 2, 12) });
-
-        await CreateSpecificTestDataForSingleUser(readOnlyUser, new CreateTestDataRequest { 
-            ApplicationReadOnly = true,
-            ApplicationUserReadOnly = true,
-            ApplicationUserPermissionReadOnly = true, 
-            ApplicationUserRoleReadOnly = true, 
-            PermissionReadOnly = true,
-            RoleReadOnly = true,
-            RolePermissionReadOnly = true,
+        
+        var readOnlyUser = await CreateTestUserWithPermissions(insertedApplication.Response.ApplicationId, new AssignRoleRequest
+        {
+                ApplicationReadOnly = true,
+                ApplicationUserReadOnly = true,
+                ApplicationUserPermissionReadOnly = true, 
+                ApplicationUserRoleReadOnly = true, 
+                PermissionReadOnly = true,
+                RoleReadOnly = true,
+                RolePermissionReadOnly = true,
         });
 
         // Assert
@@ -318,7 +319,8 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         if (insertedAppUser.Response != null)
         {
             //change password for users so they can be used for authentication testing...
-            await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = insertedAppUser.Response.ApplicationUserId, NewPassword = "Test@1234", CurrentUser = TestConstants.CurrentUser });
+            var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = insertedAppUser.Response.ApplicationUserId, NewPassword = TestConstants.DefaultTestUserPassword, CurrentUser = TestConstants.CurrentUser });
+            changePasswordResult.Errors.Count.Should().Be(0);
         }
 
         return insertedAppUser.Response;
