@@ -705,6 +705,8 @@ namespace IntegrationTests.Security.Logic
             var resetPasswordResult = await _applicationUserLogic.ResetPassword(testUser.Response.ApplicationUserId);
             var testUserAfterPasswordReset = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet());
 
+            var passwordChangeHistoryAfterPasswordReset = await _applicationUserLogic.GetPasswordChangeHistoryByApplicationUserId(testUser.Response.ApplicationUserId); 
+
             // Assert
             testUserAfterPasswordChange.Response.PasswordResetRequired.Should().BeFalse();
             testUserAfterPasswordChange.Response.LastPasswordChangeDate.Should().NotBeNull();
@@ -718,8 +720,11 @@ namespace IntegrationTests.Security.Logic
             testUserAfterPasswordReset.Response.PasswordResetRequired.Should().BeTrue();
             testUserAfterPasswordReset.Response.LastPasswordChangeDate.Should().NotBeNull();
             testUserAfterPasswordReset.Response.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
-        }
 
+            passwordChangeHistoryAfterPasswordReset.Errors.Should().BeNullOrEmpty();
+            passwordChangeHistoryAfterPasswordReset.Response.Should().HaveCount(2);
+        }
+            
         [Fact]
         public async Task ApplicationUser_ResetPassword_Should_Not_Reset_Password_Invalid_ApplicationUserId()
         {
@@ -762,12 +767,17 @@ namespace IntegrationTests.Security.Logic
             
             var testUserAfterChangePassword = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet());
 
+            var passwordChangeHistory = await _applicationUserLogic.GetPasswordChangeHistoryByApplicationUserId(testUser.Response.ApplicationUserId); 
+
             // Assert
             changePasswordResult.Errors.Should().BeNullOrEmpty();
 
             testUserAfterChangePassword.Response.PasswordResetRequired.Should().BeFalse();
             testUserAfterChangePassword.Response.LastPasswordChangeDate.Should().NotBeNull();
             testUserAfterChangePassword.Response.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+
+            passwordChangeHistory.Errors.Should().BeNullOrEmpty();
+            passwordChangeHistory.Response.Should().HaveCount(1);
         }
 
         [Fact]
