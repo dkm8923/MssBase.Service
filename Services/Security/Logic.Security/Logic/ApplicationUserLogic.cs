@@ -234,6 +234,10 @@ namespace Logic.Security.Logic
                     entity.Password = newHashedPassword;
                     entity.PasswordResetRequired = true;
                     entity.LastPasswordChangeDate = CommonUtilities.GetDateTimeUtcNow();
+
+                    //clear any existing refresh tokens when password is changed
+                    entity.RefreshToken = null;
+                    entity.RefreshTokenExpiryTime = null;    
                     
                     //log password change
                     await dbContext.ApplicationUserLogChangePasswords.AddAsync(new ApplicationUserLogChangePassword
@@ -310,6 +314,10 @@ namespace Logic.Security.Logic
                 applicationUserEntity.PasswordResetRequired = false;
                 applicationUserEntity.LastPasswordChangeDate = CommonUtilities.GetDateTimeUtcNow();
                 
+                //clear any existing refresh tokens when password is changed
+                applicationUserEntity.RefreshToken = null;
+                applicationUserEntity.RefreshTokenExpiryTime = null;    
+
                 await dbContext.SaveChangesAsync();
 
                 return new ErrorValidationResult();
