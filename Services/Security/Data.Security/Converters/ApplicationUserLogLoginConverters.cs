@@ -4,21 +4,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Data.Security.Converters
 {
-    public static class ApplicationUserLogChangePasswordConverters
+    public static class ApplicationUserLogLoginConverters
     {
-        public static ApplicationUserLogChangePasswordDto ToDto(this ApplicationUserLogChangePassword source)
+        public static ApplicationUserLogLoginDto ToDto(this ApplicationUserLogLogin source)
         {
             if (source == null)
             {
                 return null;
             }
 
-            var target = new ApplicationUserLogChangePasswordDto
+            var target = new ApplicationUserLogLoginDto
             {
                 LogId = source.LogId,
                 ApplicationUserId = source.ApplicationUserId,
                 ApplicationId = source.ApplicationId,
-                OldPassword = source.OldPassword,
+                AuthToken = source.AuthToken,
+                RefreshToken = source.RefreshToken,
                 CreatedOn = source.CreatedOn,
                 CreatedBy = source.CreatedBy
             };
@@ -26,7 +27,7 @@ namespace Data.Security.Converters
             return target;
         }
     
-        public static async Task<List<ApplicationUserLogChangePasswordDto>> ToDtos(this IQueryable<ApplicationUserLogChangePassword> source, CancellationToken cancellationToken = default)
+        public static async Task<List<ApplicationUserLogLoginDto>> ToDtos(this IQueryable<ApplicationUserLogLogin> source, CancellationToken cancellationToken = default)
         {
             if (source == null)
             {

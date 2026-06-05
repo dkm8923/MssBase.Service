@@ -1,7 +1,4 @@
-using System;
 using Microsoft.Extensions.Configuration;
-using System.IO;
-using System.Collections.Generic;
 using Data.Security.Configuration;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,6 +24,7 @@ public partial class SecurityDBContext : DbContext
     public virtual DbSet<ApplicationUserPermission> ApplicationUserPermissions { get; set; }
     public virtual DbSet<ApplicationUserRole> ApplicationUserRoles { get; set; }
     public virtual DbSet<ApplicationUserLogChangePassword> ApplicationUserLogChangePasswords { get; set; }
+    public virtual DbSet<ApplicationUserLogLogin> ApplicationUserLogLogins { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 {
@@ -56,5 +54,6 @@ public partial class SecurityDBContext : DbContext
         modelBuilder.ApplyConfiguration(new ApplicationUserPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserRoleConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserLogChangePasswordConfiguration());
+        modelBuilder.ApplyConfiguration(new ApplicationUserLogLoginConfiguration());
     }
 }

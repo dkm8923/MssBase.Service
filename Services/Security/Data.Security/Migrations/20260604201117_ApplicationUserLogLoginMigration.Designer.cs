@@ -4,6 +4,7 @@ using Data.Security.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Security.Migrations
 {
     [DbContext(typeof(SecurityDBContext))]
-    partial class SecurityDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260604201117_ApplicationUserLogLoginMigration")]
+    partial class ApplicationUserLogLoginMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -211,53 +214,6 @@ namespace Data.Security.Migrations
                         .HasDatabaseName("UQ_ApplicationUser_Log_ChangePassword_ApplicationUserId_ApplicationId_OldPassword");
 
                     b.ToTable("ApplicationUser_Log_ChangePassword", (string)null);
-                });
-
-            modelBuilder.Entity("Data.Security.Models.ApplicationUserLogLogin", b =>
-                {
-                    b.Property<int>("LogId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LogId"));
-
-                    b.Property<int>("ApplicationId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ApplicationUserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("AuthToken")
-                        .IsRequired()
-                        .HasMaxLength(4096)
-                        .IsUnicode(true)
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(64)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.Property<string>("RefreshToken")
-                        .IsRequired()
-                        .HasMaxLength(2048)
-                        .IsUnicode(true)
-                        .HasColumnType("nvarchar(2048)");
-
-                    b.HasKey("LogId");
-
-                    b.HasIndex("ApplicationId");
-
-                    b.HasIndex("ApplicationUserId", "ApplicationId", "CreatedOn")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_ApplicationUser_Log_Login_ApplicationUserId_ApplicationId_CreatedOn");
-
-                    b.ToTable("ApplicationUser_Log_Login", (string)null);
                 });
 
             modelBuilder.Entity("Data.Security.Models.ApplicationUserPermission", b =>
@@ -555,25 +511,6 @@ namespace Data.Security.Migrations
                         .HasForeignKey("ApplicationUserId")
                         .IsRequired()
                         .HasConstraintName("FK_ApplicationUser_Log_ChangePassword_User");
-
-                    b.Navigation("Application");
-
-                    b.Navigation("ApplicationUser");
-                });
-
-            modelBuilder.Entity("Data.Security.Models.ApplicationUserLogLogin", b =>
-                {
-                    b.HasOne("Data.Security.Models.Application", "Application")
-                        .WithMany()
-                        .HasForeignKey("ApplicationId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ApplicationUser_Log_Login_Application");
-
-                    b.HasOne("Data.Security.Models.ApplicationUser", "ApplicationUser")
-                        .WithMany()
-                        .HasForeignKey("ApplicationUserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ApplicationUser_Log_Login_User");
 
                     b.Navigation("Application");
 

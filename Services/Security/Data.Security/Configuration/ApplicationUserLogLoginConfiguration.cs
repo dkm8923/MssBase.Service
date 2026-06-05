@@ -5,17 +5,18 @@ using Shared.Data;
 
 namespace Data.Security.Configuration;
 
-public class ApplicationUserLogChangePasswordConfiguration : IEntityTypeConfiguration<ApplicationUserLogChangePassword>
+public class ApplicationUserLogLoginConfiguration : IEntityTypeConfiguration<ApplicationUserLogLogin>
 {
-    private readonly string _tableName = "ApplicationUser_Log_ChangePassword";
+    private readonly string _tableName = "ApplicationUser_Log_Login";
 
-    public void Configure(EntityTypeBuilder<ApplicationUserLogChangePassword> builder)
+    public void Configure(EntityTypeBuilder<ApplicationUserLogLogin> builder)
     {
         SetTableName(builder);
 
         builder.Property(t => t.ApplicationUserId).IsRequired();
         builder.Property(t => t.ApplicationId).IsRequired();
-        builder.Property(t => t.OldPassword).IsRequired().HasMaxLength(256).IsUnicode(true);
+        builder.Property(t => t.AuthToken).IsRequired().HasMaxLength(4096).IsUnicode(true);
+        builder.Property(t => t.RefreshToken).IsRequired().HasMaxLength(2048).IsUnicode(true);
         builder.Property(t => t.CreatedOn).HasPrecision(2).IsRequired();
         builder.Property(t => t.CreatedBy).HasMaxLength(64).IsRequired().IsUnicode(false);
 
@@ -24,24 +25,24 @@ public class ApplicationUserLogChangePasswordConfiguration : IEntityTypeConfigur
         CreateForeignKeys(builder);
     }
 
-    public void SetTableName(EntityTypeBuilder<ApplicationUserLogChangePassword> builder)
+    public void SetTableName(EntityTypeBuilder<ApplicationUserLogLogin> builder)
     {
         builder.ToTable(_tableName);
     }
 
-    public void CreatePrimaryKey(EntityTypeBuilder<ApplicationUserLogChangePassword> builder)
+    public void CreatePrimaryKey(EntityTypeBuilder<ApplicationUserLogLogin> builder)
     {
         builder.HasKey(e => e.LogId);
     }
 
-    public void CreateUniqueKey(EntityTypeBuilder<ApplicationUserLogChangePassword> builder)
+    public void CreateUniqueKey(EntityTypeBuilder<ApplicationUserLogLogin> builder)
     {
-        builder.HasIndex(e => new { e.ApplicationUserId, e.ApplicationId, e.OldPassword }).IsUnique().HasDatabaseName(DataUtilities.CreateUniqueKey(_tableName, "ApplicationUserId_ApplicationId_OldPassword"));
+        builder.HasIndex(e => new { e.ApplicationUserId, e.ApplicationId, e.CreatedOn }).IsUnique().HasDatabaseName(DataUtilities.CreateUniqueKey(_tableName, "ApplicationUserId_ApplicationId_CreatedOn"));
     }
 
-    public void CreateForeignKeys(EntityTypeBuilder<ApplicationUserLogChangePassword> builder)
+    public void CreateForeignKeys(EntityTypeBuilder<ApplicationUserLogLogin> builder)
     {
-        builder.HasOne(d => d.Application)
+        builder.HasOne(d => d.Application)          
             .WithMany()
             .HasForeignKey(d => d.ApplicationId)
             .OnDelete(DeleteBehavior.ClientSetNull)
