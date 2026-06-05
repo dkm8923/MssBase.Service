@@ -15,6 +15,7 @@ using Shared.Logic;
 using Shared.Logic.Validators;
 using Dto.Security.Role.Logic;
 using Contract.Security.Role;
+using Shared.Logic.Common;
 
 namespace Logic.Security.Logic
 {
@@ -215,7 +216,7 @@ namespace Logic.Security.Logic
                 
                 if (applicationResponse.Response == null)
                 {
-                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+                    errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationId, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationId) });
                     return errorValidationResult;
                 }
 
@@ -224,7 +225,7 @@ namespace Logic.Security.Logic
 
                 if (roleResponse.Response == null || roleResponse.Response.Count() == 0)
                 {
-                    errorValidationResult.Errors.Add("RoleId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("RoleId") });
+                    errorValidationResult.Errors.Add(Constants.EntityFieldNames.RoleId, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.RoleId) });
                     return errorValidationResult;
                 }
 
@@ -233,7 +234,7 @@ namespace Logic.Security.Logic
 
                 if (permissionResponse.Response == null || permissionResponse.Response.Count() == 0)
                 {
-                    errorValidationResult.Errors.Add("PermissionId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("PermissionId") });
+                    errorValidationResult.Errors.Add(Constants.EntityFieldNames.PermissionId, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.PermissionId) });
                     return errorValidationResult;
                 }
 
@@ -249,7 +250,7 @@ namespace Logic.Security.Logic
                 {
                     if ((rolePermissionId == null || rolePermissionId == 0) || (uniqueRolePermissionCheck.Response.FirstOrDefault().RolePermissionId != rolePermissionId))
                     {
-                        errorValidationResult.Errors.Add("RolePermission", new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage("RolePermission") });
+                        errorValidationResult.Errors.Add(Constants.EntityFieldNames.RolePermission, new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage(Constants.EntityFieldNames.RolePermission) });
                     }
                 }
             }
@@ -261,16 +262,6 @@ namespace Logic.Security.Logic
         {
             errors.Add("RolePermission", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("RolePermissionId") });
             return errors;
-        }
-
-        public Task<ErrorValidationResult<RolePermissionDto>> Insert(InsertUpdateRolePermissionRequest req)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<ErrorValidationResult<RolePermissionDto>> Update(int rolePermissionId, InsertUpdateRolePermissionRequest req)
-        {
-            throw new NotImplementedException();
         }
 
         #endregion

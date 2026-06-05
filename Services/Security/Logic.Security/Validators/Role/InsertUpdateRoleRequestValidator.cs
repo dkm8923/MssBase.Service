@@ -6,11 +6,6 @@ namespace Logic.Security.Validators.Role;
 
 public class InsertUpdateRoleRequestValidator : AbstractValidator<InsertUpdateRoleRequest>
 {
-    // private static class EntityFieldNames
-    // {
-    //     //add any additional field names here as needed for error messages
-    // }
-
     public InsertUpdateRoleRequestValidator()
     {
         // Set cascade mode per rule (stops after first failure within each RuleFor)

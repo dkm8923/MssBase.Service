@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Models;
 using Shared.Logic;
 using Shared.Logic.Validators;
+using Shared.Logic.Common;
 
 namespace Logic.Security.Logic
 {
@@ -215,7 +216,7 @@ namespace Logic.Security.Logic
                 
                 if (applicationResponse.Response == null)
                 {
-                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+                    errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationId, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationId) });
                     return errorValidationResult;
                 }
 
@@ -224,7 +225,7 @@ namespace Logic.Security.Logic
 
                 if (applicationUserResponse.Response == null || applicationUserResponse.Response.Count() == 0)
                 {
-                    errorValidationResult.Errors.Add("ApplicationUserId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserId") });
+                    errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationUserId, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationUserId) });
                     return errorValidationResult;
                 }
 
@@ -233,7 +234,7 @@ namespace Logic.Security.Logic
 
                 if (roleResponse.Response == null || roleResponse.Response.Count() == 0)
                 {
-                    errorValidationResult.Errors.Add("RoleId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("RoleId") });
+                    errorValidationResult.Errors.Add(Constants.EntityFieldNames.RoleId, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.RoleId) });
                     return errorValidationResult;
                 }
 
@@ -249,7 +250,7 @@ namespace Logic.Security.Logic
                 {
                     if ((applicationUserRoleId == null || applicationUserRoleId == 0) || (uniqueApplicationUserRoleCheck.Response.FirstOrDefault().ApplicationUserRoleId != applicationUserRoleId))
                     {
-                        errorValidationResult.Errors.Add("ApplicationUserRole", new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage("ApplicationUserRole") });
+                        errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationUserRole, new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage(Constants.EntityFieldNames.ApplicationUserRole) });
                     }
                 }
             }
@@ -259,7 +260,7 @@ namespace Logic.Security.Logic
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add("ApplicationUserRole", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserRoleId") });
+            errors.Add(Constants.EntityFieldNames.ApplicationUserRole, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationUserRoleId) });
             return errors;
         }
 

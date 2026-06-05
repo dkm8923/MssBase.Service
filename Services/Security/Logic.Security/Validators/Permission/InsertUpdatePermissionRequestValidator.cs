@@ -6,11 +6,6 @@ namespace Logic.Security.Validators.Permission;
 
 public class InsertUpdatePermissionRequestValidator : AbstractValidator<InsertUpdatePermissionRequest>
 {
-    // private static class EntityFieldNames
-    // {
-    //     //add any additional field names here as needed for error messages
-    // }
-
     public InsertUpdatePermissionRequestValidator()
     {
         // Set cascade mode per rule (stops after first failure within each RuleFor)

@@ -7,5 +7,35 @@
         public const string ApplicationsClaim = "applications";
         public const string RolesClaim = "roles";
         public const string PermissionsClaim = "permissions";
+        
+        public static class EntityFieldNames
+        {
+            public const string Application = "Application";
+            public const string ApplicationId = "ApplicationId";
+            public const string ApplicationName = "ApplicationName";
+            public const string ApplicationUser = "ApplicationUser";
+            public const string ApplicationUserId = "ApplicationUserId";
+            public const string ApplicationUserPermission = "ApplicationUserPermission";
+            public const string ApplicationUserPermissions = "ApplicationUserPermissions";
+            public const string ApplicationUserRoleId = "ApplicationUserRoleId";
+            public const string ApplicationUserRole = "ApplicationUserRole";
+            public const string ApplicationUserRoles = "ApplicationUserRoles";
+            public const string RolePermission = "RolePermission";
+            public const string Role = "Role";
+            public const string RoleId = "RoleId";
+            public const string Permission = "Permission";
+            public const string PermissionId = "PermissionId";
+            public const string FirstName = "FirstName";
+            public const string LastName = "LastName";
+            public const string Name = "Name";
+            public const string Email = "Email";
+            public const string Description = "Description";
+            public const string DateOfBirth = "DateOfBirth";
+            public const string Password = "Password";
+            public const string NewPassword = "NewPassword";
+            public const string Token = "Token";
+            public const string RefreshToken = "RefreshToken";
+            public const string CurrentUser = "CurrentUser";
+        }
     }
 }

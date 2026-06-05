@@ -11,6 +11,7 @@ using Shared.Models;
 using Contract.Security.Application;
 using Shared.Logic;
 using Shared.Logic.Validators;
+using Shared.Logic.Common;
 
 namespace Logic.Security.Logic
 {
@@ -193,7 +194,7 @@ namespace Logic.Security.Logic
                 
                 if (applicationResponse.Response == null)
                 {
-                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+                    errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationId, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationId) });
                     return errorValidationResult;
                 }
 
@@ -204,7 +205,7 @@ namespace Logic.Security.Logic
                 {
                     if ((RoleId == null || RoleId == 0) || (nameCheck.Response.FirstOrDefault().RoleId != RoleId))
                     {
-                        errorValidationResult.Errors.Add("Name", new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage("Name") });
+                        errorValidationResult.Errors.Add(Constants.EntityFieldNames.Name, new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage(Constants.EntityFieldNames.Name) });
                     }
                 }
             }
@@ -214,7 +215,7 @@ namespace Logic.Security.Logic
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add("Role", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("RoleId") });
+            errors.Add(Constants.EntityFieldNames.Role, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.RoleId) });
             return errors;
         }
 

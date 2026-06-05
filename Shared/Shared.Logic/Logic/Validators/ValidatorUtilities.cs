@@ -1,6 +1,7 @@
 ﻿using Shared.Models;
 using FluentValidation.Results;
 using FluentValidation;
+using Shared.Logic.Common;
 
 namespace Shared.Logic.Validators
 {
@@ -88,8 +89,8 @@ namespace Shared.Logic.Validators
         )
         {
             return ruleBuilder
-                .NotEmpty().WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.CurrentUser))
-                .Length(1, maxLength).WithMessage(CreateMaxLengthErrorMessage(EntityFieldNames.CurrentUser, maxLength));
+                .NotEmpty().WithMessage(CreateRequiredFieldErrorMessage(Constants.EntityFieldNames.CurrentUser))
+                .Length(1, maxLength).WithMessage(CreateMaxLengthErrorMessage(Constants.EntityFieldNames.CurrentUser, maxLength));
         }
 
         /// <summary>
@@ -100,7 +101,7 @@ namespace Shared.Logic.Validators
         /// <returns></returns>
         public static IRuleBuilderOptions<T, int> ValidateApplicationIdIsRequired<T>(this IRuleBuilder<T, int> ruleBuilder)
         {
-            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationId));
+            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(Constants.EntityFieldNames.ApplicationId));
         }
 
         /// <summary>
@@ -111,7 +112,7 @@ namespace Shared.Logic.Validators
         /// <returns></returns>
         public static IRuleBuilderOptions<T, int> ValidateApplicationUserIdIsRequired<T>(this IRuleBuilder<T, int> ruleBuilder)
         {
-            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.ApplicationUserId));
+            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(Constants.EntityFieldNames.ApplicationUserId));
         }
 
         /// <summary>
@@ -122,7 +123,7 @@ namespace Shared.Logic.Validators
         /// <returns></returns>
         public static IRuleBuilderOptions<T, int> ValidateRoleIdIsRequired<T>(this IRuleBuilder<T, int> ruleBuilder)
         {
-            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.RoleId));
+            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(Constants.EntityFieldNames.RoleId));
         }
 
         /// <summary>
@@ -133,7 +134,7 @@ namespace Shared.Logic.Validators
         /// <returns></returns>
         public static IRuleBuilderOptions<T, int> ValidatePermissionIdIsRequired<T>(this IRuleBuilder<T, int> ruleBuilder)
         {
-            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.PermissionId));
+            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(Constants.EntityFieldNames.PermissionId));
         }
 
         /// <summary>
@@ -145,7 +146,7 @@ namespace Shared.Logic.Validators
         /// <returns></returns>
         public static IRuleBuilderOptions<T, string?> ValidateDescriptionMaxLength<T>(this IRuleBuilder<T, string?> ruleBuilder, int maxLength = 256)
         {
-            return ruleBuilder.Length(0, maxLength).WithMessage(CreateMaxLengthErrorMessage(EntityFieldNames.Description, maxLength));
+            return ruleBuilder.Length(0, maxLength).WithMessage(CreateMaxLengthErrorMessage(Constants.EntityFieldNames.Description, maxLength));
         }
 
         /// <summary>
@@ -156,7 +157,7 @@ namespace Shared.Logic.Validators
         /// <returns></returns>
         public static IRuleBuilderOptions<T, string?> ValidateNameIsRequired<T>(this IRuleBuilder<T, string?> ruleBuilder)
         {
-            return ruleBuilder.NotEmpty().WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.Name));
+            return ruleBuilder.NotEmpty().WithMessage(CreateRequiredFieldErrorMessage(Constants.EntityFieldNames.Name));
         }
 
         /// <summary>
@@ -168,7 +169,7 @@ namespace Shared.Logic.Validators
         /// <returns></returns>
         public static IRuleBuilderOptions<T, string?> ValidateNameMaxLength<T>(this IRuleBuilder<T, string?> ruleBuilder, int maxLength = 64)
         {
-            return ruleBuilder.Length(0, maxLength).WithMessage(CreateMaxLengthErrorMessage(EntityFieldNames.Name, maxLength));
+            return ruleBuilder.Length(0, maxLength).WithMessage(CreateMaxLengthErrorMessage(Constants.EntityFieldNames.Name, maxLength));
         }
 
         /// <summary>
@@ -180,21 +181,9 @@ namespace Shared.Logic.Validators
         /// <returns></returns>
         public static IRuleBuilderOptions<T, string?> ValidateEmail<T>(this IRuleBuilder<T, string?> ruleBuilder, int maxLength = 128)
         {
-            return ruleBuilder.NotEmpty().WithMessage(CreateRequiredFieldErrorMessage(EntityFieldNames.Email))
+            return ruleBuilder.NotEmpty().WithMessage(CreateRequiredFieldErrorMessage(Constants.EntityFieldNames.Email))
                 .EmailAddress().WithMessage(CreateInvalidEmailErrorMessage())
-                .Length(1, maxLength).WithMessage(CreateMaxLengthErrorMessage(EntityFieldNames.Email, maxLength));
-        }
-
-        private static class EntityFieldNames
-        {
-            public const string Name = "Name";
-            public const string Email = "Email";
-            public const string Description = "Description";
-            public const string CurrentUser = "CurrentUser";
-            public const string ApplicationId = "ApplicationId";
-            public const string ApplicationUserId = "ApplicationUserId";
-            public const string RoleId = "RoleId";
-            public const string PermissionId = "PermissionId";
+                .Length(1, maxLength).WithMessage(CreateMaxLengthErrorMessage(Constants.EntityFieldNames.Email, maxLength));
         }
     }
 }

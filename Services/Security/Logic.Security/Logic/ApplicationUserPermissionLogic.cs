@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Models;
 using Shared.Logic;
 using Shared.Logic.Validators;
+using Shared.Logic.Common;
 
 namespace Logic.Security.Logic
 {
@@ -215,7 +216,7 @@ namespace Logic.Security.Logic
                 
                 if (applicationResponse.Response == null)
                 {
-                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+                    errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationId, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationId) });
                     return errorValidationResult;
                 }
 
@@ -224,7 +225,7 @@ namespace Logic.Security.Logic
 
                 if (applicationUserResponse.Response == null || applicationUserResponse.Response.Count() == 0)
                 {
-                    errorValidationResult.Errors.Add("ApplicationUserId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserId") });
+                    errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationUserId, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationUserId) });
                     return errorValidationResult;
                 }
 
@@ -233,7 +234,7 @@ namespace Logic.Security.Logic
 
                 if (permissionResponse.Response == null || permissionResponse.Response.Count() == 0)
                 {
-                    errorValidationResult.Errors.Add("PermissionId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("PermissionId") });
+                    errorValidationResult.Errors.Add(Constants.EntityFieldNames.PermissionId, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.PermissionId) });
                     return errorValidationResult;
                 }
 
@@ -249,7 +250,7 @@ namespace Logic.Security.Logic
                 {
                     if ((applicationUserPermissionId == null || applicationUserPermissionId == 0) || (uniqueApplicationUserPermissionCheck.Response.FirstOrDefault().ApplicationUserPermissionId != applicationUserPermissionId))
                     {
-                        errorValidationResult.Errors.Add("ApplicationUserPermission", new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage("ApplicationUserPermission") });
+                        errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationUserPermission, new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage(Constants.EntityFieldNames.ApplicationUserPermission) });
                     }
                 }
             }
