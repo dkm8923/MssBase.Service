@@ -21,6 +21,7 @@ using System.Text.Json;
 using Dto.Security.Application.Logic;
 using Dto.Security.Application;
 using System.Security.Cryptography;
+using Data.Security.Models;
 
 namespace Logic.Security.Logic;
 
@@ -116,8 +117,10 @@ public class AuthenticationLogic : IAuthenticationLogic
         var jwtToken = _generateJwtToken(authCredentials);
         var refreshToken = _generateRefreshToken();
     
-        //successful auth occurred, update user accordingly 
-        await _updateApplicationUserOnSuccessfulLogin(userInfoRes.ApplicationUserId, refreshToken);
+        //successful auth occurred:
+        await _updateApplicationUserOnSuccessfulLogin(applicationUserWithRelatedData.Response.ApplicationUserId, refreshToken);
+
+        await _logSuccessfulLogin(applicationUserWithRelatedData.Response, jwtToken, refreshToken);
 
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
     }
@@ -170,7 +173,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         var refreshToken = _generateRefreshToken();
     
         //successful auth occurred, update user accordingly 
-        await _updateApplicationUserOnSuccessfulTokenRefresh(userInfoRes.ApplicationUserId, refreshToken);
+        await _updateApplicationUserOnSuccessfulTokenRefresh(applicationUserWithRelatedData.Response.ApplicationUserId, refreshToken);
 
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
     }
@@ -427,6 +430,22 @@ public class AuthenticationLogic : IAuthenticationLogic
 
                 await dbContext.SaveChangesAsync();
             }
+        }
+    }
+
+    private async Task _logSuccessfulLogin(ApplicationUserDto applicationUser, string authToken, string refreshToken)
+    {
+        using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+        {
+            dbContext.ApplicationUserLogLogins.Add(new ApplicationUserLogLogin { 
+                ApplicationUserId = applicationUser.ApplicationUserId, 
+                ApplicationId = applicationUser.ApplicationId, 
+                AuthToken = authToken, 
+                RefreshToken = refreshToken, 
+                CreatedBy = applicationUser.Email, 
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow() });
+
+            await dbContext.SaveChangesAsync();
         }
     }
 

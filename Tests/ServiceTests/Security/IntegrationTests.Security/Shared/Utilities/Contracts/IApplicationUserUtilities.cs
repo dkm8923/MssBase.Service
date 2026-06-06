@@ -15,6 +15,8 @@ public interface IApplicationUserUtilities
     public void VerifyIncludeRelatedDataOnApplicationUser(ApplicationUserDto applicationUser, bool includeInactive = false);
     public Dictionary<string, List<string>> GetExpectedRecordDoesNotExistErrors();
     public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedApplicationUserPermissionForeignKeyErrors();
+    public Dictionary<string, List<string>> GetExpectedApplicationUserRoleForeignKeyErrors();
     public Dictionary<string, List<string>> GetExpectedRequiredFieldErrors();
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors();
     public Dictionary<string, List<string>> GetExpectedInvalidEmailFieldErrors();

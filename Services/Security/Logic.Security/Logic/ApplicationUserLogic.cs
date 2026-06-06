@@ -199,12 +199,21 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult> Delete(int applicationUserId)
         {
+            var errorValidationResult = await _validateApplicationUserOnDelete(applicationUserId);
+            if (errorValidationResult.Errors.Count > 0)
+            {
+                return errorValidationResult;
+            }
+
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
                 var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
                 
                 if (entity != null)
                 {
+                    dbContext.ApplicationUserLogChangePasswords.RemoveRange(dbContext.ApplicationUserLogChangePasswords.Where(log => log.ApplicationUserId == applicationUserId));
+                    dbContext.ApplicationUserLogLogins.RemoveRange(dbContext.ApplicationUserLogLogins.Where(log => log.ApplicationUserId == applicationUserId));
+
                     dbContext.ApplicationUsers.Remove(entity);
 
                     await dbContext.SaveChangesAsync();
@@ -369,7 +378,7 @@ namespace Logic.Security.Logic
                 
                 if (applicationResponse.Response == null)
                 {
-                    errorValidationResult.Errors.Add("ApplicationId", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationId") });
+                    errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationId, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationId) });
                     return errorValidationResult;
                 }
 
@@ -388,6 +397,30 @@ namespace Logic.Security.Logic
             return errorValidationResult;
         }
 
+        private async Task<ErrorValidationResult<ApplicationUserDto>> _validateApplicationUserOnDelete(int applicationUserId)
+        {
+            var applicationUserErrorValidationResult = await GetById(applicationUserId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true });
+
+            if (applicationUserErrorValidationResult.Response == null)
+            {
+                //application user for given id does not exist
+                return _createUserNotFoundError<ApplicationUserDto>();
+            }
+
+            //verify no dependencies exist on application user record
+            if (applicationUserErrorValidationResult.Response.ApplicationUserPermissions.NotNullAndHasRecords())
+            {
+                applicationUserErrorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationUserPermissions, new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage(Constants.EntityFieldNames.ApplicationUserPermissions) });
+            }
+
+            if (applicationUserErrorValidationResult.Response.ApplicationUserRoles.NotNullAndHasRecords())
+            {
+                applicationUserErrorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationUserRoles, new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage(Constants.EntityFieldNames.ApplicationUserRoles) });
+            }
+
+            return applicationUserErrorValidationResult;
+        }
+
         private ErrorValidationResult<T> _createUserNotFoundError<T>(T? response = default)
         {
             return new ErrorValidationResult<T>
@@ -395,7 +428,7 @@ namespace Logic.Security.Logic
                 Response = response,
                 Errors = new Dictionary<string, List<string>>
                 {
-                    { "ApplicationUser", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserId") } }
+                    { Constants.EntityFieldNames.ApplicationUser, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationUserId) } }
                 }
             };
         }
