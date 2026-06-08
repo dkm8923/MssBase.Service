@@ -1,6 +1,8 @@
+using Shared.Models.Contracts;
+
 namespace Data.Security.Models;
 
-public partial class ApplicationUserLogChangePassword
+public partial class ApplicationUserLogChangePassword : ICreateable
 {
     public int LogId { get; set; }
 

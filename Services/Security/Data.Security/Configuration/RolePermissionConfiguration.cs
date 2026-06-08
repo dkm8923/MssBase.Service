@@ -13,9 +13,7 @@ public class RolePermissionConfiguration : IEntityTypeConfiguration<RolePermissi
         SetTableName(builder);
 
         builder.Property(t => t.RolePermissionId).IsRequired();
-
-        DataUtilities.ConfigureAuditFields(builder);
-
+        builder.ConfigureAuditFields();
         builder.Property(t => t.ApplicationId).IsRequired();
         builder.Property(t => t.RoleId).IsRequired();
         builder.Property(t => t.PermissionId).IsRequired();

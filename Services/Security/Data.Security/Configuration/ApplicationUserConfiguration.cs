@@ -14,9 +14,7 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         SetTableName(builder);
 
         builder.Property(t => t.ApplicationUserId).IsRequired();
-
-        DataUtilities.ConfigureAuditFields(builder);
-        
+        builder.ConfigureAuditFields();
         builder.Property(t => t.Email).HasMaxLength(128).IsRequired().IsUnicode(false);
         builder.Property(t => t.FirstName).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.LastName).HasMaxLength(64).IsUnicode(false);

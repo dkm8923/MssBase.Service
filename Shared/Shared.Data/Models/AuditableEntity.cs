@@ -1,6 +1,8 @@
+using Shared.Models.Contracts;
+
 namespace Shared.Data.Models;
 
-public abstract class AuditableEntity
+public abstract class AuditableEntity: ICreateable, IUpdateable, IActivatable
 {
     public bool Active { get; set; } = true;
     public DateTime CreatedOn { get; set; }

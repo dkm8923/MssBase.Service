@@ -13,9 +13,7 @@ public class ApplicationUserRoleConfiguration : IEntityTypeConfiguration<Applica
         SetTableName(builder);
 
         builder.Property(t => t.ApplicationUserRoleId).IsRequired();
-
-        DataUtilities.ConfigureAuditFields(builder);
-
+        builder.ConfigureAuditFields();
         builder.Property(t => t.ApplicationId).IsRequired();
         builder.Property(t => t.ApplicationUserId).IsRequired();
         builder.Property(t => t.RoleId).IsRequired();

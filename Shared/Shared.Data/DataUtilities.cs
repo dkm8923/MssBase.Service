@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shared.Data.Models;
+using Shared.Models.Contracts;
 
 namespace Shared.Data;
 
@@ -10,12 +11,42 @@ public static class DataUtilities
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="builder"></param>
-    public static void ConfigureAuditFields<T>(EntityTypeBuilder<T> builder) where T : AuditableEntity
+    public static void ConfigureAuditFields<T>(this EntityTypeBuilder<T> builder) where T : AuditableEntity
+    {
+        builder.ConfigureCreatedAuditFields();
+        builder.ConfigureUpdatedAuditFields();
+        builder.ConfigureActiveAuditFields();
+    }
+
+    /// <summary>
+    /// Configures the created audit fields (CreatedOn, CreatedBy) for the entity.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="builder"></param>
+    public static void ConfigureCreatedAuditFields<T>(this EntityTypeBuilder<T> builder) where T : class, ICreateable
     {
         builder.Property(t => t.CreatedOn).HasPrecision(2).IsRequired();
-        builder.Property(t => t.CreatedBy).HasMaxLength(64).IsRequired().IsUnicode(false);
+        builder.Property(t => t.CreatedBy).HasMaxLength(128).IsRequired().IsUnicode(false);
+    }
+
+    /// <summary>
+    /// Configures the updated audit fields (UpdatedOn, UpdatedBy) for the entity.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="builder"></param>
+    public static void ConfigureUpdatedAuditFields<T>(this EntityTypeBuilder<T> builder) where T : class, IUpdateable
+    {
         builder.Property(t => t.UpdatedOn).HasPrecision(2).IsRequired();
-        builder.Property(t => t.UpdatedBy).HasMaxLength(64).IsRequired().IsUnicode(false);
+        builder.Property(t => t.UpdatedBy).HasMaxLength(128).IsRequired().IsUnicode(false);
+    }
+
+    /// <summary>
+    /// Configures the active audit fields (Active) for the entity.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="builder"></param>
+    public static void ConfigureActiveAuditFields<T>(this EntityTypeBuilder<T> builder) where T : class, IActivatable
+    {
         builder.Property(t => t.Active).IsRequired();
     }
 

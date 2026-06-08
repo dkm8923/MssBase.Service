@@ -13,9 +13,7 @@ public class ApplicationUserPermissionConfiguration : IEntityTypeConfiguration<A
         SetTableName(builder);
 
         builder.Property(t => t.ApplicationUserPermissionId).IsRequired();
-
-        DataUtilities.ConfigureAuditFields(builder);
-
+        builder.ConfigureAuditFields();
         builder.Property(t => t.ApplicationId).IsRequired();
         builder.Property(t => t.ApplicationUserId).IsRequired();
         builder.Property(t => t.PermissionId).IsRequired();

@@ -13,9 +13,7 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
         SetTableName(builder);
 
         builder.Property(t => t.PermissionId).IsRequired();
-
-        DataUtilities.ConfigureAuditFields(builder);
-
+        builder.ConfigureAuditFields();
         builder.Property(t => t.Name).HasMaxLength(64).IsRequired().IsUnicode(false);
         builder.Property(t => t.Description).HasMaxLength(256).IsUnicode(false);
         builder.Property(t => t.ApplicationId).IsRequired();

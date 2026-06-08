@@ -17,8 +17,7 @@ public class ApplicationUserLogLoginConfiguration : IEntityTypeConfiguration<App
         builder.Property(t => t.ApplicationId).IsRequired();
         builder.Property(t => t.AuthToken).IsRequired().HasMaxLength(4096).IsUnicode(true);
         builder.Property(t => t.RefreshToken).IsRequired().HasMaxLength(2048).IsUnicode(true);
-        builder.Property(t => t.CreatedOn).HasPrecision(2).IsRequired();
-        builder.Property(t => t.CreatedBy).HasMaxLength(64).IsRequired().IsUnicode(false);
+        builder.ConfigureCreatedAuditFields();
 
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);

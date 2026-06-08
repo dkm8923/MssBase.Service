@@ -16,8 +16,7 @@ public class ApplicationUserLogChangePasswordConfiguration : IEntityTypeConfigur
         builder.Property(t => t.ApplicationUserId).IsRequired();
         builder.Property(t => t.ApplicationId).IsRequired();
         builder.Property(t => t.OldPassword).IsRequired().HasMaxLength(256).IsUnicode(true);
-        builder.Property(t => t.CreatedOn).HasPrecision(2).IsRequired();
-        builder.Property(t => t.CreatedBy).HasMaxLength(64).IsRequired().IsUnicode(false);
+        builder.ConfigureCreatedAuditFields();
 
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);

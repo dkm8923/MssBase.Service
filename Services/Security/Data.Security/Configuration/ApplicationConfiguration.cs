@@ -13,12 +13,10 @@ public class ApplicationConfiguration : IEntityTypeConfiguration<Application>
         SetTableName(builder);
 
         builder.Property(t => t.ApplicationId).IsRequired();
-
-        DataUtilities.ConfigureAuditFields(builder);
-
+        builder.ConfigureAuditFields();
         builder.Property(t => t.Name).HasMaxLength(64).IsRequired().IsUnicode(false);
         builder.Property(t => t.Description).HasMaxLength(256).IsUnicode(false);
-
+        
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);
         //CreateTableData(builder); 
