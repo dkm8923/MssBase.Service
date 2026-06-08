@@ -66,6 +66,7 @@ public class SecurityTestBase
     protected readonly ISecurityTestUtilitiesManager _securityTestUtilities;
     protected readonly IOptionsMonitor<AuthenticationSettingsConfig> _authenticationSettingsConfigMonitor;
     protected readonly IOptionsMonitor<JwtAuthenticationConfig> _jwtAuthenticationConfigMonitor;
+    protected readonly IOptionsMonitor<PasswordValidationConfig> _passwordValidationConfigMonitor;
 
     public SecurityTestBase()
     {
@@ -82,6 +83,7 @@ public class SecurityTestBase
         _loggerSvc = _serviceProvider.GetService<ILoggerService>();
         _authenticationSettingsConfigMonitor = _serviceProvider.GetService<IOptionsMonitor<AuthenticationSettingsConfig>>();
         _jwtAuthenticationConfigMonitor = _serviceProvider.GetService<IOptionsMonitor<JwtAuthenticationConfig>>();
+        _passwordValidationConfigMonitor = _serviceProvider.GetService<IOptionsMonitor<PasswordValidationConfig>>();
         _authenticationLogic = _serviceProvider.GetService<IAuthenticationLogic>();
         _applicationLogic = _serviceProvider.GetService<IApplicationLogic>();
         _applicationUserLogic = _serviceProvider.GetService<IApplicationUserLogic>();
@@ -989,7 +991,8 @@ public class SecurityTestBase
     {
         services.Configure<AuthenticationSettingsConfig>(_configHelper.Configuration.GetSection("AuthenticationSettingsConfiguration"));
         services.Configure<JwtAuthenticationConfig>(_configHelper.Configuration.GetSection("JwtAuthConfiguration"));
-        
+        services.Configure<PasswordValidationConfig>(_configHelper.Configuration.GetSection("PasswordValidationConfiguration"));
+
         services.Configure<SecurityConnectionStrings>(_configHelper.Configuration.GetSection("SecurityConnectionStrings"));
 
         services.AddSingleton<ISecurityConnectionStrings>(sp =>

@@ -135,6 +135,11 @@ namespace MssBase.Service
                 });
         }
 
+        public static void ConfigurePasswordValidationSettings(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            services.Configure<PasswordValidationConfig>(builder.Configuration.GetSection("PasswordValidationConfiguration"));
+        }
+
         public static void AddPermissionAuthorization(this IServiceCollection services)
         {
             services.AddAuthorization();

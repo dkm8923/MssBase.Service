@@ -15,6 +15,7 @@ using Shared.Logic.Common;
 using Microsoft.AspNetCore.Identity;
 using Dto.Security.Authentication;
 using Data.Security.Models;
+using Microsoft.Extensions.Options;
 
 namespace Logic.Security.Logic
 {
@@ -26,12 +27,14 @@ namespace Logic.Security.Logic
         private IValidator<FilterApplicationUserLogicRequest> _filterApplicationUserLogicRequestValidator;
         private IValidator<InsertUpdateApplicationUserRequest> _insertUpdateApplicationUserRequestValidator;
         private IValidator<ChangePasswordRequest> _changePasswordRequestValidator;
-
+        private IOptions<PasswordValidationConfig> _passwordValidationConfig;
+        
         public ApplicationUserLogic(
                             ISecurityConnectionStrings connectionStrings,
                             IValidator<FilterApplicationUserLogicRequest> filterApplicationUserLogicRequestValidator,
                             IValidator<InsertUpdateApplicationUserRequest> insertUpdateApplicationUserRequestValidator,
-                            IValidator<ChangePasswordRequest> changePasswordRequestValidator
+                            IValidator<ChangePasswordRequest> changePasswordRequestValidator,
+                            IOptions<PasswordValidationConfig> passwordValidationConfig
         )
         {
             _connectionStrings = connectionStrings;
@@ -39,6 +42,7 @@ namespace Logic.Security.Logic
             _filterApplicationUserLogicRequestValidator = filterApplicationUserLogicRequestValidator;
             _insertUpdateApplicationUserRequestValidator = insertUpdateApplicationUserRequestValidator;
             _changePasswordRequestValidator = changePasswordRequestValidator;
+            _passwordValidationConfig = passwordValidationConfig;
         }
 
         /// <summary>
@@ -297,17 +301,20 @@ namespace Logic.Security.Logic
                 }
 
                 //verify new password is not the same as last 5 passwords
-                var oldPasswords = dbContext.ApplicationUserLogChangePasswords.Where(log => log.ApplicationUserId == req.ApplicationUserId)
+                if (_passwordValidationConfig.Value.RequirePasswordHistoryCheck)
+                {
+                    var oldPasswords = dbContext.ApplicationUserLogChangePasswords.Where(log => log.ApplicationUserId == req.ApplicationUserId)
                     .OrderByDescending(log => log.CreatedOn)
-                    .Take(5)
+                    .Take(_passwordValidationConfig.Value.RequirePasswordHistoryCheckOldPasswordCount)
                     .Select(log => log.OldPassword)
                     .ToList();
 
-                if (oldPasswords.Any(oldPassword => SecurityLogicUtilities.VerifyPasswordMatchesHash(oldPassword, req.NewPassword)))
-                {
-                    return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { "ChangePassword", new List<string> { $"New password must be different from the last 5 passwords!" } } } };
+                    if (oldPasswords.Any(oldPassword => SecurityLogicUtilities.VerifyPasswordMatchesHash(oldPassword, req.NewPassword)))
+                    {
+                        return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { "ChangePassword", new List<string> { $"New password must be different from the last {_passwordValidationConfig.Value.RequirePasswordHistoryCheckOldPasswordCount} passwords!" } } } };
+                    }
                 }
-
+                
                 //log password change
                 await dbContext.ApplicationUserLogChangePasswords.AddAsync(new ApplicationUserLogChangePassword
                 {

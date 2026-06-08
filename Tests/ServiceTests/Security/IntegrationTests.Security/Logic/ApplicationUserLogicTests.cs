@@ -909,7 +909,7 @@ namespace IntegrationTests.Security.Logic
             // Act
             var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
                 ApplicationUserId = testUser.Response.ApplicationUserId, 
-                NewPassword = CommonUtilities.GenerateRandomAlphaNumericString(129, true),
+                NewPassword = CommonUtilities.GenerateRandomAlphaNumericString(_passwordValidationConfigMonitor.CurrentValue.MaxLength + 1, true),
                 CurrentUser = TestConstants.CurrentUser 
             });
             
@@ -962,9 +962,16 @@ namespace IntegrationTests.Security.Logic
             });
             
             // Assert
-            changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            if (_passwordValidationConfigMonitor.CurrentValue.RequireUppercase)
+            {
+                changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
+                LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
+            }
+            else
+            {
+                changePasswordResult.Errors.Count.Should().Be(0);
+            }
         }
 
         [Fact]
@@ -986,9 +993,16 @@ namespace IntegrationTests.Security.Logic
             });
             
             // Assert
-            changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            if (_passwordValidationConfigMonitor.CurrentValue.RequireLowercase)
+            {
+                changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
+                LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
+            }
+            else
+            {
+                changePasswordResult.Errors.Count.Should().Be(0);
+            }  
         }
 
         [Fact]
@@ -1011,9 +1025,16 @@ namespace IntegrationTests.Security.Logic
             });
             
             // Assert
-            changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            if (_passwordValidationConfigMonitor.CurrentValue.RequireNonAlphanumeric)
+            {
+                changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
+                LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
+            }
+            else
+            {
+                changePasswordResult.Errors.Count.Should().Be(0);
+            }     
         }
 
         [Fact]
@@ -1036,9 +1057,16 @@ namespace IntegrationTests.Security.Logic
             });
             
             // Assert
-            changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+           if (_passwordValidationConfigMonitor.CurrentValue.RequireDigit)
+            {
+                changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
+                LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
+            }
+            else
+            {
+                changePasswordResult.Errors.Count.Should().Be(0);
+            }      
         }
 
         #endregion
