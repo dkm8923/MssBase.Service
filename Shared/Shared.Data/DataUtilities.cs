@@ -57,33 +57,39 @@ public static class DataUtilities
 	{
 		foreach (var entity in entities)
 		{
-			var type = typeof(T);
-			var createdOnProp = type.GetProperty("CreatedOn");
-			var createdByProp = type.GetProperty("CreatedBy");
-			var updatedOnProp = type.GetProperty("UpdatedOn");
-			var updatedByProp = type.GetProperty("UpdatedBy");
-            
-            if (createdOnProp != null && createdOnProp.CanWrite) 
-            {
-                createdOnProp.SetValue(entity, DataConstants.DefaultCreatedOn);
-            }
-				
-			if (createdByProp != null && createdByProp.CanWrite) 
-            {
-                createdByProp.SetValue(entity, DataConstants.DefaultCreatedBy);
-            }
-				
-			if (updatedOnProp != null && updatedOnProp.CanWrite) 
-            {
-                updatedOnProp.SetValue(entity, DataConstants.DefaultUpdatedOn);
-            }
-				
-            if (updatedByProp != null && updatedByProp.CanWrite) 
-            {
-                updatedByProp.SetValue(entity, DataConstants.DefaultUpdatedBy);
-            }
+            SetAuditFields(entity);
 		}
 	}
+
+    public static void SetAuditFields<T>(T entity) where T : class
+	{
+		var type = typeof(T);
+		var createdOnProp = type.GetProperty("CreatedOn");
+        var createdByProp = type.GetProperty("CreatedBy");
+        var updatedOnProp = type.GetProperty("UpdatedOn");
+        var updatedByProp = type.GetProperty("UpdatedBy");
+        
+        if (createdOnProp != null && createdOnProp.CanWrite) 
+        {
+            createdOnProp.SetValue(entity, DataConstants.DefaultCreatedOn);
+        }
+            
+        if (createdByProp != null && createdByProp.CanWrite) 
+        {
+            createdByProp.SetValue(entity, DataConstants.DefaultCreatedBy);
+        }
+            
+        if (updatedOnProp != null && updatedOnProp.CanWrite) 
+        {
+            updatedOnProp.SetValue(entity, DataConstants.DefaultUpdatedOn);
+        }
+            
+        if (updatedByProp != null && updatedByProp.CanWrite) 
+        {
+            updatedByProp.SetValue(entity, DataConstants.DefaultUpdatedBy);
+        }
+    }
+	
 
     /// <summary>
     /// Creates a unique key name based on the table name and key name. IE: "UQ_TableName_KeyName"  
