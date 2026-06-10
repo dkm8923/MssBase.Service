@@ -120,8 +120,11 @@ public class AuthenticationLogic : IAuthenticationLogic
         //successful auth occurred:
         await _updateApplicationUserOnSuccessfulLogin(applicationUserWithRelatedData.Response.ApplicationUserId, refreshToken);
 
-        await _logSuccessfulLogin(applicationUserWithRelatedData.Response, jwtToken, refreshToken);
-
+        if (_authenticationSettingsConfigMonitor.CurrentValue.LogSuccessfulAuthentication)
+        {
+            await _logSuccessfulLogin(applicationUserWithRelatedData.Response, jwtToken, refreshToken);
+        }
+        
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
     }
 
