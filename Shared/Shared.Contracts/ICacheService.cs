@@ -10,7 +10,7 @@ public interface ICacheService
 	public Task RemoveKeysByPatternAsync(string pattern);
 
     //Common Service Names
-    
+    public const string CommonRelationalDataService = "CommonRelationalDataService";
 
     //Security Service Names
     public const string ApplicationService = "ApplicationService";

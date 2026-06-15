@@ -2,7 +2,7 @@
 using Contract.Security;
 using Contract.Security.Application;
 using Contract.Security.ApplicationUser;
-//using Contract.Common;
+using Contract.Common;
 using Dto.Security.Application;
 using Dto.Security.Application.Logic;
 using Dto.Security.ApplicationUser;
@@ -12,11 +12,11 @@ using Logic.Security;
 using Logic.Security.Logic;
 using Logic.Security.Validators.Application;
 using Logic.Security.Validators.ApplicationUser;
-//using Logic.Common;
+using Logic.Common;
 using Microsoft.Extensions.Options;
 using Service.Security;
 using Service.Security.Service;
-//using Service.Common;
+using Service.Common;
 using Service.Logger;
 using Service.Logger.Contracts;
 using Service.Logger.Models;
@@ -59,6 +59,9 @@ using Contract.Security.Authentication;
 using Logic.Security.Validators.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using MssBase.Service.Shared.Authorization;
+using Contract.Common.CommonRelationalData;
+using Service.Common.Service;
+using Logic.Common.Logic;
 
 namespace MssBase.Service
 {
@@ -205,12 +208,12 @@ namespace MssBase.Service
             services.AddSingleton<ICommonConnectionStrings>(sp =>
              sp.GetRequiredService<IOptionsMonitor<CommonConnectionStrings>>().CurrentValue);
 
-            // #region CommonType
+            #region CommonRelationalData
 
-            // services.AddScoped<ICommonTypeService, CommonTypeService>();
-            // services.AddScoped<ICommonTypeLogic, CommonTypeLogic>();
+            services.AddScoped<ICommonRelationalDataService, CommonRelationalDataService>();
+            services.AddScoped<ICommonRelationalDataLogic, CommonRelationalDataLogic>();
 
-            // #endregion
+            #endregion
         }
 
         public static void ConfigureSecurityService(this IServiceCollection services, WebApplicationBuilder builder)

@@ -51,20 +51,63 @@ public static class DataUtilities
     }
 
     /// <summary>
+    /// Sets the Active field to true for a collection of entities.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="entities"></param>
+    public static void SetActiveFieldToTrue<T>(IEnumerable<T> entities) where T : class
+	{
+		foreach (var entity in entities)
+		{
+            SetActiveFieldToTrueOnEntity(entity);
+		}
+	}
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="entity"></param>
+    public static void SetActiveFieldToTrueForEntity<T>(T entity) where T : class
+    {
+        SetActiveFieldToTrueOnEntity(entity);
+    }
+
+    /// <summary>
+    /// Sets the Active field to true for single entity.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="entities"></param>
+    private static void SetActiveFieldToTrueOnEntity(object entity)
+	{
+		var type = entity.GetType();
+        var activeProp = type.GetProperty("Active");
+        if (activeProp != null && activeProp.PropertyType == typeof(bool))
+        {
+            activeProp.SetValue(entity, true);
+        }
+	}
+
+    /// <summary>
     /// Sets the audit fields (CreatedOn, CreatedBy, UpdatedOn, UpdatedBy) for a collection of entities.
     /// </summary>
     public static void SetAuditFields<T>(IEnumerable<T> entities) where T : class
 	{
 		foreach (var entity in entities)
 		{
-            SetAuditFields(entity);
+            SetAuditFieldsOnEntity(entity);
 		}
 	}
 
-    public static void SetAuditFields<T>(T entity) where T : class
-	{
-		var type = typeof(T);
-		var createdOnProp = type.GetProperty("CreatedOn");
+    public static void SetAuditFieldsForEntity<T>(T entity) where T : class
+    {
+        SetAuditFieldsOnEntity(entity);
+    }
+
+    private static void SetAuditFieldsOnEntity(object entity)
+    {
+        var type = entity.GetType();
+        var createdOnProp = type.GetProperty("CreatedOn");
         var createdByProp = type.GetProperty("CreatedBy");
         var updatedOnProp = type.GetProperty("UpdatedOn");
         var updatedByProp = type.GetProperty("UpdatedBy");

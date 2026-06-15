@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../../Shared/Shared.Data/Shared.Data.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Logic\Shared.Logic.csproj" />
     <ProjectReference Include="..\Contract.Common\Contract.Common.csproj" />
     <ProjectReference Include="..\Dto.Common\Dto.Common.csproj" />

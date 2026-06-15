@@ -27,22 +27,22 @@ public partial class SecurityDBContext : DbContext
     public virtual DbSet<ApplicationUserLogLogin> ApplicationUserLogLogins { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-{
-    if (!optionsBuilder.IsConfigured)
     {
-        // Read connection string from appsettings.json
-        var config = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true)
-            .Build();
-
-        var connectionString = config.GetSection("SecurityConnectionStrings:ReadWrite").Value;
-        if (!string.IsNullOrEmpty(connectionString))
+        if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseSqlServer(connectionString);
+            // Read connection string from appsettings.json
+            var config = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true)
+                .Build();
+
+            var connectionString = config.GetSection("SecurityConnectionStrings:ReadWrite").Value;
+            if (!string.IsNullOrEmpty(connectionString))
+            {
+                optionsBuilder.UseSqlServer(connectionString);
+            }
         }
     }
-}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

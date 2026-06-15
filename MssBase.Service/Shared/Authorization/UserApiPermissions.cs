@@ -69,4 +69,10 @@ public static class UserApiPermissions
     public const string RolePermissionDelete = "RolePermissionDelete";
 
     #endregion
+
+    #region Common Permissions
+
+    public const string CommonRelationalDataRead = "CommonRelationalDataRead";
+
+    #endregion
 }

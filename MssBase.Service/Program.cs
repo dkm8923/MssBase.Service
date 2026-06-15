@@ -29,7 +29,7 @@ builder.Services.ConfigureCors(builder);
 
 builder.Services.ConfigureLoggerService(builder, environment);
 
-//builder.Services.ConfigureCommonService(builder);
+builder.Services.ConfigureCommonService(builder);
 builder.Services.ConfigureSecurityService(builder);
 
 builder.Services.ConfigureFluentValidationAutoValidation(builder);
