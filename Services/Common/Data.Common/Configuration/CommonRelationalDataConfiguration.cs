@@ -53,6 +53,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         records.Add(_configurePhoneNumberType(builder));
         records.Add(_configureUsaState(builder));
         records.Add(_configureCountry(builder));
+        records.Add(_configureTimeZone(builder));
 
         var idx = 1;
 
@@ -595,6 +596,28 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetAuditFields(relationalRecords);
 
         var ret = new CommonRelationalData { ReferenceType = "Country", Description = "List of all Countries and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
+
+        return ret;
+    }
+
+    private CommonRelationalData _configureTimeZone(EntityTypeBuilder<CommonRelationalData> builder)
+    {
+        var relationalRecords = new List<CommonRelationalDataDto>();
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Eastern Standard Time (EST):", Value = "EST", Description = "Covers the East Coast and parts of the Midwest" });
+
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Central Standard Time (CST):", Value = "CST", Description = "Spans the central US and Gulf Coast" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Mountain Standard Time (MST):", Value = "MST", Description = "Extends across the Mountain West" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Pacific Standard Time (PST):", Value = "PST", Description = "Covers the West Coast, including California, and Nevada" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Alaska Standard Time (AKST):", Value = "AKST", Description = "Covers almost the entire state of Alaska" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Hawaii-Aleutian Standard Time (HST)", Value = "HST", Description = "Covers Hawaii and parts of the Aleutian Islands in Alaska" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Atlantic Standard Time (AST)", Value = "AST", Description = "Puerto Rico and the US Virgin Islands" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Samoa Standard Time (SST)", Value = "SST", Description = "American Samoa" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Chamorro Standard Time (CHST)", Value = "CHST", Description = "Guam and the Northern Mariana Islands" });
+
+        DataUtilities.SetActiveFieldToTrue(relationalRecords);
+        DataUtilities.SetAuditFields(relationalRecords);
+
+        var ret = new CommonRelationalData { ReferenceType = "UsaTimeZone", Description = "List of all USA Time Zones and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
 
         return ret;
     }

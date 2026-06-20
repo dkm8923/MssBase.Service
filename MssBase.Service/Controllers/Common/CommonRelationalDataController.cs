@@ -1,10 +1,8 @@
 using Contract.Common.CommonRelationalData;
-using Dto.Common.CommonRelationalData;
 using Dto.Common.CommonRelationalData.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
-using MssBase.Service.Shared.Authorization;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
@@ -29,8 +27,7 @@ namespace MssBase.Service.Controllers.Common
         // GET: api/Common/CommonRelationalData
         
         [HttpGet()]
-        [RequiredPermission(UserApiPermissions.CommonRelationalDataRead)] 
-        public async Task<IActionResult> GetCommonRelationalDatas([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetCommonRelationalData([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -46,8 +43,7 @@ namespace MssBase.Service.Controllers.Common
         // POST: api/Common/CommonRelationalData/Filter
 
         [HttpPost("Filter")]
-        [RequiredPermission(UserApiPermissions.CommonRelationalDataRead)]
-        public async Task<IActionResult> FilterCommonRelationalDatas(FilterCommonRelationalDataServiceRequest req, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> FilterCommonRelationalData(FilterCommonRelationalDataServiceRequest req, CancellationToken cancellationToken = default)
         {
             try
             {

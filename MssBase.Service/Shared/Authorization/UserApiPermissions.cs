@@ -72,7 +72,5 @@ public static class UserApiPermissions
 
     #region Common Permissions
 
-    public const string CommonRelationalDataRead = "CommonRelationalDataRead";
-
     #endregion
 }

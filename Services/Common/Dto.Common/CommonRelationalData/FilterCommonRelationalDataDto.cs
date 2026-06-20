@@ -35,6 +35,9 @@ namespace Dto.Common.CommonRelationalData
         public List<CommonRelationalDataDto>? UsaState { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<CommonRelationalDataDto>? UsaTimeZone { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<CommonRelationalDataDto>? Country { get; set; }
     }
 }
