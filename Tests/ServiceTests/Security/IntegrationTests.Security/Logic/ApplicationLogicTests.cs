@@ -14,13 +14,18 @@ namespace IntegrationTests.Security.Logic
     public class ApplicationLogicTests : SecurityTestBase, 
                                          IDefaultLogicTestsGetAll,
                                          IDefaultLogicTestsGetAllIncludeRelated,
+                                         IDefaultLogicTestsGetAllReadOnly,
                                          IDefaultLogicTestsGetById,
                                          IDefaultLogicTestsGetByIdIncludeRelated,
+                                         IDefaultLogicTestsGetByIdReadOnly,
                                          IDefaultLogicTestsFilter,
-                                         IDefaultLogicTestsFilterIncludeRelated,  
+                                         IDefaultLogicTestsFilterIncludeRelated,
+                                         IDefaultLogicTestsFilterReadOnly,
                                          IDefaultLogicTestsInsert, 
                                          IDefaultLogicTestsUpdate,
-                                         IDefaultLogicTestsDelete
+                                         IDefaultLogicTestsUpdateReadOnly,
+                                         IDefaultLogicTestsDelete,
+                                         IDefaultLogicTestsDeleteReadOnly
     {
         #region GetAll
 
@@ -123,6 +128,53 @@ namespace IntegrationTests.Security.Logic
                 application.RolePermissions.Should().BeNull();
                 application.ApplicationUserPermissions.Should().BeNull();
             }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Active_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1);
+            await _securityTestUtilities.Application.CreateInactiveReadOnlyTestRecords(1);
+
+            // Act
+            var result = await _applicationLogic.GetAll(new BaseLogicGet { IncludeReadOnly = true });
+
+            // Assert
+            result.Response.Should().HaveCount(1);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Inactive_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1);
+            await _securityTestUtilities.Application.CreateInactiveReadOnlyTestRecords(1);
+
+            // Act
+            var result = await _applicationLogic.GetAll(new BaseLogicGet { IncludeReadOnly = true, IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().HaveCount(2);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Zero_ReadOnly_Records()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            await _securityTestUtilities.Application.CreateActiveTestRecords(1);
+            await _securityTestUtilities.Application.CreateInactiveTestRecords(1);
+            await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1);
+
+            // Act
+            var result = await _applicationLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().HaveCount(2);
+            result.Response.FirstOrDefault().ReadOnly.Should().BeFalse();
         }
 
         #endregion
@@ -236,6 +288,53 @@ namespace IntegrationTests.Security.Logic
             result.Response.Roles.Should().BeNull();
             result.Response.RolePermissions.Should().BeNull();
             result.Response.ApplicationUserPermissions.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Active_ReadOnly_Record()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var res = await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1);
+            var testRecord = res[0];
+            await _securityTestUtilities.Application.CreateInactiveReadOnlyTestRecords(1);
+            
+            // Act
+            var result = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet { IncludeReadOnly = true });
+
+            // Assert
+            _securityTestUtilities.Application.VerifyTestRecordValuesMatch(result.Response, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Inactive_ReadOnly_Record()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1);
+            var res = await _securityTestUtilities.Application.CreateInactiveReadOnlyTestRecords(1);
+            var testRecord = res[0];
+    
+            // Act
+            var result = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet { IncludeInactive = true, IncludeReadOnly = true });
+
+            // Assert
+            _securityTestUtilities.Application.VerifyTestRecordValuesMatch(result.Response, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_ReadOnly_Record()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var res = await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1);
+            var testRecord = res[0];
+
+            // Act
+            var result = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet());
+
+            // Assert
+            result.Response.Should().BeNull();
         }
 
         #endregion
@@ -497,6 +596,80 @@ namespace IntegrationTests.Security.Logic
             }
         }
 
+        //asdfasdfasdf
+        [Fact]
+        public async Task Default_Filter_Should_Return_Active_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords();
+
+            var postReq = new FilterApplicationLogicRequest { IncludeReadOnly = true };
+
+            // Act
+            var result = await _applicationLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+            
+            foreach (var r in result.Response)
+            {
+                r.Active.Should().BeTrue();
+                r.ReadOnly.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Inactive_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords();
+            await _securityTestUtilities.Application.CreateInactiveReadOnlyTestRecords(1);
+
+            var postReq = new FilterApplicationLogicRequest { IncludeInactive = true, IncludeReadOnly = true };
+
+            // Act
+            var result = await _applicationLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+
+            result.Response.Where(r => r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //activeReadOnlyRecords
+            result.Response.Where(r => !r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //inactiveReadOnlyRecords
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Zero_ReadOnly_Records()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var records = await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords();
+            var testRecord = records.First();
+
+            var postReqInvalidCreatedBy = new FilterApplicationServiceRequest { CreatedBy = testRecord.CreatedBy };
+            var postReqInvalidCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.FromDateTime(testRecord.CreatedOn) };
+            var postReqInvalidUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = testRecord.UpdatedBy };
+            var postReqInvalidUpdatedOnDate = new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.FromDateTime((DateTime)testRecord.UpdatedOn) };
+            var postReqInvalidName = new FilterApplicationServiceRequest { Name = testRecord.Name };
+            
+            // Act
+            var invalidCreatedByResult = await _applicationLogic.Filter(postReqInvalidCreatedBy);
+            var invalidCreatedOnDateResult = await _applicationLogic.Filter(postReqInvalidCreatedOnDate);
+            var invalidUpdatedByResult = await _applicationLogic.Filter(postReqInvalidUpdatedBy);
+            var invalidUpdatedOnDateResult = await _applicationLogic.Filter(postReqInvalidUpdatedOnDate);
+            var invalidNameResult = await _applicationLogic.Filter(postReqInvalidName);
+            
+            // Assert
+            invalidCreatedByResult.Response.Should().HaveCount(0);
+            invalidCreatedOnDateResult.Response.Should().HaveCount(0);
+            invalidUpdatedByResult.Response.Should().HaveCount(0);
+            invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
+            invalidNameResult.Response.Should().HaveCount(0);
+        }
+
         #endregion
 
         #region Insert
@@ -666,6 +839,27 @@ namespace IntegrationTests.Security.Logic
             LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
         }
 
+        [Fact]
+        public async Task Default_Update_Should_Not_Update_Record_ReadOnly_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var testRecords = await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1);
+            var recordToUpdate = testRecords.FirstOrDefault();
+            
+            var updateReq = _securityTestUtilities.Application.ConvertApplicationDtoToInsertUpdateRequest(recordToUpdate);
+            
+            // Act
+            var updateResult = await _applicationLogic.Update(recordToUpdate.ApplicationId, updateReq);
+
+            //Assert
+            var expectedReadOnlyError = _securityTestUtilities.Application.GetExpectedReadOnlyErrors();
+
+            //Assert
+            updateResult.Errors.Should().HaveCount(1);
+            updateResult.Errors.Should().BeEquivalentTo(expectedReadOnlyError);
+        }
+
         #endregion
 
         #region Delete
@@ -695,6 +889,24 @@ namespace IntegrationTests.Security.Logic
 
             // Act
             var result = await _applicationLogic.Delete(-1);
+
+            // Assert
+            result.Errors.Count.Should().Be(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task Default_Delete_Should_Not_Delete_Record_ReadOnly_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var testRecord = (await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1)).First();
+
+            var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedReadOnlyErrors();
+
+            // Act
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);

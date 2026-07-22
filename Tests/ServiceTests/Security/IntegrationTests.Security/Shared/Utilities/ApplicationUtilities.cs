@@ -1,18 +1,27 @@
+using Contract.Security;
 using Contract.Security.Application;
+using Data.Security;
+using Data.Security.Converters;
 using Dto.Security.Application;
 using FluentAssertions;
 using IntegrationTests.Security.Shared.Utilities.Contracts;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities;
+using Microsoft.EntityFrameworkCore;
 using Shared.Models;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
 public class ApplicationUtilities : IApplicationUtilities
 {
+    private readonly ISecurityConnectionStrings _connectionStrings;
+    private readonly SecurityDBContextFactory _dbContextFactory;
+    
     protected readonly IApplicationLogic _applicationLogic;
-    public ApplicationUtilities(IApplicationLogic applicationLogic) 
+    public ApplicationUtilities(ISecurityConnectionStrings connectionStrings, IApplicationLogic applicationLogic) 
     {
+        _connectionStrings = connectionStrings;
+        _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);   
         _applicationLogic = applicationLogic;
     }
 
@@ -145,6 +154,26 @@ public class ApplicationUtilities : IApplicationUtilities
     }
 
     /// <summary>
+    /// Asynchronously creates a set of predefined test active read-only application records in the data store.
+    /// </summary>
+    /// <param name="numberOfRecordsToCreate">The number of active read-only test records to create. Default is 5.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created active read-only application DTOs.</returns>
+    public async Task<List<ApplicationDto>> CreateActiveReadOnlyTestRecords(short numberOfRecordsToCreate = 5)
+    {
+        return await CreateReadOnlyTestRecords(true, numberOfRecordsToCreate);
+    }
+
+    /// <summary>
+    /// Asynchronously creates a set of predefined test inactive read-only application records in the data store.
+    /// </summary>
+    /// <param name="numberOfRecordsToCreate">The number of inactive read-only test records to create. Default is 5.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created inactive read-only application DTOs.</returns>
+    public async Task<List<ApplicationDto>> CreateInactiveReadOnlyTestRecords(short numberOfRecordsToCreate = 5)
+    {
+        return await CreateReadOnlyTestRecords(false, numberOfRecordsToCreate);
+    }
+
+    /// <summary>
     /// Asynchronously deletes all records, including inactive ones, from the data store.
     /// </summary>
     /// <remarks>This method deletes both active and inactive records. Use with caution, as this
@@ -152,12 +181,8 @@ public class ApplicationUtilities : IApplicationUtilities
     /// <returns>A task that represents the asynchronous delete operation.</returns>
     public async Task DeleteAllRecords()
     {
-        var recordsToDelete = await _applicationLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
-
-        foreach (var record in recordsToDelete.Response)
-        {
-            await _applicationLogic.Delete(record.ApplicationId);
-        }
+        using var dbContext = _dbContextFactory.CreateContextReadWrite();
+        await dbContext.Applications.ExecuteDeleteAsync();
     }
 
     /// <summary>
@@ -212,6 +237,18 @@ public class ApplicationUtilities : IApplicationUtilities
     }
 
     /// <summary>
+    /// Retrieves a dictionary of expected read-only field validation error messages.
+    /// </summary>
+    /// <returns>A dictionary where the key is the read-only field name and the value is a list of error messages associated with that read-only field.</returns>
+    public Dictionary<string, List<string>> GetExpectedReadOnlyErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Application", new List<string> { "Record is read only and cannot be modified! (IE: ReadOnly property is set to true)" } }
+        };
+    }
+
+    /// <summary>
     /// Retrieves a dictionary of expected foreign key validation error messages.
     /// </summary>
     /// <returns>A dictionary where the key is the foreign key name and the value is a list of error messages associated with that foreign key.</returns>
@@ -241,6 +278,7 @@ public class ApplicationUtilities : IApplicationUtilities
         recordA.Name.Should().Be(recordB.Name);
         recordA.Description.Should().Be(recordB.Description);
         recordA.Active.Should().Be(recordB.Active);
+        recordA.ReadOnly.Should().Be(recordB.ReadOnly);
         recordA.CreatedBy.Should().Be(recordB.CreatedBy);
         //recordA.CreatedOn.Should().Be(recordB.CreatedOn);
         recordA.UpdatedBy.Should().Be(recordB.UpdatedBy);
@@ -277,5 +315,37 @@ public class ApplicationUtilities : IApplicationUtilities
             application.RolePermissions.Should().OnlyContain(x => x.Active);
             application.ApplicationUserPermissions.Should().OnlyContain(x => x.Active);
         }
-    } 
+    }
+
+    #region Private
+
+    /// <summary>
+    /// Asynchronously creates a set of predefined test read-only application records in the data store.
+    /// </summary>
+    /// <param name="active">Indicates whether the created read-only test records should be active. Default is true.</param>
+    /// <param name="numberOfRecordsToCreate">The number of read-only test records to create. Default is 5.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created read-only application DTOs.</returns>
+    private async Task<List<ApplicationDto>> CreateReadOnlyTestRecords(bool active = true, short numberOfRecordsToCreate = 5)
+    {
+        //create test records
+        var ret = new List<ApplicationDto>();
+        
+        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
+        {
+            var insertReq = CreateInsertUpdateRequestWithRandomValues(active);
+            var ent = insertReq.ToEntityOnInsert();
+            ent.ReadOnly = true;
+
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                await dbContext.Applications.AddAsync(ent);
+                await dbContext.SaveChangesAsync();
+                ret.Add(ent.ToDto());
+            }
+        }
+
+        return ret;
+    }
+
+    #endregion 
 }

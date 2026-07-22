@@ -7,6 +7,8 @@ namespace IntegrationTests.Security.Shared.Utilities.Contracts;
         public Task DeleteAllRecords();
         public Task<List<ApplicationDto>> CreateActiveTestRecords(short numberOfRecordsToCreate = 5);
         public Task<List<ApplicationDto>> CreateInactiveTestRecords(short numberOfRecordsToCreate = 5);
+        public Task<List<ApplicationDto>> CreateActiveReadOnlyTestRecords(short numberOfRecordsToCreate = 5);
+        public Task<List<ApplicationDto>> CreateInactiveReadOnlyTestRecords(short numberOfRecordsToCreate = 5);
         public Task<ApplicationDto> CreateSingleApplicationTestRecord(bool active = true);
         //public Task<ApplicationDto> CreateSingleApplicationTestRecordWithSpecificValues(bool active = true);
         public Task<ApplicationDto> CreateSingleApplicationTestRecordWithSpecificValues(InsertUpdateApplicationRequest req = null);
@@ -18,6 +20,7 @@ namespace IntegrationTests.Security.Shared.Utilities.Contracts;
         public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors();
         public Dictionary<string, List<string>> GetExpectedRequiredFieldErrors();
         public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors();
+        public Dictionary<string, List<string>> GetExpectedReadOnlyErrors();
         public Dictionary<string, List<string>> GetExpectedForeignKeyErrors();
         public void VerifyIncludeRelatedDataOnApplication(ApplicationDto application, bool includeInactive = false);
     }
