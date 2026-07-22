@@ -58,7 +58,7 @@ namespace IntegrationTests.Security.Service
             var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"ApplicationUserService_GetAll_0_0";
+            var expectedCacheKey = $"ApplicationUserService_GetAll_0_0_0";
 
             // Act
             var result = await _applicationUserService.GetAll(new BaseServiceGet());
@@ -76,7 +76,7 @@ namespace IntegrationTests.Security.Service
             var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = "ApplicationUserService_GetAll_1_0";
+            var expectedCacheKey = "ApplicationUserService_GetAll_1_0_0";
 
             // Act
             var result = await _applicationUserService.GetAll(new BaseServiceGet { IncludeInactive = true });
@@ -94,7 +94,7 @@ namespace IntegrationTests.Security.Service
             var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = "ApplicationUserService_GetAll_0_1";
+            var expectedCacheKey = "ApplicationUserService_GetAll_0_1_0";
 
             // Act
             var result = await _applicationUserService.GetAll(new BaseServiceGet { IncludeRelated = true });
@@ -135,7 +135,7 @@ namespace IntegrationTests.Security.Service
             var applicationUser = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"ApplicationUserService_GetById_{applicationUser.ApplicationUserId}_0_0";
+            var expectedCacheKey = $"ApplicationUserService_GetById_{applicationUser.ApplicationUserId}_0_0_0";
 
             // Act
             var result = await _applicationUserService.GetById(applicationUser.ApplicationUserId, new BaseServiceGet());
@@ -154,7 +154,7 @@ namespace IntegrationTests.Security.Service
             var applicationUser = arrangeTestDataResponse.InactiveApplicationUsers.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"ApplicationUserService_GetById_{applicationUser.ApplicationUserId}_1_0";
+            var expectedCacheKey = $"ApplicationUserService_GetById_{applicationUser.ApplicationUserId}_1_0_0";
 
             // Act
             var result = await _applicationUserService.GetById(applicationUser.ApplicationUserId, new BaseServiceGet { IncludeInactive = true });
@@ -173,7 +173,7 @@ namespace IntegrationTests.Security.Service
             var applicationUser = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"ApplicationUserService_GetById_{applicationUser.ApplicationUserId}_0_1";
+            var expectedCacheKey = $"ApplicationUserService_GetById_{applicationUser.ApplicationUserId}_0_1_0";
 
             // Act
             var result = await _applicationUserService.GetById(applicationUser.ApplicationUserId, new BaseServiceGet { IncludeRelated = true });
@@ -267,18 +267,18 @@ namespace IntegrationTests.Security.Service
            var postReqIncludeInactive = new FilterApplicationUserServiceRequest { IncludeInactive = true };
            var postReqIncludeRelated = new FilterApplicationUserServiceRequest { IncludeRelated = true };
            
-           var expectedCacheKeyCreatedBy = $"ApplicationUserService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyCreatedOnDate = $"ApplicationUserService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedBy = $"ApplicationUserService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedOnDate = $"ApplicationUserService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyApplicationUserIdsKey = $"ApplicationUserService_Filter_0_0_0_0_{(postReqApplicationUserIds.ApplicationUserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0_0_0";
-           var expectedCacheKeyEmail = $"ApplicationUserService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqEmail.Email)}_0_0_0_0_0_0";
-           var expectedCacheKeyFirstName = $"ApplicationUserService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqFirstName.FirstName)}_0_0_0_0_0";
-           var expectedCacheKeyLastName = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqLastName.LastName)}_0_0_0_0";
-           var expectedCacheKeyDateofBirth = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqDateOfBirth.DateOfBirth.ToString())}_0_0_0";
-           var expectedCacheKeyApplicationId = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0";
-           var expectedCacheKeyIncludeInactive = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_0_1_0";
-           var expectedCacheKeyIncludeRelated = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_0_0_1";
+           var expectedCacheKeyCreatedBy = $"ApplicationUserService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyCreatedOnDate = $"ApplicationUserService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedBy = $"ApplicationUserService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedOnDate = $"ApplicationUserService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyApplicationUserIdsKey = $"ApplicationUserService_Filter_0_0_0_0_{(postReqApplicationUserIds.ApplicationUserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyEmail = $"ApplicationUserService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqEmail.Email)}_0_0_0_0_0_0_0";
+           var expectedCacheKeyFirstName = $"ApplicationUserService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqFirstName.FirstName)}_0_0_0_0_0_0";
+           var expectedCacheKeyLastName = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqLastName.LastName)}_0_0_0_0_0";
+           var expectedCacheKeyDateofBirth = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqDateOfBirth.DateOfBirth.ToString())}_0_0_0_0";
+           var expectedCacheKeyApplicationId = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0";
+           var expectedCacheKeyIncludeInactive = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_0_1_0_0";
+           var expectedCacheKeyIncludeRelated = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_0_0_1_0";
 
            // Act
            var filterCreatedByResult = await _applicationUserService.Filter(postReqCreatedBy);

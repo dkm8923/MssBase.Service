@@ -158,7 +158,7 @@ namespace Logic.Security.Logic
 
                 var randomPassword = _generateRandomPassword();
 
-                entity.Password = _hashPassword(randomPassword);
+                entity.Password = LogicUtilities.HashPassword(randomPassword);
                 entity.PasswordResetRequired = true;
 
                 await dbContext.ApplicationUsers.AddAsync(entity);
@@ -243,7 +243,7 @@ namespace Logic.Security.Logic
                 
                 if (entity != null)
                 {
-                    var newHashedPassword = _hashPassword(newPassword);
+                    var newHashedPassword = LogicUtilities.HashPassword(newPassword);
                     entity.Password = newHashedPassword;
                     entity.PasswordResetRequired = true;
                     entity.LastPasswordChangeDate = CommonUtilities.GetDateTimeUtcNow();
@@ -326,7 +326,7 @@ namespace Logic.Security.Logic
                 });
 
                 //change password
-                applicationUserEntity.Password = _hashPassword(req.NewPassword);
+                applicationUserEntity.Password = LogicUtilities.HashPassword(req.NewPassword);
                 applicationUserEntity.PasswordResetRequired = false;
                 applicationUserEntity.LastPasswordChangeDate = CommonUtilities.GetDateTimeUtcNow();
                 
@@ -352,18 +352,6 @@ namespace Logic.Security.Logic
             return randomPassword;
         }
 
-        /// <summary>
-        /// Generates a hashed password using ASP.NET Core Identity's PasswordHasher.
-        /// </summary>
-        /// <param name="password"></param>
-        /// <returns></returns>
-        private string _hashPassword(string password)
-        {
-            var hasher = new PasswordHasher<object>();
-            string passwordHash = hasher.HashPassword(user: null, password: password);
-            return passwordHash;
-        }
-
         #region Validation
 
         private async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> _validateApplicationUserFilter(FilterApplicationUserLogicRequest req)
@@ -381,7 +369,7 @@ namespace Logic.Security.Logic
             if (errorValidationResult.Errors.Count == 0)
             {
                 // Validate Application exists
-                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet { IncludeInactive = true });
+                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet { IncludeInactive = true, IncludeReadOnly = true });
                 
                 if (applicationResponse.Response == null)
                 {
@@ -390,7 +378,7 @@ namespace Logic.Security.Logic
                 }
 
                 // Validate Application user email is unique
-                var emailCheck = await this.Filter(new FilterApplicationUserLogicRequest { Email = req.Email });
+                var emailCheck = await this.Filter(new FilterApplicationUserLogicRequest { Email = req.Email, IncludeReadOnly = true });
 
                 if (emailCheck.Errors.Count == 0 && emailCheck.Response.Count() > 0)
                 {

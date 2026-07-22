@@ -1,6 +1,7 @@
 ﻿using Shared.Data.Models;
 using Shared.Models;
 using Shared.Models.Contracts;
+using Microsoft.AspNetCore.Identity;
 
 namespace Shared.Logic
 {
@@ -8,6 +9,18 @@ namespace Shared.Logic
     {
         //add logic layer specific utilities here...
         
+        /// <summary>
+        /// Generates a hashed password using ASP.NET Core Identity's PasswordHasher.
+        /// </summary>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public static string HashPassword(string password)
+        {
+            var hasher = new PasswordHasher<object>();
+            string passwordHash = hasher.HashPassword(user: null, password: password);
+            return passwordHash;
+        }
+
         /// <summary>
         /// Applies Active/IncludeInactive filtering.
         /// If IncludeInactive is false, only Active records are returned.
@@ -24,6 +37,24 @@ namespace Shared.Logic
             }
 
             return query.Where(x => x.Active == true);
+        }
+
+        /// <summary>
+        /// Applies ReadOnly/IncludeReadOnly filtering.
+        /// If IncludeReadOnly is false, only non-read-only records are returned.
+        /// </summary>
+        public static IQueryable<TEntity> ApplyIncludeReadOnlyFilter<TEntity, TFilter>(
+            this IQueryable<TEntity> query,
+            TFilter filter)
+            where TEntity : AuditableEntity
+            where TFilter : BaseLogicGet
+        {
+            if (filter is null || filter.IncludeReadOnly)
+            {
+                return query;
+            }
+
+            return query.Where(x => x.ReadOnly == false);
         }
 
         /// <summary>

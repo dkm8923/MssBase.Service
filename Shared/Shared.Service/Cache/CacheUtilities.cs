@@ -23,10 +23,17 @@ namespace Shared.Service.Cache
         /// </summary>
         /// <param name="cacheKeySectionName">Service Name</param>
         /// <returns></returns>
-        public static string CreateGetAllCacheKey(string cacheKeySectionName, bool includeInactive = false, bool includeRelated = false)
+        public static string CreateGetAllCacheKey(string cacheKeySectionName, bool includeInactive = false, bool includeRelated = false, bool? includeReadOnly = null)
         {
             var includeInactiveKey = (includeInactive ? 1 : 0).ToString();
             var includeRelatedKey = (includeRelated ? 1 : 0).ToString();
+
+            if (includeReadOnly != null)
+            {
+                var includeReadOnlyKey = (includeReadOnly == true ? 1 : 0).ToString();
+                return $"{cacheKeySectionName}_{CacheKeyGetAll}_{includeInactiveKey}_{includeRelatedKey}_{includeReadOnlyKey}";
+            }
+            
             return $"{cacheKeySectionName}_{CacheKeyGetAll}_{includeInactiveKey}_{includeRelatedKey}";
         }
 
@@ -36,10 +43,17 @@ namespace Shared.Service.Cache
         /// <param name="cacheKeySectionName">Service Name</param>
         /// <param name="id">Id used to retrieve single record</param>
         /// <returns></returns>
-        public static string CreateGetByIdCacheKey(string cacheKeySectionName, long id, bool includeInactive = false, bool includeRelated = false)
+        public static string CreateGetByIdCacheKey(string cacheKeySectionName, long id, bool includeInactive = false, bool includeRelated = false, bool? includeReadOnly = null)
         {
             var includeInactiveKey = (includeInactive ? 1 : 0).ToString();
             var includeRelatedKey = (includeRelated ? 1 : 0).ToString();
+
+            if (includeReadOnly != null)
+            {
+                var includeReadOnlyKey = (includeReadOnly == true ? 1 : 0).ToString();
+                return $"{cacheKeySectionName}_{CacheKeyGetById}_{id}_{includeInactiveKey}_{includeRelatedKey}_{includeReadOnlyKey}";
+            }
+
             return $"{cacheKeySectionName}_{CacheKeyGetById}_{id}_{includeInactiveKey}_{includeRelatedKey}";
         }
 

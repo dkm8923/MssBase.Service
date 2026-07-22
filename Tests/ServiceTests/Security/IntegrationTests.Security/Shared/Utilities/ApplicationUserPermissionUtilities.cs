@@ -8,18 +8,26 @@ using Shared.Models;
 using IntegrationTests.Shared.Utilities;
 using Contract.Security.Permission;
 using Contract.Security.ApplicationUser;
+using Contract.Security;
+using Data.Security;
+using Microsoft.EntityFrameworkCore;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
 public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtilities
 {
+    private readonly ISecurityConnectionStrings _connectionStrings;
+    private readonly SecurityDBContextFactory _dbContextFactory;
+    
     protected readonly IApplicationUserPermissionLogic _applicationUserPermissionLogic;
     protected readonly IApplicationLogic _applicationLogic;
     protected readonly IApplicationUserLogic _applicationUserLogic;
     protected readonly IPermissionLogic _permissionLogic;
     
-    public ApplicationUserPermissionUtilities(IApplicationUserPermissionLogic applicationUserPermissionLogic, IApplicationLogic applicationLogic, IApplicationUserLogic applicationUserLogic, IPermissionLogic permissionLogic) 
+    public ApplicationUserPermissionUtilities(ISecurityConnectionStrings connectionStrings, IApplicationUserPermissionLogic applicationUserPermissionLogic, IApplicationLogic applicationLogic, IApplicationUserLogic applicationUserLogic, IPermissionLogic permissionLogic) 
     {
+        _connectionStrings = connectionStrings;
+        _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
         _applicationUserPermissionLogic = applicationUserPermissionLogic;
         _applicationLogic = applicationLogic;
         _applicationUserLogic = applicationUserLogic;
@@ -116,12 +124,8 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
     /// </summary>
     public async Task DeleteAllRecords()
     {
-        var recordsToDelete = await _applicationUserPermissionLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
-
-        foreach (var record in recordsToDelete.Response)
-        {
-            await _applicationUserPermissionLogic.Delete(record.ApplicationUserPermissionId);
-        }
+        using var dbContext = _dbContextFactory.CreateContextReadWrite();
+        await dbContext.ApplicationUserPermissions.ExecuteDeleteAsync();
     }
 
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors()

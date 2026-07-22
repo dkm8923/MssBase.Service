@@ -309,7 +309,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private async Task<ApplicationDto> _retrieveApplicationInfoForAuthentication(AuthenticationRequest req, IApplicationLogic applicationLogic)
     {
-        var applicationRes = await applicationLogic.Filter(new FilterApplicationLogicRequest { Name = req.ApplicationName, CurrentUser = req.Email });
+        var applicationRes = await applicationLogic.Filter(new FilterApplicationLogicRequest { Name = req.ApplicationName, CurrentUser = req.Email, IncludeReadOnly = true });
 
         if (applicationRes.Errors.Count > 0 || applicationRes.Response == null || applicationRes.Response.Count() == 0)
         {

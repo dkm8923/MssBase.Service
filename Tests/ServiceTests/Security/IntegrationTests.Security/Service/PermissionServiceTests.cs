@@ -56,7 +56,7 @@ namespace IntegrationTests.Security.Service
             var arrangeTestDataResponse = await ArrangePermissionTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"PermissionService_GetAll_0_0";
+            var expectedCacheKey = $"PermissionService_GetAll_0_0_0";
 
             // Act
             var result = await _permissionService.GetAll(new BaseServiceGet());
@@ -74,7 +74,7 @@ namespace IntegrationTests.Security.Service
             var arrangeTestDataResponse = await ArrangePermissionTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = "PermissionService_GetAll_1_0";
+            var expectedCacheKey = "PermissionService_GetAll_1_0_0";
 
             // Act
             var result = await _permissionService.GetAll(new BaseServiceGet { IncludeInactive = true });
@@ -115,7 +115,7 @@ namespace IntegrationTests.Security.Service
             var permission = arrangeTestDataResponse.ActivePermissions.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"PermissionService_GetById_{permission.PermissionId}_0_0";
+            var expectedCacheKey = $"PermissionService_GetById_{permission.PermissionId}_0_0_0";
 
             // Act
             var result = await _permissionService.GetById(permission.PermissionId, new BaseServiceGet());
@@ -134,7 +134,7 @@ namespace IntegrationTests.Security.Service
             var permission = arrangeTestDataResponse.InactivePermissions.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"PermissionService_GetById_{permission.PermissionId}_1_0";
+            var expectedCacheKey = $"PermissionService_GetById_{permission.PermissionId}_1_0_0";
 
             // Act
             var result = await _permissionService.GetById(permission.PermissionId, new BaseServiceGet { IncludeInactive = true });
@@ -202,14 +202,14 @@ namespace IntegrationTests.Security.Service
            var postReqApplicationId = new FilterPermissionServiceRequest { ApplicationId = application.ApplicationId };
            var postReqIncludeInactive = new FilterPermissionServiceRequest { IncludeInactive = true };
            
-           var expectedCacheKeyCreatedBy = $"PermissionService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0";
-           var expectedCacheKeyCreatedOnDate = $"PermissionService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedBy = $"PermissionService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0";
-           var expectedCacheKeyUpdatedOnDate = $"PermissionService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0";
-           var expectedCacheKeyPermissionIdsKey = $"PermissionService_Filter_0_0_0_0_{(postReqPermissionIds.PermissionIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0";
-           var expectedCacheKeyName = $"PermissionService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqName.Name)}_0_0";
-           var expectedCacheKeyApplicationId = $"PermissionService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0";
-           var expectedCacheKeyIncludeInactive = $"PermissionService_Filter_0_0_0_0_0_0_0_1";
+           var expectedCacheKeyCreatedBy = $"PermissionService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyCreatedOnDate = $"PermissionService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedBy = $"PermissionService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedOnDate = $"PermissionService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0";
+           var expectedCacheKeyPermissionIdsKey = $"PermissionService_Filter_0_0_0_0_{(postReqPermissionIds.PermissionIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0";
+           var expectedCacheKeyName = $"PermissionService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqName.Name)}_0_0_0";
+           var expectedCacheKeyApplicationId = $"PermissionService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0";
+           var expectedCacheKeyIncludeInactive = $"PermissionService_Filter_0_0_0_0_0_0_0_1_0";
            
             // Act
            var filterCreatedByResult = await _permissionService.Filter(postReqCreatedBy);

@@ -184,7 +184,7 @@ namespace Logic.Security.Logic
             if (errorValidationResult.Errors.Count == 0)
             {
                 // Validate Application exists
-                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet { IncludeInactive = true });
+                var applicationResponse = await applicationLogic.GetById(req.ApplicationId, new BaseLogicGet { IncludeInactive = true, IncludeReadOnly = true });
                 
                 if (applicationResponse.Response == null)
                 {
@@ -193,7 +193,7 @@ namespace Logic.Security.Logic
                 }
 
                 // Validate Permission name is unique
-                var nameCheck = await this.Filter(new FilterPermissionLogicRequest { Name = req.Name });
+                var nameCheck = await this.Filter(new FilterPermissionLogicRequest { Name = req.Name, IncludeInactive = true, IncludeReadOnly = true });
 
                 if (nameCheck.Errors.Count == 0 && nameCheck.Response.Count() > 0)
                 {

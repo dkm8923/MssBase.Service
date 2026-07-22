@@ -6,6 +6,7 @@ namespace Shared.Models
     {
         public bool IncludeInactive { get; set; } = false;
         public bool IncludeRelated { get; set; } = false;
+        public bool IncludeReadOnly { get; set; } = false;
         public string CurrentUser { get; set; } = "MssBase.Service";
     }
 }

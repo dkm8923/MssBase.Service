@@ -8,18 +8,25 @@ using Shared.Models;
 using IntegrationTests.Shared.Utilities;
 using Contract.Security.Role;
 using Contract.Security.ApplicationUser;
+using Contract.Security;
+using Data.Security;
+using Microsoft.EntityFrameworkCore;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
 public class ApplicationUserRoleUtilities : IApplicationUserRoleUtilities
 {
+    private readonly ISecurityConnectionStrings _connectionStrings;
+    private readonly SecurityDBContextFactory _dbContextFactory;
     protected readonly IApplicationUserRoleLogic _applicationUserRoleLogic;
     protected readonly IApplicationLogic _applicationLogic;
     protected readonly IApplicationUserLogic _applicationUserLogic;
     protected readonly IRoleLogic _roleLogic;
     
-    public ApplicationUserRoleUtilities(IApplicationUserRoleLogic applicationUserRoleLogic, IApplicationLogic applicationLogic, IApplicationUserLogic applicationUserLogic, IRoleLogic roleLogic) 
+    public ApplicationUserRoleUtilities(ISecurityConnectionStrings connectionStrings, IApplicationUserRoleLogic applicationUserRoleLogic, IApplicationLogic applicationLogic, IApplicationUserLogic applicationUserLogic, IRoleLogic roleLogic) 
     {
+        _connectionStrings = connectionStrings;
+        _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
         _applicationUserRoleLogic = applicationUserRoleLogic;
         _applicationLogic = applicationLogic;
         _applicationUserLogic = applicationUserLogic;
@@ -116,12 +123,8 @@ public class ApplicationUserRoleUtilities : IApplicationUserRoleUtilities
     /// </summary>
     public async Task DeleteAllRecords()
     {
-        var recordsToDelete = await _applicationUserRoleLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
-
-        foreach (var record in recordsToDelete.Response)
-        {
-            await _applicationUserRoleLogic.Delete(record.ApplicationUserRoleId);
-        }
+        using var dbContext = _dbContextFactory.CreateContextReadWrite();
+        await dbContext.ApplicationUserRoles.ExecuteDeleteAsync();
     }
 
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors()

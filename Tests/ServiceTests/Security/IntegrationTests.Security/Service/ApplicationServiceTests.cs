@@ -62,7 +62,7 @@ namespace IntegrationTests.Security.Service
             await _securityTestUtilities.Application.CreateActiveTestRecords();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"ApplicationService_GetAll_0_0";
+            var expectedCacheKey = $"ApplicationService_GetAll_0_0_0";
 
             // Act
             var result = await _applicationService.GetAll(new BaseServiceGet());
@@ -82,7 +82,7 @@ namespace IntegrationTests.Security.Service
             await _securityTestUtilities.Application.CreateActiveTestRecords();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = "ApplicationService_GetAll_1_0";
+            var expectedCacheKey = "ApplicationService_GetAll_1_0_0";
 
             // Act
             var result = await _applicationService.GetAll(new BaseServiceGet { IncludeInactive = true });
@@ -119,7 +119,7 @@ namespace IntegrationTests.Security.Service
             var arrangeTestDataResponse = await ArrangeApplicationTestDataWithRelatedData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = "ApplicationService_GetAll_0_1";
+            var expectedCacheKey = "ApplicationService_GetAll_0_1_0";
 
             // Act
             var result = await _applicationService.GetAll(new BaseServiceGet { IncludeRelated = true });
@@ -143,7 +143,7 @@ namespace IntegrationTests.Security.Service
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var expectedCacheKey = $"ApplicationService_GetById_{testRecord.ApplicationId}_0_0";
+            var expectedCacheKey = $"ApplicationService_GetById_{testRecord.ApplicationId}_0_0_0";
 
             // Act
             var result = await _applicationService.GetById(testRecord.ApplicationId, new BaseServiceGet());
@@ -162,8 +162,8 @@ namespace IntegrationTests.Security.Service
             await _cacheTestUtilities.DeleteAllKeyData();
 
             var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
-            var expectedCacheKey = $"ApplicationService_GetById_{testRecord.ApplicationId}_1_0";
-
+            var expectedCacheKey = $"ApplicationService_GetById_{testRecord.ApplicationId}_1_0_0";
+    
             // Act
             var result = await _applicationService.GetById(testRecord.ApplicationId, new BaseServiceGet { IncludeInactive = true });
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
@@ -200,7 +200,7 @@ namespace IntegrationTests.Security.Service
             var application = arrangeTestDataResponse.ActiveApplications.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"ApplicationService_GetById_{application.ApplicationId}_0_1";
+            var expectedCacheKey = $"ApplicationService_GetById_{application.ApplicationId}_0_1_0";
 
             // Act
             var result = await _applicationService.GetById(application.ApplicationId, new BaseServiceGet { IncludeRelated = true });
@@ -232,14 +232,13 @@ namespace IntegrationTests.Security.Service
            var postReqIncludeInactive = new FilterApplicationServiceRequest { IncludeInactive = true };
            var postReqIncludeRelated = new FilterApplicationServiceRequest { IncludeRelated = true };
            
-           //ApplicationService_Filter_IntegrationTest_0_0_0_0_0_0_0
-           var expectedCacheKeyCreatedBy = $"ApplicationService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0";
-           var expectedCacheKeyCreatedOnDate = $"ApplicationService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedBy = $"ApplicationService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0";
-           var expectedCacheKeyUpdatedOnDate = $"ApplicationService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0";
-           var expectedCacheKeyName = $"ApplicationService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqName.Name)}_0_0";
-           var expectedCacheKeyIncludeInactive = $"ApplicationService_Filter_0_0_0_0_0_0_1_0";
-           var expectedCacheKeyIncludeRelated = $"ApplicationService_Filter_0_0_0_0_0_0_0_1";
+           var expectedCacheKeyCreatedBy = $"ApplicationService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyCreatedOnDate = $"ApplicationService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedBy = $"ApplicationService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedOnDate = $"ApplicationService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0";
+           var expectedCacheKeyName = $"ApplicationService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqName.Name)}_0_0_0";
+           var expectedCacheKeyIncludeInactive = $"ApplicationService_Filter_0_0_0_0_0_0_1_0_0";
+           var expectedCacheKeyIncludeRelated = $"ApplicationService_Filter_0_0_0_0_0_0_0_1_0";
 
            // Act
            var filterCreatedByResult = await _applicationService.Filter(postReqCreatedBy);

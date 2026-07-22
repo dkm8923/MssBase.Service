@@ -18,6 +18,7 @@ namespace Data.Security.Converters
             {
                 ApplicationUserId = source.ApplicationUserId,
                 Active = source.Active,
+                ReadOnly = source.ReadOnly,
                 CreatedBy = source.CreatedBy,
                 CreatedOn = source.CreatedOn,
                 UpdatedBy = source.UpdatedBy,

@@ -45,11 +45,14 @@ using Dto.Security.Authentication;
 using Logic.Security.Validators.Authentication;
 using Shared.Models;
 using MssBase.Service.Shared.Authorization;
+using Microsoft.EntityFrameworkCore;
+using IntegrationTests.Shared.Models.Config;
 
 namespace IntegrationTests.Security.Shared;
 
 public class SecurityTestBase
 {
+    private readonly TestConfig _testConfig;
     private readonly ISecurityConnectionStrings _connectionStrings;
     protected readonly SecurityDBContextFactory _dbContextFactory;
     private readonly AppSettingsHelper _configHelper;
@@ -75,6 +78,7 @@ public class SecurityTestBase
         _configHelper = new AppSettingsHelper();
 
         _serviceProvider = ConfigureServices();
+        _testConfig = _serviceProvider.GetService<IOptionsMonitor<TestConfig>>().CurrentValue;
         
         //get instance of db context factory (Should be using services for 99% of DB interactions, but their are always edge cases)
         _connectionStrings = _serviceProvider.GetService<ISecurityConnectionStrings>();
@@ -97,13 +101,31 @@ public class SecurityTestBase
 
     protected async Task ClearAllSecurityTestTableData()
     {
-        await _securityTestUtilities.ApplicationUserPermission.DeleteAllRecords();
-        await _securityTestUtilities.ApplicationUserRole.DeleteAllRecords();
-        await _securityTestUtilities.RolePermission.DeleteAllRecords();
-        await _securityTestUtilities.Role.DeleteAllRecords();
-        await _securityTestUtilities.Permission.DeleteAllRecords();
-        await _securityTestUtilities.ApplicationUser.DeleteAllRecords();
-        await _securityTestUtilities.Application.DeleteAllRecords();
+        using var dbContext = _dbContextFactory.CreateContextReadWrite();
+        
+        if (_testConfig.DatabaseType == "SqlServer")
+        {
+            var query = @"
+                DELETE FROM [ApplicationUserPermission];
+                DELETE FROM [ApplicationUserRole];
+                DELETE FROM [RolePermission];
+                DELETE FROM [Role];
+                DELETE FROM [Permission];
+                DELETE FROM [ApplicationUser];
+                DELETE FROM [Application];
+            ";
+            await dbContext.Database.ExecuteSqlRawAsync(query);
+        }
+        else
+        {
+            await dbContext.ApplicationUserPermissions.ExecuteDeleteAsync();
+            await dbContext.ApplicationUserRoles.ExecuteDeleteAsync();
+            await dbContext.RolePermissions.ExecuteDeleteAsync();
+            await dbContext.Roles.ExecuteDeleteAsync();
+            await dbContext.Permissions.ExecuteDeleteAsync();
+            await dbContext.ApplicationUsers.ExecuteDeleteAsync();
+            await dbContext.Applications.ExecuteDeleteAsync();
+        }
     }
 
     protected async Task DropDatabaseAndRecreate()
@@ -992,8 +1014,9 @@ public class SecurityTestBase
         services.Configure<AuthenticationSettingsConfig>(_configHelper.Configuration.GetSection("AuthenticationSettingsConfiguration"));
         services.Configure<JwtAuthenticationConfig>(_configHelper.Configuration.GetSection("JwtAuthConfiguration"));
         services.Configure<PasswordValidationConfig>(_configHelper.Configuration.GetSection("PasswordValidationConfiguration"));
-
         services.Configure<SecurityConnectionStrings>(_configHelper.Configuration.GetSection("SecurityConnectionStrings"));
+
+        services.Configure<TestConfig>(_configHelper.Configuration.GetSection("TestConfiguration"));
 
         services.AddSingleton<ISecurityConnectionStrings>(sp =>
             sp.GetRequiredService<IOptionsMonitor<SecurityConnectionStrings>>().CurrentValue);

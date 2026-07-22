@@ -18,6 +18,7 @@ namespace Data.Security.Converters
             {
                 RolePermissionId = source.RolePermissionId,
                 Active = source.Active,
+                ReadOnly = source.ReadOnly,
                 CreatedBy = source.CreatedBy,
                 CreatedOn = source.CreatedOn,
                 UpdatedBy = source.UpdatedBy,

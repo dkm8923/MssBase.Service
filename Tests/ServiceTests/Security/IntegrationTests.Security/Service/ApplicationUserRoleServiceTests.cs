@@ -58,7 +58,7 @@ namespace IntegrationTests.Security.Service
             await ArrangeApplicationUserRoleTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"ApplicationUserRoleService_GetAll_0_0";
+            var expectedCacheKey = $"ApplicationUserRoleService_GetAll_0_0_0";
 
             // Act
             var result = await _applicationUserRoleService.GetAll(new BaseServiceGet());
@@ -76,7 +76,7 @@ namespace IntegrationTests.Security.Service
             await ArrangeApplicationUserRoleTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = "ApplicationUserRoleService_GetAll_1_0";
+            var expectedCacheKey = "ApplicationUserRoleService_GetAll_1_0_0";
 
             // Act
             var result = await _applicationUserRoleService.GetAll(new BaseServiceGet { IncludeInactive = true });
@@ -112,7 +112,7 @@ namespace IntegrationTests.Security.Service
             var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = "ApplicationUserRoleService_GetAll_0_1";
+            var expectedCacheKey = "ApplicationUserRoleService_GetAll_0_1_0";
 
             // Act
             var result = await _applicationUserRoleService.GetAll(new BaseServiceGet { IncludeRelated = true });
@@ -135,7 +135,7 @@ namespace IntegrationTests.Security.Service
             var activeApplicationUserRole = securityTestData.ActiveApplicationUserRoles.First();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"ApplicationUserRoleService_GetById_{activeApplicationUserRole.ApplicationUserRoleId}_0_0";
+            var expectedCacheKey = $"ApplicationUserRoleService_GetById_{activeApplicationUserRole.ApplicationUserRoleId}_0_0_0";
 
             // Act
             var result = await _applicationUserRoleService.GetById(activeApplicationUserRole.ApplicationUserRoleId, new BaseServiceGet());
@@ -154,7 +154,7 @@ namespace IntegrationTests.Security.Service
             var inactiveApplicationUserRole = securityTestData.InactiveApplicationUserRoles.First();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"ApplicationUserRoleService_GetById_{inactiveApplicationUserRole.ApplicationUserRoleId}_1_0";
+            var expectedCacheKey = $"ApplicationUserRoleService_GetById_{inactiveApplicationUserRole.ApplicationUserRoleId}_1_0_0";
 
             // Act
             var result = await _applicationUserRoleService.GetById(inactiveApplicationUserRole.ApplicationUserRoleId, new BaseServiceGet { IncludeInactive = true });
@@ -191,7 +191,7 @@ namespace IntegrationTests.Security.Service
             var applicationUserRole = arrangeTestDataResponse.ActiveApplicationUserRoles.FirstOrDefault();
             await _cacheTestUtilities.DeleteAllKeyData();
 
-            var expectedCacheKey = $"ApplicationUserRoleService_GetById_{applicationUserRole.ApplicationUserRoleId}_0_1";
+            var expectedCacheKey = $"ApplicationUserRoleService_GetById_{applicationUserRole.ApplicationUserRoleId}_0_1_0";
 
             // Act
             var result = await _applicationUserRoleService.GetById(applicationUserRole.ApplicationUserRoleId, new BaseServiceGet { IncludeRelated = true });
@@ -244,16 +244,16 @@ namespace IntegrationTests.Security.Service
            var postReqIncludeInactive = new FilterApplicationUserRoleServiceRequest { IncludeInactive = true };
            var postReqIncludeRelated = new FilterApplicationUserRoleServiceRequest { IncludeRelated = true };
            
-           var expectedCacheKeyCreatedBy = $"ApplicationUserRoleService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyCreatedOnDate = $"ApplicationUserRoleService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedBy = $"ApplicationUserRoleService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedOnDate = $"ApplicationUserRoleService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0";
-           var expectedCacheKeyApplicationUserRoleIdsKey = $"ApplicationUserRoleService_Filter_0_0_0_0_{(postReqApplicationUserRoleIds.ApplicationUserRoleIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0";
-           var expectedCacheKeyApplicationId = $"ApplicationUserRoleService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0_0";
-           var expectedCacheKeyApplicationUserId = $"ApplicationUserRoleService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationUserId.ApplicationUserId.ToString())}_0_0_0";
-           var expectedCacheKeyRoleId = $"ApplicationUserRoleService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqRoleId.RoleId.ToString())}_0_0";
-           var expectedCacheKeyIncludeInactive = $"ApplicationUserRoleService_Filter_0_0_0_0_0_0_0_0_1_0";
-           var expectedCacheKeyIncludeRelated = $"ApplicationUserRoleService_Filter_0_0_0_0_0_0_0_0_0_1";
+           var expectedCacheKeyCreatedBy = $"ApplicationUserRoleService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyCreatedOnDate = $"ApplicationUserRoleService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedBy = $"ApplicationUserRoleService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedOnDate = $"ApplicationUserRoleService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0";
+           var expectedCacheKeyApplicationUserRoleIdsKey = $"ApplicationUserRoleService_Filter_0_0_0_0_{(postReqApplicationUserRoleIds.ApplicationUserRoleIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0_0";
+           var expectedCacheKeyApplicationId = $"ApplicationUserRoleService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0_0_0";
+           var expectedCacheKeyApplicationUserId = $"ApplicationUserRoleService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationUserId.ApplicationUserId.ToString())}_0_0_0_0";
+           var expectedCacheKeyRoleId = $"ApplicationUserRoleService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqRoleId.RoleId.ToString())}_0_0_0";
+           var expectedCacheKeyIncludeInactive = $"ApplicationUserRoleService_Filter_0_0_0_0_0_0_0_0_1_0_0";
+           var expectedCacheKeyIncludeRelated = $"ApplicationUserRoleService_Filter_0_0_0_0_0_0_0_0_0_1_0";
            
            // Act
            var filterCreatedByResult = await _applicationUserRoleService.Filter(postReqCreatedBy);

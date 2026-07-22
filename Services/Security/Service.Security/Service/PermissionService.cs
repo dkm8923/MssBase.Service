@@ -26,13 +26,13 @@ namespace Service.Security.Service
 
         public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> GetAll(BaseServiceGet req, CancellationToken cancellationToken = default)
         {
-            var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated);
+            var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated, req.IncludeReadOnly);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.GetAll(req, cancellationToken));
         }
 
         public async Task<ErrorValidationResult<PermissionDto>> GetById(int permissionId, BaseServiceGet req, CancellationToken cancellationToken = default)
         {
-            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, permissionId, req.IncludeInactive, req.IncludeRelated);
+            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, permissionId, req.IncludeInactive, req.IncludeRelated, req.IncludeReadOnly);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.GetById(permissionId, req, cancellationToken));
         }
 
@@ -46,6 +46,7 @@ namespace Service.Security.Service
             var nameKey = CacheUtilities.CreateKeyFromString(req.Name);
             var applicationIdKey = (req.ApplicationId ?? 0).ToString();
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
+            var includeReadOnlyKey = CacheUtilities.CreateKeyFromBool(req.IncludeReadOnly);
             
             var cacheKeyName = CacheUtilities.CreateFilterCacheKey(cacheKeySectionName, new List<string> {
                  createdByKey
@@ -56,6 +57,7 @@ namespace Service.Security.Service
                 ,nameKey
                 ,applicationIdKey
                 ,includeInactiveKey
+                ,includeReadOnlyKey
             });
 
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _permissionLogic.Filter(req, cancellationToken));

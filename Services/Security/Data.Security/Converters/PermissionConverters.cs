@@ -18,6 +18,7 @@ namespace Data.Security.Converters
             {
                 PermissionId = source.PermissionId,
                 Active = source.Active,
+                ReadOnly = source.ReadOnly,
                 CreatedBy = source.CreatedBy,
                 CreatedOn = source.CreatedOn,
                 UpdatedBy = source.UpdatedBy,

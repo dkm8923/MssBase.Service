@@ -6,16 +6,23 @@ using IntegrationTests.Security.Shared.Utilities.Contracts;
 using IntegrationTests.Shared;
 using Shared.Models;
 using IntegrationTests.Shared.Utilities;
+using Contract.Security;
+using Data.Security;
+using Microsoft.EntityFrameworkCore;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
 public class PermissionUtilities : IPermissionUtilities
 {
+    private readonly ISecurityConnectionStrings _connectionStrings;
+    private readonly SecurityDBContextFactory _dbContextFactory;
     protected readonly IPermissionLogic _PermissionLogic;
     protected readonly IApplicationLogic _applicationLogic;
     
-    public PermissionUtilities(IPermissionLogic PermissionLogic, IApplicationLogic applicationLogic) 
+    public PermissionUtilities(ISecurityConnectionStrings connectionStrings, IPermissionLogic PermissionLogic, IApplicationLogic applicationLogic) 
     {
+        _connectionStrings = connectionStrings;
+        _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
         _PermissionLogic = PermissionLogic;
         _applicationLogic = applicationLogic;
     }
@@ -110,12 +117,8 @@ public class PermissionUtilities : IPermissionUtilities
     /// </summary>
     public async Task DeleteAllRecords()
     {
-        var recordsToDelete = await _PermissionLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
-
-        foreach (var record in recordsToDelete.Response)
-        {
-            await _PermissionLogic.Delete(record.PermissionId);
-        }
+        using var dbContext = _dbContextFactory.CreateContextReadWrite();
+        await dbContext.Permissions.ExecuteDeleteAsync();
     }
 
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors()

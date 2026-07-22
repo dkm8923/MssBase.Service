@@ -39,7 +39,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterApplicationLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
+            var ret = await this.Filter(new FilterApplicationLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly }, cancellationToken);
             return ret;
         }
 
@@ -48,7 +48,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<ApplicationDto>> GetById(int applicationId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterApplicationLogicRequest { ApplicationIds = new List<int> { applicationId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated });
+            var res = await this.Filter(new FilterApplicationLogicRequest { ApplicationIds = new List<int> { applicationId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly }, cancellationToken);
 
             return new ErrorValidationResult<ApplicationDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -69,15 +69,16 @@ namespace Logic.Security.Logic
                 var query = dbContext.Applications.AsQueryable().AsNoTracking();
 
                 query = query.ApplyIncludeInactiveFilter(req);
+                query = query.ApplyIncludeReadOnlyFilter(req);
                 query = query.ApplyAuditableFilters(req);
 
                 if (req.IncludeRelated)
                 {
-                    query = query.Include(application => application.ApplicationUsers).Where(au => req.IncludeInactive || au.Active)
-                                 .Include(application => application.Permissions).Where(p => req.IncludeInactive || p.Active)
-                                 .Include(application => application.Roles).Where(r => req.IncludeInactive || r.Active)
-                                 .Include(application => application.RolePermissions).Where(rp => req.IncludeInactive || rp.Active)
-                                 .Include(application => application.ApplicationUserPermissions).Where(aup => req.IncludeInactive || aup.Active);
+                    query = query.Include(application => application.ApplicationUsers).Where(au => (req.IncludeInactive || au.Active) && (req.IncludeReadOnly || !au.ReadOnly))
+                                 .Include(application => application.Permissions).Where(p => (req.IncludeInactive || p.Active) && (req.IncludeReadOnly || !p.ReadOnly))
+                                 .Include(application => application.Roles).Where(r => (req.IncludeInactive || r.Active) && (req.IncludeReadOnly || !r.ReadOnly))
+                                 .Include(application => application.RolePermissions).Where(rp => (req.IncludeInactive || rp.Active) && (req.IncludeReadOnly || !rp.ReadOnly))
+                                 .Include(application => application.ApplicationUserPermissions).Where(aup => (req.IncludeInactive || aup.Active) && (req.IncludeReadOnly || !aup.ReadOnly));
                 }
 
                 if (req.ApplicationIds != null && req.ApplicationIds.Count > 0)
@@ -129,7 +130,7 @@ namespace Logic.Security.Logic
 
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.Applications.FirstOrDefaultAsync(ent => ent.ApplicationId == applicationId);
+                var entity = await dbContext.Applications.FirstOrDefaultAsync(ent => ent.ApplicationId == applicationId  && !ent.ReadOnly);
 
                 if (entity != null)
                 {
@@ -156,7 +157,7 @@ namespace Logic.Security.Logic
             {
                 using (var dbContext = _dbContextFactory.CreateContextReadWrite())
                 {
-                    var entity = await dbContext.Applications.FirstOrDefaultAsync(ent => ent.ApplicationId == applicationId);
+                    var entity = await dbContext.Applications.FirstOrDefaultAsync(ent => ent.ApplicationId == applicationId && !ent.ReadOnly);
                     dbContext.Applications.Remove(entity);
                     await dbContext.SaveChangesAsync();
                     errorValidationResult.Response = null;
@@ -182,6 +183,17 @@ namespace Logic.Security.Logic
 
             if (errorValidationResult.Errors.Count == 0)
             {
+                if (applicationId != null && applicationId != 0)
+                {
+                    var applicationToUpdate = await this.GetById(applicationId.Value, new BaseLogicGet { IncludeInactive = true, IncludeRelated = false, IncludeReadOnly = true });
+                    
+                    // Validate Application is not read only on update
+                    if (applicationToUpdate.Response != null && applicationToUpdate.Response.ReadOnly)
+                    {
+                        return await _returnReadOnlyRecordErrorValidationResult();
+                    }
+                }
+
                 // Validate Application name is unique
                 var nameCheck = await this.Filter(new FilterApplicationLogicRequest { Name = req.Name });
 
@@ -199,13 +211,18 @@ namespace Logic.Security.Logic
 
         private async Task<ErrorValidationResult<ApplicationDto>> _validateApplicationOnDelete(int applicationId)
         {
-            var applicationErrorValidationResult = await GetById(applicationId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true });
+            var applicationErrorValidationResult = await GetById(applicationId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true, IncludeReadOnly = true });
 
             if (applicationErrorValidationResult.Response == null)
             {
                 //application for given id does not exist
                 applicationErrorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(applicationErrorValidationResult.Errors);
                 return applicationErrorValidationResult;
+            }
+
+            if (applicationErrorValidationResult.Response != null && applicationErrorValidationResult.Response.ReadOnly)
+            {
+                return await _returnReadOnlyRecordErrorValidationResult();
             }
 
             //verify no dependencies exist on application record
@@ -241,6 +258,13 @@ namespace Logic.Security.Logic
         {
             errors.Add(Constants.EntityFieldNames.Application, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationId) });
             return errors;
+        }
+
+        private async Task<ErrorValidationResult<ApplicationDto>> _returnReadOnlyRecordErrorValidationResult()
+        {
+            var errorValidationResult = new ErrorValidationResult<ApplicationDto>();
+            errorValidationResult.Errors.Add(Constants.EntityFieldNames.Application, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
+            return errorValidationResult;
         }
 
         #endregion

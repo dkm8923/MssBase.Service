@@ -6,16 +6,23 @@ using IntegrationTests.Security.Shared.Utilities.Contracts;
 using IntegrationTests.Shared;
 using Shared.Models;
 using IntegrationTests.Shared.Utilities;
+using Contract.Security;
+using Data.Security;
+using Microsoft.EntityFrameworkCore;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
 public class RoleUtilities : IRoleUtilities
 {
+    private readonly ISecurityConnectionStrings _connectionStrings;
+    private readonly SecurityDBContextFactory _dbContextFactory;
     protected readonly IRoleLogic _RoleLogic;
     protected readonly IApplicationLogic _applicationLogic;
     
-    public RoleUtilities(IRoleLogic RoleLogic, IApplicationLogic applicationLogic) 
+    public RoleUtilities(ISecurityConnectionStrings connectionStrings, IRoleLogic RoleLogic, IApplicationLogic applicationLogic) 
     {
+        _connectionStrings = connectionStrings;
+        _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);   
         _RoleLogic = RoleLogic;
         _applicationLogic = applicationLogic;
     }
@@ -110,12 +117,8 @@ public class RoleUtilities : IRoleUtilities
     /// </summary>
     public async Task DeleteAllRecords()
     {
-        var recordsToDelete = await _RoleLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
-
-        foreach (var record in recordsToDelete.Response)
-        {
-            await _RoleLogic.Delete(record.RoleId);
-        }
+        using var dbContext = _dbContextFactory.CreateContextReadWrite();
+        await dbContext.Roles.ExecuteDeleteAsync();
     }
 
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors()

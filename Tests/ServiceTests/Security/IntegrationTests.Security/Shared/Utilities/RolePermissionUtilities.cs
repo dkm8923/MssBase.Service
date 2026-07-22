@@ -8,18 +8,26 @@ using Shared.Models;
 using IntegrationTests.Shared.Utilities;
 using Contract.Security.Permission;
 using Contract.Security.Role;
+using Contract.Security;
+using Data.Security;
+using Microsoft.EntityFrameworkCore;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
 public class RolePermissionUtilities : IRolePermissionUtilities
 {
+    private readonly ISecurityConnectionStrings _connectionStrings;
+    private readonly SecurityDBContextFactory _dbContextFactory;
+
     protected readonly IRolePermissionLogic _rolePermissionLogic;
     protected readonly IApplicationLogic _applicationLogic;
     protected readonly IRoleLogic _roleLogic;
     protected readonly IPermissionLogic _permissionLogic;
     
-    public RolePermissionUtilities(IRolePermissionLogic rolePermissionLogic, IApplicationLogic applicationLogic, IRoleLogic roleLogic, IPermissionLogic permissionLogic) 
+    public RolePermissionUtilities(ISecurityConnectionStrings connectionStrings, IRolePermissionLogic rolePermissionLogic, IApplicationLogic applicationLogic, IRoleLogic roleLogic, IPermissionLogic permissionLogic) 
     {
+        _connectionStrings = connectionStrings;
+        _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
         _rolePermissionLogic = rolePermissionLogic;
         _applicationLogic = applicationLogic;
         _roleLogic = roleLogic;
@@ -116,12 +124,8 @@ public class RolePermissionUtilities : IRolePermissionUtilities
     /// </summary>
     public async Task DeleteAllRecords()
     {
-        var recordsToDelete = await _rolePermissionLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
-
-        foreach (var record in recordsToDelete.Response)
-        {
-            await _rolePermissionLogic.Delete(record.RolePermissionId);
-        }
+        using var dbContext = _dbContextFactory.CreateContextReadWrite();
+        await dbContext.RolePermissions.ExecuteDeleteAsync();
     }
 
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors()

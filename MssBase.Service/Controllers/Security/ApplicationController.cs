@@ -30,11 +30,11 @@ namespace MssBase.Service.Controllers.Security
         
         [HttpGet()]
         [RequiredPermission(UserApiPermissions.ApplicationRead)] 
-        public async Task<IActionResult> GetApplications([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetApplications([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, [FromQuery] bool includeReadOnly = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _applicationSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
+                var records = await _applicationSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated, IncludeReadOnly = includeReadOnly }, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)
@@ -47,11 +47,11 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpGet("{applicationId}", Name = "GetApplicationById")]
         [RequiredPermission(UserApiPermissions.ApplicationRead)]
-        public async Task<IActionResult> GetApplicationById(int applicationId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetApplicationById(int applicationId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, [FromQuery] bool includeReadOnly = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var record = await _applicationSvc.GetById(applicationId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
+                var record = await _applicationSvc.GetById(applicationId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated, IncludeReadOnly = includeReadOnly }, cancellationToken);
 
                 if (record.Response == null)
                 {

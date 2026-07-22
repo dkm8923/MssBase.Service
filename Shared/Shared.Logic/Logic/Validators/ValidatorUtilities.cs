@@ -42,6 +42,11 @@ namespace Shared.Logic.Validators
             return $"Record does not exist for specified {idName}!";
         }
 
+        public static string CreateRecordIsReadOnlyValidationErrorMessage()
+        {
+            return $"Record is read only and cannot be modified! (IE: ReadOnly property is set to true)";
+        }
+
         public static string SetPropertyNameOnFilterRequestValidation() 
         {
             return "FilterRequest";
