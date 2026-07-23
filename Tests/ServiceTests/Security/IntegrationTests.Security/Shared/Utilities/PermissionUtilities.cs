@@ -4,10 +4,10 @@ using Dto.Security.Permission;
 using FluentAssertions;
 using IntegrationTests.Security.Shared.Utilities.Contracts;
 using IntegrationTests.Shared;
-using Shared.Models;
 using IntegrationTests.Shared.Utilities;
 using Contract.Security;
 using Data.Security;
+using Data.Security.Converters;
 using Microsoft.EntityFrameworkCore;
 
 namespace IntegrationTests.Security.Shared.Utilities;
@@ -113,6 +113,28 @@ public class PermissionUtilities : IPermissionUtilities
     }
 
     /// <summary>
+    /// Asynchronously creates a set of predefined test active read-only permission records in the data store.
+    /// </summary>
+    /// <param name="applicationId">The ID of the application to which the permissions belong.</param>
+    /// <param name="numberOfRecordsToCreate">The number of active read-only test records to create. Default is 5.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created active read-only permission DTOs.</returns>
+    public async Task<List<PermissionDto>> CreateActiveReadOnlyTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
+    {
+        return await CreateReadOnlyTestRecords(applicationId, true, numberOfRecordsToCreate);
+    }
+
+    /// <summary>
+    /// Asynchronously creates a set of predefined test inactive read-only permission records in the data store.
+    /// </summary>
+    /// <param name="applicationId">The ID of the application to which the permissions belong.</param>
+    /// <param name="numberOfRecordsToCreate">The number of inactive read-only test records to create. Default is 5.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created inactive read-only permission DTOs.</returns>
+    public async Task<List<PermissionDto>> CreateInactiveReadOnlyTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
+    {
+        return await CreateReadOnlyTestRecords(applicationId, false, numberOfRecordsToCreate);
+    }
+
+    /// <summary>
     /// Asynchronously deletes all records, including inactive ones, from the data store.
     /// </summary>
     public async Task DeleteAllRecords()
@@ -157,6 +179,18 @@ public class PermissionUtilities : IPermissionUtilities
         };
     }
 
+    /// <summary>
+    /// Retrieves a dictionary of expected read-only field validation error messages.
+    /// </summary>
+    /// <returns>A dictionary where the key is the read-only field name and the value is a list of error messages associated with that read-only field.</returns>
+    public Dictionary<string, List<string>> GetExpectedReadOnlyErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Permission", new List<string> { "Record is read only and cannot be modified! (IE: ReadOnly property is set to true)" } }
+        };
+    }
+
     public Dictionary<string, List<string>> GetExpectedInvalidApplicationIdFieldErrors()
     {
         return new Dictionary<string, List<string>>
@@ -174,8 +208,41 @@ public class PermissionUtilities : IPermissionUtilities
         recordA.Name.Should().Be(recordB.Name);
         recordA.Description.Should().Be(recordB.Description);
         recordA.Active.Should().Be(recordB.Active);
+        recordA.ReadOnly.Should().Be(recordB.ReadOnly);
         recordA.ApplicationId.Should().Be(recordB.ApplicationId);
         recordA.CreatedBy.Should().Be(recordB.CreatedBy);
         recordA.UpdatedBy.Should().Be(recordB.UpdatedBy);
     }
+
+    #region Private
+
+    /// <summary>
+    /// Asynchronously creates a set of predefined test read-only permission records in the data store.
+    /// </summary>
+    /// <param name="active">Indicates whether the created read-only test records should be active. Default is true.</param>
+    /// <param name="numberOfRecordsToCreate">The number of read-only test records to create. Default is 5.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created read-only permission DTOs.</returns>
+    private async Task<List<PermissionDto>> CreateReadOnlyTestRecords(int applicationId, bool active = true, short numberOfRecordsToCreate = 5)
+    {
+        //create test records
+        var ret = new List<PermissionDto>();
+        
+        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
+        {
+            var insertReq = CreateInsertUpdateRequestWithRandomValues(applicationId, active);
+            var ent = insertReq.ToEntityOnInsert();
+            ent.ReadOnly = true;
+
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                await dbContext.Permissions.AddAsync(ent);
+                await dbContext.SaveChangesAsync();
+                ret.Add(ent.ToDto());
+            }
+        }
+
+        return ret;
+    }
+
+    #endregion 
 }
