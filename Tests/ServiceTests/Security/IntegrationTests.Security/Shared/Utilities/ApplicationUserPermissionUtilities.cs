@@ -120,6 +120,26 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
     }
     
     /// <summary>
+    /// Asynchronously creates a set of predefined test active read-only application user permission records in the data store.
+    /// </summary>
+    /// <param name="numberOfRecordsToCreate">The number of active read-only test records to create. Default is 5.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created active read-only application user permission DTOs.</returns>
+    // public async Task<List<ApplicationUserPermissionDto>> CreateActiveReadOnlyTestRecords(short numberOfRecordsToCreate = 5)
+    // {
+    //     return await CreateReadOnlyTestRecords(true, numberOfRecordsToCreate);
+    // }
+
+    /// <summary>
+    /// Asynchronously creates a set of predefined test inactive read-only application user permission records in the data store.
+    /// </summary>
+    /// <param name="numberOfRecordsToCreate">The number of inactive read-only test records to create. Default is 5.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created inactive read-only application user permission DTOs.</returns>
+    // public async Task<List<ApplicationUserPermissionDto>> CreateInactiveReadOnlyTestRecords(short numberOfRecordsToCreate = 5)
+    // {
+    //     return await CreateReadOnlyTestRecords(false, numberOfRecordsToCreate);
+    // }
+
+    /// <summary>
     /// Asynchronously deletes all records, including inactive ones, from the data store.
     /// </summary>
     public async Task DeleteAllRecords()
@@ -164,6 +184,18 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
    }
 
     /// <summary>
+    /// Retrieves a dictionary of expected read-only field validation error messages.
+    /// </summary>
+    /// <returns>A dictionary where the key is the read-only field name and the value is a list of error messages associated with that read-only field.</returns>
+    public Dictionary<string, List<string>> GetExpectedReadOnlyErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Application", new List<string> { "Record is read only and cannot be modified! (IE: ReadOnly property is set to true)" } }
+        };
+    }
+
+    /// <summary>
     /// Verifies that all relevant property values of two application user permission records are equal.
     /// </summary>
     public void VerifyTestRecordValuesMatch(ApplicationUserPermissionDto recordA, ApplicationUserPermissionDto recordB)
@@ -173,9 +205,45 @@ public class ApplicationUserPermissionUtilities : IApplicationUserPermissionUtil
         recordA.ApplicationUserId.Should().Be(recordB.ApplicationUserId);
         recordA.PermissionId.Should().Be(recordB.PermissionId);
         recordA.Active.Should().Be(recordB.Active);
+        recordA.ReadOnly.Should().Be(recordB.ReadOnly);
         recordA.ApplicationId.Should().Be(recordB.ApplicationId);
         recordA.CreatedBy.Should().Be(recordB.CreatedBy);
         recordA.UpdatedBy.Should().Be(recordB.UpdatedBy);
     }
+
+     #region Private
+
+    /// <summary>
+    /// Asynchronously creates a set of predefined test read-only application user permission records in the data store.
+    /// </summary>
+    /// <param name="applicationId">The ID of the application to which the application user permissions belong.</param>
+    /// <param name="applicationUserId">The ID of the application user associated with the permission.</param>
+    /// <param name="permissionId">The ID of the permission associated with the application user.</param>
+    /// <param name="active">Indicates whether the created read-only test records should be active. Default is true.</param>
+    /// <param name="numberOfRecordsToCreate">The number of read-only test records to create. Default is 5.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created read-only application user permission DTOs.</returns>
+    // private async Task<List<ApplicationUserPermissionDto>> CreateReadOnlyTestRecords(int applicationId, int applicationUserId, int permissionId, bool active = true, short numberOfRecordsToCreate = 5)
+    // {
+    //     //create test records
+    //     var ret = new List<ApplicationUserPermissionDto>();
+        
+    //     for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
+    //     {
+    //         var insertReq = CreateInsertUpdateRequestWithRandomValues(applicationId, applicationUserId, permissionId, active);
+    //         var ent = insertReq.ToEntityOnInsert();
+    //         ent.ReadOnly = true;
+
+    //         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+    //         {
+    //             await dbContext.ApplicationUserPermissions.AddAsync(ent);
+    //             await dbContext.SaveChangesAsync();
+    //             ret.Add(ent.ToDto());
+    //         }
+    //     }
+
+    //     return ret;
+    // }
+
+    #endregion 
 }
 

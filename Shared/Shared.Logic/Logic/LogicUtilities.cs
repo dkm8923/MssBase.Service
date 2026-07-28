@@ -2,6 +2,7 @@
 using Shared.Models;
 using Shared.Models.Contracts;
 using Microsoft.AspNetCore.Identity;
+using Shared.Logic.Validators;
 
 namespace Shared.Logic
 {
@@ -92,6 +93,12 @@ namespace Shared.Logic
             }
 
             return query;
+        }
+
+        public static Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors, string keyName, string idFieldName)
+        {
+            errors.Add(keyName, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(idFieldName) });
+            return errors;
         }
     }
 }

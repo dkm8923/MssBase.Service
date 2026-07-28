@@ -44,7 +44,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<IEnumerable<ApplicationUserRoleDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterApplicationUserRoleLogicRequest { IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, CurrentUser = req.CurrentUser }, cancellationToken);
+            var ret = await this.Filter(new FilterApplicationUserRoleLogicRequest { IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
 
@@ -53,7 +53,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<ApplicationUserRoleDto>> GetById(int applicationUserRoleId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterApplicationUserRoleLogicRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoleId }, IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, CurrentUser = req.CurrentUser }, cancellationToken);
+            var res = await this.Filter(new FilterApplicationUserRoleLogicRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoleId }, IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
 
             return new ErrorValidationResult<ApplicationUserRoleDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -74,6 +74,7 @@ namespace Logic.Security.Logic
                 var query = dbContext.ApplicationUserRoles.AsQueryable().AsNoTracking();
 
                 query = query.ApplyIncludeInactiveFilter(req);
+                query = query.ApplyIncludeReadOnlyFilter(req);
                 query = query.ApplyAuditableFilters(req);
 
                 if (req.IncludeRelated)

@@ -40,7 +40,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<IEnumerable<PermissionDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterPermissionLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser }, cancellationToken);
+            var ret = await this.Filter(new FilterPermissionLogicRequest { IncludeInactive = req.IncludeInactive, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
 
@@ -49,7 +49,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<PermissionDto>> GetById(int PermissionId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterPermissionLogicRequest { PermissionIds = new List<int> { PermissionId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser }, cancellationToken);
+            var res = await this.Filter(new FilterPermissionLogicRequest { PermissionIds = new List<int> { PermissionId }, IncludeInactive = req.IncludeInactive, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
 
             return new ErrorValidationResult<PermissionDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -70,6 +70,7 @@ namespace Logic.Security.Logic
                 var query = dbContext.Permissions.AsQueryable().AsNoTracking();
 
                 query = query.ApplyIncludeInactiveFilter(req);
+                query = query.ApplyIncludeReadOnlyFilter(req);
                 query = query.ApplyAuditableFilters(req);
 
                 if (req.PermissionIds != null && req.PermissionIds.Count > 0)
@@ -128,43 +129,42 @@ namespace Logic.Security.Logic
             {
                 var entity = await dbContext.Permissions.FirstOrDefaultAsync(ent => ent.PermissionId == PermissionId);
 
-                if (entity != null)
+                if (entity == null)
                 {
-                    entity = entity.UpdateEntityFromRequest(req);
-                    await dbContext.SaveChangesAsync();
-                    return new ErrorValidationResult<PermissionDto> { Response = entity.ToDto() };
-                }
-                else
-                {
-                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
+                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors); 
                     return errorValidationResult;
                 }
+
+                if (entity.ReadOnly)
+                {
+                    return await _returnReadOnlyRecordErrorValidationResult();
+                }
+
+                entity = entity.UpdateEntityFromRequest(req);
+                await dbContext.SaveChangesAsync();
+                return new ErrorValidationResult<PermissionDto> { Response = entity.ToDto() };
             }
         }
 
         /// <summary>
         /// Deletes the Permission with the specified identifier.
         /// </summary>
-        public async Task<ErrorValidationResult> Delete(int PermissionId)
+        public async Task<ErrorValidationResult> Delete(int permissionId)
         {
-            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            var errorValidationResult = await _validatePermissionOnDelete(permissionId);
+
+            if (errorValidationResult.Errors.Count == 0)
             {
-                var entity = await dbContext.Permissions.FirstOrDefaultAsync(ent => ent.PermissionId == PermissionId);
-                var errorValidationResult = new ErrorValidationResult();
-
-                if (entity != null)
+                using (var dbContext = _dbContextFactory.CreateContextReadWrite())
                 {
+                    var entity = await dbContext.Permissions.FirstOrDefaultAsync(ent => ent.PermissionId == permissionId && !ent.ReadOnly);
                     dbContext.Permissions.Remove(entity);
-
                     await dbContext.SaveChangesAsync();
+                    errorValidationResult.Response = null;
                 }
-                else
-                {
-                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
-                }
-
-                return errorValidationResult;
             }
+
+            return errorValidationResult;
         }
 
         #region Validation
@@ -176,7 +176,7 @@ namespace Logic.Security.Logic
             return errorValidationResult;
         }
 
-        private async Task<ErrorValidationResult<PermissionDto>> _validatePermissionOnInsertUpdate(IApplicationLogic applicationLogic, InsertUpdatePermissionRequest req, int? PermissionId = null)
+        private async Task<ErrorValidationResult<PermissionDto>> _validatePermissionOnInsertUpdate(IApplicationLogic applicationLogic, InsertUpdatePermissionRequest req, int? permissionId = null)
         {
             ValidationResult result = await _insertUpdatePermissionRequestValidator.ValidateAsync(req);
             var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<PermissionDto>(result);
@@ -197,7 +197,7 @@ namespace Logic.Security.Logic
 
                 if (nameCheck.Errors.Count == 0 && nameCheck.Response.Count() > 0)
                 {
-                    if ((PermissionId == null || PermissionId == 0) || (nameCheck.Response.FirstOrDefault().PermissionId != PermissionId))
+                    if ((permissionId == null || permissionId == 0) || (nameCheck.Response.FirstOrDefault().PermissionId != permissionId))
                     {
                         errorValidationResult.Errors.Add(Constants.EntityFieldNames.Name, new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage(Constants.EntityFieldNames.Name) });
                     }
@@ -207,10 +207,35 @@ namespace Logic.Security.Logic
             return errorValidationResult;
         }
 
+        private async Task<ErrorValidationResult<PermissionDto>> _validatePermissionOnDelete(int permissionId)
+        {
+            var permissionErrorValidationResult = await GetById(permissionId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true, IncludeReadOnly = true });
+
+            if (permissionErrorValidationResult.Response == null)
+            {
+                //permission for given id does not exist
+                permissionErrorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(permissionErrorValidationResult.Errors);
+                return permissionErrorValidationResult;
+            }
+
+            if (permissionErrorValidationResult.Response != null && permissionErrorValidationResult.Response.ReadOnly)
+            {
+                return await _returnReadOnlyRecordErrorValidationResult();
+            }
+
+            return permissionErrorValidationResult;
+        }
+
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add(Constants.EntityFieldNames.Permission, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.PermissionId) });
-            return errors;
+            return LogicUtilities.AddRecordNotFoundErrorToErrorValidationResult(errors, Constants.EntityFieldNames.Permission, Constants.EntityFieldNames.PermissionId);
+        }
+
+        private async Task<ErrorValidationResult<PermissionDto>> _returnReadOnlyRecordErrorValidationResult()
+        {
+            var errorValidationResult = new ErrorValidationResult<PermissionDto>();
+            errorValidationResult.Errors.Add(Constants.EntityFieldNames.Permission, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
+            return errorValidationResult;
         }
 
         #endregion

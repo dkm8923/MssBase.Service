@@ -174,7 +174,11 @@ namespace IntegrationTests.Security.Logic
 
             // Assert
             result.Response.Should().HaveCount(2);
-            result.Response.FirstOrDefault().ReadOnly.Should().BeFalse();
+            
+            foreach (var record in result.Response)
+            {
+                record.ReadOnly.Should().BeFalse();
+            }
         }
 
         #endregion
@@ -596,7 +600,6 @@ namespace IntegrationTests.Security.Logic
             }
         }
 
-        //asdfasdfasdf
         [Fact]
         public async Task Default_Filter_Should_Return_Active_ReadOnly_Data()
         {

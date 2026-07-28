@@ -50,7 +50,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterApplicationUserLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
+            var ret = await this.Filter(new FilterApplicationUserLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly, }, cancellationToken);
             return ret;
         }
 
@@ -59,7 +59,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<ApplicationUserDto>> GetById(int applicationUserId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { applicationUserId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
+            var res = await this.Filter(new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { applicationUserId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly }, cancellationToken);
 
             return new ErrorValidationResult<ApplicationUserDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -95,6 +95,7 @@ namespace Logic.Security.Logic
                 var query = dbContext.ApplicationUsers.AsQueryable().AsNoTracking();
 
                 query = query.ApplyIncludeInactiveFilter(req);
+                query = query.ApplyIncludeReadOnlyFilter(req);
                 query = query.ApplyAuditableFilters(req);
 
                 if (req.IncludeRelated)
@@ -171,7 +172,7 @@ namespace Logic.Security.Logic
         }
 
         /// <summary>
-        /// Updates the details of an existing application user.
+        /// Updates the details of an existing ApplicationUser.
         /// </summary>
         public async Task<ErrorValidationResult<ApplicationUserDto>> Update(int applicationUserId, InsertUpdateApplicationUserRequest req, IApplicationLogic applicationLogic)
         {
@@ -185,16 +186,20 @@ namespace Logic.Security.Logic
             {
                 var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
 
-                if (entity != null)
+                if (entity == null)
                 {
-                    entity = entity.UpdateEntityFromRequest(req);
-                    await dbContext.SaveChangesAsync();
-                    return new ErrorValidationResult<ApplicationUserDto> { Response = entity.ToDtoWithoutPassword() };
+                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors); 
+                    return errorValidationResult;
                 }
-                else
+
+                if (entity.ReadOnly)
                 {
-                    return _createUserNotFoundError<ApplicationUserDto>(null);
+                    return await _returnReadOnlyRecordErrorValidationResult();
                 }
+
+                entity = entity.UpdateEntityFromRequest(req);
+                await dbContext.SaveChangesAsync();
+                return new ErrorValidationResult<ApplicationUserDto> { Response = entity.ToDtoWithoutPassword() };
             }
         }
 
@@ -394,12 +399,17 @@ namespace Logic.Security.Logic
 
         private async Task<ErrorValidationResult<ApplicationUserDto>> _validateApplicationUserOnDelete(int applicationUserId)
         {
-            var applicationUserErrorValidationResult = await GetById(applicationUserId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true });
+            var applicationUserErrorValidationResult = await GetById(applicationUserId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true, IncludeReadOnly = true });
 
             if (applicationUserErrorValidationResult.Response == null)
             {
                 //application user for given id does not exist
                 return _createUserNotFoundError<ApplicationUserDto>();
+            }
+
+            if (applicationUserErrorValidationResult.Response.ReadOnly)
+            {
+                return await _returnReadOnlyRecordErrorValidationResult();
             }
 
             //verify no dependencies exist on application user record
@@ -426,6 +436,18 @@ namespace Logic.Security.Logic
                     { Constants.EntityFieldNames.ApplicationUser, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationUserId) } }
                 }
             };
+        }
+
+        private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
+        {
+            return LogicUtilities.AddRecordNotFoundErrorToErrorValidationResult(errors, Constants.EntityFieldNames.ApplicationUser, Constants.EntityFieldNames.ApplicationUserId);
+        }
+
+        private async Task<ErrorValidationResult<ApplicationUserDto>> _returnReadOnlyRecordErrorValidationResult()
+        {
+            var errorValidationResult = new ErrorValidationResult<ApplicationUserDto>();
+            errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationUser, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
+            return errorValidationResult;
         }
 
         #endregion

@@ -101,30 +101,39 @@ public class SecurityTestBase
 
     protected async Task ClearAllSecurityTestTableData()
     {
-        using var dbContext = _dbContextFactory.CreateContextReadWrite();
+        try
+        {
+            using var dbContext = _dbContextFactory.CreateContextReadWrite();
         
-        if (_testConfig.DatabaseType == "SqlServer")
-        {
-            var query = @"
-                DELETE FROM [ApplicationUserPermission];
-                DELETE FROM [ApplicationUserRole];
-                DELETE FROM [RolePermission];
-                DELETE FROM [Role];
-                DELETE FROM [Permission];
-                DELETE FROM [ApplicationUser];
-                DELETE FROM [Application];
-            ";
-            await dbContext.Database.ExecuteSqlRawAsync(query);
+            if (_testConfig.DatabaseType == "SqlServer")
+            {
+                var query = @"
+                    DELETE FROM [ApplicationUserPermission];
+                    DELETE FROM [ApplicationUserRole];
+                    DELETE FROM [RolePermission];
+                    DELETE FROM [Role];
+                    DELETE FROM [Permission];
+                    DELETE FROM [ApplicationUser_Log_Login];
+                    DELETE FROM [ApplicationUser_Log_ChangePassword];
+                    DELETE FROM [ApplicationUser];
+                    DELETE FROM [Application];
+                ";
+                await dbContext.Database.ExecuteSqlRawAsync(query);
+            }
+            else
+            {
+                await dbContext.ApplicationUserPermissions.ExecuteDeleteAsync();
+                await dbContext.ApplicationUserRoles.ExecuteDeleteAsync();
+                await dbContext.RolePermissions.ExecuteDeleteAsync();
+                await dbContext.Roles.ExecuteDeleteAsync();
+                await dbContext.Permissions.ExecuteDeleteAsync();
+                await dbContext.ApplicationUsers.ExecuteDeleteAsync();
+                await dbContext.Applications.ExecuteDeleteAsync();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            await dbContext.ApplicationUserPermissions.ExecuteDeleteAsync();
-            await dbContext.ApplicationUserRoles.ExecuteDeleteAsync();
-            await dbContext.RolePermissions.ExecuteDeleteAsync();
-            await dbContext.Roles.ExecuteDeleteAsync();
-            await dbContext.Permissions.ExecuteDeleteAsync();
-            await dbContext.ApplicationUsers.ExecuteDeleteAsync();
-            await dbContext.Applications.ExecuteDeleteAsync();
+            throw ex;
         }
     }
 
@@ -139,93 +148,100 @@ public class SecurityTestBase
 
     protected async Task<ApplicationUserDto> CreateTestUserWithPermissions(int applicationId, AssignRoleRequest req)
     {
-        var testUser = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest { 
-            Active = true, 
-            ApplicationId = applicationId, 
-            Email = TestConstants.DefaultTestUserEmail, 
-            FirstName = "Bob", 
-            LastName = "Smith", 
-            DateOfBirth = new DateTime(1987, 2, 12),
-            CurrentUser = TestConstants.CurrentUser 
-        }, _applicationLogic);
-
-        if (testUser.Response != null)
+        try
         {
-            //change password for users so they can be used for authentication testing...
-            await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = testUser.Response.ApplicationUserId, NewPassword = TestConstants.DefaultTestUserPassword, CurrentUser = TestConstants.CurrentUser });
+            var testUser = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest { 
+                Active = true, 
+                ApplicationId = applicationId, 
+                Email = TestConstants.DefaultTestUserEmail, 
+                FirstName = "Bob", 
+                LastName = "Smith", 
+                DateOfBirth = new DateTime(1987, 2, 12),
+                CurrentUser = TestConstants.CurrentUser 
+            }, _applicationLogic);
+
+            if (testUser.Response != null)
+            {
+                //change password for users so they can be used for authentication testing...
+                await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = testUser.Response.ApplicationUserId, NewPassword = TestConstants.DefaultTestUserPassword, CurrentUser = TestConstants.CurrentUser });
+            }
+
+            var applicationUserId = testUser.Response.ApplicationUserId;
+
+            //Create default application user permissions for user
+            await CreateDefaultApplicationUserPermissionsForTestUser(applicationId, applicationUserId);
+
+            if (req.ApplicationAdmin || req.ApplicationReadOnly)
+            {
+                var applicationRolesWithPermissions = await CreateDefaultApplicationRolesWithPermissions(applicationId);
+                var roleId = req.ApplicationAdmin ? applicationRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationAdmin).FirstOrDefault().RoleId 
+                    : applicationRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationReadOnly).FirstOrDefault().RoleId;
+
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
+            }
+
+            if (req.ApplicationUserAdmin || req.ApplicationUserReadOnly)
+            {
+                var applicationUserRolesWithPermissions = await CreateDefaultApplicationUserRolesWithPermissions(applicationId);
+                var roleId = req.ApplicationUserAdmin ? applicationUserRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserAdmin).FirstOrDefault().RoleId 
+                    : applicationUserRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserReadOnly).FirstOrDefault().RoleId;
+
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
+            }
+
+            if (req.ApplicationUserPermissionAdmin || req.ApplicationUserPermissionReadOnly)
+            {
+                var applicationUserPermissionRolesWithPermissions = await CreateDefaultApplicationUserPermissionRolesWithPermissions(applicationId);
+                var roleId = req.ApplicationUserPermissionAdmin ? applicationUserPermissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserPermissionAdmin).FirstOrDefault().RoleId 
+                    : applicationUserPermissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserPermissionReadOnly).FirstOrDefault().RoleId;
+
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
+            }
+
+            if (req.ApplicationUserRoleAdmin || req.ApplicationUserRoleReadOnly)
+            {
+                var applicationUserRoleRolesWithPermissions = await CreateDefaultApplicationUserRoleRolesWithPermissions(applicationId);
+                var roleId = req.ApplicationUserRoleAdmin ? applicationUserRoleRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserRoleAdmin).FirstOrDefault().RoleId 
+                    : applicationUserRoleRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserRoleReadOnly).FirstOrDefault().RoleId;
+
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
+            }
+
+            if (req.PermissionAdmin || req.PermissionReadOnly)
+            {
+                var permissionRolesWithPermissions = await CreateDefaultPermissionRolesWithPermissions(applicationId);
+                var roleId = req.PermissionAdmin ? permissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.PermissionAdmin).FirstOrDefault().RoleId 
+                    : permissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.PermissionReadOnly).FirstOrDefault().RoleId;
+
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
+            }
+
+            if (req.RoleAdmin || req.RoleReadOnly)
+            {
+                var roleRolesWithPermissions = await CreateDefaultRoleRolesWithPermissions(applicationId);
+                var roleId = req.RoleAdmin ? roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RoleAdmin).FirstOrDefault().RoleId 
+                    : roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RoleReadOnly).FirstOrDefault().RoleId;
+
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
+            }
+
+            if (req.RolePermissionAdmin || req.RolePermissionReadOnly)
+            {
+                var roleRolesWithPermissions = await CreateDefaultRolePermissionRolesWithPermissions(applicationId);
+                var roleId = req.RolePermissionAdmin ? roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RolePermissionAdmin).FirstOrDefault().RoleId 
+                    : roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RolePermissionReadOnly).FirstOrDefault().RoleId;
+
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
+            }
+
+            var ret = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet { IncludeRelated = true });
+
+            return ret.Response;
         }
-
-        var applicationUserId = testUser.Response.ApplicationUserId;
-
-        //Create default application user permissions for user
-        await CreateDefaultApplicationUserPermissionsForTestUser(applicationId, applicationUserId);
-
-        if (req.ApplicationAdmin || req.ApplicationReadOnly)
+        catch (Exception ex)
         {
-            var applicationRolesWithPermissions = await CreateDefaultApplicationRolesWithPermissions(applicationId);
-            var roleId = req.ApplicationAdmin ? applicationRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationAdmin).FirstOrDefault().RoleId 
-                : applicationRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationReadOnly).FirstOrDefault().RoleId;
-
-            await AssignRoleToUser(applicationId, applicationUserId, roleId);
+            throw ex;
         }
-
-        if (req.ApplicationUserAdmin || req.ApplicationUserReadOnly)
-        {
-            var applicationUserRolesWithPermissions = await CreateDefaultApplicationUserRolesWithPermissions(applicationId);
-            var roleId = req.ApplicationUserAdmin ? applicationUserRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserAdmin).FirstOrDefault().RoleId 
-                : applicationUserRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserReadOnly).FirstOrDefault().RoleId;
-
-            await AssignRoleToUser(applicationId, applicationUserId, roleId);
-        }
-
-        if (req.ApplicationUserPermissionAdmin || req.ApplicationUserPermissionReadOnly)
-        {
-            var applicationUserPermissionRolesWithPermissions = await CreateDefaultApplicationUserPermissionRolesWithPermissions(applicationId);
-            var roleId = req.ApplicationUserPermissionAdmin ? applicationUserPermissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserPermissionAdmin).FirstOrDefault().RoleId 
-                : applicationUserPermissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserPermissionReadOnly).FirstOrDefault().RoleId;
-
-            await AssignRoleToUser(applicationId, applicationUserId, roleId);
-        }
-
-        if (req.ApplicationUserRoleAdmin || req.ApplicationUserRoleReadOnly)
-        {
-            var applicationUserRoleRolesWithPermissions = await CreateDefaultApplicationUserRoleRolesWithPermissions(applicationId);
-            var roleId = req.ApplicationUserRoleAdmin ? applicationUserRoleRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserRoleAdmin).FirstOrDefault().RoleId 
-                : applicationUserRoleRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserRoleReadOnly).FirstOrDefault().RoleId;
-
-            await AssignRoleToUser(applicationId, applicationUserId, roleId);
-        }
-
-        if (req.PermissionAdmin || req.PermissionReadOnly)
-        {
-            var permissionRolesWithPermissions = await CreateDefaultPermissionRolesWithPermissions(applicationId);
-            var roleId = req.PermissionAdmin ? permissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.PermissionAdmin).FirstOrDefault().RoleId 
-                : permissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.PermissionReadOnly).FirstOrDefault().RoleId;
-
-            await AssignRoleToUser(applicationId, applicationUserId, roleId);
-        }
-
-        if (req.RoleAdmin || req.RoleReadOnly)
-        {
-            var roleRolesWithPermissions = await CreateDefaultRoleRolesWithPermissions(applicationId);
-            var roleId = req.RoleAdmin ? roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RoleAdmin).FirstOrDefault().RoleId 
-                : roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RoleReadOnly).FirstOrDefault().RoleId;
-
-            await AssignRoleToUser(applicationId, applicationUserId, roleId);
-        }
-
-        if (req.RolePermissionAdmin || req.RolePermissionReadOnly)
-        {
-            var roleRolesWithPermissions = await CreateDefaultRolePermissionRolesWithPermissions(applicationId);
-            var roleId = req.RolePermissionAdmin ? roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RolePermissionAdmin).FirstOrDefault().RoleId 
-                : roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RolePermissionReadOnly).FirstOrDefault().RoleId;
-
-            await AssignRoleToUser(applicationId, applicationUserId, roleId);
-        }
-
-        var ret = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet { IncludeRelated = true });
-
-        return ret.Response;
     }
 
     private async Task<List<ApplicationUserPermissionDto>> CreateDefaultApplicationUserPermissionsForTestUser(int applicationId, int applicationUserId)
@@ -623,7 +639,7 @@ public class SecurityTestBase
         return ret;
     }
 
-    protected async Task<SecurityTestData> ArrangePermissionTestData()
+    protected async Task<SecurityTestData> ArrangePermissionTestData(short numberOfActivePermissionsToCreate = 5, short numberOfInactivePermissionsToCreate = 5)
     {
         // Arrange
         var ret = new SecurityTestData();
@@ -632,8 +648,8 @@ public class SecurityTestBase
 
         ret.ActiveApplications.Add(application);
 
-        ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);;
-        ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId);
+        ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, numberOfActivePermissionsToCreate);
+        ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId, numberOfInactivePermissionsToCreate);
 
         return ret;
     }

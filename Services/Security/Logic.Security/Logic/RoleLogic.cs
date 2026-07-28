@@ -40,7 +40,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<IEnumerable<RoleDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterRoleLogicRequest { IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, CurrentUser = req.CurrentUser }, cancellationToken);
+            var ret = await this.Filter(new FilterRoleLogicRequest { IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated,IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
 
@@ -49,7 +49,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<RoleDto>> GetById(int RoleId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { RoleId }, IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, CurrentUser = req.CurrentUser }, cancellationToken);
+            var res = await this.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { RoleId }, IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
 
             return new ErrorValidationResult<RoleDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -70,6 +70,7 @@ namespace Logic.Security.Logic
                 var query = dbContext.Roles.AsQueryable().AsNoTracking();
 
                 query = query.ApplyIncludeInactiveFilter(req);
+                query = query.ApplyIncludeReadOnlyFilter(req);
                 query = query.ApplyAuditableFilters(req);
 
                 if (req.IncludeRelated)
@@ -122,9 +123,9 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Updates the details of an existing Role.
         /// </summary>
-        public async Task<ErrorValidationResult<RoleDto>> Update(int RoleId, InsertUpdateRoleRequest req, IApplicationLogic applicationLogic)
+        public async Task<ErrorValidationResult<RoleDto>> Update(int roleId, InsertUpdateRoleRequest req, IApplicationLogic applicationLogic)
         {
-            var errorValidationResult = await _validateRoleOnInsertUpdate(applicationLogic, req, RoleId);
+            var errorValidationResult = await _validateRoleOnInsertUpdate(applicationLogic, req, roleId);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
@@ -132,45 +133,44 @@ namespace Logic.Security.Logic
 
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.Roles.FirstOrDefaultAsync(ent => ent.RoleId == RoleId);
+                var entity = await dbContext.Roles.FirstOrDefaultAsync(ent => ent.RoleId == roleId);
 
-                if (entity != null)
+                if (entity == null)
                 {
-                    entity = entity.UpdateEntityFromRequest(req);
-                    await dbContext.SaveChangesAsync();
-                    return new ErrorValidationResult<RoleDto> { Response = entity.ToDto() };
-                }
-                else
-                {
-                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
+                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors); 
                     return errorValidationResult;
                 }
+
+                if (entity.ReadOnly)
+                {
+                    return await _returnReadOnlyRecordErrorValidationResult();
+                }
+
+                entity = entity.UpdateEntityFromRequest(req);
+                await dbContext.SaveChangesAsync();
+                return new ErrorValidationResult<RoleDto> { Response = entity.ToDto() };
             }
         }
 
         /// <summary>
         /// Deletes the Role with the specified identifier.
         /// </summary>
-        public async Task<ErrorValidationResult> Delete(int RoleId)
+        public async Task<ErrorValidationResult> Delete(int roleId)
         {
-            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            var errorValidationResult = await _validateRoleOnDelete(roleId);
+
+            if (errorValidationResult.Errors.Count == 0)
             {
-                var entity = await dbContext.Roles.FirstOrDefaultAsync(ent => ent.RoleId == RoleId);
-                var errorValidationResult = new ErrorValidationResult();
-
-                if (entity != null)
+                using (var dbContext = _dbContextFactory.CreateContextReadWrite())
                 {
+                    var entity = await dbContext.Roles.FirstOrDefaultAsync(ent => ent.RoleId == roleId && !ent.ReadOnly);
                     dbContext.Roles.Remove(entity);
-
                     await dbContext.SaveChangesAsync();
+                    errorValidationResult.Response = null;
                 }
-                else
-                {
-                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
-                }
-
-                return errorValidationResult;
             }
+
+            return errorValidationResult;
         }
 
         #region Validation
@@ -182,7 +182,7 @@ namespace Logic.Security.Logic
             return errorValidationResult;
         }
 
-        private async Task<ErrorValidationResult<RoleDto>> _validateRoleOnInsertUpdate(IApplicationLogic applicationLogic, InsertUpdateRoleRequest req, int? RoleId = null)
+        private async Task<ErrorValidationResult<RoleDto>> _validateRoleOnInsertUpdate(IApplicationLogic applicationLogic, InsertUpdateRoleRequest req, int? roleId = null)
         {
             ValidationResult result = await _insertUpdateRoleRequestValidator.ValidateAsync(req);
             var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<RoleDto>(result);
@@ -203,7 +203,7 @@ namespace Logic.Security.Logic
 
                 if (nameCheck.Errors.Count == 0 && nameCheck.Response.Count() > 0)
                 {
-                    if ((RoleId == null || RoleId == 0) || (nameCheck.Response.FirstOrDefault().RoleId != RoleId))
+                    if ((roleId == null || roleId == 0) || (nameCheck.Response.FirstOrDefault().RoleId != roleId))
                     {
                         errorValidationResult.Errors.Add(Constants.EntityFieldNames.Name, new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage(Constants.EntityFieldNames.Name) });
                     }
@@ -213,10 +213,36 @@ namespace Logic.Security.Logic
             return errorValidationResult;
         }
 
+        private async Task<ErrorValidationResult<RoleDto>> _validateRoleOnDelete(int roleId)
+        {
+            var roleErrorValidationResult = await GetById(roleId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true, IncludeReadOnly = true });
+
+            if (roleErrorValidationResult.Response == null)
+            {
+                //role for given id does not exist
+                roleErrorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(roleErrorValidationResult.Errors);
+                return roleErrorValidationResult;
+            }
+
+            if (roleErrorValidationResult.Response != null && roleErrorValidationResult.Response.ReadOnly)
+            {
+                return await _returnReadOnlyRecordErrorValidationResult();
+            }
+
+            return roleErrorValidationResult;
+        }
+
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
             errors.Add(Constants.EntityFieldNames.Role, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.RoleId) });
             return errors;
+        }
+
+        private async Task<ErrorValidationResult<RoleDto>> _returnReadOnlyRecordErrorValidationResult()
+        {
+            var errorValidationResult = new ErrorValidationResult<RoleDto>();
+            errorValidationResult.Errors.Add(Constants.EntityFieldNames.Role, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
+            return errorValidationResult;
         }
 
         #endregion

@@ -44,7 +44,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var ret = await this.Filter(new FilterRolePermissionLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
+            var ret = await this.Filter(new FilterRolePermissionLogicRequest { IncludeInactive = req.IncludeInactive, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
             return ret;
         }
 
@@ -53,7 +53,7 @@ namespace Logic.Security.Logic
         /// </summary>
         public async Task<ErrorValidationResult<RolePermissionDto>> GetById(int rolePermissionId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
-            var res = await this.Filter(new FilterRolePermissionLogicRequest { RolePermissionIds = new List<int> { rolePermissionId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
+            var res = await this.Filter(new FilterRolePermissionLogicRequest { RolePermissionIds = new List<int> { rolePermissionId }, IncludeInactive = req.IncludeInactive, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated }, cancellationToken);
 
             return new ErrorValidationResult<RolePermissionDto> { Response = res.Response.FirstOrDefault() };
         }
@@ -74,6 +74,7 @@ namespace Logic.Security.Logic
                 var query = dbContext.RolePermissions.AsQueryable().AsNoTracking();
 
                 query = query.ApplyIncludeInactiveFilter(req);
+                query = query.ApplyIncludeReadOnlyFilter(req);
                 query = query.ApplyAuditableFilters(req);
 
                 if (req.IncludeRelated)
