@@ -28,11 +28,11 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpGet()]
         [RequiredPermission(UserApiPermissions.RolePermissionRead)] 
-        public async Task<IActionResult> GetRolePermissions([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetRolePermissions([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, [FromQuery] bool includeReadOnly = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _rolePermissionSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
+                var records = await _rolePermissionSvc.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated, IncludeReadOnly = includeReadOnly }, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)
@@ -47,11 +47,11 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpGet("{applicationUserId}", Name = "GetRolePermissionById")]
         [RequiredPermission(UserApiPermissions.RolePermissionRead)]
-        public async Task<IActionResult> GetRolePermissionById(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetRolePermissionById(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, [FromQuery] bool includeReadOnly = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var record = await _rolePermissionSvc.GetById(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
+                var record = await _rolePermissionSvc.GetById(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated, IncludeReadOnly = includeReadOnly }, cancellationToken);
 
                 if (record.Response == null)
                 {
