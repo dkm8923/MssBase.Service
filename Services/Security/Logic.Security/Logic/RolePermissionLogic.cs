@@ -152,17 +152,20 @@ namespace Logic.Security.Logic
             {
                 var entity = await dbContext.RolePermissions.FirstOrDefaultAsync(ent => ent.RolePermissionId == rolePermissionId);
 
-                if (entity != null)
+                if (entity == null)
                 {
-                    entity = entity.UpdateEntityFromRequest(req);
-                    await dbContext.SaveChangesAsync();
-                    return new ErrorValidationResult<RolePermissionDto> { Response = entity.ToDto() };
-                }
-                else
-                {
-                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
+                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors); 
                     return errorValidationResult;
                 }
+
+                if (entity.ReadOnly)
+                {
+                    return await _returnReadOnlyRecordErrorValidationResult();
+                }
+
+                entity = entity.UpdateEntityFromRequest(req);
+                await dbContext.SaveChangesAsync();
+                return new ErrorValidationResult<RolePermissionDto> { Response = entity.ToDto() };
             }
         }
 
@@ -178,6 +181,11 @@ namespace Logic.Security.Logic
 
                 if (entity != null)
                 {
+                    if (entity.ReadOnly)
+                    {
+                        return await _returnReadOnlyRecordErrorValidationResult();
+                    }
+
                     dbContext.RolePermissions.Remove(entity);
 
                     await dbContext.SaveChangesAsync();
@@ -262,8 +270,14 @@ namespace Logic.Security.Logic
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add("RolePermission", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("RolePermissionId") });
-            return errors;
+            return LogicUtilities.AddRecordNotFoundErrorToErrorValidationResult(errors, Constants.EntityFieldNames.RolePermission, Constants.EntityFieldNames.RolePermissionId);
+        }
+
+        private async Task<ErrorValidationResult<RolePermissionDto>> _returnReadOnlyRecordErrorValidationResult()
+        {
+            var errorValidationResult = new ErrorValidationResult<RolePermissionDto>();
+            errorValidationResult.Errors.Add(Constants.EntityFieldNames.RolePermission, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
+            return errorValidationResult;
         }
 
         #endregion

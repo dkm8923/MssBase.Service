@@ -256,8 +256,7 @@ namespace Logic.Security.Logic
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add(Constants.EntityFieldNames.Application, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationId) });
-            return errors;
+            return LogicUtilities.AddRecordNotFoundErrorToErrorValidationResult(errors, Constants.EntityFieldNames.Application, Constants.EntityFieldNames.ApplicationId);
         }
 
         private async Task<ErrorValidationResult<ApplicationDto>> _returnReadOnlyRecordErrorValidationResult()

@@ -16,11 +16,13 @@
             public const string ApplicationUser = "ApplicationUser";
             public const string ApplicationUserId = "ApplicationUserId";
             public const string ApplicationUserPermission = "ApplicationUserPermission";
+            public const string ApplicationUserPermissionId = "ApplicationUserPermissionId";
             public const string ApplicationUserPermissions = "ApplicationUserPermissions";
             public const string ApplicationUserRoleId = "ApplicationUserRoleId";
             public const string ApplicationUserRole = "ApplicationUserRole";
             public const string ApplicationUserRoles = "ApplicationUserRoles";
             public const string RolePermission = "RolePermission";
+            public const string RolePermissionId = "RolePermissionId";
             public const string Role = "Role";
             public const string RoleId = "RoleId";
             public const string Permission = "Permission";

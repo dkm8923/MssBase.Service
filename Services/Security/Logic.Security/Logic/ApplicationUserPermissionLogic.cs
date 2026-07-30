@@ -152,17 +152,20 @@ namespace Logic.Security.Logic
             {
                 var entity = await dbContext.ApplicationUserPermissions.FirstOrDefaultAsync(ent => ent.ApplicationUserPermissionId == applicationUserPermissionId);
 
-                if (entity != null)
+                if (entity == null)
                 {
-                    entity = entity.UpdateEntityFromRequest(req);
-                    await dbContext.SaveChangesAsync();
-                    return new ErrorValidationResult<ApplicationUserPermissionDto> { Response = entity.ToDto() };
-                }
-                else
-                {
-                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
+                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors); 
                     return errorValidationResult;
                 }
+
+                if (entity.ReadOnly)
+                {
+                    return await _returnReadOnlyRecordErrorValidationResult();
+                }
+
+                entity = entity.UpdateEntityFromRequest(req);
+                await dbContext.SaveChangesAsync();
+                return new ErrorValidationResult<ApplicationUserPermissionDto> { Response = entity.ToDto() };
             }
         }
 
@@ -178,6 +181,11 @@ namespace Logic.Security.Logic
 
                 if (entity != null)
                 {
+                    if (entity.ReadOnly)
+                    {
+                        return await _returnReadOnlyRecordErrorValidationResult();
+                    }
+
                     dbContext.ApplicationUserPermissions.Remove(entity);
 
                     await dbContext.SaveChangesAsync();
@@ -262,8 +270,14 @@ namespace Logic.Security.Logic
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add("ApplicationUserPermission", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationUserPermissionId") });
-            return errors;
+            return LogicUtilities.AddRecordNotFoundErrorToErrorValidationResult(errors, Constants.EntityFieldNames.ApplicationUserPermission, Constants.EntityFieldNames.ApplicationUserPermissionId);
+        }
+
+        private async Task<ErrorValidationResult<ApplicationUserPermissionDto>> _returnReadOnlyRecordErrorValidationResult()
+        {
+            var errorValidationResult = new ErrorValidationResult<ApplicationUserPermissionDto>();
+            errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationUserPermission, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
+            return errorValidationResult;
         }
 
         #endregion

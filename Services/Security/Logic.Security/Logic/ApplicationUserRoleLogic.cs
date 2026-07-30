@@ -152,17 +152,20 @@ namespace Logic.Security.Logic
             {
                 var entity = await dbContext.ApplicationUserRoles.FirstOrDefaultAsync(ent => ent.ApplicationUserRoleId == applicationUserRoleId);
 
-                if (entity != null)
+                if (entity == null)
                 {
-                    entity = entity.UpdateEntityFromRequest(req);
-                    await dbContext.SaveChangesAsync();
-                    return new ErrorValidationResult<ApplicationUserRoleDto> { Response = entity.ToDto() };
-                }
-                else
-                {
-                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
+                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors); 
                     return errorValidationResult;
                 }
+
+                if (entity.ReadOnly)
+                {
+                    return await _returnReadOnlyRecordErrorValidationResult();
+                }
+
+                entity = entity.UpdateEntityFromRequest(req);
+                await dbContext.SaveChangesAsync();
+                return new ErrorValidationResult<ApplicationUserRoleDto> { Response = entity.ToDto() };
             }
         }
 
@@ -178,6 +181,11 @@ namespace Logic.Security.Logic
 
                 if (entity != null)
                 {
+                    if (entity.ReadOnly)
+                    {
+                        return await _returnReadOnlyRecordErrorValidationResult();
+                    }
+
                     dbContext.ApplicationUserRoles.Remove(entity);
 
                     await dbContext.SaveChangesAsync();
@@ -262,8 +270,14 @@ namespace Logic.Security.Logic
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
         {
-            errors.Add(Constants.EntityFieldNames.ApplicationUserRole, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(Constants.EntityFieldNames.ApplicationUserRoleId) });
-            return errors;
+            return LogicUtilities.AddRecordNotFoundErrorToErrorValidationResult(errors, Constants.EntityFieldNames.ApplicationUserRole, Constants.EntityFieldNames.ApplicationUserRoleId);
+        }
+
+        private async Task<ErrorValidationResult<ApplicationUserRoleDto>> _returnReadOnlyRecordErrorValidationResult()
+        {
+            var errorValidationResult = new ErrorValidationResult<ApplicationUserRoleDto>();
+            errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationUserRole, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
+            return errorValidationResult;
         }
 
         #endregion
