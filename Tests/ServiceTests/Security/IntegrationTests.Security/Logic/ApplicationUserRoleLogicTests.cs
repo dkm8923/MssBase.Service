@@ -15,9 +15,12 @@ namespace IntegrationTests.Security.Logic
     public class ApplicationUserRoleLogicTests : SecurityTestBase,
                                                        IDefaultLogicTestsGetAll,
                                                        IDefaultLogicTestsGetAllIncludeRelated,
+                                                       IDefaultLogicTestsGetAllReadOnly,
                                                        IDefaultLogicTestsGetById,
                                                        IDefaultLogicTestsGetByIdIncludeRelated,
+                                                       IDefaultLogicTestsGetByIdReadOnly,
                                                        IDefaultLogicTestsFilter,
+                                                       IDefaultLogicTestsFilterReadOnly,
                                                        IDefaultLogicTestsFilterIncludeRelated,  
                                                        IDefaultLogicTestsInsert, 
                                                        IDefaultLogicTestsUpdate,
@@ -125,6 +128,79 @@ namespace IntegrationTests.Security.Logic
             }
         }
 
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Active_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var applicationUserRole = await _securityTestUtilities.ApplicationUserRole.CreateActiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
+
+            // Act
+            var result = await _applicationUserRoleLogic.GetAll(new BaseLogicGet { IncludeReadOnly = true });
+
+            // Assert
+            result.Response.Should().HaveCount(1);
+            
+            foreach (var record in result.Response)
+            {
+                record.ReadOnly.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Inactive_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var roles =  await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 2);
+            await _securityTestUtilities.ApplicationUserRole.CreateActiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, roles[0].RoleId);
+            await _securityTestUtilities.ApplicationUserRole.CreateInactiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, roles[1].RoleId);
+
+            // Act
+            var result = await _applicationUserRoleLogic.GetAll(new BaseLogicGet { IncludeReadOnly = true, IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().HaveCount(2);
+            
+            foreach (var record in result.Response)
+            {
+                record.ReadOnly.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Zero_ReadOnly_Records()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var roles =  await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 3);
+            
+            await _securityTestUtilities.ApplicationUserRole.CreateActiveTestRecords(application.ApplicationId, applicationUser.ApplicationUserId, roles[0].RoleId, 1);
+            await _securityTestUtilities.ApplicationUserRole.CreateInactiveTestRecords(application.ApplicationId, applicationUser.ApplicationUserId, roles[1].RoleId, 1);
+            await _securityTestUtilities.ApplicationUserRole.CreateActiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, roles[2].RoleId);
+            
+            // Act
+            var result = await _applicationUserRoleLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().HaveCount(2);
+
+            foreach (var record in result.Response)
+            {
+                record.ReadOnly.Should().BeFalse();
+            }
+        }
+
         #endregion
 
         #region GetById
@@ -219,6 +295,60 @@ namespace IntegrationTests.Security.Logic
             // Assert
             result.Response.Should().NotBeNull();
             result.Response.Role.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Active_ReadOnly_Record()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var testRecord = await _securityTestUtilities.ApplicationUserRole.CreateActiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
+
+            // Act
+            var result = await _applicationUserRoleLogic.GetById(testRecord.ApplicationUserRoleId, new BaseLogicGet { IncludeReadOnly = true });
+
+            // Assert
+            _securityTestUtilities.ApplicationUserRole.VerifyTestRecordValuesMatch(result.Response, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Inactive_ReadOnly_Record()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var testRecord = await _securityTestUtilities.ApplicationUserRole.CreateInactiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
+    
+            // Act
+            var result = await _applicationUserRoleLogic.GetById(testRecord.ApplicationUserRoleId, new BaseLogicGet { IncludeInactive = true, IncludeReadOnly = true });
+
+            // Assert
+            _securityTestUtilities.ApplicationUserRole.VerifyTestRecordValuesMatch(result.Response, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_ReadOnly_Record()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var testRecord = await _securityTestUtilities.ApplicationUserRole.CreateActiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
+
+            // Act
+            var result = await _applicationUserRoleLogic.GetById(testRecord.ApplicationUserRoleId, new BaseLogicGet());
+
+            // Assert
+            result.Response.Should().BeNull();
         }
 
         #endregion
@@ -429,6 +559,99 @@ namespace IntegrationTests.Security.Logic
             invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
             invalidApplicationUserRoleIdsResult.Response.Should().HaveCount(0);
             invalidApplicationIdResult.Response.Should().HaveCount(0);
+            invalidRoleIdResult.Response.Should().HaveCount(0);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Active_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var applicationUserRole = await _securityTestUtilities.ApplicationUserRole.CreateActiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
+
+            var postReq = new FilterApplicationUserRoleServiceRequest { IncludeReadOnly = true };
+
+            // Act
+            var result = await _applicationUserRoleLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+            
+            foreach (var r in result.Response)
+            {
+                r.Active.Should().BeTrue();
+                r.ReadOnly.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Inactive_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var roles =  await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 2);
+            await _securityTestUtilities.ApplicationUserRole.CreateActiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, roles[0].RoleId);
+            await _securityTestUtilities.ApplicationUserRole.CreateInactiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, roles[1].RoleId);
+
+            var postReq = new FilterApplicationUserRoleServiceRequest { IncludeInactive = true, IncludeReadOnly = true };
+
+            // Act
+            var result = await _applicationUserRoleLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+
+            result.Response.Where(r => r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //activeReadOnlyRecords
+            result.Response.Where(r => !r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //inactiveReadOnlyRecords
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Zero_ReadOnly_Records()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var roles =  await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 2);
+            var testRecord = await _securityTestUtilities.ApplicationUserRole.CreateActiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, roles[0].RoleId);
+            
+            var postReqInvalidCreatedBy = new FilterApplicationUserRoleLogicRequest { CreatedBy = testRecord.CreatedBy };
+            var postReqInvalidCreatedOnDate = new FilterApplicationUserRoleLogicRequest { CreatedOnDate = DateOnly.FromDateTime(testRecord.CreatedOn) };
+            var postReqInvalidUpdatedBy = new FilterApplicationUserRoleLogicRequest { UpdatedBy = testRecord.UpdatedBy };
+            var postReqInvalidUpdatedOnDate = new FilterApplicationUserRoleLogicRequest { UpdatedOnDate = DateOnly.FromDateTime((DateTime)testRecord.UpdatedOn) };
+            var postReqInvalidApplicationUserRoleIds = new FilterApplicationUserRoleLogicRequest { ApplicationUserRoleIds = new List<int> { testRecord.ApplicationUserRoleId } };
+            var postReqInvalidApplicationId = new FilterApplicationUserRoleLogicRequest { ApplicationId = testRecord.ApplicationId };
+            var postReqInvalidApplicationUserId = new FilterApplicationUserRoleLogicRequest { ApplicationUserId = testRecord.ApplicationUserId };
+            var postReqInvalidRoleId = new FilterApplicationUserRoleLogicRequest { RoleId = testRecord.RoleId };
+
+            // Act
+            var invalidCreatedByResult = await _applicationUserRoleLogic.Filter(postReqInvalidCreatedBy);
+            var invalidCreatedOnDateResult = await _applicationUserRoleLogic.Filter(postReqInvalidCreatedOnDate);
+            var invalidUpdatedByResult = await _applicationUserRoleLogic.Filter(postReqInvalidUpdatedBy);
+            var invalidUpdatedOnDateResult = await _applicationUserRoleLogic.Filter(postReqInvalidUpdatedOnDate);
+            var invalidApplicationUserRoleIdsResult = await _applicationUserRoleLogic.Filter(postReqInvalidApplicationUserRoleIds);
+            var invalidApplicationIdResult = await _applicationUserRoleLogic.Filter(postReqInvalidApplicationId);
+            var invalidApplicationUserIdResult = await _applicationUserRoleLogic.Filter(postReqInvalidApplicationUserId);
+            var invalidRoleIdResult = await _applicationUserRoleLogic.Filter(postReqInvalidRoleId);
+
+            // Assert
+            invalidCreatedByResult.Response.Should().HaveCount(0);
+            invalidCreatedOnDateResult.Response.Should().HaveCount(0);
+            invalidUpdatedByResult.Response.Should().HaveCount(0);
+            invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
+            invalidApplicationUserRoleIdsResult.Response.Should().HaveCount(0);
+            invalidApplicationIdResult.Response.Should().HaveCount(0);
+            invalidApplicationUserIdResult.Response.Should().HaveCount(0);
             invalidRoleIdResult.Response.Should().HaveCount(0);
         }
 
