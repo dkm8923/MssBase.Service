@@ -24,7 +24,9 @@ namespace IntegrationTests.Security.Logic
                                                        IDefaultLogicTestsFilterIncludeRelated,  
                                                        IDefaultLogicTestsInsert, 
                                                        IDefaultLogicTestsUpdate,
-                                                       IDefaultLogicTestsDelete
+                                                       IDefaultLogicTestsUpdateReadOnly,
+                                                       IDefaultLogicTestsDelete,
+                                                       IDefaultLogicTestsDeleteReadOnly
     {
         #region Private
 
@@ -821,6 +823,30 @@ namespace IntegrationTests.Security.Logic
             LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
         }
 
+        [Fact]
+        public async Task Default_Update_Should_Not_Update_Record_ReadOnly_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var recordToUpdate = await _securityTestUtilities.ApplicationUserRole.CreateActiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
+
+            var updateReq = _securityTestUtilities.ApplicationUserRole.ConvertApplicationUserRoleDtoToInsertUpdateRequest(recordToUpdate);
+            
+            // Act
+            var updateResult = await _applicationUserRoleLogic.Update(recordToUpdate.ApplicationUserRoleId, updateReq, _applicationLogic, _applicationUserLogic, _roleLogic);
+
+            //Assert
+            var expectedReadOnlyError = _securityTestUtilities.ApplicationUserRole.GetExpectedReadOnlyErrors();
+
+            //Assert
+            updateResult.Errors.Should().HaveCount(1);
+            updateResult.Errors.Should().BeEquivalentTo(expectedReadOnlyError);
+        }
+
         #endregion
 
         #region Delete
@@ -851,6 +877,29 @@ namespace IntegrationTests.Security.Logic
 
             // Act
             var result = await _applicationUserRoleLogic.Delete(-1);
+
+            // Assert
+            result.Errors.Count.Should().Be(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task Default_Delete_Should_Not_Delete_Record_ReadOnly_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var testRecord = await _securityTestUtilities.ApplicationUserRole.CreateActiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
+
+
+            var expectedFieldErrors = _securityTestUtilities.ApplicationUserRole.GetExpectedReadOnlyErrors();
+
+            // Act
+            var result = await _applicationUserRoleLogic.Delete(testRecord.ApplicationUserRoleId);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);

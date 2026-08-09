@@ -2,6 +2,7 @@ using Data.Security.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shared.Data;
+using Shared.Logic;
 
 namespace Data.Security.Configuration;
 
@@ -60,14 +61,25 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
 
     public void CreateTableData(EntityTypeBuilder<ApplicationUser> builder) 
     {
+        var defaultPassword = "!0TestPassword1230!";
+
         var dataArr = new List<ApplicationUser>();
         dataArr.Add(new ApplicationUser { 
              ApplicationUserId = 1
             ,Email = "dkm8923@gmail.com"
             ,FirstName = "Dan"
             ,LastName = "Mauk"
-            ,ApplicationId = 2
+            ,DateOfBirth = new DateTime(1989, 6, 15)
+            //,Password = LogicUtilities.HashPassword(defaultPassword)
+            ,Password = defaultPassword
+            ,PasswordResetRequired = false
+            ,LastLoginDate = DataConstants.DefaultCreatedOn
+            ,LastPasswordChangeDate = DataConstants.DefaultCreatedOn
+            ,LastLockoutDate = null
+            ,FailedPasswordAttemptCount = 0
+            ,ApplicationId = 1
             ,Active = true
+            ,ReadOnly = true
         });
 
         dataArr.Add(new ApplicationUser { 
@@ -75,8 +87,17 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             ,Email = "thompsonswartz@gmail.com"
             ,FirstName = "Rachel"
             ,LastName = "Thompson"
+            ,DateOfBirth = new DateTime(1987, 12, 04)
+            //,Password = defaultPassword
+            ,Password = defaultPassword
+            ,PasswordResetRequired = false
+            ,LastLoginDate = DataConstants.DefaultCreatedOn
+            ,LastPasswordChangeDate = DataConstants.DefaultCreatedOn
+            ,LastLockoutDate = null
+            ,FailedPasswordAttemptCount = 0
             ,ApplicationId = 1
             ,Active = true
+            ,ReadOnly = true
         });
 
         DataUtilities.SetAuditFields(dataArr);

@@ -62,8 +62,36 @@ public class ApplicationUserRoleConfiguration : IEntityTypeConfiguration<Applica
     public void CreateTableData(EntityTypeBuilder<ApplicationUserRole> builder) 
     {
         var dataArr = new List<ApplicationUserRole>();
-        dataArr.Add(new ApplicationUserRole { ApplicationUserRoleId = 1, ApplicationId = 2, ApplicationUserId = 1, RoleId = 2, Active = true});
         
+        //Add All Admin Roles to Default Admin User
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 1, RoleId = 1}); //ApplicationAdmin
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 1, RoleId = 3}); //ApplicationUserAdmin
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 1, RoleId = 5}); //ApplicationUserPermissionAdmin
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 1, RoleId = 7}); //ApplicationUserRoleAdmin
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 1, RoleId = 9}); //PermissionAdmin
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 1, RoleId = 11}); //RoleAdmin
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 1, RoleId = 13}); //RolePermissionAdmin
+        
+        //Add All Readonly Roles to Default ReadOnly User
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 2, RoleId = 2}); //ApplicationReadOnly
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 2, RoleId = 4}); //ApplicationUserReadOnly
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 2, RoleId = 6}); //ApplicationUserPermissionReadOnly
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 2, RoleId = 8}); //ApplicationUserRoleReadOnly
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 2, RoleId = 10}); //PermissionReadOnly
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 2, RoleId = 12}); //RoleReadOnly
+        dataArr.Add(new ApplicationUserRole { ApplicationUserId = 2, RoleId = 14}); //RolePermissionReadOnly
+
+        var defaultAppId = 1;
+        var idx = 1;
+
+        foreach (var applicationUserRole in dataArr)
+        {
+            applicationUserRole.ApplicationId = defaultAppId;
+            applicationUserRole.ApplicationUserRoleId = idx++;
+            applicationUserRole.Active = true;
+            applicationUserRole.ReadOnly = true;
+        }
+
         DataUtilities.SetAuditFields(dataArr);
 
         builder.HasData(dataArr);

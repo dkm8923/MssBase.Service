@@ -50,9 +50,44 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
     public void CreateTableData(EntityTypeBuilder<Role> builder) 
     {
         var dataArr = new List<Role>();
-        dataArr.Add(new Role { RoleId = 1, Name = "DataAnalyst", Description = "Super User Role for EPC Application", Active = true, ApplicationId = 2 });
-        dataArr.Add(new Role { RoleId = 2, Name = "OfficeUser", Description = "Read Only Role for EPC Application", Active = true, ApplicationId = 2 });
         
+        //Default Application Roles
+        dataArr.Add(new Role { RoleId = 1, Name = "ApplicationAdmin", Description = "Full Access to all Application Functionality" });
+        dataArr.Add(new Role { RoleId = 2, Name = "ApplicationReadOnly", Description = "ReadOnly Access to Application Functionality" });
+        
+        //Default ApplicationUser Roles
+        dataArr.Add(new Role { RoleId = 3, Name = "ApplicationUserAdmin", Description = "Full Access to all ApplicationUser Functionality" });
+        dataArr.Add(new Role { RoleId = 4, Name = "ApplicationUserReadOnly", Description = "ReadOnly Access to ApplicationUser Functionality" });
+
+        //Default ApplicationUserPermission Roles
+        dataArr.Add(new Role { RoleId = 5, Name = "ApplicationUserPermissionAdmin", Description = "Full Access to all ApplicationUserPermission Functionality" });
+        dataArr.Add(new Role { RoleId = 6, Name = "ApplicationUserPermissionReadOnly", Description = "ReadOnly Access to ApplicationUserPermission Functionality" });
+
+        //Default ApplicationUserRole Roles
+        dataArr.Add(new Role { RoleId = 7, Name = "ApplicationUserRoleAdmin", Description = "Full Access to all ApplicationUserRole Functionality" });
+        dataArr.Add(new Role { RoleId = 8, Name = "ApplicationUserRoleReadOnly", Description = "ReadOnly Access to ApplicationUserRole Functionality" });
+
+        //Default Permission Roles
+        dataArr.Add(new Role { RoleId = 9, Name = "PermissionAdmin", Description = "Full Access to all Permission Functionality" });
+        dataArr.Add(new Role { RoleId = 10, Name = "PermissionReadOnly", Description = "ReadOnly Access to Permission Functionality" });
+
+        //Default Role Roles
+        dataArr.Add(new Role { RoleId = 11, Name = "RoleAdmin", Description = "Full Access to all Role Functionality" });
+        dataArr.Add(new Role { RoleId = 12, Name = "RoleReadOnly", Description = "ReadOnly Access to Role Functionality" });
+
+        //Default RolePermission Roles
+        dataArr.Add(new Role { RoleId = 13, Name = "RolePermissionAdmin", Description = "Full Access to all RolePermission Functionality" });
+        dataArr.Add(new Role { RoleId = 14, Name = "RolePermissionReadOnly", Description = "ReadOnly Access to RolePermission Functionality" });
+
+        var defaultAppId = 1;
+        
+        foreach (var role in dataArr)
+        {
+            role.ApplicationId = defaultAppId;
+            role.Active = true;
+            role.ReadOnly = true;
+        }
+
         DataUtilities.SetAuditFields(dataArr);
 
         builder.HasData(dataArr);
