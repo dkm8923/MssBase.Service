@@ -15,13 +15,18 @@ namespace IntegrationTests.Security.Logic
     public class RolePermissionLogicTests : SecurityTestBase,
                                             IDefaultLogicTestsGetAll,
                                             IDefaultLogicTestsGetAllIncludeRelated,
+                                            IDefaultLogicTestsGetAllReadOnly,
                                             IDefaultLogicTestsGetById,
                                             IDefaultLogicTestsGetByIdIncludeRelated,
+                                            IDefaultLogicTestsGetByIdReadOnly,
                                             IDefaultLogicTestsFilter,
-                                            IDefaultLogicTestsFilterIncludeRelated,  
+                                            IDefaultLogicTestsFilterIncludeRelated,
+                                            IDefaultLogicTestsFilterReadOnly,
                                             IDefaultLogicTestsInsert, 
                                             IDefaultLogicTestsUpdate,
-                                            IDefaultLogicTestsDelete
+                                            IDefaultLogicTestsUpdateReadOnly,
+                                            IDefaultLogicTestsDelete,
+                                            IDefaultLogicTestsDeleteReadOnly
     {
         #region Private
 
@@ -125,6 +130,79 @@ namespace IntegrationTests.Security.Logic
             }
         }
 
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Active_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var permission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var rolePermission = await _securityTestUtilities.RolePermission.CreateActiveReadOnlyTestRecord(application.ApplicationId, role.RoleId, permission.PermissionId);
+
+            // Act
+            var result = await _rolePermissionLogic.GetAll(new BaseLogicGet { IncludeReadOnly = true });
+
+            // Assert
+            result.Response.Should().HaveCount(1);
+            
+            foreach (var record in result.Response)
+            {
+                record.ReadOnly.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Inactive_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var permission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 2)).FirstOrDefault();
+            var roles =  await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 2);
+            await _securityTestUtilities.RolePermission.CreateActiveReadOnlyTestRecord(application.ApplicationId, roles[0].RoleId, permission.PermissionId);
+            await _securityTestUtilities.RolePermission.CreateInactiveReadOnlyTestRecord(application.ApplicationId, roles[1].RoleId, permission.PermissionId);
+
+            // Act
+            var result = await _rolePermissionLogic.GetAll(new BaseLogicGet { IncludeReadOnly = true, IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().HaveCount(2);
+            
+            foreach (var record in result.Response)
+            {
+                record.ReadOnly.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Zero_ReadOnly_Records()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var permission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var roles =  await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 3);
+            
+            await _securityTestUtilities.RolePermission.CreateActiveTestRecords(application.ApplicationId, roles[0].RoleId, permission.PermissionId, 1);
+            await _securityTestUtilities.RolePermission.CreateInactiveTestRecords(application.ApplicationId, roles[1].RoleId, permission.PermissionId, 1);
+            await _securityTestUtilities.RolePermission.CreateActiveReadOnlyTestRecord(application.ApplicationId, roles[2].RoleId, permission.PermissionId);
+            
+            // Act
+            var result = await _rolePermissionLogic.GetAll(new BaseLogicGet { IncludeInactive = true });
+
+            // Assert
+            result.Response.Should().HaveCount(2);
+
+            foreach (var record in result.Response)
+            {
+                record.ReadOnly.Should().BeFalse();
+            }
+        }
+
         #endregion
 
         #region GetById
@@ -219,6 +297,60 @@ namespace IntegrationTests.Security.Logic
             // Assert
             result.Response.Should().NotBeNull();
             result.Response.Permission.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Active_ReadOnly_Record()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var permission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var testRecord = await _securityTestUtilities.RolePermission.CreateActiveReadOnlyTestRecord(application.ApplicationId, role.RoleId, permission.PermissionId);
+
+            // Act
+            var result = await _rolePermissionLogic.GetById(testRecord.RolePermissionId, new BaseLogicGet { IncludeReadOnly = true });
+
+            // Assert
+            _securityTestUtilities.RolePermission.VerifyTestRecordValuesMatch(result.Response, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Inactive_ReadOnly_Record()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var permission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var testRecord = await _securityTestUtilities.RolePermission.CreateInactiveReadOnlyTestRecord(application.ApplicationId, role.RoleId, permission.PermissionId);
+    
+            // Act
+            var result = await _rolePermissionLogic.GetById(testRecord.RolePermissionId, new BaseLogicGet { IncludeInactive = true, IncludeReadOnly = true });
+
+            // Assert
+            _securityTestUtilities.RolePermission.VerifyTestRecordValuesMatch(result.Response, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_ReadOnly_Record()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var permission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var testRecord = await _securityTestUtilities.RolePermission.CreateActiveReadOnlyTestRecord(application.ApplicationId, role.RoleId, permission.PermissionId);
+
+            // Act
+            var result = await _rolePermissionLogic.GetById(testRecord.RolePermissionId, new BaseLogicGet());
+
+            // Assert
+            result.Response.Should().BeNull();
         }
 
         #endregion
@@ -431,6 +563,99 @@ namespace IntegrationTests.Security.Logic
             invalidPermissionIdResult.Response.Should().HaveCount(0);
         }
 
+        [Fact]
+        public async Task Default_Filter_Should_Return_Active_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var permission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var rolePermission = await _securityTestUtilities.RolePermission.CreateActiveReadOnlyTestRecord(application.ApplicationId, role.RoleId, permission.PermissionId);
+
+            var postReq = new FilterRolePermissionServiceRequest { IncludeReadOnly = true };
+
+            // Act
+            var result = await _rolePermissionLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
+            
+            foreach (var r in result.Response)
+            {
+                r.Active.Should().BeTrue();
+                r.ReadOnly.Should().BeTrue();
+            }
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Inactive_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var permission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var roles =  await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 2);
+            await _securityTestUtilities.RolePermission.CreateActiveReadOnlyTestRecord(application.ApplicationId, roles[0].RoleId, permission.PermissionId);
+            await _securityTestUtilities.RolePermission.CreateInactiveReadOnlyTestRecord(application.ApplicationId, roles[1].RoleId, permission.PermissionId);
+
+            var postReq = new FilterRolePermissionServiceRequest { IncludeInactive = true, IncludeReadOnly = true };
+
+            // Act
+            var result = await _rolePermissionLogic.Filter(postReq);
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+
+            result.Response.Where(r => r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //activeReadOnlyRecords
+            result.Response.Where(r => !r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //inactiveReadOnlyRecords
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Zero_ReadOnly_Records()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var permission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var roles =  await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 2);
+            var testRecord = await _securityTestUtilities.RolePermission.CreateActiveReadOnlyTestRecord(application.ApplicationId, roles[0].RoleId, permission.PermissionId);
+            
+            var postReqInvalidCreatedBy = new FilterRolePermissionServiceRequest { CreatedBy = testRecord.CreatedBy };
+            var postReqInvalidCreatedOnDate = new FilterRolePermissionServiceRequest { CreatedOnDate = DateOnly.FromDateTime(testRecord.CreatedOn) };
+            var postReqInvalidUpdatedBy = new FilterRolePermissionServiceRequest { UpdatedBy = testRecord.UpdatedBy };
+            var postReqInvalidUpdatedOnDate = new FilterRolePermissionServiceRequest { UpdatedOnDate = DateOnly.FromDateTime((DateTime)testRecord.UpdatedOn) };
+            var postReqInvalidRolePermissionIds = new FilterRolePermissionServiceRequest { RolePermissionIds = new List<int> { testRecord.RolePermissionId } };
+            var postReqInvalidApplicationId = new FilterRolePermissionServiceRequest { ApplicationId = testRecord.ApplicationId };
+            var postReqInvalidRoleId = new FilterRolePermissionServiceRequest { RoleId = testRecord.RoleId };
+            var postReqInvalidPermissionId = new FilterRolePermissionServiceRequest { PermissionId = testRecord.PermissionId };
+
+            // Act
+            var invalidCreatedByResult = await _rolePermissionLogic.Filter(postReqInvalidCreatedBy);
+            var invalidCreatedOnDateResult = await _rolePermissionLogic.Filter(postReqInvalidCreatedOnDate);
+            var invalidUpdatedByResult = await _rolePermissionLogic.Filter(postReqInvalidUpdatedBy);
+            var invalidUpdatedOnDateResult = await _rolePermissionLogic.Filter(postReqInvalidUpdatedOnDate);
+            var invalidRolePermissionIdsResult = await _rolePermissionLogic.Filter(postReqInvalidRolePermissionIds);
+            var invalidApplicationIdResult = await _rolePermissionLogic.Filter(postReqInvalidApplicationId);
+            var invalidRoleIdResult = await _rolePermissionLogic.Filter(postReqInvalidRoleId);
+            var invalidPermissionIdResult = await _rolePermissionLogic.Filter(postReqInvalidPermissionId);
+
+            // Assert
+            invalidCreatedByResult.Response.Should().HaveCount(0);
+            invalidCreatedOnDateResult.Response.Should().HaveCount(0);
+            invalidUpdatedByResult.Response.Should().HaveCount(0);
+            invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
+            invalidRolePermissionIdsResult.Response.Should().HaveCount(0);
+            invalidApplicationIdResult.Response.Should().HaveCount(0);
+            invalidRoleIdResult.Response.Should().HaveCount(0);
+            invalidPermissionIdResult.Response.Should().HaveCount(0);
+        }
+
         #endregion
 
         #region Insert
@@ -595,6 +820,30 @@ namespace IntegrationTests.Security.Logic
             LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
         }
 
+        [Fact]
+        public async Task Default_Update_Should_Not_Update_Record_ReadOnly_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var permission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var recordToUpdate = await _securityTestUtilities.RolePermission.CreateActiveReadOnlyTestRecord(application.ApplicationId, role.RoleId, permission.PermissionId);
+
+            var updateReq = _securityTestUtilities.RolePermission.ConvertRolePermissionDtoToInsertUpdateRequest(recordToUpdate);
+            
+            // Act
+            var updateResult = await _rolePermissionLogic.Update(recordToUpdate.RolePermissionId, updateReq, _applicationLogic, _roleLogic, _permissionLogic);
+
+            //Assert
+            var expectedReadOnlyError = _securityTestUtilities.RolePermission.GetExpectedReadOnlyErrors();
+
+            //Assert
+            updateResult.Errors.Should().HaveCount(1);
+            updateResult.Errors.Should().BeEquivalentTo(expectedReadOnlyError);
+        }
+
         #endregion
 
         #region Delete
@@ -625,6 +874,28 @@ namespace IntegrationTests.Security.Logic
 
             // Act
             var result = await _rolePermissionLogic.Delete(-1);
+
+            // Assert
+            result.Errors.Count.Should().Be(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task Default_Delete_Should_Not_Delete_Record_ReadOnly_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            
+            var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
+            var permission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
+            var testRecord = await _securityTestUtilities.RolePermission.CreateActiveReadOnlyTestRecord(application.ApplicationId, role.RoleId, permission.PermissionId);
+
+            var expectedFieldErrors = _securityTestUtilities.RolePermission.GetExpectedReadOnlyErrors();
+
+            // Act
+            var result = await _rolePermissionLogic.Delete(testRecord.RolePermissionId);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);

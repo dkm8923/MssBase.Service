@@ -824,7 +824,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Default_Update_Should_Not_Update_Record_ReadOnly_Error()
+        public async Task Default_Update_Should_Not_Update_Record_ReadOnly_Error() // Implements IDefaultLogicTestsUpdateReadOnly
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -894,7 +894,6 @@ namespace IntegrationTests.Security.Logic
             var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
             var role =  (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).FirstOrDefault();
             var testRecord = await _securityTestUtilities.ApplicationUserRole.CreateActiveReadOnlyTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
-
 
             var expectedFieldErrors = _securityTestUtilities.ApplicationUserRole.GetExpectedReadOnlyErrors();
 
