@@ -7,6 +7,8 @@ public interface IApplicationUserPermissionUtilities
     public Task DeleteAllRecords();
     public Task<List<ApplicationUserPermissionDto>> CreateActiveTestRecords(int applicationId, int applicationUserId, int permissionId, short numberOfRecordsToCreate = 5);
     public Task<List<ApplicationUserPermissionDto>> CreateInactiveTestRecords(int applicationId, int applicationUserId, int permissionId, short numberOfRecordsToCreate = 5);
+    public Task<ApplicationUserPermissionDto> CreateActiveReadOnlyTestRecord(int applicationId, int applicationUserId, int permissionId);
+    public Task<ApplicationUserPermissionDto> CreateInactiveReadOnlyTestRecord(int applicationId, int applicationUserId, int permissionId);
     public Task<ApplicationUserPermissionDto> CreateSingleApplicationUserPermissionTestRecord(int applicationId, int applicationUserId, int permissionId, bool active = true);
     public InsertUpdateApplicationUserPermissionRequest CreateInsertUpdateRequestWithMaxLengthErrors(int applicationId, int applicationUserId, int permissionId);
     public InsertUpdateApplicationUserPermissionRequest CreateInsertUpdateRequestWithSpecificValues(int applicationId, int applicationUserId, int permissionId, bool active = true);
@@ -14,6 +16,7 @@ public interface IApplicationUserPermissionUtilities
     public void VerifyTestRecordValuesMatch(ApplicationUserPermissionDto recordA, ApplicationUserPermissionDto recordB);
     public Dictionary<string, List<string>> GetExpectedRecordDoesNotExistErrors();
     public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedReadOnlyErrors();
     public Dictionary<string, List<string>> GetExpectedRequiredFieldErrors();
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors();
 }
