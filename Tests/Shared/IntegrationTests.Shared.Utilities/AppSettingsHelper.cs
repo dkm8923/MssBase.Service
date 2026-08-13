@@ -10,7 +10,7 @@ namespace Tests.Shared
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                .AddJsonFile("appsettings.IntegrationTest.json", optional: false, reloadOnChange: true);
 
             Configuration = builder.Build();
         }
