@@ -28,11 +28,11 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpGet()]
         [RequiredPermission(UserApiPermissions.RoleRead)]
-        public async Task<IActionResult> GetRoles([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetRoles([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, [FromQuery] bool includeReadOnly = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _roleService.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
+                var records = await _roleService.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated, IncludeReadOnly = includeReadOnly }, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)
@@ -47,7 +47,7 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpGet("{roleId}", Name = "GetRoleById")]
         [RequiredPermission(UserApiPermissions.RoleRead)]
-        public async Task<IActionResult> GetRoleById(int roleId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetRoleById(int roleId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, [FromQuery] bool includeReadOnly = false, CancellationToken cancellationToken = default)
         {
             try
             {

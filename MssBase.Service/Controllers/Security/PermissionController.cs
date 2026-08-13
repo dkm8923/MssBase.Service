@@ -28,11 +28,11 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpGet()]
         [RequiredPermission(UserApiPermissions.PermissionRead)] 
-        public async Task<IActionResult> GetPermissions([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetPermissions([FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeReadOnly = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var records = await _permissionService.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, cancellationToken);
+                var records = await _permissionService.GetAll(new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeReadOnly = includeReadOnly }, cancellationToken);
                 return Ok(records);
             }
             catch (Exception ex)
@@ -47,11 +47,11 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpGet("{permissionId}", Name = "GetPermissionById")]
         [RequiredPermission(UserApiPermissions.PermissionRead)] 
-        public async Task<IActionResult> GetPermissionById(int permissionId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetPermissionById(int permissionId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeReadOnly = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var record = await _permissionService.GetById(permissionId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive }, cancellationToken);
+                var record = await _permissionService.GetById(permissionId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeReadOnly = includeReadOnly }, cancellationToken);
 
                 if (record.Response == null)
                 {

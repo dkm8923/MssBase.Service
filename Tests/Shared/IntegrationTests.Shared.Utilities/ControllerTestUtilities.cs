@@ -254,6 +254,11 @@ namespace IntegrationTests.Shared
         {
             return $"IncludeRelated={includeRelated}";
         }
+        
+        public static string CreateIncludeReadOnlyQueryStringParm(bool includeReadOnly)
+        {
+            return $"IncludeReadOnly={includeReadOnly}";
+        }
 
         public static string AddQueryStringParmToApiEndPointUrl(string apiEndPoint, string queryStringParm)
         {
@@ -356,6 +361,11 @@ namespace IntegrationTests.Shared
             if (queryStringParms.IncludeRelated) 
             {
                 apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateIncludeRelatedQueryStringParm(queryStringParms.IncludeRelated));
+            }
+
+            if (queryStringParms.IncludeReadOnly) 
+            {
+                apiEndPoint = AddQueryStringParmToApiEndPointUrl(apiEndPoint, CreateIncludeReadOnlyQueryStringParm(queryStringParms.IncludeReadOnly));
             }
 
             return apiEndPoint;
