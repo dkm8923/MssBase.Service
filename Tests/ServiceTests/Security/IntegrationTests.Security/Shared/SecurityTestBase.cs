@@ -499,6 +499,18 @@ public class SecurityTestBase
         return ret;
     }
 
+    protected async Task<SecurityTestData> ArrangeReadOnlyApplicationTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        
+        ret.ActiveApplications = await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords();
+        ret.InactiveApplications = await _securityTestUtilities.Application.CreateInactiveReadOnlyTestRecords();
+
+        return ret;
+    }
+
     protected async Task<SecurityTestData> ArrangeApplicationTestDataWithRelatedData()
     {
         // Arrange
