@@ -51,7 +51,7 @@ namespace MssBase.Service.Controllers.Security
         {
             try
             {
-                var record = await _roleService.GetById(roleId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated }, cancellationToken);
+                var record = await _roleService.GetById(roleId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated, IncludeReadOnly = includeReadOnly }, cancellationToken);
 
                 if (record.Response == null)
                 {
