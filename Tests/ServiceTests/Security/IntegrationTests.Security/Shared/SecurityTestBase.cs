@@ -287,7 +287,7 @@ public class SecurityTestBase
             CurrentUser = TestConstants.CurrentUser
         });
 
-        var createdPermissions =await CreatePermissions(testPermissions);
+        var createdPermissions = await CreatePermissions(testPermissions);
 
         var createdApplicationUserPermissions = new List<ApplicationUserPermissionDto>();
         
@@ -578,6 +578,21 @@ public class SecurityTestBase
         return ret;
     }
 
+    protected async Task<SecurityTestData> ArrangeReadOnlyApplicationUserTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        
+        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+        ret.ActiveApplications.Add(application);
+
+        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
+        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
+
+        return ret;
+    }
+
     protected async Task<ErrorValidationResult> ArrangeApplicationUserPasswordChangeHistoryTestData(int applicationUserId)
     {
         var passwordChangeResponse = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = applicationUserId, NewPassword = TestConstants.DefaultTestUserPassword + "1", CurrentUser = TestConstants.CurrentUser });
@@ -654,6 +669,22 @@ public class SecurityTestBase
         return ret;
     }
 
+    protected async Task<SecurityTestData> ArrangeReadOnlyPermissionTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        
+        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+        ret.ActiveApplications.Add(application);
+
+        ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
+        ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
+
+        return ret;
+    }
+
+
     protected async Task<SecurityTestData> ArrangeRoleTestData()
     {
         // Arrange
@@ -665,6 +696,21 @@ public class SecurityTestBase
 
         ret.ActiveRoles = await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId);;
         ret.InactiveRoles = await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId);
+
+        return ret;
+    }
+
+    protected async Task<SecurityTestData> ArrangeReadOnlyRoleTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        
+        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+        ret.ActiveApplications.Add(application);
+
+        ret.ActiveRoles = await _securityTestUtilities.Role.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
+        ret.InactiveRoles = await _securityTestUtilities.Role.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
 
         return ret;
     }
@@ -683,13 +729,13 @@ public class SecurityTestBase
         
         foreach (var activeRole in ret.ActiveRoles)
         {
-            //create 5 active RolePermission records
+            //create active RolePermission record(s)
             foreach (var activePermission in activePermissions) 
             {
                 activeRolePermissions.Add(await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, activeRole.RoleId, activePermission.PermissionId));
             }
 
-            //create 5 inactive RolePermission records
+            //create inactive RolePermission record(s)
             foreach (var inactivePermission in inactivePermissions) 
             {
                 inactiveRolePermissions.Add(await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, activeRole.RoleId, inactivePermission.PermissionId, false));
@@ -698,7 +744,7 @@ public class SecurityTestBase
 
         foreach (var inactiveRole in ret.InactiveRoles)
         {
-            //create 5 inactive RolePermission records
+            //create inactive RolePermission record(s)
             foreach (var inactivePermission in inactivePermissions) 
             {
                 inactiveRolePermissions.Add(await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, inactiveRole.RoleId, inactivePermission.PermissionId, false));

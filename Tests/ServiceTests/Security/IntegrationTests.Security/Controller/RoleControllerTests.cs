@@ -10,6 +10,7 @@ using IntegrationTests.Shared.Utilities;
 using IntegrationTests.Shared.Utilities.Contracts.Controller;
 using Dto.Security.Application;
 using IntegrationTests.Shared.Models;
+using IntegrationTests.Shared.Utilities.Contracts.Logic;
 
 namespace IntegrationTests.Security.Controller
 {
@@ -18,13 +19,18 @@ namespace IntegrationTests.Security.Controller
                                                   IClassFixture<WebApplicationFactory<Program>>,
                                                   IDefaultControllerTestsGetAll,
                                                   IDefaultControllerTestsGetAllIncludeRelated,
+                                                  IDefaultLogicTestsGetAllReadOnly,
                                                   IDefaultControllerTestsGetById,
                                                   IDefaultControllerTestsGetByIdIncludeRelated,
+                                                  IDefaultLogicTestsGetByIdReadOnly,
                                                   IDefaultControllerTestsFilter,
-                                                  IDefaultControllerTestsFilterIncludeRelated,  
+                                                  IDefaultControllerTestsFilterIncludeRelated,
+                                                  IDefaultLogicTestsFilterReadOnly,  
                                                   IDefaultControllerTestsInsert,
                                                   IDefaultControllerTestsUpdate,
-                                                  IDefaultControllerTestsDelete
+                                                  IDefaultLogicTestsUpdateReadOnly,
+                                                  IDefaultControllerTestsDelete,
+                                                  IDefaultLogicTestsDeleteReadOnly
     {
         private readonly HttpClient _client;
         private readonly string _defaultRoleApiEndPoint = ApiEndPoints.Security.Role.Base;
@@ -214,6 +220,75 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             getAllResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Active_ReadOnly_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(new HttpGetRequestParms {
+                Client = _client, 
+                ApiEndPoint = _defaultRoleApiEndPoint, 
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeReadOnly = true, DeleteCache = true } 
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+
+            var readOnlyRecordCt = result.Response.Count(x => x.ReadOnly);
+            readOnlyRecordCt.Should().BeGreaterThan(0);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Inactive_ReadOnly_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(new HttpGetRequestParms {
+                Client = _client, 
+                ApiEndPoint = _defaultRoleApiEndPoint, 
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeReadOnly = true, IncludeInactive = true, DeleteCache = true } 
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+
+            var readOnlyInactiveRecordCt = result.Response.Count(x => x.ReadOnly && !x.Active);
+            readOnlyInactiveRecordCt.Should().BeGreaterThan(0);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Zero_ReadOnly_Records()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(new HttpGetRequestParms {
+                Client = _client, 
+                ApiEndPoint = _defaultRoleApiEndPoint, 
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeInactive = true, DeleteCache = true } 
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+
+            var readOnlyRecordCt = result.Response.Count(x => x.ReadOnly);
+            readOnlyRecordCt.Should().Be(0);
         }
 
         #endregion
@@ -435,6 +510,77 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             getByIdResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Active_ReadOnly_Record()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveRoles.Where(x => x.ReadOnly).FirstOrDefault();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RoleDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultRoleApiEndPoint,
+                RecordId = testRecord.RoleId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeReadOnly = true, DeleteCache = true }
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            _securityTestUtilities.Role.VerifyTestRecordValuesMatch(result.Response, testRecord);
+            result.Response.Active.Should().BeTrue();
+            result.Response.ReadOnly.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Return_Inactive_ReadOnly_Record()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.InactiveRoles.Where(x => x.ReadOnly).FirstOrDefault();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RoleDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultRoleApiEndPoint,
+                RecordId = testRecord.RoleId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeInactive = true, IncludeReadOnly = true, DeleteCache = true }
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            _securityTestUtilities.Role.VerifyTestRecordValuesMatch(result.Response, testRecord);
+            result.Response.Active.Should().BeFalse();
+            result.Response.ReadOnly.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_ReadOnly_Record()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveRoles.Where(x => x.ReadOnly).FirstOrDefault();
+
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<RoleDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultRoleApiEndPoint,
+                RecordId = testRecord.RoleId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true },
+                ExpectedStatusCode = System.Net.HttpStatusCode.NotFound
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().BeNull();
         }
 
         #endregion
@@ -708,6 +854,78 @@ namespace IntegrationTests.Security.Controller
             filterResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
+        [Fact]
+        public async Task Default_Filter_Should_Return_Active_ReadOnly_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+
+            var postReq = new FilterRoleServiceRequest { IncludeReadOnly = true, DeleteCache = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RoleDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultRoleApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+            
+            var activeRecordCt = result.Response.Count(x => x.Active);
+            activeRecordCt.Should().Be(result.Response.Count);
+
+            var readOnlyRecordCt = result.Response.Count(x => x.ReadOnly);
+            readOnlyRecordCt.Should().BeGreaterThan(0);
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Inactive_ReadOnly_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+
+            var postReq = new FilterRoleServiceRequest { IncludeInactive = true, IncludeReadOnly = true, DeleteCache = true };
+
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RoleDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultRoleApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+
+            result.Response.Where(r => r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //activeReadOnlyRecords
+            result.Response.Where(r => !r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //inactiveReadOnlyRecords
+        }
+
+        [Fact]
+        public async Task Default_Filter_Should_Return_Zero_ReadOnly_Records()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveRoles.First();
+
+            var postReqInvalidName = new FilterRoleServiceRequest { Name = testRecord.Name, DeleteCache = true };
+            
+            // Act
+            var invalidNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RoleDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultRoleApiEndPoint, Token = token, RequestObject = postReqInvalidName });
+
+            // Assert
+            invalidNameResult.Response.Should().HaveCount(0);
+        }
+
         #endregion
 
         #region Insert
@@ -892,6 +1110,34 @@ namespace IntegrationTests.Security.Controller
             updateResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
 
+        [Fact]
+        public async Task Default_Update_Should_Not_Update_Record_ReadOnly_Error()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveRoles[0];
+
+            var expectedFieldErrors = _securityTestUtilities.Role.GetExpectedReadOnlyErrors();
+
+            var updateReq = new InsertUpdateRoleRequest
+            {
+                Name = "name update",
+                Description = "description update",
+                Active = false,
+                ApplicationId = testRecord.ApplicationId,
+                CurrentUser = TestConstants.CurrentUser
+            };
+
+            // Act
+            var updateResult = await ControllerTestUtilities.UpdateRecord(_client, _defaultRoleApiEndPoint, updateReq, testRecord.RoleId, token);
+            var errorValidationResult = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult>(updateResult);
+
+            // Assert
+            errorValidationResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, errorValidationResult.Errors);
+        }
+
         #endregion
 
         #region Delete
@@ -983,6 +1229,25 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             deleteResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task Default_Delete_Should_Not_Delete_Record_ReadOnly_Error()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveRoles[0];
+
+            var expectedFieldErrors = _securityTestUtilities.Role.GetExpectedReadOnlyErrors();
+
+            // Act
+            var deleteResult = await ControllerTestUtilities.DeleteRecord(_client, _defaultRoleApiEndPoint, testRecord.RoleId, token);
+            var errorValidationResult = await ControllerTestUtilities.GetResponseContent<ErrorValidationResult>(deleteResult);
+
+            // Assert
+            errorValidationResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, errorValidationResult.Errors);
         }
 
         #endregion
