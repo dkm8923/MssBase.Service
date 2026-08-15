@@ -57,7 +57,8 @@ namespace IntegrationTests.Security.Controller
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpGetRequestParms {
                 Client = _client, 
                 ApiEndPoint = _defaultApplicationUserRoleApiEndPoint,
-                Token = token 
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
 
             // Assert
@@ -97,7 +98,8 @@ namespace IntegrationTests.Security.Controller
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpGetRequestParms { 
                 Client = _client, 
                 ApiEndPoint = _defaultApplicationUserRoleApiEndPoint, 
-                Token = token
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
 
             // Assert
@@ -169,7 +171,8 @@ namespace IntegrationTests.Security.Controller
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpGetRequestParms {
                 Client = _client,
                 ApiEndPoint = _defaultApplicationUserRoleApiEndPoint,
-                Token = token
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
 
             // Assert
@@ -296,7 +299,8 @@ namespace IntegrationTests.Security.Controller
                 Client = _client, 
                 ApiEndPoint = _defaultApplicationUserRoleApiEndPoint,
                 RecordId = testRecord.ApplicationUserRoleId,
-                Token = token
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
 
             // Assert
@@ -318,7 +322,8 @@ namespace IntegrationTests.Security.Controller
                 ApiEndPoint = _defaultApplicationUserRoleApiEndPoint,
                 RecordId = testRecord.ApplicationUserRoleId,
                 Token = token,
-                ExpectedStatusCode = HttpStatusCode.NotFound
+                ExpectedStatusCode = HttpStatusCode.NotFound,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
             
             // Assert
@@ -363,7 +368,8 @@ namespace IntegrationTests.Security.Controller
                 ApiEndPoint = _defaultApplicationUserRoleApiEndPoint,
                 RecordId = id,
                 Token = token,
-                ExpectedStatusCode = HttpStatusCode.NotFound
+                ExpectedStatusCode = HttpStatusCode.NotFound,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
 
             // Assert
@@ -567,7 +573,7 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var postReq = new FilterApplicationUserRoleServiceRequest { };
+            var postReq = new FilterApplicationUserRoleServiceRequest { DeleteCache = true };
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpPostRequestParms
@@ -590,7 +596,7 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var postReq = new FilterApplicationUserRoleServiceRequest { IncludeInactive = true };
+            var postReq = new FilterApplicationUserRoleServiceRequest { IncludeInactive = true, DeleteCache = true };
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpPostRequestParms
@@ -642,14 +648,14 @@ namespace IntegrationTests.Security.Controller
             var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             
-            var postReqInvalidCreatedBy = new FilterApplicationUserRoleServiceRequest { CreatedBy = "TestCreatedBy" };
-            var postReqInvalidCreatedOnDate = new FilterApplicationUserRoleServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000") };
-            var postReqInvalidUpdatedBy = new FilterApplicationUserRoleServiceRequest { UpdatedBy = "TestUpdatedBy" };
-            var postReqInvalidUpdatedOnDate = new FilterApplicationUserRoleServiceRequest { UpdatedOnDate = DateOnly.Parse("1/1/2000") };
-            var postReqInvalidApplicationUserRoleIds = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { 9999 } };
-            var postReqInvalidApplicationId = new FilterApplicationUserRoleServiceRequest { ApplicationId = 9999 };
-            var postReqInvalidApplicationUserIds = new FilterApplicationUserRoleServiceRequest { ApplicationUserId = 9999 };
-            var postReqInvalidRoleIds = new FilterApplicationUserRoleServiceRequest { RoleId = 9999 };
+            var postReqInvalidCreatedBy = new FilterApplicationUserRoleServiceRequest { CreatedBy = "TestCreatedBy", DeleteCache = true };
+            var postReqInvalidCreatedOnDate = new FilterApplicationUserRoleServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000"), DeleteCache = true };
+            var postReqInvalidUpdatedBy = new FilterApplicationUserRoleServiceRequest { UpdatedBy = "TestUpdatedBy", DeleteCache = true };
+            var postReqInvalidUpdatedOnDate = new FilterApplicationUserRoleServiceRequest { UpdatedOnDate = DateOnly.Parse("1/1/2000"), DeleteCache = true };
+            var postReqInvalidApplicationUserRoleIds = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { 9999 }, DeleteCache = true };
+            var postReqInvalidApplicationId = new FilterApplicationUserRoleServiceRequest { ApplicationId = 9999, DeleteCache = true };
+            var postReqInvalidApplicationUserIds = new FilterApplicationUserRoleServiceRequest { ApplicationUserId = 9999, DeleteCache = true };
+            var postReqInvalidRoleIds = new FilterApplicationUserRoleServiceRequest { RoleId = 9999, DeleteCache = true };
 
             // Act
             var invalidCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserRoleApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedBy });
@@ -680,7 +686,7 @@ namespace IntegrationTests.Security.Controller
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var applicationUserRoles = arrangeTestDataResponse.ActiveApplicationUserRoles.Take(5).ToList();
             
-            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoles[0].ApplicationUserRoleId, applicationUserRoles[1].ApplicationUserRoleId }, IncludeRelated = true };
+            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoles[0].ApplicationUserRoleId, applicationUserRoles[1].ApplicationUserRoleId }, IncludeRelated = true, DeleteCache = true };
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpPostRequestParms
@@ -712,7 +718,7 @@ namespace IntegrationTests.Security.Controller
             var activeApplicationUserRoles = arrangeTestDataResponse.ActiveApplicationUserRoles.Take(5).ToList();
             var inactiveApplicationUserRoles = arrangeTestDataResponse.InactiveApplicationUserRoles.Take(5).ToList();
 
-            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { activeApplicationUserRoles[0].ApplicationUserRoleId, activeApplicationUserRoles[1].ApplicationUserRoleId, inactiveApplicationUserRoles[0].ApplicationUserRoleId, inactiveApplicationUserRoles[1].ApplicationUserRoleId }, IncludeRelated = true, IncludeInactive = true };
+            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { activeApplicationUserRoles[0].ApplicationUserRoleId, activeApplicationUserRoles[1].ApplicationUserRoleId, inactiveApplicationUserRoles[0].ApplicationUserRoleId, inactiveApplicationUserRoles[1].ApplicationUserRoleId }, IncludeRelated = true, IncludeInactive = true, DeleteCache = true };
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpPostRequestParms
@@ -739,7 +745,7 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var postReq = new FilterApplicationUserRoleServiceRequest();
+            var postReq = new FilterApplicationUserRoleServiceRequest { DeleteCache = true };
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpPostRequestParms

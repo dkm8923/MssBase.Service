@@ -56,7 +56,8 @@ namespace IntegrationTests.Security.Controller
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(new HttpGetRequestParms { 
                 Client = _client, 
                 ApiEndPoint = _defaultApplicationApiEndPoint,
-                Token = token 
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
 
             // Assert
@@ -96,7 +97,8 @@ namespace IntegrationTests.Security.Controller
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(new HttpGetRequestParms { 
                 Client = _client, 
                 ApiEndPoint = _defaultApplicationApiEndPoint,
-                Token = token
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
 
             // Assert
@@ -193,7 +195,8 @@ namespace IntegrationTests.Security.Controller
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<ApplicationDto>>(new HttpGetRequestParms {
                 Client = _client,
                 ApiEndPoint = _defaultApplicationApiEndPoint,
-                Token = token
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
 
             // Assert
@@ -293,7 +296,8 @@ namespace IntegrationTests.Security.Controller
                 Client = _client, 
                 ApiEndPoint = _defaultApplicationApiEndPoint,
                 RecordId = testRecord.ApplicationId,
-                Token = token
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
 
             // Assert
@@ -315,7 +319,8 @@ namespace IntegrationTests.Security.Controller
                 ApiEndPoint = _defaultApplicationApiEndPoint,
                 RecordId = testRecord.ApplicationId,
                 Token = token,
-                ExpectedStatusCode = HttpStatusCode.NotFound
+                ExpectedStatusCode = HttpStatusCode.NotFound,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
             
             // Assert
@@ -360,7 +365,8 @@ namespace IntegrationTests.Security.Controller
                 ApiEndPoint = _defaultApplicationApiEndPoint,
                 RecordId = id,
                 Token = token,
-                ExpectedStatusCode = HttpStatusCode.NotFound
+                ExpectedStatusCode = HttpStatusCode.NotFound,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
             });
 
             // Assert
@@ -596,7 +602,7 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var postReq = new FilterApplicationServiceRequest { };
+            var postReq = new FilterApplicationServiceRequest { DeleteCache = true };
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms
@@ -619,7 +625,7 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var postReq = new FilterApplicationServiceRequest { IncludeInactive = true };
+            var postReq = new FilterApplicationServiceRequest { IncludeInactive = true, DeleteCache = true };
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms
@@ -644,18 +650,18 @@ namespace IntegrationTests.Security.Controller
             var testRecord = arrangeTestDataResponse.ActiveApplications[0];
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
-            var postReqCreatedBy = new FilterApplicationServiceRequest { CreatedBy = TestConstants.CurrentUser };
-            var postReqCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-            var postReqUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = TestConstants.CurrentUser };
-            var postReqUpdatedOnDate = new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-            var postReqName = new FilterApplicationServiceRequest { Name = testRecord.Name };
+            var postReqCreatedBy = new FilterApplicationServiceRequest { CreatedBy = TestConstants.CurrentUser, DeleteCache = true };
+            var postReqCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow), DeleteCache = true };
+            var postReqUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = TestConstants.CurrentUser, DeleteCache = true };
+            var postReqUpdatedOnDate = new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow), DeleteCache = true };
+            var postReqName = new FilterApplicationServiceRequest { Name = testRecord.Name, DeleteCache = true };
             
             // Act
-            var filterCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint,Token = token, RequestObject = postReqCreatedBy });
-            var filterCreatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint,Token = token, RequestObject = postReqCreatedOnDate });
-            var filterUpdatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint,Token = token, RequestObject = postReqUpdatedBy });
-            var filterUpdatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint,Token = token, RequestObject = postReqUpdatedOnDate });
-            var filterNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint,Token = token, RequestObject = postReqName });
+            var filterCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint, Token = token, RequestObject = postReqCreatedBy });
+            var filterCreatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint, Token = token, RequestObject = postReqCreatedOnDate });
+            var filterUpdatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint, Token = token, RequestObject = postReqUpdatedBy });
+            var filterUpdatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint, Token = token, RequestObject = postReqUpdatedOnDate });
+            var filterNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint, Token = token, RequestObject = postReqName });
             
             // Assert
             filterCreatedByResult.Response.Should().HaveCountGreaterThan(0);
@@ -698,11 +704,11 @@ namespace IntegrationTests.Security.Controller
             var arrangeTestDataResponse = await ArrangeApplicationTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
-            var postReqInvalidCreatedBy = new FilterApplicationServiceRequest { CreatedBy = "TestCreatedBy" };
-            var postReqInvalidCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000") };
-            var postReqInvalidUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = "TestUpdatedBy" };
-            var postReqInvalidUpdatedOnDate = new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.Parse("1/1/2000") };
-            var postReqInvalidName = new FilterApplicationServiceRequest { Name = "asdfasfasdfsd" };
+            var postReqInvalidCreatedBy = new FilterApplicationServiceRequest { CreatedBy = "TestCreatedBy", DeleteCache = true };
+            var postReqInvalidCreatedOnDate = new FilterApplicationServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000"), DeleteCache = true };
+            var postReqInvalidUpdatedBy = new FilterApplicationServiceRequest { UpdatedBy = "TestUpdatedBy", DeleteCache = true };
+            var postReqInvalidUpdatedOnDate = new FilterApplicationServiceRequest { UpdatedOnDate = DateOnly.Parse("1/1/2000"), DeleteCache = true };
+            var postReqInvalidName = new FilterApplicationServiceRequest { Name = "asdfasfasdfsd", DeleteCache = true };
             
             // Act
             var invalidCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedBy });

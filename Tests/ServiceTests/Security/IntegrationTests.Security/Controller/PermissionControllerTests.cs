@@ -50,7 +50,8 @@ namespace IntegrationTests.Security.Controller
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<PermissionDto>>(new HttpGetRequestParms { 
                 Client = _client, 
                 ApiEndPoint = _defaultPermissionApiEndPoint, 
-                Token = token 
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true }
             });
 
             // Assert
@@ -90,7 +91,8 @@ namespace IntegrationTests.Security.Controller
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<PermissionDto>>(new HttpGetRequestParms { 
                 Client = _client, 
                 ApiEndPoint = _defaultPermissionApiEndPoint, 
-                Token = token
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true }
             });
 
             // Assert
@@ -212,7 +214,8 @@ namespace IntegrationTests.Security.Controller
                 Client = _client, 
                 ApiEndPoint = _defaultPermissionApiEndPoint,
                 RecordId = testRecord.PermissionId,
-                Token = token
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true }
             });
 
             // Assert
@@ -234,7 +237,8 @@ namespace IntegrationTests.Security.Controller
                 ApiEndPoint = _defaultPermissionApiEndPoint,
                 RecordId = testRecord.PermissionId,
                 Token = token,
-                ExpectedStatusCode = HttpStatusCode.NotFound
+                ExpectedStatusCode = HttpStatusCode.NotFound,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true }
             });
             
             // Assert
@@ -279,7 +283,8 @@ namespace IntegrationTests.Security.Controller
                 ApiEndPoint = _defaultPermissionApiEndPoint,
                 RecordId = id,
                 Token = token,
-                ExpectedStatusCode = HttpStatusCode.NotFound
+                ExpectedStatusCode = HttpStatusCode.NotFound,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true }
             });
 
             // Assert
@@ -414,7 +419,7 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangePermissionTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var postReq = new FilterPermissionServiceRequest { };
+            var postReq = new FilterPermissionServiceRequest { DeleteCache = true };
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<PermissionDto>>(new HttpPostRequestParms
@@ -437,7 +442,7 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangePermissionTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var postReq = new FilterPermissionServiceRequest { IncludeInactive = true };
+            var postReq = new FilterPermissionServiceRequest { IncludeInactive = true, DeleteCache = true };
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<PermissionDto>>(new HttpPostRequestParms
@@ -462,11 +467,11 @@ namespace IntegrationTests.Security.Controller
             var testPermission = arrangeTestDataResponse.ActivePermissions[0];
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
-            var postReqCreatedBy = new FilterPermissionServiceRequest { CreatedBy = TestConstants.CurrentUser };
-            var postReqCreatedOnDate = new FilterPermissionServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-            var postReqUpdatedBy = new FilterPermissionServiceRequest { UpdatedBy = TestConstants.CurrentUser };
-            var postReqUpdatedOnDate = new FilterPermissionServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-            var postReqName = new FilterPermissionServiceRequest { Name = testPermission.Name };
+            var postReqCreatedBy = new FilterPermissionServiceRequest { CreatedBy = TestConstants.CurrentUser, DeleteCache = true };
+            var postReqCreatedOnDate = new FilterPermissionServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow), DeleteCache = true };
+            var postReqUpdatedBy = new FilterPermissionServiceRequest { UpdatedBy = TestConstants.CurrentUser, DeleteCache = true };
+            var postReqUpdatedOnDate = new FilterPermissionServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow), DeleteCache = true };
+            var postReqName = new FilterPermissionServiceRequest { Name = testPermission.Name, DeleteCache = true };
             
             // Act
             var filterCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<PermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultPermissionApiEndPoint,Token = token, RequestObject = postReqCreatedBy });
@@ -516,11 +521,11 @@ namespace IntegrationTests.Security.Controller
             var arrangeTestDataResponse = await ArrangePermissionTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
-            var postReqInvalidCreatedBy = new FilterPermissionServiceRequest { CreatedBy = "TestCreatedBy" };
-            var postReqInvalidCreatedOnDate = new FilterPermissionServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000") };
-            var postReqInvalidUpdatedBy = new FilterPermissionServiceRequest { UpdatedBy = "TestUpdatedBy" };
-            var postReqInvalidUpdatedOnDate = new FilterPermissionServiceRequest { UpdatedOnDate = DateOnly.Parse("1/1/2000") };
-            var postReqInvalidName = new FilterPermissionServiceRequest { Name = "asdfasfasdfsd" };
+            var postReqInvalidCreatedBy = new FilterPermissionServiceRequest { CreatedBy = "TestCreatedBy", DeleteCache = true };
+            var postReqInvalidCreatedOnDate = new FilterPermissionServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000"), DeleteCache = true };
+            var postReqInvalidUpdatedBy = new FilterPermissionServiceRequest { UpdatedBy = "TestUpdatedBy", DeleteCache = true };
+            var postReqInvalidUpdatedOnDate = new FilterPermissionServiceRequest { UpdatedOnDate = DateOnly.Parse("1/1/2000"), DeleteCache = true };
+            var postReqInvalidName = new FilterPermissionServiceRequest { Name = "asdfasfasdfsd", DeleteCache = true };
             
             // Act
             var invalidCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<PermissionDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultPermissionApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedBy });
