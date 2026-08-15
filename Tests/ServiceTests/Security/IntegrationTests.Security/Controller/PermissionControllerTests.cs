@@ -25,6 +25,7 @@ namespace IntegrationTests.Security.Controller
                                                   IDefaultLogicTestsFilterReadOnly,
                                                   IDefaultControllerTestsInsert,
                                                   IDefaultControllerTestsUpdate,
+                                                  IDefaultLogicTestsUpdateReadOnly,
                                                   IDefaultControllerTestsDelete,
                                                   IDefaultLogicTestsDeleteReadOnly
     {
