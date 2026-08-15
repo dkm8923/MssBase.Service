@@ -3,7 +3,6 @@ using Dto.Security.Role;
 using Dto.Security.Role.Service;
 using FluentAssertions;
 using IntegrationTests.Security.Shared;
-using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities;
 using IntegrationTests.Shared.Utilities.Contracts.Service;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,8 +15,10 @@ namespace IntegrationTests.Security.Service
     public class RoleServiceTests : SecurityTestBase,
                                                IDefaultServiceTestsGetAll,
                                                IDefaultServiceTestsGetAllIncludeRelated,
+                                               IDefaultServiceTestsGetAllReadOnly,
                                                IDefaultServiceTestsGetById,
                                                IDefaultServiceTestsGetByIdIncludeRelated,
+                                               IDefaultServiceTestsGetByIdReadOnly,
                                                IDefaultServiceTestsFilter,
                                                IDefaultServiceTestsInsert,
                                                IDefaultServiceTestsUpdate,
@@ -106,6 +107,25 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
+        public async Task Default_GetAll_IncludeReadOnly_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = "RoleService_GetAll_0_0_1";
+
+            // Act
+            var result = await _roleService.GetAll(new BaseServiceGet { IncludeReadOnly = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+            var cacheKeyData = await _cacheTestUtilities.GetKeyData<List<RoleDto>>(expectedCacheKey);
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().HaveCountGreaterThan(0);
+        }
+
+        [Fact]
         public async Task Default_GetAll_Should_Not_Cache_And_Return_Zero_Records()
         {
             // Arrange
@@ -185,6 +205,25 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
+        public async Task Default_GetById_IncludeReadOnly_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyRoleTestData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var testRecord = arrangeTestDataResponse.ActiveRoles.FirstOrDefault();
+            var expectedCacheKey = $"RoleService_GetById_{testRecord.RoleId}_0_0_1";
+    
+            // Act
+            var result = await _roleService.GetById(testRecord.RoleId, new BaseServiceGet { IncludeReadOnly = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
+        [Fact]
         public async Task Default_GetById_Unused_Id_Should_Not_Cache()
         {
             // Arrange
@@ -214,6 +253,8 @@ namespace IntegrationTests.Security.Service
            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
            await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId);
            await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId);
+           await _securityTestUtilities.Role.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
+           await _cacheTestUtilities.DeleteAllKeyData();
 
            var roleInsertReq = new InsertUpdateRoleRequest
            {
@@ -241,6 +282,7 @@ namespace IntegrationTests.Security.Service
            var postReqApplicationId = new FilterRoleServiceRequest { ApplicationId = application.ApplicationId };
            var postReqIncludeInactive = new FilterRoleServiceRequest { IncludeInactive = true };
            var postReqIncludeRelated = new FilterRoleServiceRequest { IncludeRelated = true };
+           var postReqIncludeReadOnly = new FilterRoleServiceRequest { IncludeReadOnly = true };
            
            var expectedCacheKeyCreatedBy = $"RoleService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0";
            var expectedCacheKeyCreatedOnDate = $"RoleService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0";
@@ -251,6 +293,7 @@ namespace IntegrationTests.Security.Service
            var expectedCacheKeyApplicationId = $"RoleService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0";
            var expectedCacheKeyIncludeInactive = $"RoleService_Filter_0_0_0_0_0_0_0_1_0_0";
            var expectedCacheKeyIncludeRelated = $"RoleService_Filter_0_0_0_0_0_0_0_0_1_0";
+           var expectedCacheKeyIncludeReadOnly = $"RoleService_Filter_0_0_0_0_0_0_0_0_0_1";
            
             // Act
            var filterCreatedByResult = await _roleService.Filter(postReqCreatedBy);
@@ -262,6 +305,7 @@ namespace IntegrationTests.Security.Service
            var filterApplicationIdResult = await _roleService.Filter(postReqApplicationId);
            var filterIncludeInactiveResult = await _roleService.Filter(postReqIncludeInactive);
            var filterIncludeRelatedResult = await _roleService.Filter(postReqIncludeRelated);
+           var filterIncludeReadOnlyResult = await _roleService.Filter(postReqIncludeReadOnly);
 
            var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
@@ -292,6 +336,9 @@ namespace IntegrationTests.Security.Service
 
            availableCacheKeys.Should().Contain(expectedCacheKeyIncludeRelated);
            filterIncludeRelatedResult.Response.Should().HaveCount(6);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyIncludeReadOnly);
+           filterIncludeReadOnlyResult.Response.Should().HaveCountGreaterThan(0);
         }
 
         #endregion

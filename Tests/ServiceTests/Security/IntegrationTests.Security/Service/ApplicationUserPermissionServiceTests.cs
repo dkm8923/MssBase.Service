@@ -3,7 +3,6 @@ using Dto.Security.ApplicationUserPermission;
 using Dto.Security.ApplicationUserPermission.Service;
 using FluentAssertions;
 using IntegrationTests.Security.Shared;
-using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities;
 using IntegrationTests.Shared.Utilities.Contracts.Service;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,8 +15,10 @@ namespace IntegrationTests.Security.Service
     public class ApplicationUserPermissionServiceTests : SecurityTestBase,
                                                IDefaultServiceTestsGetAll,
                                                IDefaultServiceTestsGetAllIncludeRelated,
+                                               IDefaultServiceTestsGetAllReadOnly,
                                                IDefaultServiceTestsGetById,
                                                IDefaultServiceTestsGetByIdIncludeRelated,
+                                               IDefaultServiceTestsGetByIdReadOnly,
                                                IDefaultServiceTestsFilter,
                                                IDefaultServiceTestsInsert,
                                                IDefaultServiceTestsUpdate,
@@ -85,6 +86,25 @@ namespace IntegrationTests.Security.Service
             // Assert
             availableCacheKeys.Should().Contain(expectedCacheKey);
             result.Response.Should().HaveCount(10);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_IncludeReadOnly_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyApplicationUserPermissionTestData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = "ApplicationUserPermissionService_GetAll_0_0_1";
+
+            // Act
+            var result = await _applicationUserPermissionService.GetAll(new BaseServiceGet { IncludeReadOnly = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+            var cacheKeyData = await _cacheTestUtilities.GetKeyData<List<ApplicationUserPermissionDto>>(expectedCacheKey);
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -202,6 +222,25 @@ namespace IntegrationTests.Security.Service
             result.Response.Should().NotBeNull();
         }
 
+        [Fact]
+        public async Task Default_GetById_IncludeReadOnly_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyApplicationUserPermissionTestData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions.FirstOrDefault();
+            var expectedCacheKey = $"ApplicationUserPermissionService_GetById_{testRecord.ApplicationUserPermissionId}_0_0_1";
+    
+            // Act
+            var result = await _applicationUserPermissionService.GetById(testRecord.ApplicationUserPermissionId, new BaseServiceGet { IncludeReadOnly = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
         #endregion
 
         #region Filter
@@ -214,6 +253,7 @@ namespace IntegrationTests.Security.Service
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
             var permission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
+            
             await _cacheTestUtilities.DeleteAllKeyData();
            
             var insertReq = new InsertUpdateApplicationUserPermissionRequest
@@ -243,6 +283,7 @@ namespace IntegrationTests.Security.Service
            var postReqPermissionId = new FilterApplicationUserPermissionServiceRequest { PermissionId = permission.PermissionId };
            var postReqIncludeInactive = new FilterApplicationUserPermissionServiceRequest { IncludeInactive = true };
            var postReqIncludeRelated = new FilterApplicationUserPermissionServiceRequest { IncludeRelated = true };
+           var postReqIncludeReadOnly = new FilterApplicationUserPermissionServiceRequest { IncludeReadOnly = true };
            
            var expectedCacheKeyCreatedBy = $"ApplicationUserPermissionService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0";
            var expectedCacheKeyCreatedOnDate = $"ApplicationUserPermissionService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0";
@@ -254,6 +295,7 @@ namespace IntegrationTests.Security.Service
            var expectedCacheKeyPermissionId = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqPermissionId.PermissionId.ToString())}_0_0_0";
            var expectedCacheKeyIncludeInactive = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_0_0_1_0_0";
            var expectedCacheKeyIncludeRelated = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_0_0_0_1_0";
+           var expectedCacheKeyIncludeReadOnly = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_0_0_0_0_1";
            
            // Act
            var filterCreatedByResult = await _applicationUserPermissionService.Filter(postReqCreatedBy);
@@ -266,6 +308,7 @@ namespace IntegrationTests.Security.Service
            var filterPermissionIdResult = await _applicationUserPermissionService.Filter(postReqPermissionId);
            var filterIncludeInactiveResult = await _applicationUserPermissionService.Filter(postReqIncludeInactive);
            var filterIncludeRelatedResult = await _applicationUserPermissionService.Filter(postReqIncludeRelated);
+           var filterIncludeReadOnlyResult = await _applicationUserPermissionService.Filter(postReqIncludeReadOnly);
            
            var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
@@ -298,7 +341,10 @@ namespace IntegrationTests.Security.Service
            filterIncludeInactiveResult.Response.Should().HaveCount(11);
 
            availableCacheKeys.Should().Contain(expectedCacheKeyIncludeRelated);
-           filterIncludeRelatedResult.Response.Should().HaveCount(6); 
+           filterIncludeRelatedResult.Response.Should().HaveCount(6);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyIncludeReadOnly);
+           filterIncludeReadOnlyResult.Response.Should().HaveCountGreaterThan(0); 
         }
 
         #endregion

@@ -3,7 +3,6 @@ using Dto.Security.ApplicationUser;
 using Dto.Security.ApplicationUser.Service;
 using FluentAssertions;
 using IntegrationTests.Security.Shared;
-using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities;
 using IntegrationTests.Shared.Utilities.Contracts.Service;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,8 +15,10 @@ namespace IntegrationTests.Security.Service
     public class ApplicationUserServiceTests : SecurityTestBase,
                                                IDefaultServiceTestsGetAll,
                                                IDefaultServiceTestsGetAllIncludeRelated,
+                                               IDefaultServiceTestsGetAllReadOnly,
                                                IDefaultServiceTestsGetById,
                                                IDefaultServiceTestsGetByIdIncludeRelated,
+                                               IDefaultServiceTestsGetByIdReadOnly,
                                                IDefaultServiceTestsFilter,
                                                IDefaultServiceTestsInsert,
                                                IDefaultServiceTestsUpdate,
@@ -85,6 +86,25 @@ namespace IntegrationTests.Security.Service
             // Assert
             availableCacheKeys.Should().Contain(expectedCacheKey);
             result.Response.Should().HaveCount(10);
+        }
+
+        [Fact]
+        public async Task Default_GetAll_IncludeReadOnly_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyApplicationUserTestData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var expectedCacheKey = "ApplicationUserService_GetAll_0_0_1";
+
+            // Act
+            var result = await _applicationUserService.GetAll(new BaseServiceGet { IncludeReadOnly = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+            var cacheKeyData = await _cacheTestUtilities.GetKeyData<List<ApplicationUserDto>>(expectedCacheKey);
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -185,6 +205,25 @@ namespace IntegrationTests.Security.Service
         }
 
         [Fact]
+        public async Task Default_GetById_IncludeReadOnly_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeReadOnlyApplicationUserTestData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
+            var expectedCacheKey = $"ApplicationUserService_GetById_{testRecord.ApplicationUserId}_0_0_1";
+    
+            // Act
+            var result = await _applicationUserService.GetById(testRecord.ApplicationUserId, new BaseServiceGet { IncludeReadOnly = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
+        [Fact]
         public async Task Default_GetById_Unused_Id_Should_Not_Cache()
         {
             // Arrange
@@ -234,6 +273,8 @@ namespace IntegrationTests.Security.Service
            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
            await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);
            await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId);
+           await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
+           await _cacheTestUtilities.DeleteAllKeyData();
 
            var applicationUserInsertReq = new InsertUpdateApplicationUserRequest
            {
@@ -266,6 +307,7 @@ namespace IntegrationTests.Security.Service
            var postReqApplicationId = new FilterApplicationUserServiceRequest { ApplicationId = application.ApplicationId };
            var postReqIncludeInactive = new FilterApplicationUserServiceRequest { IncludeInactive = true };
            var postReqIncludeRelated = new FilterApplicationUserServiceRequest { IncludeRelated = true };
+           var postReqIncludeReadOnly = new FilterApplicationUserServiceRequest { IncludeReadOnly = true };
            
            var expectedCacheKeyCreatedBy = $"ApplicationUserService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0_0_0";
            var expectedCacheKeyCreatedOnDate = $"ApplicationUserService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0_0_0";
@@ -279,6 +321,7 @@ namespace IntegrationTests.Security.Service
            var expectedCacheKeyApplicationId = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0";
            var expectedCacheKeyIncludeInactive = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_0_1_0_0";
            var expectedCacheKeyIncludeRelated = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_0_0_1_0";
+           var expectedCacheKeyIncludeReadOnly = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_1";
 
            // Act
            var filterCreatedByResult = await _applicationUserService.Filter(postReqCreatedBy);
@@ -292,7 +335,7 @@ namespace IntegrationTests.Security.Service
            var filterApplicationIdResult = await _applicationUserService.Filter(postReqApplicationId);
            var filterIncludeInactiveResult = await _applicationUserService.Filter(postReqIncludeInactive);
            var filterIncludeRelatedResult = await _applicationUserService.Filter(postReqIncludeRelated);
-           
+           var filterIncludeReadOnlyResult = await _applicationUserService.Filter(postReqIncludeReadOnly);
            var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
            // Assert
@@ -332,6 +375,9 @@ namespace IntegrationTests.Security.Service
 
            availableCacheKeys.Should().Contain(expectedCacheKeyIncludeRelated);
            filterIncludeRelatedResult.Response.Should().HaveCount(6);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyIncludeReadOnly);
+           filterIncludeReadOnlyResult.Response.Should().HaveCountGreaterThan(0);
         }
 
         #endregion
