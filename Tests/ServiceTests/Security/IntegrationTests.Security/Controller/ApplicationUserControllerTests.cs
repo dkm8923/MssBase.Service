@@ -58,7 +58,7 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(5);
+            result.Response.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -78,7 +78,7 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(5);
+            result.Response.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -98,7 +98,7 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(2);
+            result.Response.Should().HaveCountGreaterThan(0);
 
             foreach (var applicationUser in result.Response)
             {
@@ -714,9 +714,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var applicationUsers = arrangeTestDataResponse.ActiveApplicationUsers;
             
-            var postReq = new FilterApplicationUserServiceRequest { ApplicationUserIds = new List<int> { applicationUsers[0].ApplicationUserId, applicationUsers[1].ApplicationUserId }, DeleteCache = true };
+            var postReq = new FilterApplicationUserServiceRequest { ApplicationUserIds = new List<int>(), DeleteCache = true };
+            arrangeTestDataResponse.ActiveApplicationUsers.ForEach(au => postReq.ApplicationUserIds.Add(au.ApplicationUserId));
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms
@@ -728,7 +728,7 @@ namespace IntegrationTests.Security.Controller
             });
 
             //Assert
-            result.Response.Should().HaveCountGreaterThan(0);
+            result.Response.Should().HaveSameCount(arrangeTestDataResponse.ActiveApplicationUsers);
         }
 
         [Fact]

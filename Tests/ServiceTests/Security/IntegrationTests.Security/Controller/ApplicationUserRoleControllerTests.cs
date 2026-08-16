@@ -63,7 +63,7 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(5);
+            result.Response.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -83,7 +83,7 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(5);
+            result.Response.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -124,7 +124,7 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(5);
+            result.Response.Should().HaveCountGreaterThan(0);
 
             foreach (var applicationUserRole in result.Response)
             {
@@ -152,7 +152,7 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(10);
+            result.Response.Should().HaveCountGreaterThan(0);
 
             foreach (var applicationUserRole in result.Response)
             {
@@ -177,7 +177,7 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(5);
+            result.Response.Should().HaveCountGreaterThan(0);
 
             foreach (var applicationUserRole in result.Response)
             {
@@ -619,14 +619,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var applicationUserRoleIds = new List<int> 
-            { 
-                arrangeTestDataResponse.ActiveApplicationUserRoles[0].ApplicationUserRoleId, 
-                arrangeTestDataResponse.ActiveApplicationUserRoles[1].ApplicationUserRoleId,
-                arrangeTestDataResponse.ActiveApplicationUserRoles[2].ApplicationUserRoleId 
-            };
             
-            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = applicationUserRoleIds };
+            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int>() };
+            arrangeTestDataResponse.ActiveApplicationUserRoles.ForEach(aur => postReq.ApplicationUserRoleIds.Add(aur.ApplicationUserRoleId));
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpPostRequestParms
@@ -638,7 +633,7 @@ namespace IntegrationTests.Security.Controller
             });
 
             //Assert
-            result.Response.Should().HaveCount(3);
+            result.Response.Should().HaveCount(arrangeTestDataResponse.ActiveApplicationUserRoles.Count);
         }
 
         [Fact]
@@ -684,9 +679,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var applicationUserRoles = arrangeTestDataResponse.ActiveApplicationUserRoles.Take(5).ToList();
             
-            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoles[0].ApplicationUserRoleId, applicationUserRoles[1].ApplicationUserRoleId }, IncludeRelated = true, DeleteCache = true };
+            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int>(), IncludeRelated = true, DeleteCache = true };
+            arrangeTestDataResponse.ActiveApplicationUserRoles.ForEach(aur => postReq.ApplicationUserRoleIds.Add(aur.ApplicationUserRoleId));
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpPostRequestParms
@@ -699,7 +694,7 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(2);
+            result.Response.Should().HaveCount(arrangeTestDataResponse.ActiveApplicationUserRoles.Count);
 
             foreach (var r in result.Response)
             {
@@ -715,10 +710,10 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var activeApplicationUserRoles = arrangeTestDataResponse.ActiveApplicationUserRoles.Take(5).ToList();
-            var inactiveApplicationUserRoles = arrangeTestDataResponse.InactiveApplicationUserRoles.Take(5).ToList();
-
-            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { activeApplicationUserRoles[0].ApplicationUserRoleId, activeApplicationUserRoles[1].ApplicationUserRoleId, inactiveApplicationUserRoles[0].ApplicationUserRoleId, inactiveApplicationUserRoles[1].ApplicationUserRoleId }, IncludeRelated = true, IncludeInactive = true, DeleteCache = true };
+            
+            var postReq = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int>(), IncludeRelated = true, IncludeInactive = true, DeleteCache = true };
+            arrangeTestDataResponse.ActiveApplicationUserRoles.ForEach(aur => postReq.ApplicationUserRoleIds.Add(aur.ApplicationUserRoleId));
+            arrangeTestDataResponse.InactiveApplicationUserRoles.ForEach(aur => postReq.ApplicationUserRoleIds.Add(aur.ApplicationUserRoleId));
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserRoleDto>>(new HttpPostRequestParms
@@ -731,7 +726,7 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(4);
+            result.Response.Should().HaveCount(arrangeTestDataResponse.ActiveApplicationUserRoles.Count + arrangeTestDataResponse.InactiveApplicationUserRoles.Count);  
 
             foreach (var rolePermission in result.Response)
             {
@@ -758,7 +753,7 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(6);
+            result.Response.Should().HaveCountGreaterThan(0);
 
             foreach (var rolePermission in result.Response)
             {

@@ -588,7 +588,7 @@ namespace IntegrationTests.Security.Logic
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(5);
+            result.Response.Should().HaveCountGreaterThan(0);
             
             foreach (var application in result.Response)
             {

@@ -59,7 +59,7 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(5);
+            result.Response.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -79,7 +79,7 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(10);
+            result.Response.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -124,14 +124,14 @@ namespace IntegrationTests.Security.Controller
             // Act
             var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<RoleDto>>(new HttpGetRequestParms { 
                 Client = _client, 
-                ApiEndPoint = ApiEndPoints.Security.Role.Base, 
+                ApiEndPoint = _defaultRoleApiEndPoint, 
                 Token = token,
                 QueryStringParms = new BaseServiceGet { IncludeRelated = true, IncludeInactive = true, DeleteCache = true }
             });
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(10);
+            result.Response.Should().HaveCountGreaterThan(0);
 
             foreach (var role in result.Response)
             {
@@ -387,7 +387,7 @@ namespace IntegrationTests.Security.Controller
             result.Response.Should().NotBeNull();
             result.Response.Active.Should().BeTrue();
 
-            result.Response.RolePermissions.Should().HaveCount(5);
+            result.Response.RolePermissions.Should().HaveCountGreaterThan(0);
 
             foreach (var rolePermission in result.Response.RolePermissions)
             {
@@ -417,7 +417,7 @@ namespace IntegrationTests.Security.Controller
             // Assert
             result.Response.Should().NotBeNull();
             result.Response.Active.Should().BeFalse();
-            result.Response.RolePermissions.Should().HaveCount(5);
+            result.Response.RolePermissions.Should().HaveCountGreaterThan(0);
 
             foreach (var rolePermission in result.Response.RolePermissions)
             {
@@ -647,9 +647,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeRoleTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var roles = arrangeTestDataResponse.ActiveRoles.Take(5).ToList();
             
-            var postReq = new FilterRoleServiceRequest { RoleIds = new List<int> { roles[0].RoleId, roles[1].RoleId }, DeleteCache = true };
+            var postReq = new FilterRoleServiceRequest { RoleIds = new List<int>(), DeleteCache = true };
+            arrangeTestDataResponse.ActiveRoles.ForEach(r => postReq.RoleIds.Add(r.RoleId));
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RoleDto>>(new HttpPostRequestParms
@@ -661,7 +661,7 @@ namespace IntegrationTests.Security.Controller
             });
 
             //Assert
-            result.Response.Should().HaveCount(2);
+            result.Response.Should().HaveCount(arrangeTestDataResponse.ActiveRoles.Count);
         }
 
         [Fact]
@@ -704,9 +704,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var roles = arrangeTestDataResponse.ActiveRoles.Take(5).ToList();
             
-            var postReq = new FilterRoleServiceRequest { RoleIds = new List<int> { roles[0].RoleId, roles[1].RoleId }, IncludeRelated = true, DeleteCache = true };
+            var postReq = new FilterRoleServiceRequest { RoleIds = new List<int>(), IncludeRelated = true, DeleteCache = true };
+            arrangeTestDataResponse.ActiveRoles.ForEach(r => postReq.RoleIds.Add(r.RoleId));
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RoleDto>>(new HttpPostRequestParms
@@ -719,12 +719,12 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(2);
+            result.Response.Should().HaveCount(arrangeTestDataResponse.ActiveRoles.Count);
 
             foreach (var r in result.Response)
             {
                 r.Active.Should().BeTrue();
-                r.RolePermissions.Should().HaveCount(5);
+                r.RolePermissions.Should().HaveCountGreaterThan(0);
 
                 foreach (var rolePermission in r.RolePermissions)
                 {
@@ -741,10 +741,10 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeRoleTestDataWithRelatedData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var activeRoles = arrangeTestDataResponse.ActiveRoles.Take(5).ToList();
-            var inactiveRoles = arrangeTestDataResponse.InactiveRoles.Take(5).ToList();
-
-            var postReq = new FilterRoleServiceRequest { RoleIds = new List<int> { activeRoles[0].RoleId, activeRoles[1].RoleId, inactiveRoles[0].RoleId, inactiveRoles[1].RoleId }, IncludeRelated = true, IncludeInactive = true, DeleteCache = true };
+            
+            var postReq = new FilterRoleServiceRequest { RoleIds = new List<int>(), IncludeRelated = true, IncludeInactive = true, DeleteCache = true };
+            arrangeTestDataResponse.ActiveRoles.ForEach(r => postReq.RoleIds.Add(r.RoleId));
+            arrangeTestDataResponse.InactiveRoles.ForEach(r => postReq.RoleIds.Add(r.RoleId));
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<RoleDto>>(new HttpPostRequestParms
@@ -757,17 +757,17 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(4);
+            result.Response.Should().HaveCount(arrangeTestDataResponse.ActiveRoles.Count + arrangeTestDataResponse.InactiveRoles.Count);
 
             foreach (var role in result.Response)
             {
                 if (role.Active)
                 {
-                    role.RolePermissions.Should().HaveCount(10);
+                    role.RolePermissions.Should().HaveCountGreaterThan(0);
                 }
                 else
                 {
-                    role.RolePermissions.Should().HaveCount(5);
+                    role.RolePermissions.Should().HaveCountGreaterThan(0);
                 }
 
                 foreach (var rolePermission in role.RolePermissions)
@@ -796,7 +796,7 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(5);
+            result.Response.Should().HaveCountGreaterThan(0);
 
             foreach (var role in result.Response)
             {

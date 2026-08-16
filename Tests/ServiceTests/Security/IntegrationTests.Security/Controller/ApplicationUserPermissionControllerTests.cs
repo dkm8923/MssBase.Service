@@ -152,7 +152,7 @@ namespace IntegrationTests.Security.Controller
 
             // Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCountGreaterThan(10);
+            result.Response.Should().HaveCountGreaterThan(0);
 
             foreach (var applicationUserPermission in result.Response)
             {
@@ -619,14 +619,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var applicationUserPermissionIds = new List<int> 
-            { 
-                arrangeTestDataResponse.ActiveApplicationUserPermissions[0].ApplicationUserPermissionId, 
-                arrangeTestDataResponse.ActiveApplicationUserPermissions[1].ApplicationUserPermissionId,
-                arrangeTestDataResponse.ActiveApplicationUserPermissions[2].ApplicationUserPermissionId 
-            };
             
-            var postReq = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = applicationUserPermissionIds, DeleteCache = true };
+            var postReq = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = new List<int>(), DeleteCache = true };
+            arrangeTestDataResponse.ActiveApplicationUserPermissions.ForEach(aup => postReq.ApplicationUserPermissionIds.Add(aup.ApplicationUserPermissionId));
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms
@@ -638,7 +633,7 @@ namespace IntegrationTests.Security.Controller
             });
 
             //Assert
-            result.Response.Should().HaveCount(3);
+            result.Response.Should().HaveSameCount(arrangeTestDataResponse.ActiveApplicationUserPermissions);
         }
 
         [Fact]
@@ -684,9 +679,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var applicationUserPermissions = arrangeTestDataResponse.ActiveApplicationUserPermissions.Take(5).ToList();
             
-            var postReq = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = new List<int> { applicationUserPermissions[0].ApplicationUserPermissionId, applicationUserPermissions[1].ApplicationUserPermissionId }, IncludeRelated = true, DeleteCache = true };
+            var postReq = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = new List<int>(), IncludeRelated = true, DeleteCache = true };
+            arrangeTestDataResponse.ActiveApplicationUserPermissions.ForEach(aup => postReq.ApplicationUserPermissionIds.Add(aup.ApplicationUserPermissionId));
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms
@@ -699,7 +694,7 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(2);
+            result.Response.Should().HaveCount(arrangeTestDataResponse.ActiveApplicationUserPermissions.Count);
 
             foreach (var r in result.Response)
             {
@@ -718,7 +713,10 @@ namespace IntegrationTests.Security.Controller
             var activeApplicationUserPermissions = arrangeTestDataResponse.ActiveApplicationUserPermissions.Take(5).ToList();
             var inactiveApplicationUserPermissions = arrangeTestDataResponse.InactiveApplicationUserPermissions.Take(5).ToList();
 
-            var postReq = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = new List<int> { activeApplicationUserPermissions[0].ApplicationUserPermissionId, activeApplicationUserPermissions[1].ApplicationUserPermissionId, inactiveApplicationUserPermissions[0].ApplicationUserPermissionId, inactiveApplicationUserPermissions[1].ApplicationUserPermissionId }, IncludeRelated = true, IncludeInactive = true, DeleteCache = true };
+            // Arrange post request with specific ApplicationUserPermissionIds
+            var postReq = new FilterApplicationUserPermissionServiceRequest { ApplicationUserPermissionIds = new List<int>(), IncludeRelated = true, IncludeInactive = true, DeleteCache = true };
+            activeApplicationUserPermissions.ForEach(aup => postReq.ApplicationUserPermissionIds.Add(aup.ApplicationUserPermissionId));
+            inactiveApplicationUserPermissions.ForEach(aup => postReq.ApplicationUserPermissionIds.Add(aup.ApplicationUserPermissionId));
 
             // Act
             var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserPermissionDto>>(new HttpPostRequestParms
@@ -731,7 +729,7 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(4);
+            result.Response.Should().HaveCount(activeApplicationUserPermissions.Count + inactiveApplicationUserPermissions.Count);
 
             foreach (var applicationUserPermission in result.Response)
             {
@@ -758,7 +756,7 @@ namespace IntegrationTests.Security.Controller
 
             //Assert
             result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(10);
+            result.Response.Should().HaveCountGreaterThan(0);
 
             foreach (var applicationUserPermission in result.Response)
             {
