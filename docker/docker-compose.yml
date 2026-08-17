@@ -1,13 +1,17 @@
+# Environment-specific values come from an env file (defaults below are for "dev").
+# Run with: docker compose --env-file .env.dev -p mssbase-dev up -d --build
+# For a future test/prod env, copy .env.dev -> .env.test, adjust values, and run with
+# --env-file .env.test -p mssbase-test instead (each project gets its own volumes/containers).
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: mssbase-sqlserver
+    container_name: mssbase-sqlserver-${ENVIRONMENT:-dev}
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "Test12345"
+      MSSQL_SA_PASSWORD: "${SA_PASSWORD:-Test12345}"
       MSSQL_PID: "Developer"
     ports:
-      - "1433:1433"
+      - "${SQL_PORT:-1433}:1433"
     volumes:
       - mssbase-sqlserver-data:/var/opt/mssql
     healthcheck:
@@ -20,9 +24,9 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: mssbase-redis
+    container_name: mssbase-redis-${ENVIRONMENT:-dev}
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - mssbase-redis-data:/data
     healthcheck:
@@ -30,6 +34,27 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ..
+      dockerfile: MssBase.Service/Dockerfile
+    container_name: mssbase-api-${ENVIRONMENT:-dev}
+    environment:
+      ASPNETCORE_ENVIRONMENT: "${ASPNET_ENVIRONMENT:-Development}"
+      CommonConnectionStrings__ReadWrite: "Server=sqlserver,1433;Database=CommonDb;User Id=sa;Password=${SA_PASSWORD:-Test12345};TrustServerCertificate=True;MultipleActiveResultSets=True;"
+      CommonConnectionStrings__ReadOnly: "Server=sqlserver,1433;Database=CommonDb;User Id=sa;Password=${SA_PASSWORD:-Test12345};TrustServerCertificate=True;MultipleActiveResultSets=True;"
+      SecurityConnectionStrings__ReadWrite: "Server=sqlserver,1433;Database=${SECURITY_DB_NAME:-SecurityDB_DEV};User Id=sa;Password=${SA_PASSWORD:-Test12345};TrustServerCertificate=True;MultipleActiveResultSets=True;"
+      SecurityConnectionStrings__ReadOnly: "Server=sqlserver,1433;Database=${SECURITY_DB_NAME:-SecurityDB_DEV};User Id=sa;Password=${SA_PASSWORD:-Test12345};TrustServerCertificate=True;MultipleActiveResultSets=True;"
+      RedisConfiguration__ConnectionString: "redis:6379"
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
