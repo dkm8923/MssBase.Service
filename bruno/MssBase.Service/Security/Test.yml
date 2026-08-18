@@ -1,0 +1,15 @@
+info:
+  name: Test
+  type: http
+
+http:
+  method: GET
+  url: https://super-duper-space-lamp-g49j4j67pwp2j59-8080.app.github.dev/openapi/v1.json
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+​
