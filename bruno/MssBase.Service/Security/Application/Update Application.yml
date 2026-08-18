@@ -1,0 +1,37 @@
+info:
+  name: Update Application
+  type: http
+  seq: 1
+
+http:
+  method: PUT
+  url: "{{BaseUrl}}/Security/Application/:ApplicationId"
+  params:
+    - name: ApplicationId
+      value: "1"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "active": {{Active}},
+        "name": "{{Name}}",
+        "description": "{{Description}}",
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: Active
+      value: "true"
+    - name: Name
+      value: Test Application Name Update
+    - name: Description
+      value: Test Description Update
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

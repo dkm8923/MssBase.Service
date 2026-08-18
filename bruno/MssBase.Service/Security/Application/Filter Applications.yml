@@ -1,0 +1,30 @@
+info:
+  name: Filter Applications
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/Application/Filter"
+  body:
+    type: json
+    data: |-
+      {
+        "deleteCache": true,
+        "createdBy": null,
+        "createdOnDate": null,
+        "updatedBy": null,
+        "updatedOnDate": null,
+        "applicationIds": null,
+        "name": null,
+        "includeInactive": false,
+        "includeRelated": false,
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

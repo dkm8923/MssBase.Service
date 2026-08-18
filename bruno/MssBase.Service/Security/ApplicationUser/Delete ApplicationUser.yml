@@ -1,0 +1,19 @@
+info:
+  name: Delete ApplicationUser
+  type: http
+  seq: 1
+
+http:
+  method: DELETE
+  url: "{{BaseUrl}}/Security/ApplicationUser/:ApplicationUserId"
+  params:
+    - name: ApplicationUserId
+      value: ""
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

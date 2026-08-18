@@ -1,17 +1,17 @@
 info:
-  name: Get All Applications
+  name: Get Permission By Id
   type: http
   seq: 1
 
 http:
   method: GET
-  url: "{{BaseUrl}}/Security/Application"
+  url: "{{BaseUrl}}/Security/Application/:ApplicationId"
   params:
     - name: includeInactive
       value: "true"
       type: query
       disabled: true
-    - name: includeRelated
+    - name: IncludeRelated
       value: "true"
       type: query
       disabled: true
@@ -19,6 +19,9 @@ http:
       value: "true"
       type: query
       disabled: true
+    - name: ApplicationId
+      value: "1"
+      type: path
   auth: inherit
 
 settings:
