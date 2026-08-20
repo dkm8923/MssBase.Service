@@ -11,6 +11,9 @@ using Shared.Models;
 using Shared.Logic;
 using Shared.Logic.Validators;
 using Shared.Logic.Common;
+using Data.Security.Models;
+using System.Text.Json;
+using static Shared.Logic.Common.Constants;
 
 namespace Logic.Security.Logic
 {
@@ -134,8 +137,11 @@ namespace Logic.Security.Logic
 
                 if (entity != null)
                 {
+                    await LogApplicationChange(dbContext, entity, req);
+                    
                     entity = entity.UpdateEntityFromRequest(req);
                     await dbContext.SaveChangesAsync();
+                    
                     return new ErrorValidationResult<ApplicationDto> { Response = entity.ToDto() };
                 }
                 else
@@ -264,6 +270,54 @@ namespace Logic.Security.Logic
             var errorValidationResult = new ErrorValidationResult<ApplicationDto>();
             errorValidationResult.Errors.Add(Constants.EntityFieldNames.Application, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
             return errorValidationResult;
+        }
+
+        #endregion
+
+        #region Private
+
+        private async Task LogApplicationChange(SecurityDBContext dbContext, Application oldRecord, InsertUpdateApplicationRequest req) 
+        {
+            var newRecord = req.ToEntityOnInsert();
+            
+            // Only capture fields that actually changed, not the full entity graph
+            var changeLog = new Dictionary<string, object?>();
+
+            if (oldRecord.Name != newRecord.Name)
+            {
+                changeLog[nameof(Application.Name)] = newRecord.Name;
+            }
+
+            if (oldRecord.Description != newRecord.Description)
+            {
+                changeLog[nameof(Application.Description)] = newRecord.Description;
+            }
+
+            if (oldRecord.Active != newRecord.Active)
+            {
+                changeLog[nameof(Application.Active)] = newRecord.Active;
+            }
+
+            if (oldRecord.UpdatedBy != req.CurrentUser)
+            {
+                changeLog[nameof(Application.UpdatedBy)] = req.CurrentUser;
+            }
+            
+            changeLog[nameof(Application.UpdatedOn)] = oldRecord.UpdatedOn;
+            
+            await dbContext.AuditChangeLogs.AddAsync(new AuditChangeLog {
+                ChangeType = "Update",
+                ReferenceType = EntityFieldNames.Application,
+                ReferenceId = oldRecord.ApplicationId,
+                Json = JsonSerializer.Serialize(changeLog),
+                CreatedBy = req.CurrentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private void LogApplicationDelete(SecurityDBContext dbContext, Application record) 
+        {
+            
         }
 
         #endregion

@@ -26,6 +26,8 @@ public partial class SecurityDBContext : DbContext
     public virtual DbSet<ApplicationUserLogChangePassword> ApplicationUserLogChangePasswords { get; set; }
     public virtual DbSet<ApplicationUserLogLogin> ApplicationUserLogLogins { get; set; }
 
+    public virtual DbSet<AuditChangeLog> AuditChangeLogs { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
