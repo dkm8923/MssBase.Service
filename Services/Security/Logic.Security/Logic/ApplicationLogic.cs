@@ -155,7 +155,7 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Deletes the application with the specified identifier.
         /// </summary>
-        public async Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId)
+        public async Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId, string currentUser)
         {
             var errorValidationResult = await _validateApplicationOnDelete(applicationId);
 
@@ -164,6 +164,7 @@ namespace Logic.Security.Logic
                 using (var dbContext = _dbContextFactory.CreateContextReadWrite())
                 {
                     var entity = await dbContext.Applications.FirstOrDefaultAsync(ent => ent.ApplicationId == applicationId && !ent.ReadOnly);
+                    await LogApplicationDelete(dbContext, entity, currentUser);
                     dbContext.Applications.Remove(entity);
                     await dbContext.SaveChangesAsync();
                     errorValidationResult.Response = null;
@@ -305,8 +306,8 @@ namespace Logic.Security.Logic
             
             changeLog[nameof(Application.UpdatedOn)] = oldRecord.UpdatedOn;
             
-            await dbContext.AuditChangeLogs.AddAsync(new AuditChangeLog {
-                ChangeType = "Update",
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Update,
                 ReferenceType = EntityFieldNames.Application,
                 ReferenceId = oldRecord.ApplicationId,
                 Json = JsonSerializer.Serialize(changeLog),
@@ -315,9 +316,26 @@ namespace Logic.Security.Logic
             });
         }
 
-        private void LogApplicationDelete(SecurityDBContext dbContext, Application record) 
+        private async Task LogApplicationDelete(SecurityDBContext dbContext, Application record, string currentUser) 
         {
-            
+            var deleteLog = new Dictionary<string, object?>();
+            deleteLog[nameof(Application.Name)] = record.Name;
+            deleteLog[nameof(Application.Description)] = record.Description;
+            deleteLog[nameof(Application.Active)] = record.Active;
+            deleteLog[nameof(Application.ReadOnly)] = record.ReadOnly;
+            deleteLog[nameof(Application.CreatedBy)] = record.CreatedBy;
+            deleteLog[nameof(Application.CreatedOn)] = record.CreatedOn;
+            deleteLog[nameof(Application.UpdatedBy)] = record.UpdatedBy;
+            deleteLog[nameof(Application.UpdatedOn)] = record.UpdatedOn;
+
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Delete,
+                ReferenceType = EntityFieldNames.Application,
+                ReferenceId = record.ApplicationId,
+                Json = JsonSerializer.Serialize(deleteLog),
+                CreatedBy = currentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
         }
 
         #endregion

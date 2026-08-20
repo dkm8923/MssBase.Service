@@ -87,11 +87,11 @@ namespace Service.Security.Service
 
         #region Delete
 
-        public async Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId)
+        public async Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId, string currentUser)
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _applicationLogic.Delete(applicationId);
+            return await _applicationLogic.Delete(applicationId, currentUser);
         }
 
         #endregion

@@ -12,5 +12,5 @@ public interface IApplicationService
     public Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> Filter(FilterApplicationServiceRequest req, CancellationToken cancellationToken = default);
     public Task<ErrorValidationResult<ApplicationDto>> Insert(InsertUpdateApplicationRequest req);
     public Task<ErrorValidationResult<ApplicationDto>> Update(int applicationId, InsertUpdateApplicationRequest req);
-    public Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId);
+    public Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId, string currentUser);
 }

@@ -875,7 +875,7 @@ namespace IntegrationTests.Security.Logic
             var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
-            await _applicationLogic.Delete(testRecord.ApplicationId);
+            await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
             var getResult = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet());
 
             // Assert
@@ -891,7 +891,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedRecordDoesNotExistErrors();
 
             // Act
-            var result = await _applicationLogic.Delete(-1);
+            var result = await _applicationLogic.Delete(-1, TestConstants.CurrentUser);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);
@@ -909,7 +909,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedReadOnlyErrors();
 
             // Act
-            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);
@@ -933,7 +933,7 @@ namespace IntegrationTests.Security.Logic
             await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(testRecord.ApplicationId);
             
             // Act
-            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
             
             // Assert
             result.Errors.Count.Should().Be(1);
@@ -957,7 +957,7 @@ namespace IntegrationTests.Security.Logic
             await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(testRecord.ApplicationId);
             
             // Act
-            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
             
             // Assert
             result.Errors.Count.Should().Be(1);
@@ -981,7 +981,7 @@ namespace IntegrationTests.Security.Logic
             await _securityTestUtilities.Role.CreateSingleRoleTestRecord(testRecord.ApplicationId);
             
             // Act
-            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
             
             // Assert
             result.Errors.Count.Should().Be(1);
@@ -1006,7 +1006,7 @@ namespace IntegrationTests.Security.Logic
         //     await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(testRecord.ApplicationId);
 
         //     // Act
-        //     var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+        //     var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
 
         //     // Assert
         //     result.Errors.Count.Should().Be(1);
@@ -1030,7 +1030,7 @@ namespace IntegrationTests.Security.Logic
         //     await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(testRecord.ApplicationId);
 
         //     // Act
-        //     var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+        //     var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
 
         //     // Assert
         //     result.Errors.Count.Should().Be(1);

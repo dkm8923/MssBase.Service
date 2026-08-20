@@ -2,10 +2,10 @@ using Shared.Models.Contracts;
 
 namespace Data.Security.Models;
 
-public partial class AuditChangeLog : ICreateable
+public partial class AuditLog : ICreateable
 {
-    public int AuditChangeLogId { get; set; }
-    public string ChangeType { get; set; }
+    public int AuditLogId { get; set; }
+    public string LogType { get; set; }
     public string ReferenceType { get; set; }
     public int ReferenceId { get; set; }
     public string Json { get; set; }

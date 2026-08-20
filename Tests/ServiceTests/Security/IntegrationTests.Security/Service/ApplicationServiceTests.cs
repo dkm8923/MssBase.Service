@@ -394,7 +394,7 @@ namespace IntegrationTests.Security.Service
             var record = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
             // Act
-            await _applicationService.Delete(record.ApplicationId);
+            await _applicationService.Delete(record.ApplicationId, TestConstants.CurrentUser);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert

@@ -5,15 +5,15 @@ using Shared.Data;
 
 namespace Data.Security.Configuration;
 
-public class AuditChangeLogConfiguration : IEntityTypeConfiguration<AuditChangeLog>
+public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 {
-    private readonly string _tableName = "AuditChangeLog";
-    public void Configure(EntityTypeBuilder<AuditChangeLog> builder)
+    private readonly string _tableName = "AuditLog";
+    public void Configure(EntityTypeBuilder<AuditLog> builder)
     {
         SetTableName(builder);
 
-        builder.Property(t => t.AuditChangeLogId).IsRequired();
-        builder.Property(t => t.ChangeType).HasMaxLength(32).IsRequired();
+        builder.Property(t => t.AuditLogId).IsRequired();
+        builder.Property(t => t.LogType).HasMaxLength(32).IsRequired();
         builder.Property(t => t.ReferenceType).HasMaxLength(128).IsRequired();
         builder.Property(t => t.ReferenceId).IsRequired();
         builder.Property(t => t.Json).HasMaxLength(4096).IsUnicode(true).IsRequired();
@@ -22,13 +22,13 @@ public class AuditChangeLogConfiguration : IEntityTypeConfiguration<AuditChangeL
         CreatePrimaryKey(builder);
     }
 
-    public void SetTableName(EntityTypeBuilder<AuditChangeLog> builder)
+    public void SetTableName(EntityTypeBuilder<AuditLog> builder)
     {
         builder.ToTable(_tableName);
     }
 
-    public void CreatePrimaryKey(EntityTypeBuilder<AuditChangeLog> builder)
+    public void CreatePrimaryKey(EntityTypeBuilder<AuditLog> builder)
     {
-        builder.HasKey(e => e.AuditChangeLogId);
+        builder.HasKey(e => e.AuditLogId);
     }
 }

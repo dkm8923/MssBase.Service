@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Security.Migrations
 {
     [DbContext(typeof(SecurityDBContext))]
-    [Migration("20260819194042_AuditChangeLogMigration")]
+    [Migration("20260820181030_AuditChangeLogMigration")]
     partial class AuditChangeLogMigration
     {
         /// <inheritdoc />
@@ -391,17 +391,23 @@ namespace Data.Security.Migrations
 
                     b.Property<string>("ChangeType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
 
                     b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
 
                     b.Property<string>("Json")
                         .IsRequired()
+                        .HasMaxLength(4096)
+                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ReferenceId")
@@ -409,11 +415,12 @@ namespace Data.Security.Migrations
 
                     b.Property<string>("ReferenceType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.HasKey("AuditChangeLogId");
 
-                    b.ToTable("AuditChangeLogs");
+                    b.ToTable("AuditChangeLog", (string)null);
                 });
 
             modelBuilder.Entity("Data.Security.Models.Permission", b =>
