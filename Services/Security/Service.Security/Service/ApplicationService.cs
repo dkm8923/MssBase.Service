@@ -3,6 +3,7 @@ using Dto.Security.Application;
 using Dto.Security.Application.Service;
 using Shared.Contracts;
 using Shared.Models;
+using Shared.Models.Dtos;
 using Shared.Service.Cache;
 
 namespace Service.Security.Service
@@ -32,6 +33,12 @@ namespace Service.Security.Service
         {
             var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, applicationId, req.IncludeInactive, req.IncludeRelated, req.IncludeReadOnly);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationLogic.GetById(applicationId, req, cancellationToken));
+        }
+
+        public async Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByApplicationId(int applicationId, BaseServiceGet req, CancellationToken cancellationToken = default)
+        {
+            var cacheKeyName = CacheUtilities.CreateGetAuditLogByIdCacheKey(cacheKeySectionName, applicationId);
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationLogic.GetAuditLogsByApplicationId(applicationId, cancellationToken));
         }
 
         public async Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> Filter(FilterApplicationServiceRequest req, CancellationToken cancellationToken = default)

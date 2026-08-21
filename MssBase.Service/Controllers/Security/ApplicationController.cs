@@ -67,6 +67,29 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        // GET: api/Security/Application/{applicationId}/AuditLogs
+
+        [HttpGet("{applicationId}/AuditLogs", Name = "GetApplicationAuditLogsById")]
+        [RequiredPermission(UserApiPermissions.ApplicationRead)]
+        public async Task<IActionResult> GetApplicationAuditLogsById(int applicationId, [FromQuery] bool deleteCache = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var record = await _applicationSvc.GetAuditLogsByApplicationId(applicationId, new BaseServiceGet { DeleteCache = deleteCache }, cancellationToken);
+
+                if (record.Response == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(record);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
         // POST: api/Security/Application/Filter
 
         [HttpPost("Filter")]

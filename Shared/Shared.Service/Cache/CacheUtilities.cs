@@ -9,6 +9,7 @@ namespace Shared.Service.Cache
         //cache key names
         private static string CacheKeyGetAll = "GetAll";
         private static string CacheKeyGetById = "GetById";
+        private static string CacheKeyGetAuditLogById = "GetAuditLogById";
         private static string CacheKeyFilter = "Filter";
 
         #endregion
@@ -55,6 +56,17 @@ namespace Shared.Service.Cache
             }
 
             return $"{cacheKeySectionName}_{CacheKeyGetById}_{id}_{includeInactiveKey}_{includeRelatedKey}";
+        }
+
+        /// <summary>
+        /// Creates cache key for "GetAuditLogById" requests
+        /// </summary>
+        /// <param name="cacheKeySectionName">Service Name</param>
+        /// <param name="id">Id used to retrieve all audit logs for a single record</param>
+        /// <returns></returns>
+        public static string CreateGetAuditLogByIdCacheKey(string cacheKeySectionName, long id)
+        {
+            return $"{cacheKeySectionName}_{CacheKeyGetAuditLogById}_{id}";
         }
 
         /// <summary>

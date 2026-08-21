@@ -1,9 +1,8 @@
-using Data.Security.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shared.Data;
+using Shared.Data.Models;
 
-namespace Data.Security.Configuration;
+namespace Shared.Data.Configuration;
 
 public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 {

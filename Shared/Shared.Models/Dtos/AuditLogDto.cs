@@ -1,8 +1,8 @@
 using Shared.Models.Contracts;
 
-namespace Data.Security.Models;
+namespace Shared.Models.Dtos;
 
-public partial class AuditLog : ICreateable
+public record AuditLogDto: ICreateable
 {
     public int AuditLogId { get; set; }
     public string LogType { get; set; }

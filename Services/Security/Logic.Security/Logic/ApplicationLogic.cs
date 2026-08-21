@@ -12,8 +12,11 @@ using Shared.Logic;
 using Shared.Logic.Validators;
 using Shared.Logic.Common;
 using Data.Security.Models;
+using Shared.Data.Models;
+using Shared.Data.Converters;
 using System.Text.Json;
 using static Shared.Logic.Common.Constants;
+using Shared.Models.Dtos;
 
 namespace Logic.Security.Logic
 {
@@ -54,6 +57,19 @@ namespace Logic.Security.Logic
             var res = await this.Filter(new FilterApplicationLogicRequest { ApplicationIds = new List<int> { applicationId }, IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly }, cancellationToken);
 
             return new ErrorValidationResult<ApplicationDto> { Response = res.Response.FirstOrDefault() };
+        }
+
+        /// <summary>
+        /// Retrieves the audit logs for an application by its unique identifier.
+        /// </summary>
+        public async Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByApplicationId(int applicationId, CancellationToken cancellationToken = default)
+        {
+            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
+            {
+                var query = dbContext.AuditLogs.AsQueryable().AsNoTracking().Where(al => al.ReferenceType == EntityFieldNames.Application && al.ReferenceId == applicationId);
+
+                return new ErrorValidationResult<IEnumerable<AuditLogDto>> { Response = await query.ToDtos(cancellationToken) };
+            }
         }
 
         /// <summary>
