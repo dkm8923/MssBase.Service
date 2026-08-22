@@ -67,7 +67,6 @@ namespace Logic.Security.Logic
             using (var dbContext = _dbContextFactory.CreateContextReadOnly())
             {
                 var query = dbContext.AuditLogs.AsQueryable().AsNoTracking().Where(al => al.ReferenceType == EntityFieldNames.Application && al.ReferenceId == applicationId);
-
                 return new ErrorValidationResult<IEnumerable<AuditLogDto>> { Response = await query.ToDtos(cancellationToken) };
             }
         }
@@ -326,7 +325,8 @@ namespace Logic.Security.Logic
                 LogType = AuditLogLogTypes.Update,
                 ReferenceType = EntityFieldNames.Application,
                 ReferenceId = oldRecord.ApplicationId,
-                Json = JsonSerializer.Serialize(changeLog),
+                ChangeLogJson = JsonSerializer.Serialize(changeLog),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(oldRecord),
                 CreatedBy = req.CurrentUser,
                 CreatedOn = CommonUtilities.GetDateTimeUtcNow()
             });
@@ -334,24 +334,30 @@ namespace Logic.Security.Logic
 
         private async Task LogApplicationDelete(SecurityDBContext dbContext, Application record, string currentUser) 
         {
-            var deleteLog = new Dictionary<string, object?>();
-            deleteLog[nameof(Application.Name)] = record.Name;
-            deleteLog[nameof(Application.Description)] = record.Description;
-            deleteLog[nameof(Application.Active)] = record.Active;
-            deleteLog[nameof(Application.ReadOnly)] = record.ReadOnly;
-            deleteLog[nameof(Application.CreatedBy)] = record.CreatedBy;
-            deleteLog[nameof(Application.CreatedOn)] = record.CreatedOn;
-            deleteLog[nameof(Application.UpdatedBy)] = record.UpdatedBy;
-            deleteLog[nameof(Application.UpdatedOn)] = record.UpdatedOn;
-
             await dbContext.AuditLogs.AddAsync(new AuditLog {
                 LogType = AuditLogLogTypes.Delete,
                 ReferenceType = EntityFieldNames.Application,
                 ReferenceId = record.ApplicationId,
-                Json = JsonSerializer.Serialize(deleteLog),
+                ChangeLogJson = JsonSerializer.Serialize(new {}),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(record),
                 CreatedBy = currentUser,
                 CreatedOn = CommonUtilities.GetDateTimeUtcNow()
             });
+        }
+
+        private string GetRecordStateBeforeChangeJson(Application record)
+        {
+            var log = new Dictionary<string, object?>();
+            log[nameof(Application.Name)] = record.Name;
+            log[nameof(Application.Description)] = record.Description;
+            log[nameof(Application.Active)] = record.Active;
+            log[nameof(Application.ReadOnly)] = record.ReadOnly;
+            log[nameof(Application.CreatedBy)] = record.CreatedBy;
+            log[nameof(Application.CreatedOn)] = record.CreatedOn;
+            log[nameof(Application.UpdatedBy)] = record.UpdatedBy;
+            log[nameof(Application.UpdatedOn)] = record.UpdatedOn;
+            
+            return JsonSerializer.Serialize(log);
         }
 
         #endregion

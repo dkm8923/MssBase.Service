@@ -1,6 +1,7 @@
 using Shared.Data.Models;
 using Shared.Models.Dtos;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace Shared.Data.Converters;
 
@@ -19,7 +20,8 @@ public static class AuditLogConverters
             LogType = source.LogType,
             ReferenceType = source.ReferenceType,
             ReferenceId = source.ReferenceId,
-            Json = source.Json,
+            ChangeLogJson = JsonSerializer.Deserialize<dynamic>(source.ChangeLogJson),
+            RecordStateBeforeChangeJson = JsonSerializer.Deserialize<dynamic>(source.RecordStateBeforeChangeJson),
             CreatedOn = source.CreatedOn,
             CreatedBy = source.CreatedBy
         };
@@ -29,7 +31,7 @@ public static class AuditLogConverters
 
     public static async Task<List<AuditLogDto>> ToDtos(this IQueryable<AuditLog> source, CancellationToken cancellationToken = default)
     {
-        if (source == null)
+        if (source.Count() == 0)
         {
             return null;
         }

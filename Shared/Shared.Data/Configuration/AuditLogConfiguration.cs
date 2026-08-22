@@ -15,7 +15,8 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(t => t.LogType).HasMaxLength(32).IsRequired();
         builder.Property(t => t.ReferenceType).HasMaxLength(128).IsRequired();
         builder.Property(t => t.ReferenceId).IsRequired();
-        builder.Property(t => t.Json).HasMaxLength(4096).IsUnicode(true).IsRequired();
+        builder.Property(t => t.ChangeLogJson).HasMaxLength(4096).IsUnicode(true).IsRequired();
+        builder.Property(t => t.RecordStateBeforeChangeJson).HasMaxLength(4096).IsUnicode(true).IsRequired();
         builder.ConfigureCreatedAuditFields();
         
         CreatePrimaryKey(builder);

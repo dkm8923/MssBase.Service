@@ -10,4 +10,7 @@ public static class TestConstants
     public const string DefaultTestUserEmail = "IntegrationTest@example.com";
     public const string DefaultTestUserPassword = "!0TestPassword1230!";
     public const string DefaultTestUserApplicationName = "MSS Security";
+    public const string LogTypeUpdate = "Update";
+    public const string LogTypeDelete = "Delete";
+    public const string ReferenceTypeApplication = "Application";
 }
