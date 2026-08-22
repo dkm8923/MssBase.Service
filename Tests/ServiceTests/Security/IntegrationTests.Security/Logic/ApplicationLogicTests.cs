@@ -22,6 +22,7 @@ namespace IntegrationTests.Security.Logic
                                          IDefaultLogicTestsFilter,
                                          IDefaultLogicTestsFilterIncludeRelated,
                                          IDefaultLogicTestsFilterReadOnly,
+                                         IDefaultLogicTestsGetAuditLogsById,
                                          IDefaultLogicTestsInsert, 
                                          IDefaultLogicTestsUpdate,
                                          IDefaultLogicTestsUpdateReadOnly,
@@ -679,7 +680,7 @@ namespace IntegrationTests.Security.Logic
         #region Get Audit Logs By Id
 
         [Fact]
-        public async Task GetAuditLogsByApplicationId_Should_Return_Update_Data()
+        public async Task Default_GetAuditLogsById_Should_Return_Update_Data()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -708,11 +709,13 @@ namespace IntegrationTests.Security.Logic
 
             var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<ApplicationDto>();
             recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.ApplicationId = res.ReferenceId;
+
             _securityTestUtilities.Application.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
         }
 
         [Fact]
-        public async Task GetAuditLogsByApplicationId_Should_Return_Delete_Data()
+        public async Task Default_GetAuditLogsById_Should_Return_Delete_Data()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -735,11 +738,13 @@ namespace IntegrationTests.Security.Logic
 
             var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<ApplicationDto>();
             recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.ApplicationId = res.ReferenceId;
+
             _securityTestUtilities.Application.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
         }
 
         [Fact]
-        public async Task GetAuditLogsByApplicationId_Should_Return_Update_And_Delete_Data()
+        public async Task Default_GetAuditLogsById_Should_Return_Update_And_Delete_Data()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
@@ -767,21 +772,6 @@ namespace IntegrationTests.Security.Logic
             deleteRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplication);
             deleteRes.ReferenceId.Should().Be(testRecord.ApplicationId);
         }
-
-        // [Fact]
-        // public async Task GetAuditLogsByApplicationId_Should_Return_Zero_Records()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     await _securityTestUtilities.Application.CreateActiveTestRecords();
-        //     await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
-
-        //     // Act
-        //     var result = await _applicationLogic.GetAll(new BaseLogicGet());
-
-        //     // Assert
-        //     result.Response.Should().HaveCount(5);
-        // }
 
         #endregion 
 
