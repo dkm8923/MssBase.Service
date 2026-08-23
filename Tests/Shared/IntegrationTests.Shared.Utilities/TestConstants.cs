@@ -13,4 +13,7 @@ public static class TestConstants
     public const string LogTypeUpdate = "Update";
     public const string LogTypeDelete = "Delete";
     public const string ReferenceTypeApplication = "Application";
+    public const string ReferenceTypeApplicationUser = "ApplicationUser";
+    public const string ReferenceTypePermission = "Permission";
+    public const string ReferenceTypeRole = "Role";
 }

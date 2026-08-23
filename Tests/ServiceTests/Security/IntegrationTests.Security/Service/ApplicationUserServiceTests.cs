@@ -452,7 +452,7 @@ namespace IntegrationTests.Security.Service
             await CreateApplicationUserCacheKeys();
 
             // Act
-            await _applicationUserService.Delete(testRecord.ApplicationUserId);
+            await _applicationUserService.Delete(testRecord.ApplicationUserId, TestConstants.CurrentUser);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert

@@ -27,6 +27,8 @@ namespace MssBase.Service.Controllers.Security
             _applicationSvc = applicationSvc;
         }
 
+        #region GetAll
+
         // GET: api/Security/Application
         
         [HttpGet()]
@@ -43,6 +45,10 @@ namespace MssBase.Service.Controllers.Security
                 return HandleControllerException(HttpContext, ex);
             }
         }
+
+        #endregion
+
+        #region GetById
 
         // GET: api/Security/Application/{applicationId}
 
@@ -90,6 +96,10 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        #endregion
+
+        #region Filter
+
         // POST: api/Security/Application/Filter
 
         [HttpPost("Filter")]
@@ -106,6 +116,10 @@ namespace MssBase.Service.Controllers.Security
                 return HandleControllerException(HttpContext, ex);
             }
         }
+
+        #endregion
+
+        #region Insert
 
         // POST: api/Security/Application
 
@@ -130,6 +144,10 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        #endregion
+
+        #region Update
+
         // PUT: api/Security/Application
 
         [HttpPut("{applicationId}")]
@@ -152,6 +170,10 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        #endregion
+
+        #region Delete
+
         // DELETE: api/Security/Application
 
         [HttpDelete("{applicationId}")]
@@ -173,5 +195,8 @@ namespace MssBase.Service.Controllers.Security
                 return HandleControllerException(HttpContext, ex);
             }
         }
+
+        #endregion
+
     }
 }

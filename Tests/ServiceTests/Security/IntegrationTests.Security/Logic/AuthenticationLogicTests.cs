@@ -365,7 +365,7 @@ namespace IntegrationTests.Security.Logic
             var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
 
             //delete user after successful authentication to set up scenario where token is valid but user is deleted
-            await _applicationUserLogic.Delete(testUser.ApplicationUserId);
+            await _applicationUserLogic.Delete(testUser.ApplicationUserId, TestConstants.CurrentUser);
 
             // Act
             var refreshTokenResult = await _authenticationLogic.RefreshToken(new RefreshTokenRequest { 

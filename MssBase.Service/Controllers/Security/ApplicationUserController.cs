@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
 using MssBase.Service.Shared.Authorization;
+using Shared.Logic.Common;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
@@ -81,6 +82,29 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        // GET: api/Security/ApplicationUser/{applicationUserId}/AuditLogs
+
+        [HttpGet("{applicationUserId}/AuditLogs", Name = "GetApplicationUserAuditLogsById")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserRead)]
+        public async Task<IActionResult> GetApplicationUserAuditLogsById(int applicationUserId, [FromQuery] bool deleteCache = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var record = await _applicationUserSvc.GetAuditLogsByApplicationUserId(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache }, cancellationToken);
+
+                if (record.Response == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(record);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
         #endregion
 
         #region Filter
@@ -150,11 +174,11 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpDelete("{applicationUserId}")]
         [RequiredPermission(UserApiPermissions.ApplicationUserDelete)]
-        public async Task<IActionResult> DeleteApplicationUser(int applicationUserId)
+        public async Task<IActionResult> DeleteApplicationUser(int applicationUserId, [FromQuery] string currentUser = Constants.ApplicationName)
         {
             try
             {
-                var result = await _applicationUserSvc.Delete(applicationUserId);
+                var result = await _applicationUserSvc.Delete(applicationUserId, currentUser);
                 if (result.Errors.Count > 0)
                 {
                     return BadRequest(result);

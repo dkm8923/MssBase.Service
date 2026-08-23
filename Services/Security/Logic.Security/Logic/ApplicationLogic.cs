@@ -152,7 +152,7 @@ namespace Logic.Security.Logic
 
                 if (entity != null)
                 {
-                    await LogApplicationChange(dbContext, entity, req);
+                    await LogChange(dbContext, entity, req);
                     
                     entity = entity.UpdateEntityFromRequest(req);
                     await dbContext.SaveChangesAsync();
@@ -179,7 +179,7 @@ namespace Logic.Security.Logic
                 using (var dbContext = _dbContextFactory.CreateContextReadWrite())
                 {
                     var entity = await dbContext.Applications.FirstOrDefaultAsync(ent => ent.ApplicationId == applicationId && !ent.ReadOnly);
-                    await LogApplicationDelete(dbContext, entity, currentUser);
+                    await LogDelete(dbContext, entity, currentUser);
                     dbContext.Applications.Remove(entity);
                     await dbContext.SaveChangesAsync();
                     errorValidationResult.Response = null;
@@ -290,9 +290,9 @@ namespace Logic.Security.Logic
 
         #endregion
 
-        #region Private
+        #region Audit Log
 
-        private async Task LogApplicationChange(SecurityDBContext dbContext, Application oldRecord, InsertUpdateApplicationRequest req) 
+        private async Task LogChange(SecurityDBContext dbContext, Application oldRecord, InsertUpdateApplicationRequest req) 
         {
             var newRecord = req.ToEntityOnInsert();
             
@@ -332,7 +332,7 @@ namespace Logic.Security.Logic
             });
         }
 
-        private async Task LogApplicationDelete(SecurityDBContext dbContext, Application record, string currentUser) 
+        private async Task LogDelete(SecurityDBContext dbContext, Application record, string currentUser) 
         {
             await dbContext.AuditLogs.AddAsync(new AuditLog {
                 LogType = AuditLogLogTypes.Delete,
