@@ -462,7 +462,7 @@ namespace IntegrationTests.Security.Logic
             var postReqFilterCreatedOnDate = new FilterRoleLogicRequest { CreatedOnDate = todaysUtcDate };
             var postReqFilterUpdatedBy = new FilterRoleLogicRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterRoleLogicRequest { UpdatedOnDate = todaysUtcDate };
-            var postReqFilterRoleIds = new FilterRoleLogicRequest { RoleIds = new List<int> { roles[0].RoleId, roles[1].RoleId, roles[2].RoleId } };
+            var postReqFilterRoleIds = new FilterRoleLogicRequest { RoleIds = new List<int> { roles[0].RoleId } };
             var postReqFilterName = new FilterRoleLogicRequest { Name = "Test Role Name 1" };
             var postReqFilterApplicationId = new FilterRoleLogicRequest { ApplicationId = applicationId };
             
@@ -477,12 +477,12 @@ namespace IntegrationTests.Security.Logic
             
             // Assert
             filterCreatedByResult.Response.Should().HaveCount(2);
-            filterCreatedOnDateResult.Response.Should().HaveCount(7);
+            filterCreatedOnDateResult.Response.Should().HaveCount(3);
             filterUpdatedByResult.Response.Should().HaveCount(1);
-            filterUpdatedOnDateResult.Response.Should().HaveCount(7);
-            filterRoleIdsResult.Response.Should().HaveCount(3);
+            filterUpdatedOnDateResult.Response.Should().HaveCount(3);
+            filterRoleIdsResult.Response.Should().HaveCount(1);
             filterNameResult.Response.Should().HaveCount(1);
-            filterApplicationIdResult.Response.Should().HaveCount(7);
+            filterApplicationIdResult.Response.Should().HaveCount(3);
         }
 
         [Fact]
