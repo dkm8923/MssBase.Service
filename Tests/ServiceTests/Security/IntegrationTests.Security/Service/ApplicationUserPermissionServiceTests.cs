@@ -431,7 +431,7 @@ namespace IntegrationTests.Security.Service
             await CreateApplicationUserPermissionCacheKeys();
 
             // Act
-            await _applicationUserPermissionService.Delete(applicationUserPermission.ApplicationUserPermissionId);
+            await _applicationUserPermissionService.Delete(applicationUserPermission.ApplicationUserPermissionId, TestConstants.CurrentUser);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert

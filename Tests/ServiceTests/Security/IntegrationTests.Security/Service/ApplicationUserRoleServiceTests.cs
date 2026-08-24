@@ -431,7 +431,7 @@ namespace IntegrationTests.Security.Service
             await CreateApplicationUserRoleCacheKeys();
 
             // Act
-            await _applicationUserRoleService.Delete(applicationUserRole.ApplicationUserRoleId);
+            await _applicationUserRoleService.Delete(applicationUserRole.ApplicationUserRoleId, TestConstants.CurrentUser);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert

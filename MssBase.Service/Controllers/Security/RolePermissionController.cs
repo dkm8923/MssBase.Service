@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
 using MssBase.Service.Shared.Authorization;
+using Shared.Logic.Common;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
@@ -135,11 +136,11 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpDelete("{applicationUserId}")]
         [RequiredPermission(UserApiPermissions.RolePermissionDelete)]
-        public async Task<IActionResult> DeleteRolePermission(int applicationUserId)
+        public async Task<IActionResult> DeleteRolePermission(int applicationUserId, [FromQuery] string currentUser = Constants.ApplicationName)
         {
             try
             {
-                var result = await _rolePermissionSvc.Delete(applicationUserId);
+                var result = await _rolePermissionSvc.Delete(applicationUserId, currentUser);
                 if (result.Errors.Count > 0)
                 {
                     return BadRequest(result);

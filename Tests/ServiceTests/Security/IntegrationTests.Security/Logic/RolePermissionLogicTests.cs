@@ -8,6 +8,7 @@ using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities.Contracts.Logic;
 using IntegrationTests.Shared.Utilities;
 using Dto.Security.Permission;
+using System.Text.Json;
 
 namespace IntegrationTests.Security.Logic
 {
@@ -19,6 +20,7 @@ namespace IntegrationTests.Security.Logic
                                             IDefaultLogicTestsGetById,
                                             IDefaultLogicTestsGetByIdIncludeRelated,
                                             IDefaultLogicTestsGetByIdReadOnly,
+                                            IDefaultLogicTestsGetAuditLogsById,
                                             IDefaultLogicTestsFilter,
                                             IDefaultLogicTestsFilterIncludeRelated,
                                             IDefaultLogicTestsFilterReadOnly,
@@ -351,6 +353,134 @@ namespace IntegrationTests.Security.Logic
 
             // Assert
             result.Response.Should().BeNull();
+        }
+
+        #endregion
+
+        #region Get Audit Logs By Id
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
+            var permission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
+            var testRecord = (await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, role.RoleId, permission.PermissionId));
+            
+            var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var newRole = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(newApplication.ApplicationId);
+            var newPermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(newApplication.ApplicationId);
+
+            var updateReq = _securityTestUtilities.RolePermission.ConvertRolePermissionDtoToInsertUpdateRequest(testRecord);
+            updateReq.ApplicationId = newApplication.ApplicationId;
+            updateReq.RoleId = newRole.RoleId;
+            updateReq.PermissionId = newPermission.PermissionId;
+
+            // Act
+            var updateResult = await _rolePermissionLogic.Update(testRecord.RolePermissionId, updateReq, _applicationLogic, _roleLogic, _permissionLogic);
+            var auditLogResult = await _rolePermissionLogic.GetAuditLogsByRolePermissionId(testRecord.RolePermissionId);
+
+            // Assert
+            auditLogResult.Response.Should().HaveCount(1);
+
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeRolePermission);
+            res.ReferenceId.Should().Be(testRecord.RolePermissionId);
+
+            var changeLog = ((JsonElement)res.ChangeLogJson).Deserialize<RolePermissionChangeLog>();
+            changeLog.Should().NotBeNull();
+            changeLog.ApplicationId.Should().Be(updateReq.ApplicationId);
+            changeLog.RoleId.Should().Be(updateReq.RoleId);
+            changeLog.PermissionId.Should().Be(updateReq.PermissionId);
+
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<RolePermissionDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.RolePermissionId = res.ReferenceId;
+
+            _securityTestUtilities.RolePermission.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
+            var permission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
+            var testRecord = (await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, role.RoleId, permission.PermissionId));
+            
+            // Act
+            await _rolePermissionLogic.Delete(testRecord.RolePermissionId, TestConstants.CurrentUser);
+            var getResult = await _rolePermissionLogic.GetById(testRecord.RolePermissionId, new BaseLogicGet());
+            var auditLogResult = await _rolePermissionLogic.GetAuditLogsByRolePermissionId(testRecord.RolePermissionId);
+
+            // Assert
+            getResult.Response.Should().BeNull();
+
+            auditLogResult.Response.Should().HaveCount(1);
+
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeDelete);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeRolePermission);
+            res.ReferenceId.Should().Be(testRecord.RolePermissionId);
+
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<RolePermissionDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.RolePermissionId = res.ReferenceId;
+
+            _securityTestUtilities.RolePermission.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_And_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
+            var permission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
+            var testRecord = (await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, role.RoleId, permission.PermissionId));
+            
+            var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var newRole = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(newApplication.ApplicationId);
+            var newPermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(newApplication.ApplicationId);
+
+            var updateReq = _securityTestUtilities.RolePermission.ConvertRolePermissionDtoToInsertUpdateRequest(testRecord);
+            updateReq.ApplicationId = newApplication.ApplicationId;
+            updateReq.RoleId = newRole.RoleId;
+            updateReq.PermissionId = newPermission.PermissionId;
+
+            // Act
+            var updateResult = await _rolePermissionLogic.Update(testRecord.RolePermissionId, updateReq, _applicationLogic, _roleLogic, _permissionLogic);
+            await _rolePermissionLogic.Delete(testRecord.RolePermissionId, TestConstants.CurrentUser);
+            var auditLogResult = await _rolePermissionLogic.GetAuditLogsByRolePermissionId(testRecord.RolePermissionId);
+
+            // Assert
+            auditLogResult.Response.Should().HaveCount(2);
+
+            var updateRes = auditLogResult.Response.First();
+            updateRes.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            updateRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeRolePermission);
+            updateRes.ReferenceId.Should().Be(testRecord.RolePermissionId);
+
+            var deleteRes = auditLogResult.Response.Last();
+            deleteRes.LogType.Should().Be(TestConstants.LogTypeDelete);
+            deleteRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeRolePermission);
+            deleteRes.ReferenceId.Should().Be(testRecord.RolePermissionId);
+        }
+
+        class RolePermissionChangeLog
+        {
+            public int? ApplicationId { get; set; }
+            public int? RoleId { get; set; }
+            public int? PermissionId { get; set; }
+            public bool? Active { get; set; }
+            public string? UpdatedBy { get; set; }
+            public DateTime? UpdatedOn { get; set; }
         }
 
         #endregion
@@ -856,7 +986,7 @@ namespace IntegrationTests.Security.Logic
             var recordToDelete = arrangeTestDataResponse.ActiveRolePermissions.FirstOrDefault();   
 
             // Act
-            var result = await _rolePermissionLogic.Delete(recordToDelete.RolePermissionId);
+            var result = await _rolePermissionLogic.Delete(recordToDelete.RolePermissionId, TestConstants.CurrentUser);
             var getResult = await _rolePermissionLogic.GetById(recordToDelete.RolePermissionId, new BaseLogicGet { IncludeInactive = true });
 
             // Assert
@@ -873,7 +1003,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.RolePermission.GetExpectedRecordDoesNotExistErrors();
 
             // Act
-            var result = await _rolePermissionLogic.Delete(-1);
+            var result = await _rolePermissionLogic.Delete(-1, TestConstants.CurrentUser);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);
@@ -895,7 +1025,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.RolePermission.GetExpectedReadOnlyErrors();
 
             // Act
-            var result = await _rolePermissionLogic.Delete(testRecord.RolePermissionId);
+            var result = await _rolePermissionLogic.Delete(testRecord.RolePermissionId, TestConstants.CurrentUser);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);

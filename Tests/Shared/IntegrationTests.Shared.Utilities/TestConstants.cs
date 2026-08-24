@@ -16,4 +16,7 @@ public static class TestConstants
     public const string ReferenceTypeApplicationUser = "ApplicationUser";
     public const string ReferenceTypePermission = "Permission";
     public const string ReferenceTypeRole = "Role";
+    public const string ReferenceTypeApplicationUserPermission = "ApplicationUserPermission";
+    public const string ReferenceTypeApplicationUserRole = "ApplicationUserRole";
+    public const string ReferenceTypeRolePermission = "RolePermission";
 }

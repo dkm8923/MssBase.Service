@@ -430,7 +430,7 @@ namespace IntegrationTests.Security.Service
             await CreateRolePermissionCacheKeys();
 
             // Act
-            await _rolePermissionService.Delete(rolePermission.RolePermissionId);
+            await _rolePermissionService.Delete(rolePermission.RolePermissionId, TestConstants.CurrentUser);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert

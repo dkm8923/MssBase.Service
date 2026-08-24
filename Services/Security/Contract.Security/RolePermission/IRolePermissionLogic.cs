@@ -4,6 +4,7 @@ using Contract.Security.Role;
 using Dto.Security.RolePermission;
 using Dto.Security.RolePermission.Logic;
 using Shared.Models;
+using Shared.Models.Dtos;
 
 namespace Contract.Security.RolePermission
 {
@@ -11,6 +12,7 @@ namespace Contract.Security.RolePermission
     {
         public Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default);
         public Task<ErrorValidationResult<RolePermissionDto>> GetById(int rolePermissionId, BaseLogicGet req, CancellationToken cancellationToken = default);
+        public Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByRolePermissionId(int rolePermissionId, CancellationToken cancellationToken = default);
         public Task<ErrorValidationResult<IEnumerable<RolePermissionDto>>> Filter(FilterRolePermissionLogicRequest req, CancellationToken cancellationToken = default);
         public Task<ErrorValidationResult<RolePermissionDto>> Insert(InsertUpdateRolePermissionRequest req, 
                                                                      IApplicationLogic applicationLogic,
@@ -23,6 +25,6 @@ namespace Contract.Security.RolePermission
                                                                      IRoleLogic roleLogic,
                                                                      IPermissionLogic permissionLogic
                                                                     );
-        public Task<ErrorValidationResult> Delete(int rolePermissionId);
+        public Task<ErrorValidationResult> Delete(int rolePermissionId, string currentUser);
     }
 }

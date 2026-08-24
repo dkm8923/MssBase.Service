@@ -7,6 +7,7 @@ using MssBase.Service.Controllers.Shared;
 using MssBase.Service.Shared.Authorization;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
+using Shared.Logic.Common;
 
 namespace MssBase.Service.Controllers.Security
 {
@@ -135,11 +136,11 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpDelete("{applicationUserId}")]
         [RequiredPermission(UserApiPermissions.ApplicationUserPermissionDelete)]
-        public async Task<IActionResult> DeleteApplicationUserPermission(int applicationUserId)
+        public async Task<IActionResult> DeleteApplicationUserPermission(int applicationUserId, [FromQuery] string currentUser = Constants.ApplicationName)
         {
             try
             {
-                var result = await _applicationUserSvc.Delete(applicationUserId);
+                var result = await _applicationUserSvc.Delete(applicationUserId, currentUser);
                 if (result.Errors.Count > 0)
                 {
                     return BadRequest(result);

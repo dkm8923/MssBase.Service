@@ -373,6 +373,124 @@ namespace IntegrationTests.Security.Logic
 
         #endregion
 
+        #region Get Audit Logs By Id
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+            
+            var updateReq = _securityTestUtilities.ApplicationUser.ConvertApplicationUserDtoToInsertUpdateRequest(testRecord);
+            updateReq.Email = "UpdatedEmail@Test.com";
+            updateReq.FirstName = "Updated FirstName";
+            updateReq.LastName = "Updated LastName";
+            updateReq.DateOfBirth = new DateTime(2000, 1, 1);
+
+            // Act
+            var updateResult = await _applicationUserLogic.Update(testRecord.ApplicationUserId, updateReq, _applicationLogic);
+            var auditLogResult = await _applicationUserLogic.GetAuditLogsByApplicationUserId(testRecord.ApplicationUserId);
+
+            // Assert
+            auditLogResult.Response.Should().HaveCount(1);
+
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
+            res.ReferenceId.Should().Be(testRecord.ApplicationUserId);
+
+            var changeLog = ((JsonElement)res.ChangeLogJson).Deserialize<ApplicationUserChangeLog>();
+            changeLog.Should().NotBeNull();
+            changeLog.Email.Should().Be(updateReq.Email);
+            changeLog.FirstName.Should().Be(updateReq.FirstName);
+            changeLog.LastName.Should().Be(updateReq.LastName);
+            changeLog.DateOfBirth.Should().Be(updateReq.DateOfBirth);
+
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<ApplicationUserDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.ApplicationUserId = res.ReferenceId;
+
+            _securityTestUtilities.ApplicationUser.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+
+            // Act
+            await _applicationUserLogic.Delete(testRecord.ApplicationUserId, TestConstants.CurrentUser);
+            var getResult = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet());
+            var auditLogResult = await _applicationUserLogic.GetAuditLogsByApplicationUserId(testRecord.ApplicationUserId);
+
+            // Assert
+            getResult.Response.Should().BeNull();
+
+            auditLogResult.Response.Should().HaveCount(1);
+
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeDelete);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
+            res.ReferenceId.Should().Be(testRecord.ApplicationUserId);
+
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<ApplicationUserDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.ApplicationUserId = res.ReferenceId;
+
+            _securityTestUtilities.ApplicationUser.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_And_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+
+            var updateReq = _securityTestUtilities.ApplicationUser.ConvertApplicationUserDtoToInsertUpdateRequest(testRecord);
+            updateReq.Email = "UpdatedEmail@Test.com";
+            updateReq.FirstName = "Updated FirstName";
+            updateReq.LastName = "Updated LastName";
+            updateReq.DateOfBirth = new DateTime(2000, 1, 1);
+
+            // Act
+            var updateResult = await _applicationUserLogic.Update(testRecord.ApplicationUserId, updateReq, _applicationLogic);
+            await _applicationUserLogic.Delete(testRecord.ApplicationUserId, TestConstants.CurrentUser);
+            var auditLogResult = await _applicationUserLogic.GetAuditLogsByApplicationUserId(testRecord.ApplicationUserId);
+
+            // Assert
+            auditLogResult.Response.Should().HaveCount(2);
+
+            var updateRes = auditLogResult.Response.First();
+            updateRes.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            updateRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
+            updateRes.ReferenceId.Should().Be(testRecord.ApplicationUserId);
+
+            var deleteRes = auditLogResult.Response.Last();
+            deleteRes.LogType.Should().Be(TestConstants.LogTypeDelete);
+            deleteRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
+            deleteRes.ReferenceId.Should().Be(testRecord.ApplicationUserId);
+        }
+
+        class ApplicationUserChangeLog
+        {
+            public string? Email { get; set; }
+            public string? FirstName { get; set; }
+            public string? LastName { get; set; }
+            public DateTime? DateOfBirth { get; set; }
+            public bool? Active { get; set; }
+            public string? UpdatedBy { get; set; }
+            public DateTime? UpdatedOn { get; set; }
+        }
+
+        #endregion
+
         #region Filter
 
         [Fact]
@@ -672,124 +790,6 @@ namespace IntegrationTests.Security.Logic
         }
 
         #endregion
-
-        #region Get Audit Logs By Id
-
-        [Fact]
-        public async Task Default_GetAuditLogsById_Should_Return_Update_Data()
-        {
-            // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).First();
-            
-            var updateReq = _securityTestUtilities.ApplicationUser.ConvertApplicationUserDtoToInsertUpdateRequest(testRecord);
-            updateReq.Email = "UpdatedEmail@Test.com";
-            updateReq.FirstName = "Updated FirstName";
-            updateReq.LastName = "Updated LastName";
-            updateReq.DateOfBirth = new DateTime(2000, 1, 1);
-
-            // Act
-            var updateResult = await _applicationUserLogic.Update(testRecord.ApplicationUserId, updateReq, _applicationLogic);
-            var auditLogResult = await _applicationUserLogic.GetAuditLogsByApplicationUserId(testRecord.ApplicationUserId);
-
-            // Assert
-            auditLogResult.Response.Should().HaveCount(1);
-
-            var res = auditLogResult.Response.First();
-            res.LogType.Should().Be(TestConstants.LogTypeUpdate);
-            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
-            res.ReferenceId.Should().Be(testRecord.ApplicationUserId);
-
-            var changeLog = ((JsonElement)res.ChangeLogJson).Deserialize<ApplicationUserChangeLog>();
-            changeLog.Should().NotBeNull();
-            changeLog.Email.Should().Be(updateReq.Email);
-            changeLog.FirstName.Should().Be(updateReq.FirstName);
-            changeLog.LastName.Should().Be(updateReq.LastName);
-            changeLog.DateOfBirth.Should().Be(updateReq.DateOfBirth);
-
-            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<ApplicationUserDto>();
-            recordStateBeforeChange.Should().NotBeNull();
-            recordStateBeforeChange.ApplicationUserId = res.ReferenceId;
-
-            _securityTestUtilities.ApplicationUser.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
-        }
-
-        [Fact]
-        public async Task Default_GetAuditLogsById_Should_Return_Delete_Data()
-        {
-            // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).First();
-
-            // Act
-            await _applicationUserLogic.Delete(testRecord.ApplicationUserId, TestConstants.CurrentUser);
-            var getResult = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet());
-            var auditLogResult = await _applicationUserLogic.GetAuditLogsByApplicationUserId(testRecord.ApplicationUserId);
-
-            // Assert
-            getResult.Response.Should().BeNull();
-
-            auditLogResult.Response.Should().HaveCount(1);
-
-            var res = auditLogResult.Response.First();
-            res.LogType.Should().Be(TestConstants.LogTypeDelete);
-            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
-            res.ReferenceId.Should().Be(testRecord.ApplicationUserId);
-
-            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<ApplicationUserDto>();
-            recordStateBeforeChange.Should().NotBeNull();
-            recordStateBeforeChange.ApplicationUserId = res.ReferenceId;
-
-            _securityTestUtilities.ApplicationUser.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
-        }
-
-        [Fact]
-        public async Task Default_GetAuditLogsById_Should_Return_Update_And_Delete_Data()
-        {
-            // Arrange
-            await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).First();
-
-            var updateReq = _securityTestUtilities.ApplicationUser.ConvertApplicationUserDtoToInsertUpdateRequest(testRecord);
-            updateReq.Email = "UpdatedEmail@Test.com";
-            updateReq.FirstName = "Updated FirstName";
-            updateReq.LastName = "Updated LastName";
-            updateReq.DateOfBirth = new DateTime(2000, 1, 1);
-
-            // Act
-            var updateResult = await _applicationUserLogic.Update(testRecord.ApplicationUserId, updateReq, _applicationLogic);
-            await _applicationUserLogic.Delete(testRecord.ApplicationUserId, TestConstants.CurrentUser);
-            var auditLogResult = await _applicationUserLogic.GetAuditLogsByApplicationUserId(testRecord.ApplicationUserId);
-
-            // Assert
-            auditLogResult.Response.Should().HaveCount(2);
-
-            var updateRes = auditLogResult.Response.First();
-            updateRes.LogType.Should().Be(TestConstants.LogTypeUpdate);
-            updateRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
-            updateRes.ReferenceId.Should().Be(testRecord.ApplicationUserId);
-
-            var deleteRes = auditLogResult.Response.Last();
-            deleteRes.LogType.Should().Be(TestConstants.LogTypeDelete);
-            deleteRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
-            deleteRes.ReferenceId.Should().Be(testRecord.ApplicationUserId);
-        }
-
-        class ApplicationUserChangeLog
-        {
-            public string? Email { get; set; }
-            public string? FirstName { get; set; }
-            public string? LastName { get; set; }
-            public DateTime? DateOfBirth { get; set; }
-            public bool? Active { get; set; }
-            public string? UpdatedBy { get; set; }
-            public DateTime? UpdatedOn { get; set; }
-        }
-
-        #endregion 
 
         #region Insert
 
