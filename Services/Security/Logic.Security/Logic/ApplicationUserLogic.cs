@@ -50,6 +50,8 @@ namespace Logic.Security.Logic
             _passwordValidationConfig = passwordValidationConfig;
         }
 
+        #region GetAll
+
         /// <summary>
         /// Retrieves a collection of application users based on the specified request parameters.
         /// </summary>
@@ -58,6 +60,10 @@ namespace Logic.Security.Logic
             var ret = await this.Filter(new FilterApplicationUserLogicRequest { IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
+
+        #endregion
+
+        #region GetById
 
         /// <summary>
         /// Retrieves an application user by its unique identifier.
@@ -68,6 +74,10 @@ namespace Logic.Security.Logic
 
             return new ErrorValidationResult<ApplicationUserDto> { Response = res.Response.FirstOrDefault() };
         }
+
+        #endregion
+
+        #region GetAuditLogsByApplicationUserId
 
         /// <summary>
         /// Retrieves the audit logs for an application user by its unique identifier.
@@ -81,20 +91,9 @@ namespace Logic.Security.Logic
             }
         }
 
-        /// <summary>
-        /// Retrieves the password change history for a specific application user by their unique identifier. This includes a list of previous password changes, along with details such as the old password (hashed), the date of the change, and who initiated the change.
-        /// </summary>
-        /// <param name="applicationUserId"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>> GetPasswordChangeHistoryByApplicationUserId(int applicationUserId, CancellationToken cancellationToken = default)
-        {
-            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
-            {
-                var query = dbContext.ApplicationUserLogChangePasswords.AsQueryable().AsNoTracking().Where(log => log.ApplicationUserId == applicationUserId);
-                return new ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>> { Response = await query.ToDtos(cancellationToken) };
-            }
-        }
+        #endregion
+
+        #region Filter
 
         /// <summary>
         /// Filters application users based on the specified criteria.
@@ -159,6 +158,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Insert
+
         /// <summary>
         /// Inserts a new application user into the data store.
         /// </summary>
@@ -187,6 +190,10 @@ namespace Logic.Security.Logic
                 return new ErrorValidationResult<ApplicationUserDto> { Response = entity.ToDto() };
             }
         }
+
+        #endregion
+
+        #region Update
 
         /// <summary>
         /// Updates the details of an existing ApplicationUser.
@@ -222,6 +229,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Delete
+
         /// <summary>
         /// Deletes the application user with the specified identifier.
         /// </summary>
@@ -254,6 +265,25 @@ namespace Logic.Security.Logic
                 {
                     return _createUserNotFoundError<object?>();
                 }
+            }
+        }
+
+        #endregion
+
+        #region Password Logic
+
+        /// <summary>
+        /// Retrieves the password change history for a specific application user by their unique identifier. This includes a list of previous password changes, along with details such as the old password (hashed), the date of the change, and who initiated the change.
+        /// </summary>
+        /// <param name="applicationUserId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>> GetPasswordChangeHistoryByApplicationUserId(int applicationUserId, CancellationToken cancellationToken = default)
+        {
+            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
+            {
+                var query = dbContext.ApplicationUserLogChangePasswords.AsQueryable().AsNoTracking().Where(log => log.ApplicationUserId == applicationUserId);
+                return new ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>> { Response = await query.ToDtos(cancellationToken) };
             }
         }
 
@@ -365,6 +395,8 @@ namespace Logic.Security.Logic
                 return new ErrorValidationResult();
             }
         }
+
+        #endregion
 
         #region Private Methods
 
@@ -564,7 +596,5 @@ namespace Logic.Security.Logic
         }
 
         #endregion
-
-        
     }
 }

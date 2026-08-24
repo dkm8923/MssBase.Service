@@ -778,6 +778,17 @@ namespace IntegrationTests.Security.Logic
             deleteRes.ReferenceId.Should().Be(testRecord.ApplicationUserId);
         }
 
+        class ApplicationUserChangeLog
+        {
+            public string? Email { get; set; }
+            public string? FirstName { get; set; }
+            public string? LastName { get; set; }
+            public DateTime? DateOfBirth { get; set; }
+            public bool? Active { get; set; }
+            public string? UpdatedBy { get; set; }
+            public DateTime? UpdatedOn { get; set; }
+        }
+
         #endregion 
 
         #region Insert
@@ -1434,16 +1445,5 @@ namespace IntegrationTests.Security.Logic
 
         #endregion
 
-    }
-
-    class ApplicationUserChangeLog
-    {
-        public string? Email { get; set; }
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public DateTime? DateOfBirth { get; set; }
-        public bool? Active { get; set; }
-        public string? UpdatedBy { get; set; }
-        public DateTime? UpdatedOn { get; set; }
     }
 }

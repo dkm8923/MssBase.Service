@@ -6,6 +6,7 @@ using Shared.Models;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities.Contracts.Logic;
 using IntegrationTests.Shared.Utilities;
+using System.Text.Json;
 
 namespace IntegrationTests.Security.Logic
 {
@@ -15,6 +16,7 @@ namespace IntegrationTests.Security.Logic
                                         IDefaultLogicTestsGetAllReadOnly,
                                         IDefaultLogicTestsGetById,
                                         IDefaultLogicTestsGetByIdReadOnly,
+                                        IDefaultLogicTestsGetAuditLogsById,
                                         IDefaultLogicTestsFilter,
                                         IDefaultLogicTestsFilterReadOnly,  
                                         IDefaultLogicTestsInsert, 
@@ -229,6 +231,117 @@ namespace IntegrationTests.Security.Logic
         }
 
         #endregion
+
+        #region Get Audit Logs By Id
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+            
+            var updateReq = _securityTestUtilities.Permission.ConvertPermissionDtoToInsertUpdateRequest(testRecord);
+            updateReq.Name = "Updated Permission Name";
+            updateReq.Description = "Updated Permission Description";
+            updateReq.Active = false;
+
+            // Act
+            var updateResult = await _permissionLogic.Update(testRecord.PermissionId, updateReq, _applicationLogic);
+            var auditLogResult = await _permissionLogic.GetAuditLogsByPermissionId(testRecord.PermissionId);
+
+            // Assert
+            auditLogResult.Response.Should().HaveCount(1);
+
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypePermission);
+            res.ReferenceId.Should().Be(testRecord.PermissionId);
+
+            var changeLog = ((JsonElement)res.ChangeLogJson).Deserialize<PermissionChangeLog>();
+            changeLog.Should().NotBeNull();
+            changeLog.Name.Should().Be(updateReq.Name);
+            changeLog.Description.Should().Be(updateReq.Description);
+            changeLog.Active.Should().Be(updateReq.Active);
+
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<PermissionDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.PermissionId = res.ReferenceId;
+
+            _securityTestUtilities.Permission.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+
+            // Act
+            await _permissionLogic.Delete(testRecord.PermissionId, TestConstants.CurrentUser);
+            var getResult = await _permissionLogic.GetById(testRecord.PermissionId, new BaseLogicGet());
+            var auditLogResult = await _permissionLogic.GetAuditLogsByPermissionId(testRecord.PermissionId);
+
+            // Assert
+            getResult.Response.Should().BeNull();
+
+            auditLogResult.Response.Should().HaveCount(1);
+
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeDelete);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypePermission);
+            res.ReferenceId.Should().Be(testRecord.PermissionId);
+
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<PermissionDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.PermissionId = res.ReferenceId;
+
+            _securityTestUtilities.Permission.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_And_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = (await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+
+            var updateReq = _securityTestUtilities.Permission.ConvertPermissionDtoToInsertUpdateRequest(testRecord);
+            updateReq.Name = "Updated Permission Name";
+
+            // Act
+            var updateResult = await _permissionLogic.Update(testRecord.PermissionId, updateReq, _applicationLogic);
+            await _permissionLogic.Delete(testRecord.PermissionId, TestConstants.CurrentUser);
+            var auditLogResult = await _permissionLogic.GetAuditLogsByPermissionId(testRecord.PermissionId);
+
+            // Assert
+            auditLogResult.Response.Should().HaveCount(2);
+
+            var updateRes = auditLogResult.Response.First();
+            updateRes.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            updateRes.ReferenceType.Should().Be(TestConstants.ReferenceTypePermission);
+            updateRes.ReferenceId.Should().Be(testRecord.PermissionId);
+
+            var deleteRes = auditLogResult.Response.Last();
+            deleteRes.LogType.Should().Be(TestConstants.LogTypeDelete);
+            deleteRes.ReferenceType.Should().Be(TestConstants.ReferenceTypePermission);
+            deleteRes.ReferenceId.Should().Be(testRecord.PermissionId);
+        }
+
+        class PermissionChangeLog
+        {
+            public string? Name { get; set; }
+            public string? Description { get; set; }
+            public bool? Active { get; set; }
+            public string? UpdatedBy { get; set; }
+            public DateTime? UpdatedOn { get; set; }
+        }
+
+        #endregion 
 
         #region Filter
 
@@ -648,7 +761,7 @@ namespace IntegrationTests.Security.Logic
             var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
 
             // Act
-            var result = await _permissionLogic.Delete(testRecord.PermissionId);
+            var result = await _permissionLogic.Delete(testRecord.PermissionId, TestConstants.CurrentUser);
             var getResult = await _permissionLogic.GetById(testRecord.PermissionId, new BaseLogicGet { IncludeInactive = true });
 
             // Assert
@@ -665,7 +778,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Permission.GetExpectedRecordDoesNotExistErrors();
 
             // Act
-            var result = await _permissionLogic.Delete(-1);
+            var result = await _permissionLogic.Delete(-1, TestConstants.CurrentUser);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);
@@ -684,7 +797,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Permission.GetExpectedReadOnlyErrors();
 
             // Act
-            var result = await _permissionLogic.Delete(testRecord.PermissionId);
+            var result = await _permissionLogic.Delete(testRecord.PermissionId, TestConstants.CurrentUser);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);

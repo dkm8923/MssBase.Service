@@ -773,6 +773,15 @@ namespace IntegrationTests.Security.Logic
             deleteRes.ReferenceId.Should().Be(testRecord.ApplicationId);
         }
 
+        class ApplicationChangeLog
+        {
+            public string? Name { get; set; }
+            public string? Description { get; set; }
+            public bool? Active { get; set; }
+            public string? UpdatedBy { get; set; }
+            public DateTime? UpdatedOn { get; set; }
+        }
+
         #endregion 
 
         #region Insert
@@ -1139,14 +1148,5 @@ namespace IntegrationTests.Security.Logic
         // }
 
         #endregion
-    }
-
-    class ApplicationChangeLog
-    {
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public bool? Active { get; set; }
-        public string? UpdatedBy { get; set; }
-        public DateTime? UpdatedOn { get; set; }
     }
 }

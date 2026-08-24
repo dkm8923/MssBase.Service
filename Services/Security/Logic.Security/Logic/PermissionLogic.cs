@@ -12,6 +12,12 @@ using Contract.Security.Application;
 using Shared.Logic;
 using Shared.Logic.Validators;
 using Shared.Logic.Common;
+using Data.Security.Models;
+using static Shared.Logic.Common.Constants;
+using Shared.Data.Models;
+using System.Text.Json;
+using Shared.Models.Dtos;
+using Shared.Data.Converters;
 
 namespace Logic.Security.Logic
 {
@@ -35,6 +41,8 @@ namespace Logic.Security.Logic
             _insertUpdatePermissionRequestValidator = insertUpdatePermissionRequestValidator;
         }
 
+        #region GetAll
+
         /// <summary>
         /// Retrieves a collection of Permissions based on the specified request parameters.
         /// </summary>
@@ -43,6 +51,10 @@ namespace Logic.Security.Logic
             var ret = await this.Filter(new FilterPermissionLogicRequest { IncludeInactive = req.IncludeInactive, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
+
+        #endregion
+
+        #region GetById
 
         /// <summary>
         /// Retrieves an Permission by its unique identifier.
@@ -53,6 +65,26 @@ namespace Logic.Security.Logic
 
             return new ErrorValidationResult<PermissionDto> { Response = res.Response.FirstOrDefault() };
         }
+
+        #endregion
+
+        #region GetAuditLogsByPermissionId
+
+        /// <summary>
+        /// Retrieves the audit logs for a permission by its unique identifier.
+        /// </summary>
+        public async Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByPermissionId(int permissionId, CancellationToken cancellationToken = default)
+        {
+            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
+            {
+                var query = dbContext.AuditLogs.AsQueryable().AsNoTracking().Where(al => al.ReferenceType == EntityFieldNames.Permission && al.ReferenceId == permissionId);
+                return new ErrorValidationResult<IEnumerable<AuditLogDto>> { Response = await query.ToDtos(cancellationToken) };
+            }
+        }
+
+        #endregion
+
+        #region Filter
 
         /// <summary>
         /// Filters Permissions based on the specified criteria.
@@ -92,6 +124,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Insert
+
         /// <summary>
         /// Inserts a new Permission into the data store.
         /// </summary>
@@ -113,6 +149,10 @@ namespace Logic.Security.Logic
                 return new ErrorValidationResult<PermissionDto> { Response = entity.ToDto() };
             }
         }
+
+        #endregion
+
+        #region Update
 
         /// <summary>
         /// Updates the details of an existing Permission.
@@ -140,16 +180,22 @@ namespace Logic.Security.Logic
                     return await _returnReadOnlyRecordErrorValidationResult();
                 }
 
+                await LogChange(dbContext, entity, req);
+
                 entity = entity.UpdateEntityFromRequest(req);
                 await dbContext.SaveChangesAsync();
                 return new ErrorValidationResult<PermissionDto> { Response = entity.ToDto() };
             }
         }
 
+        #endregion
+
+        #region Delete
+
         /// <summary>
         /// Deletes the Permission with the specified identifier.
         /// </summary>
-        public async Task<ErrorValidationResult> Delete(int permissionId)
+        public async Task<ErrorValidationResult> Delete(int permissionId, string currentUser)
         {
             var errorValidationResult = await _validatePermissionOnDelete(permissionId);
 
@@ -158,6 +204,9 @@ namespace Logic.Security.Logic
                 using (var dbContext = _dbContextFactory.CreateContextReadWrite())
                 {
                     var entity = await dbContext.Permissions.FirstOrDefaultAsync(ent => ent.PermissionId == permissionId && !ent.ReadOnly);
+                    
+                    await LogDelete(dbContext, entity, currentUser);
+                    
                     dbContext.Permissions.Remove(entity);
                     await dbContext.SaveChangesAsync();
                     errorValidationResult.Response = null;
@@ -166,6 +215,8 @@ namespace Logic.Security.Logic
 
             return errorValidationResult;
         }
+
+        #endregion
 
         #region Validation
 
@@ -236,6 +287,83 @@ namespace Logic.Security.Logic
             var errorValidationResult = new ErrorValidationResult<PermissionDto>();
             errorValidationResult.Errors.Add(Constants.EntityFieldNames.Permission, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
             return errorValidationResult;
+        }
+
+        #endregion
+
+        #region Audit Log
+
+        private async Task LogChange(SecurityDBContext dbContext, Permission oldRecord, InsertUpdatePermissionRequest req) 
+        {
+            var newRecord = req.ToEntityOnInsert();
+            
+            // Only capture fields that actually changed, not the full entity graph
+            var changeLog = new Dictionary<string, object?>();
+
+            if (oldRecord.Name != newRecord.Name)
+            {
+                changeLog[nameof(Permission.Name)] = newRecord.Name;
+            }
+
+            if (oldRecord.Description != newRecord.Description)
+            {
+                changeLog[nameof(Permission.Description)] = newRecord.Description;
+            }
+
+            if (oldRecord.ApplicationId != newRecord.ApplicationId)
+            {
+                changeLog[nameof(ApplicationUser.ApplicationId)] = newRecord.ApplicationId;
+            }
+
+            if (oldRecord.Active != newRecord.Active)
+            {
+                changeLog[nameof(Permission.Active)] = newRecord.Active;
+            }
+
+            if (oldRecord.UpdatedBy != req.CurrentUser)
+            {
+                changeLog[nameof(Permission.UpdatedBy)] = req.CurrentUser;
+            }
+            
+            changeLog[nameof(Permission.UpdatedOn)] = oldRecord.UpdatedOn;
+            
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Update,
+                ReferenceType = EntityFieldNames.Permission,
+                ReferenceId = oldRecord.PermissionId,
+                ChangeLogJson = JsonSerializer.Serialize(changeLog),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(oldRecord),
+                CreatedBy = req.CurrentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private async Task LogDelete(SecurityDBContext dbContext, Permission record, string currentUser) 
+        {
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Delete,
+                ReferenceType = EntityFieldNames.Permission,
+                ReferenceId = record.PermissionId,
+                ChangeLogJson = JsonSerializer.Serialize(new {}),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(record),
+                CreatedBy = currentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private string GetRecordStateBeforeChangeJson(Permission record)
+        {
+            var log = new Dictionary<string, object?>();
+            log[nameof(Permission.Name)] = record.Name;
+            log[nameof(Permission.Description)] = record.Description;
+            log[nameof(Permission.ApplicationId)] = record.ApplicationId;
+            log[nameof(Permission.Active)] = record.Active;
+            log[nameof(Permission.CreatedBy)] = record.CreatedBy;
+            log[nameof(Permission.CreatedOn)] = record.CreatedOn;
+            log[nameof(Permission.UpdatedBy)] = record.UpdatedBy;
+            log[nameof(Permission.UpdatedOn)] = record.UpdatedOn;
+            
+            return JsonSerializer.Serialize(log);
         }
 
         #endregion

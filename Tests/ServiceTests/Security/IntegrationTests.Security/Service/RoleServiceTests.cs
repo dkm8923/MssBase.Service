@@ -412,7 +412,7 @@ namespace IntegrationTests.Security.Service
             await CreateRoleCacheKeys();
 
             // Act
-            await _roleService.Delete(testRecord.RoleId);
+            await _roleService.Delete(testRecord.RoleId, TestConstants.CurrentUser);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert

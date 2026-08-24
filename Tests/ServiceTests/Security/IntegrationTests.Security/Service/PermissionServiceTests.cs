@@ -368,7 +368,7 @@ namespace IntegrationTests.Security.Service
             await CreatePermissionCacheKeys();
 
             // Act
-            await _permissionService.Delete(testRecord.PermissionId);
+            await _permissionService.Delete(testRecord.PermissionId, TestConstants.CurrentUser);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert

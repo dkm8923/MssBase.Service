@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
 using MssBase.Service.Shared.Authorization;
+using Shared.Logic.Common;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
@@ -52,6 +53,29 @@ namespace MssBase.Service.Controllers.Security
             try
             {
                 var record = await _roleService.GetById(roleId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated, IncludeReadOnly = includeReadOnly }, cancellationToken);
+
+                if (record.Response == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(record);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
+        // GET: api/Security/Role/{roleId}/AuditLogs
+
+        [HttpGet("{roleId}/AuditLogs", Name = "GetRoleAuditLogsById")]
+        [RequiredPermission(UserApiPermissions.RoleRead)]
+        public async Task<IActionResult> GetRoleAuditLogsById(int roleId, [FromQuery] bool deleteCache = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var record = await _roleService.GetAuditLogsByRoleId(roleId, new BaseServiceGet { DeleteCache = deleteCache }, cancellationToken);
 
                 if (record.Response == null)
                 {
@@ -135,11 +159,11 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpDelete("{roleId}")]
         [RequiredPermission(UserApiPermissions.RoleDelete)]
-        public async Task<IActionResult> DeleteRole(int roleId)
+        public async Task<IActionResult> DeleteRole(int roleId, [FromQuery] string currentUser = Constants.ApplicationName)
         {
             try
             {
-                var result = await _roleService.Delete(roleId);
+                var result = await _roleService.Delete(roleId, currentUser);
                 if (result.Errors.Count > 0)
                 {
                     return BadRequest(result);

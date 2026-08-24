@@ -12,6 +12,12 @@ using Contract.Security.Application;
 using Shared.Logic;
 using Shared.Logic.Validators;
 using Shared.Logic.Common;
+using Data.Security.Models;
+using static Shared.Logic.Common.Constants;
+using Shared.Data.Models;
+using System.Text.Json;
+using Shared.Models.Dtos;
+using Shared.Data.Converters;
 
 namespace Logic.Security.Logic
 {
@@ -35,6 +41,8 @@ namespace Logic.Security.Logic
             _insertUpdateRoleRequestValidator = insertUpdateRoleRequestValidator;
         }
 
+        #region GetAll
+
         /// <summary>
         /// Retrieves a collection of Roles based on the specified request parameters.
         /// </summary>
@@ -43,6 +51,10 @@ namespace Logic.Security.Logic
             var ret = await this.Filter(new FilterRoleLogicRequest { IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
+
+        #endregion
+
+        #region GetById
 
         /// <summary>
         /// Retrieves an Role by its unique identifier.
@@ -53,6 +65,26 @@ namespace Logic.Security.Logic
 
             return new ErrorValidationResult<RoleDto> { Response = res.Response.FirstOrDefault() };
         }
+
+        #endregion
+        
+        #region GetAuditLogsByRoleId
+        
+        /// <summary>
+        /// Retrieves the audit logs for a role by its unique identifier.
+        /// </summary>
+        public async Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByRoleId(int roleId, CancellationToken cancellationToken = default)
+        {
+            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
+            {
+                var query = dbContext.AuditLogs.AsQueryable().AsNoTracking().Where(al => al.ReferenceType == EntityFieldNames.Role && al.ReferenceId == roleId);
+                return new ErrorValidationResult<IEnumerable<AuditLogDto>> { Response = await query.ToDtos(cancellationToken) };
+            }
+        }
+
+        #endregion
+
+        #region Filter
 
         /// <summary>
         /// Filters Roles based on the specified criteria.
@@ -98,6 +130,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Insert
+
         /// <summary>
         /// Inserts a new Role into the data store.
         /// </summary>
@@ -119,6 +155,10 @@ namespace Logic.Security.Logic
                 return new ErrorValidationResult<RoleDto> { Response = entity.ToDto() };
             }
         }
+
+        #endregion
+
+        #region Update  
 
         /// <summary>
         /// Updates the details of an existing Role.
@@ -146,16 +186,22 @@ namespace Logic.Security.Logic
                     return await _returnReadOnlyRecordErrorValidationResult();
                 }
 
+                await LogChange(dbContext, entity, req);
+
                 entity = entity.UpdateEntityFromRequest(req);
                 await dbContext.SaveChangesAsync();
                 return new ErrorValidationResult<RoleDto> { Response = entity.ToDto() };
             }
         }
 
+        #endregion
+
+        #region Delete  
+
         /// <summary>
         /// Deletes the Role with the specified identifier.
         /// </summary>
-        public async Task<ErrorValidationResult> Delete(int roleId)
+        public async Task<ErrorValidationResult> Delete(int roleId, string currentUser)
         {
             var errorValidationResult = await _validateRoleOnDelete(roleId);
 
@@ -164,6 +210,9 @@ namespace Logic.Security.Logic
                 using (var dbContext = _dbContextFactory.CreateContextReadWrite())
                 {
                     var entity = await dbContext.Roles.FirstOrDefaultAsync(ent => ent.RoleId == roleId && !ent.ReadOnly);
+                    
+                    await LogDelete(dbContext, entity, currentUser);
+                    
                     dbContext.Roles.Remove(entity);
                     await dbContext.SaveChangesAsync();
                     errorValidationResult.Response = null;
@@ -172,6 +221,8 @@ namespace Logic.Security.Logic
 
             return errorValidationResult;
         }
+
+        #endregion
 
         #region Validation
 
@@ -243,6 +294,83 @@ namespace Logic.Security.Logic
             var errorValidationResult = new ErrorValidationResult<RoleDto>();
             errorValidationResult.Errors.Add(Constants.EntityFieldNames.Role, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
             return errorValidationResult;
+        }
+
+        #endregion
+
+        #region Audit Log
+
+        private async Task LogChange(SecurityDBContext dbContext, Role oldRecord, InsertUpdateRoleRequest req) 
+        {
+            var newRecord = req.ToEntityOnInsert();
+            
+            // Only capture fields that actually changed, not the full entity graph
+            var changeLog = new Dictionary<string, object?>();
+
+            if (oldRecord.Name != newRecord.Name)
+            {
+                changeLog[nameof(Role.Name)] = newRecord.Name;
+            }
+
+            if (oldRecord.Description != newRecord.Description)
+            {
+                changeLog[nameof(Role.Description)] = newRecord.Description;
+            }
+
+            if (oldRecord.ApplicationId != newRecord.ApplicationId)
+            {
+                changeLog[nameof(Role.ApplicationId)] = newRecord.ApplicationId;
+            }
+
+            if (oldRecord.Active != newRecord.Active)
+            {
+                changeLog[nameof(Role.Active)] = newRecord.Active;
+            }
+
+            if (oldRecord.UpdatedBy != req.CurrentUser)
+            {
+                changeLog[nameof(Role.UpdatedBy)] = req.CurrentUser;
+            }
+            
+            changeLog[nameof(Role.UpdatedOn)] = oldRecord.UpdatedOn;
+            
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Update,
+                ReferenceType = EntityFieldNames.Role,
+                ReferenceId = oldRecord.RoleId,
+                ChangeLogJson = JsonSerializer.Serialize(changeLog),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(oldRecord),
+                CreatedBy = req.CurrentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private async Task LogDelete(SecurityDBContext dbContext, Role record, string currentUser) 
+        {
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Delete,
+                ReferenceType = EntityFieldNames.Role,
+                ReferenceId = record.RoleId,
+                ChangeLogJson = JsonSerializer.Serialize(new {}),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(record),
+                CreatedBy = currentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private string GetRecordStateBeforeChangeJson(Role record)
+        {
+            var log = new Dictionary<string, object?>();
+            log[nameof(Role.Name)] = record.Name;
+            log[nameof(Role.Description)] = record.Description;
+            log[nameof(Role.ApplicationId)] = record.ApplicationId;
+            log[nameof(Role.Active)] = record.Active;
+            log[nameof(Role.CreatedBy)] = record.CreatedBy;
+            log[nameof(Role.CreatedOn)] = record.CreatedOn;
+            log[nameof(Role.UpdatedBy)] = record.UpdatedBy;
+            log[nameof(Role.UpdatedOn)] = record.UpdatedOn;
+            
+            return JsonSerializer.Serialize(log);
         }
 
         #endregion
