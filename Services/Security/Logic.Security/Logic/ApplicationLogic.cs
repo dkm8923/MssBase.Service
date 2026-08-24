@@ -40,6 +40,8 @@ namespace Logic.Security.Logic
             _insertUpdateApplicationRequestValidator = insertUpdateApplicationRequestValidator;
         }
 
+        #region GetAll
+
         /// <summary>
         /// Retrieves a collection of applications based on the specified request parameters.
         /// </summary>
@@ -48,6 +50,10 @@ namespace Logic.Security.Logic
             var ret = await this.Filter(new FilterApplicationLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly }, cancellationToken);
             return ret;
         }
+
+        #endregion
+
+        #region GetById
 
         /// <summary>
         /// Retrieves an application by its unique identifier.
@@ -58,6 +64,10 @@ namespace Logic.Security.Logic
 
             return new ErrorValidationResult<ApplicationDto> { Response = res.Response.FirstOrDefault() };
         }
+
+        #endregion
+
+        #region GetAuditLogsByApplicationId
 
         /// <summary>
         /// Retrieves the audit logs for an application by its unique identifier.
@@ -70,6 +80,10 @@ namespace Logic.Security.Logic
                 return new ErrorValidationResult<IEnumerable<AuditLogDto>> { Response = await query.ToDtos(cancellationToken) };
             }
         }
+
+        #endregion
+
+        #region Filter
 
         /// <summary>
         /// Filters applications based on the specified criteria.
@@ -113,6 +127,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Insert
+
         /// <summary>
         /// Inserts a new application into the data store.
         /// </summary>
@@ -134,6 +152,10 @@ namespace Logic.Security.Logic
                 return new ErrorValidationResult<ApplicationDto> { Response = entity.ToDto() };
             }
         }
+
+        #endregion
+
+        #region Update
 
         /// <summary>
         /// Updates the details of an existing application.
@@ -167,6 +189,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Delete
+
         /// <summary>
         /// Deletes the application with the specified identifier.
         /// </summary>
@@ -188,6 +214,8 @@ namespace Logic.Security.Logic
 
             return errorValidationResult;
         }
+
+        #endregion
 
         #region Validation
 
