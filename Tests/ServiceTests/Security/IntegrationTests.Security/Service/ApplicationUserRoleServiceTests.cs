@@ -19,6 +19,7 @@ namespace IntegrationTests.Security.Service
                                                IDefaultServiceTestsGetById,
                                                IDefaultServiceTestsGetByIdIncludeRelated,
                                                IDefaultServiceTestsGetByIdReadOnly,
+                                               IDefaultServiceTestsGetAuditLogsById,
                                                IDefaultServiceTestsFilter,
                                                IDefaultServiceTestsInsert,
                                                IDefaultServiceTestsUpdate,
@@ -234,6 +235,43 @@ namespace IntegrationTests.Security.Service
     
             // Act
             var result = await _applicationUserRoleService.GetById(testRecord.ApplicationUserRoleId, new BaseServiceGet { IncludeReadOnly = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
+        #endregion
+
+        #region GetAuditLogsById
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Cache()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+            
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
+            var testRecord = await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
+
+            var updateReq = new InsertUpdateApplicationUserRoleRequest
+            {
+                ApplicationId = testRecord.ApplicationId,
+                ApplicationUserId = testRecord.ApplicationUserId,
+                RoleId = testRecord.RoleId,
+                Active = false,
+                CurrentUser = TestConstants.CurrentUser
+            };
+
+            // Act
+            var updateResult = await _applicationUserRoleLogic.Update(testRecord.ApplicationUserRoleId, updateReq, _applicationLogic, _applicationUserLogic, _roleLogic);
+            var expectedCacheKey = $"ApplicationUserRoleService_GetAuditLogById_{testRecord.ApplicationUserRoleId}";
+
+            var result = await _applicationUserRoleService.GetAuditLogsByApplicationUserRoleId(testRecord.ApplicationUserRoleId, new BaseServiceGet());
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert

@@ -18,6 +18,7 @@ namespace IntegrationTests.Security.Service
                                                IDefaultServiceTestsGetAllReadOnly,
                                                IDefaultServiceTestsGetById,
                                                IDefaultServiceTestsGetByIdReadOnly,
+                                               IDefaultServiceTestsGetAuditLogsById,
                                                IDefaultServiceTestsFilter,
                                                IDefaultServiceTestsInsert,
                                                IDefaultServiceTestsUpdate,
@@ -201,6 +202,41 @@ namespace IntegrationTests.Security.Service
             // Assert
             result.Response.Should().BeNull();
             availableCacheKeys.Should().HaveCount(0);
+        }
+
+        #endregion
+
+        #region GetAuditLogsById
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Cache()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+            
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
+
+            var updateReq = new InsertUpdatePermissionRequest
+            {
+                ApplicationId = testRecord.ApplicationId,
+                Name = "Updated Permission Name",
+                Description = "Updated Permission Description",
+                Active = false,
+                CurrentUser = TestConstants.CurrentUser
+            };
+
+            // Act
+            var updateResult = await _permissionLogic.Update(testRecord.PermissionId, updateReq, _applicationLogic);
+            var expectedCacheKey = $"PermissionService_GetAuditLogById_{testRecord.PermissionId}";
+
+            var result = await _permissionService.GetAuditLogsByPermissionId(testRecord.PermissionId, new BaseServiceGet());
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
         }
 
         #endregion
