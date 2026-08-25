@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
 using MssBase.Service.Shared.Authorization;
+using Shared.Logic.Common;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
@@ -52,6 +53,29 @@ namespace MssBase.Service.Controllers.Security
             try
             {
                 var record = await _permissionService.GetById(permissionId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeReadOnly = includeReadOnly }, cancellationToken);
+
+                if (record.Response == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(record);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
+        // GET: api/Security/Permission/{permissionId}/AuditLogs
+
+        [HttpGet("{permissionId}/AuditLogs", Name = "GetPermissionAuditLogsById")]
+        [RequiredPermission(UserApiPermissions.PermissionRead)]
+        public async Task<IActionResult> GetPermissionAuditLogsById(int permissionId, [FromQuery] bool deleteCache = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var record = await _permissionService.GetAuditLogsByPermissionId(permissionId, new BaseServiceGet { DeleteCache = deleteCache }, cancellationToken);
 
                 if (record.Response == null)
                 {
@@ -135,11 +159,11 @@ namespace MssBase.Service.Controllers.Security
 
         [HttpDelete("{permissionId}")]
         [RequiredPermission(UserApiPermissions.PermissionDelete)]
-        public async Task<IActionResult> DeletePermission(int permissionId)
+        public async Task<IActionResult> DeletePermission(int permissionId, [FromQuery] string currentUser = Constants.ApplicationName)
         {
             try
             {
-                var result = await _permissionService.Delete(permissionId);
+                var result = await _permissionService.Delete(permissionId, currentUser);
                 if (result.Errors.Count > 0)
                 {
                     return BadRequest(result);

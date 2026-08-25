@@ -6,6 +6,7 @@ using Shared.Models;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities.Contracts.Logic;
 using IntegrationTests.Shared.Utilities;
+using System.Text.Json;
 
 namespace IntegrationTests.Security.Logic
 {
@@ -17,6 +18,7 @@ namespace IntegrationTests.Security.Logic
                                   IDefaultLogicTestsGetById,
                                   IDefaultLogicTestsGetByIdIncludeRelated,
                                   IDefaultLogicTestsGetByIdReadOnly,
+                                  IDefaultLogicTestsGetAuditLogsById,
                                   IDefaultLogicTestsFilter,
                                   IDefaultLogicTestsFilterIncludeRelated,
                                   IDefaultLogicTestsFilterReadOnly,    
@@ -360,6 +362,115 @@ namespace IntegrationTests.Security.Logic
 
         #endregion
 
+        #region Get Audit Logs By Id
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+            
+            var updateReq = _securityTestUtilities.Role.ConvertRoleDtoToInsertUpdateRequest(testRecord);
+            updateReq.Name = "Updated Role Name";
+            updateReq.Description = "Updated Description";
+
+            // Act
+            var updateResult = await _roleLogic.Update(testRecord.RoleId, updateReq, _applicationLogic);
+            var auditLogResult = await _roleLogic.GetAuditLogsByRoleId(testRecord.RoleId);
+
+            // Assert
+            auditLogResult.Response.Should().HaveCount(1);
+
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeRole);
+            res.ReferenceId.Should().Be(testRecord.RoleId);
+
+            var changeLog = ((JsonElement)res.ChangeLogJson).Deserialize<RoleChangeLog>();
+            changeLog.Should().NotBeNull();
+            changeLog.Name.Should().Be(updateReq.Name);
+            changeLog.Description.Should().Be(updateReq.Description);
+
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<RoleDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.RoleId = res.ReferenceId;
+
+            _securityTestUtilities.Role.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+
+            // Act
+            await _roleLogic.Delete(testRecord.RoleId, TestConstants.CurrentUser);
+            var getResult = await _roleLogic.GetById(testRecord.RoleId, new BaseLogicGet());
+            var auditLogResult = await _roleLogic.GetAuditLogsByRoleId(testRecord.RoleId);
+
+            // Assert
+            getResult.Response.Should().BeNull();
+
+            auditLogResult.Response.Should().HaveCount(1);
+
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeDelete);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeRole);
+            res.ReferenceId.Should().Be(testRecord.RoleId);
+
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<RoleDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.RoleId = res.ReferenceId;
+
+            _securityTestUtilities.Role.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_And_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = (await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+
+            var updateReq = _securityTestUtilities.Role.ConvertRoleDtoToInsertUpdateRequest(testRecord);
+            updateReq.Name = "Updated Role Name";
+
+            // Act
+            var updateResult = await _roleLogic.Update(testRecord.RoleId, updateReq, _applicationLogic);
+            await _roleLogic.Delete(testRecord.RoleId, TestConstants.CurrentUser);
+            var auditLogResult = await _roleLogic.GetAuditLogsByRoleId(testRecord.RoleId);
+
+            // Assert
+            auditLogResult.Response.Should().HaveCount(2);
+
+            var updateRes = auditLogResult.Response.First();
+            updateRes.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            updateRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeRole);
+            updateRes.ReferenceId.Should().Be(testRecord.RoleId);
+
+            var deleteRes = auditLogResult.Response.Last();
+            deleteRes.LogType.Should().Be(TestConstants.LogTypeDelete);
+            deleteRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeRole);
+            deleteRes.ReferenceId.Should().Be(testRecord.RoleId);
+        }
+
+        class RoleChangeLog
+        {
+            public string? Name { get; set; }
+            public string? Description { get; set; }
+            public bool? Active { get; set; }
+            public string? UpdatedBy { get; set; }
+            public DateTime? UpdatedOn { get; set; }
+        }
+
+        #endregion 
+
         #region Filter
 
         [Fact]
@@ -462,7 +573,7 @@ namespace IntegrationTests.Security.Logic
             var postReqFilterCreatedOnDate = new FilterRoleLogicRequest { CreatedOnDate = todaysUtcDate };
             var postReqFilterUpdatedBy = new FilterRoleLogicRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterRoleLogicRequest { UpdatedOnDate = todaysUtcDate };
-            var postReqFilterRoleIds = new FilterRoleLogicRequest { RoleIds = new List<int> { roles[0].RoleId, roles[1].RoleId, roles[2].RoleId } };
+            var postReqFilterRoleIds = new FilterRoleLogicRequest { RoleIds = new List<int> { roles[0].RoleId } };
             var postReqFilterName = new FilterRoleLogicRequest { Name = "Test Role Name 1" };
             var postReqFilterApplicationId = new FilterRoleLogicRequest { ApplicationId = applicationId };
             
@@ -477,12 +588,12 @@ namespace IntegrationTests.Security.Logic
             
             // Assert
             filterCreatedByResult.Response.Should().HaveCount(2);
-            filterCreatedOnDateResult.Response.Should().HaveCount(7);
+            filterCreatedOnDateResult.Response.Should().HaveCount(3);
             filterUpdatedByResult.Response.Should().HaveCount(1);
-            filterUpdatedOnDateResult.Response.Should().HaveCount(7);
-            filterRoleIdsResult.Response.Should().HaveCount(3);
+            filterUpdatedOnDateResult.Response.Should().HaveCount(3);
+            filterRoleIdsResult.Response.Should().HaveCount(1);
             filterNameResult.Response.Should().HaveCount(1);
-            filterApplicationIdResult.Response.Should().HaveCount(7);
+            filterApplicationIdResult.Response.Should().HaveCount(3);
         }
 
         [Fact]
@@ -860,7 +971,7 @@ namespace IntegrationTests.Security.Logic
             var testRecord = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
 
             // Act
-            var result = await _roleLogic.Delete(testRecord.RoleId);
+            var result = await _roleLogic.Delete(testRecord.RoleId, TestConstants.CurrentUser);
             var getResult = await _roleLogic.GetById(testRecord.RoleId, new BaseLogicGet { IncludeInactive = true });
 
             // Assert
@@ -877,7 +988,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Role.GetExpectedRecordDoesNotExistErrors();
 
             // Act
-            var result = await _roleLogic.Delete(-1);
+            var result = await _roleLogic.Delete(-1, TestConstants.CurrentUser);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);
@@ -896,7 +1007,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Role.GetExpectedReadOnlyErrors();
 
             // Act
-            var result = await _roleLogic.Delete(testRecord.RoleId);
+            var result = await _roleLogic.Delete(testRecord.RoleId, TestConstants.CurrentUser);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);

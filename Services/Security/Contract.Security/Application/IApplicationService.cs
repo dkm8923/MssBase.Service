@@ -2,6 +2,7 @@ using System;
 using Dto.Security.Application;
 using Dto.Security.Application.Service;
 using Shared.Models;
+using Shared.Models.Dtos;
 
 namespace Contract.Security.Application;
 
@@ -9,8 +10,9 @@ public interface IApplicationService
 {
     public Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> GetAll(BaseServiceGet req, CancellationToken cancellationToken = default);
     public Task<ErrorValidationResult<ApplicationDto>> GetById(int applicationId, BaseServiceGet req, CancellationToken cancellationToken = default);
+    public Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByApplicationId(int applicationId, BaseServiceGet req, CancellationToken cancellationToken = default);
     public Task<ErrorValidationResult<IEnumerable<ApplicationDto>>> Filter(FilterApplicationServiceRequest req, CancellationToken cancellationToken = default);
     public Task<ErrorValidationResult<ApplicationDto>> Insert(InsertUpdateApplicationRequest req);
     public Task<ErrorValidationResult<ApplicationDto>> Update(int applicationId, InsertUpdateApplicationRequest req);
-    public Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId);
+    public Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId, string currentUser);
 }

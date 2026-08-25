@@ -16,6 +16,12 @@ using Shared.Models;
 using Shared.Logic;
 using Shared.Logic.Validators;
 using Shared.Logic.Common;
+using Shared.Models.Dtos;
+using static Shared.Logic.Common.Constants;
+using Shared.Data.Converters;
+using Data.Security.Models;
+using System.Text.Json;
+using Shared.Data.Models;
 
 namespace Logic.Security.Logic
 {
@@ -39,6 +45,8 @@ namespace Logic.Security.Logic
             _insertUpdateApplicationUserPermissionRequestValidator = insertUpdateApplicationUserPermissionRequestValidator;
         }
 
+        #region GetAll
+
         /// <summary>
         /// Retrieves a collection of application users based on the specified request parameters.
         /// </summary>
@@ -47,6 +55,10 @@ namespace Logic.Security.Logic
             var ret = await this.Filter(new FilterApplicationUserPermissionLogicRequest { IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
+
+        #endregion
+
+        #region GetById
 
         /// <summary>
         /// Retrieves an application user by its unique identifier.
@@ -57,6 +69,26 @@ namespace Logic.Security.Logic
 
             return new ErrorValidationResult<ApplicationUserPermissionDto> { Response = res.Response.FirstOrDefault() };
         }
+
+        #endregion
+
+        #region GetAuditLogsByApplicationUserPermissionId
+
+        /// <summary>
+        /// Retrieves the audit logs for an application user permission by its unique identifier.
+        /// </summary>
+        public async Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByApplicationUserPermissionId(int applicationUserPermissionId, CancellationToken cancellationToken = default)
+        {
+            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
+            {
+                var query = dbContext.AuditLogs.AsQueryable().AsNoTracking().Where(al => al.ReferenceType == EntityFieldNames.ApplicationUserPermission && al.ReferenceId == applicationUserPermissionId);
+                return new ErrorValidationResult<IEnumerable<AuditLogDto>> { Response = await query.ToDtos(cancellationToken) };
+            }
+        }
+
+        #endregion
+
+        #region Filter
 
         /// <summary>
         /// Filters application users based on the specified criteria.
@@ -106,6 +138,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Insert
+
         /// <summary>
         /// Inserts a new application user into the data store.
         /// </summary>
@@ -132,17 +168,21 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Update
+
         /// <summary>
         /// Updates the details of an existing application user.
         /// </summary>
         public async Task<ErrorValidationResult<ApplicationUserPermissionDto>> Update(int applicationUserPermissionId, 
                                                                                       InsertUpdateApplicationUserPermissionRequest req, 
                                                                                       IApplicationLogic applicationLogic,
-                                                                                      IApplicationUserLogic applicationUserPermissionLogic,
+                                                                                      IApplicationUserLogic applicationUserLogic,
                                                                                       IPermissionLogic permissionLogic
                                                                                      )
         {
-            var errorValidationResult = await _validateApplicationUserPermissionOnInsertUpdate(applicationLogic, applicationUserPermissionLogic, permissionLogic, req, applicationUserPermissionId);
+            var errorValidationResult = await _validateApplicationUserPermissionOnInsertUpdate(applicationLogic, applicationUserLogic, permissionLogic, req, applicationUserPermissionId);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
@@ -163,16 +203,22 @@ namespace Logic.Security.Logic
                     return await _returnReadOnlyRecordErrorValidationResult();
                 }
 
+                await LogChange(dbContext, entity, req);
+
                 entity = entity.UpdateEntityFromRequest(req);
                 await dbContext.SaveChangesAsync();
                 return new ErrorValidationResult<ApplicationUserPermissionDto> { Response = entity.ToDto() };
             }
         }
 
+        #endregion
+
+        #region Delete
+
         /// <summary>
         /// Deletes the application user with the specified identifier.
         /// </summary>
-        public async Task<ErrorValidationResult> Delete(int applicationUserPermissionId)
+        public async Task<ErrorValidationResult> Delete(int applicationUserPermissionId, string currentUser)
         {
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
@@ -186,6 +232,8 @@ namespace Logic.Security.Logic
                         return await _returnReadOnlyRecordErrorValidationResult();
                     }
 
+                    await LogDelete(dbContext, entity, currentUser);
+
                     dbContext.ApplicationUserPermissions.Remove(entity);
 
                     await dbContext.SaveChangesAsync();
@@ -198,6 +246,8 @@ namespace Logic.Security.Logic
                 return errorValidationResult;
             }
         }
+
+        #endregion
 
         #region Validation
 
@@ -278,6 +328,83 @@ namespace Logic.Security.Logic
             var errorValidationResult = new ErrorValidationResult<ApplicationUserPermissionDto>();
             errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationUserPermission, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
             return errorValidationResult;
+        }
+
+        #endregion
+
+        #region Audit Log
+
+        private async Task LogChange(SecurityDBContext dbContext, ApplicationUserPermission oldRecord, InsertUpdateApplicationUserPermissionRequest req) 
+        {
+            var newRecord = req.ToEntityOnInsert();
+            
+            // Only capture fields that actually changed, not the full entity graph
+            var changeLog = new Dictionary<string, object?>();
+
+            if (oldRecord.ApplicationId != newRecord.ApplicationId)
+            {
+                changeLog[nameof(ApplicationUserPermission.ApplicationId)] = newRecord.ApplicationId;
+            }
+            
+            if (oldRecord.ApplicationUserId != newRecord.ApplicationUserId)
+            {
+                changeLog[nameof(ApplicationUserPermission.ApplicationUserId)] = newRecord.ApplicationUserId;
+            }
+
+            if (oldRecord.PermissionId != newRecord.PermissionId)
+            {
+                changeLog[nameof(ApplicationUserPermission.PermissionId)] = newRecord.PermissionId;
+            }
+
+            if (oldRecord.Active != newRecord.Active)
+            {
+                changeLog[nameof(ApplicationUserPermission.Active)] = newRecord.Active;
+            }
+
+            if (oldRecord.UpdatedBy != req.CurrentUser)
+            {
+                changeLog[nameof(ApplicationUserPermission.UpdatedBy)] = req.CurrentUser;
+            }
+            
+            changeLog[nameof(ApplicationUserPermission.UpdatedOn)] = oldRecord.UpdatedOn;
+            
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Update,
+                ReferenceType = EntityFieldNames.ApplicationUserPermission,
+                ReferenceId = oldRecord.ApplicationUserPermissionId,
+                ChangeLogJson = JsonSerializer.Serialize(changeLog),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(oldRecord),
+                CreatedBy = req.CurrentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private async Task LogDelete(SecurityDBContext dbContext, ApplicationUserPermission record, string currentUser) 
+        {
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Delete,
+                ReferenceType = EntityFieldNames.ApplicationUserPermission,
+                ReferenceId = record.ApplicationUserPermissionId,
+                ChangeLogJson = JsonSerializer.Serialize(new {}),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(record),
+                CreatedBy = currentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private string GetRecordStateBeforeChangeJson(ApplicationUserPermission record)
+        {
+            var log = new Dictionary<string, object?>();
+            log[nameof(ApplicationUserPermission.ApplicationId)] = record.ApplicationId;
+            log[nameof(ApplicationUserPermission.ApplicationUserId)] = record.ApplicationUserId;
+            log[nameof(ApplicationUserPermission.PermissionId)] = record.PermissionId;
+            log[nameof(ApplicationUserPermission.Active)] = record.Active;
+            log[nameof(ApplicationUserPermission.CreatedBy)] = record.CreatedBy;
+            log[nameof(ApplicationUserPermission.CreatedOn)] = record.CreatedOn;
+            log[nameof(ApplicationUserPermission.UpdatedBy)] = record.UpdatedBy;
+            log[nameof(ApplicationUserPermission.UpdatedOn)] = record.UpdatedOn;
+            
+            return JsonSerializer.Serialize(log);
         }
 
         #endregion

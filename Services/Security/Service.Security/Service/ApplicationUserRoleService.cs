@@ -6,6 +6,7 @@ using Dto.Security.ApplicationUserRole;
 using Dto.Security.ApplicationUserRole.Service;
 using Shared.Contracts;
 using Shared.Models;
+using Shared.Models.Dtos;
 using Shared.Service.Cache;
 
 namespace Service.Security.Service
@@ -45,6 +46,12 @@ namespace Service.Security.Service
         {
             var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, applicationUserId, req.IncludeInactive, req.IncludeRelated, req.IncludeReadOnly);
             return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserRoleLogic.GetById(applicationUserId, req, cancellationToken));
+        }
+
+        public async Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByApplicationUserRoleId(int roleId, BaseServiceGet req, CancellationToken cancellationToken = default)
+        {
+            var cacheKeyName = CacheUtilities.CreateGetAuditLogByIdCacheKey(cacheKeySectionName, roleId);
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserRoleLogic.GetAuditLogsByApplicationUserRoleId(roleId, cancellationToken));
         }
 
         public async Task<ErrorValidationResult<IEnumerable<ApplicationUserRoleDto>>> Filter(FilterApplicationUserRoleServiceRequest req, CancellationToken cancellationToken = default )
@@ -104,11 +111,11 @@ namespace Service.Security.Service
 
         #region Delete
 
-        public async Task<ErrorValidationResult> Delete(int applicationUserId)
+        public async Task<ErrorValidationResult> Delete(int applicationUserId, string currentUser)
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _applicationUserRoleLogic.Delete(applicationUserId);
+            return await _applicationUserRoleLogic.Delete(applicationUserId, currentUser);
         }
 
         #endregion

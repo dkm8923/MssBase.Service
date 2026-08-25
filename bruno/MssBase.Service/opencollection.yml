@@ -1,0 +1,119 @@
+opencollection: 1.0.0
+
+info:
+  name: MssBase.Service
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: bearer
+    token: "{{BearerToken}}"
+  scripts:
+    - type: before-request
+      code: |-
+        const apiBaseUrl = bru.getEnvVar("BaseUrl");
+        const testUserEmail = bru.getEnvVar("TestUserEmail");
+        const testPassword = bru.getEnvVar("TestUserPassword");
+        const testApplicationName = bru.getEnvVar("TestApplicationName");
+
+        const existingToken = bru.getEnvVar("BearerToken");
+        const tokenExpireTime = bru.getEnvVar("BearerTokenExpireTime");
+        const authInProgress = bru.getEnvVar("__auth_in_progress") === "1";
+
+        // Avoid duplicate auth calls if pre-request runs multiple times quickly
+        if (authInProgress) {
+          console.log("Auth already in progress. Skipping duplicate request.");
+          return;
+        }
+
+        const isExpired =
+          !tokenExpireTime || new Date(tokenExpireTime).getTime() <= Date.now();
+
+        if (!existingToken || isExpired) {
+          const requestOptions = {
+            url: apiBaseUrl + "/Security/Authentication/Authenticate",
+            method: "POST",
+            header: { "content-type": "application/json" },
+            data: {
+              Email: testUserEmail,
+              Password: testPassword,
+              ApplicationName: testApplicationName
+            }
+          };
+
+          console.log("Sending auth request:", requestOptions.url);
+
+          bru.sendRequest(requestOptions, function (err, res) {
+            try {
+              if (err) {
+                console.error("Auth request failed:", err);
+                return;
+              }
+
+              const body = res && res.data ? res.data : {};
+              console.log("Auth response body:", body);
+
+              const newToken = body.response && body.response.token;
+              const newRefreshToken = body.response && body.response.refreshToken;
+
+              if (!newToken) {
+                console.error("No token found at body.response.token");
+                return;
+              }
+
+              const expireIso = getJwtExpireIso(newToken);
+              
+              bru.setEnvVar("BearerToken", newToken, { persist: true });
+              bru.setEnvVar("BearerTokenExpireTime", expireIso);
+
+              // Optional but useful for refresh flow
+              if (newRefreshToken) {
+                bru.setEnvVar("RefreshToken", newRefreshToken);
+              }
+
+              console.log("Bearer Token:", newToken);
+              console.log("Refresh Token:", newRefreshToken);
+              console.log("Token expires at:", expireIso);
+            } 
+            catch (e) {
+              console.error("Post-auth processing error:", e);
+            } 
+          });
+        }
+
+        function decodeJwtPayload(jwt) {
+          const parts = jwt.split(".");
+          if (parts.length !== 3) {
+            throw new Error("Invalid JWT format");
+          }
+
+          const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+          const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+          const json = Buffer.from(padded, "base64").toString("utf8");
+          return JSON.parse(json);
+        }
+
+        function getJwtExpireIso(jwt) {
+          const payload = decodeJwtPayload(jwt);
+          if (!payload.exp) {
+            throw new Error("JWT has no exp claim");
+          }
+
+          return new Date(payload.exp * 1000).toISOString();
+        }
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

@@ -19,6 +19,7 @@ namespace IntegrationTests.Security.Service
                                                IDefaultServiceTestsGetById,
                                                IDefaultServiceTestsGetByIdIncludeRelated,
                                                IDefaultServiceTestsGetByIdReadOnly,
+                                               IDefaultServiceTestsGetAuditLogsById,
                                                IDefaultServiceTestsFilter,
                                                IDefaultServiceTestsInsert,
                                                IDefaultServiceTestsUpdate,
@@ -243,6 +244,43 @@ namespace IntegrationTests.Security.Service
 
         #endregion
 
+        #region GetAuditLogsById
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Cache()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+            
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var permission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
+            var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
+            var testRecord = await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, role.RoleId, permission.PermissionId);
+
+            var updateReq = new InsertUpdateRolePermissionRequest
+            {
+                ApplicationId = testRecord.ApplicationId,
+                RoleId = testRecord.RoleId,
+                PermissionId = testRecord.PermissionId,
+                Active = false,
+                CurrentUser = TestConstants.CurrentUser
+            };
+
+            // Act
+            var updateResult = await _rolePermissionLogic.Update(testRecord.RolePermissionId, updateReq, _applicationLogic, _roleLogic, _permissionLogic);
+            var expectedCacheKey = $"RolePermissionService_GetAuditLogById_{testRecord.RolePermissionId}";
+
+            var result = await _rolePermissionService.GetAuditLogsByRolePermissionId(testRecord.RolePermissionId, new BaseServiceGet());
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
+        #endregion
+
         #region Filter
 
         [Fact]
@@ -430,7 +468,7 @@ namespace IntegrationTests.Security.Service
             await CreateRolePermissionCacheKeys();
 
             // Act
-            await _rolePermissionService.Delete(rolePermission.RolePermissionId);
+            await _rolePermissionService.Delete(rolePermission.RolePermissionId, TestConstants.CurrentUser);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert

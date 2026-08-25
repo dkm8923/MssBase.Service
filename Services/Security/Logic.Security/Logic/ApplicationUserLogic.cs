@@ -12,10 +12,15 @@ using Shared.Models;
 using Shared.Logic;
 using Shared.Logic.Validators;
 using Shared.Logic.Common;
+using Shared.Data.Converters;
 using Microsoft.AspNetCore.Identity;
 using Dto.Security.Authentication;
 using Data.Security.Models;
 using Microsoft.Extensions.Options;
+using Shared.Models.Dtos;
+using static Shared.Logic.Common.Constants;
+using System.Text.Json;
+using Shared.Data.Models;
 
 namespace Logic.Security.Logic
 {
@@ -45,6 +50,8 @@ namespace Logic.Security.Logic
             _passwordValidationConfig = passwordValidationConfig;
         }
 
+        #region GetAll
+
         /// <summary>
         /// Retrieves a collection of application users based on the specified request parameters.
         /// </summary>
@@ -53,6 +60,10 @@ namespace Logic.Security.Logic
             var ret = await this.Filter(new FilterApplicationUserLogicRequest { IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
+
+        #endregion
+
+        #region GetById
 
         /// <summary>
         /// Retrieves an application user by its unique identifier.
@@ -64,20 +75,25 @@ namespace Logic.Security.Logic
             return new ErrorValidationResult<ApplicationUserDto> { Response = res.Response.FirstOrDefault() };
         }
 
+        #endregion
+
+        #region GetAuditLogsByApplicationUserId
+
         /// <summary>
-        /// Retrieves the password change history for a specific application user by their unique identifier. This includes a list of previous password changes, along with details such as the old password (hashed), the date of the change, and who initiated the change.
+        /// Retrieves the audit logs for an application user by its unique identifier.
         /// </summary>
-        /// <param name="applicationUserId"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>> GetPasswordChangeHistoryByApplicationUserId(int applicationUserId, CancellationToken cancellationToken = default)
+        public async Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByApplicationUserId(int applicationUserId, CancellationToken cancellationToken = default)
         {
             using (var dbContext = _dbContextFactory.CreateContextReadOnly())
             {
-                var query = dbContext.ApplicationUserLogChangePasswords.AsQueryable().AsNoTracking().Where(log => log.ApplicationUserId == applicationUserId);
-                return new ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>> { Response = await query.ToDtos(cancellationToken) };
+                var query = dbContext.AuditLogs.AsQueryable().AsNoTracking().Where(al => al.ReferenceType == EntityFieldNames.ApplicationUser && al.ReferenceId == applicationUserId);
+                return new ErrorValidationResult<IEnumerable<AuditLogDto>> { Response = await query.ToDtos(cancellationToken) };
             }
         }
+
+        #endregion
+
+        #region Filter
 
         /// <summary>
         /// Filters application users based on the specified criteria.
@@ -142,6 +158,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Insert
+
         /// <summary>
         /// Inserts a new application user into the data store.
         /// </summary>
@@ -171,6 +191,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Update
+
         /// <summary>
         /// Updates the details of an existing ApplicationUser.
         /// </summary>
@@ -197,16 +221,22 @@ namespace Logic.Security.Logic
                     return await _returnReadOnlyRecordErrorValidationResult();
                 }
 
+                await LogChange(dbContext, entity, req);
+
                 entity = entity.UpdateEntityFromRequest(req);
                 await dbContext.SaveChangesAsync();
                 return new ErrorValidationResult<ApplicationUserDto> { Response = entity.ToDtoWithoutPassword() };
             }
         }
 
+        #endregion
+
+        #region Delete
+
         /// <summary>
         /// Deletes the application user with the specified identifier.
         /// </summary>
-        public async Task<ErrorValidationResult> Delete(int applicationUserId)
+        public async Task<ErrorValidationResult> Delete(int applicationUserId, string currentUser)
         {
             var errorValidationResult = await _validateApplicationUserOnDelete(applicationUserId);
             if (errorValidationResult.Errors.Count > 0)
@@ -216,12 +246,14 @@ namespace Logic.Security.Logic
 
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
+                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId && !ent.ReadOnly);
                 
                 if (entity != null)
                 {
                     dbContext.ApplicationUserLogChangePasswords.RemoveRange(dbContext.ApplicationUserLogChangePasswords.Where(log => log.ApplicationUserId == applicationUserId));
                     dbContext.ApplicationUserLogLogins.RemoveRange(dbContext.ApplicationUserLogLogins.Where(log => log.ApplicationUserId == applicationUserId));
+
+                    await LogDelete(dbContext, entity, currentUser);
 
                     dbContext.ApplicationUsers.Remove(entity);
 
@@ -233,6 +265,25 @@ namespace Logic.Security.Logic
                 {
                     return _createUserNotFoundError<object?>();
                 }
+            }
+        }
+
+        #endregion
+
+        #region Password Logic
+
+        /// <summary>
+        /// Retrieves the password change history for a specific application user by their unique identifier. This includes a list of previous password changes, along with details such as the old password (hashed), the date of the change, and who initiated the change.
+        /// </summary>
+        /// <param name="applicationUserId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>> GetPasswordChangeHistoryByApplicationUserId(int applicationUserId, CancellationToken cancellationToken = default)
+        {
+            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
+            {
+                var query = dbContext.ApplicationUserLogChangePasswords.AsQueryable().AsNoTracking().Where(log => log.ApplicationUserId == applicationUserId);
+                return new ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>> { Response = await query.ToDtos(cancellationToken) };
             }
         }
 
@@ -345,6 +396,8 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
         #region Private Methods
 
         /// <summary>
@@ -356,6 +409,8 @@ namespace Logic.Security.Logic
             var randomPassword = CommonUtilities.GenerateRandomAlphaNumericString(16, true);
             return randomPassword;
         }
+
+        #endregion
 
         #region Validation
 
@@ -452,8 +507,94 @@ namespace Logic.Security.Logic
 
         #endregion
 
-        #endregion
+        #region Audit Log
 
-        
+        private async Task LogChange(SecurityDBContext dbContext, ApplicationUser oldRecord, InsertUpdateApplicationUserRequest req) 
+        {
+            var newRecord = req.ToEntityOnInsert();
+            
+            // Only capture fields that actually changed, not the full entity graph
+            var changeLog = new Dictionary<string, object?>();
+
+            if (oldRecord.FirstName != newRecord.FirstName)
+            {
+                changeLog[nameof(ApplicationUser.FirstName)] = newRecord.FirstName;
+            }
+
+            if (oldRecord.LastName != newRecord.LastName)
+            {
+                changeLog[nameof(ApplicationUser.LastName)] = newRecord.LastName;
+            }
+
+            if (oldRecord.Email != newRecord.Email)
+            {
+                changeLog[nameof(ApplicationUser.Email)] = newRecord.Email;
+            }
+
+            if (oldRecord.DateOfBirth != newRecord.DateOfBirth)
+            {
+                changeLog[nameof(ApplicationUser.DateOfBirth)] = newRecord.DateOfBirth;
+            }
+
+            if (oldRecord.ApplicationId != newRecord.ApplicationId)
+            {
+                changeLog[nameof(ApplicationUser.ApplicationId)] = newRecord.ApplicationId;
+            }
+
+            if (oldRecord.Active != newRecord.Active)
+            {
+                changeLog[nameof(ApplicationUser.Active)] = newRecord.Active;
+            }
+            
+            if (oldRecord.UpdatedBy != req.CurrentUser)
+            {
+                changeLog[nameof(ApplicationUser.UpdatedBy)] = req.CurrentUser;
+            }
+            
+            changeLog[nameof(ApplicationUser.UpdatedOn)] = oldRecord.UpdatedOn;
+            
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Update,
+                ReferenceType = EntityFieldNames.ApplicationUser,
+                ReferenceId = oldRecord.ApplicationUserId,
+                ChangeLogJson = JsonSerializer.Serialize(changeLog),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(oldRecord),
+                CreatedBy = req.CurrentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private async Task LogDelete(SecurityDBContext dbContext, ApplicationUser record, string currentUser) 
+        {
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Delete,
+                ReferenceType = EntityFieldNames.ApplicationUser,
+                ReferenceId = record.ApplicationUserId,
+                ChangeLogJson = JsonSerializer.Serialize(new {}),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(record),
+                CreatedBy = currentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private string GetRecordStateBeforeChangeJson(ApplicationUser record)
+        {
+            var log = new Dictionary<string, object?>();
+            log[nameof(ApplicationUser.FirstName)] = record.FirstName;
+            log[nameof(ApplicationUser.LastName)] = record.LastName;
+            log[nameof(ApplicationUser.Email)] = record.Email;
+            log[nameof(ApplicationUser.DateOfBirth)] = record.DateOfBirth;
+            log[nameof(ApplicationUser.ApplicationId)] = record.ApplicationId;
+            log[nameof(ApplicationUser.Active)] = record.Active;
+            log[nameof(ApplicationUser.ReadOnly)] = record.ReadOnly;
+            log[nameof(ApplicationUser.CreatedBy)] = record.CreatedBy;
+            log[nameof(ApplicationUser.CreatedOn)] = record.CreatedOn;
+            log[nameof(ApplicationUser.UpdatedBy)] = record.UpdatedBy;
+            log[nameof(ApplicationUser.UpdatedOn)] = record.UpdatedOn;
+            
+            return JsonSerializer.Serialize(log);
+        }
+
+        #endregion
     }
 }

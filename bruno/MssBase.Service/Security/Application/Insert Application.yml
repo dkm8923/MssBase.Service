@@ -1,0 +1,33 @@
+info:
+  name: Insert Application
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/Application"
+  body:
+    type: json
+    data: |-
+      {
+        "active": {{Active}},
+        "name": "{{Name}}",
+        "description": "{{Description}}",
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: Active
+      value: "true"
+    - name: Name
+      value: TestApplicationName
+    - name: Description
+      value: TestApplicationDescription
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

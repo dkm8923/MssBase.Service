@@ -1,0 +1,20 @@
+info:
+  name: Delete Application
+  type: http
+  seq: 1
+
+http:
+  method: DELETE
+  url: "{{BaseUrl}}/Security/Application/:ApplicationId"
+  params:
+    - name: ApplicationId
+      value: ""
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+​

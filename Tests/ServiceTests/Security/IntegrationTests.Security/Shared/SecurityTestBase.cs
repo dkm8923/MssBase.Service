@@ -117,6 +117,7 @@ public class SecurityTestBase
                     DELETE FROM [ApplicationUser_Log_ChangePassword];
                     DELETE FROM [ApplicationUser];
                     DELETE FROM [Application];
+                    DELETE FROM [AuditLog];
                 ";
                 await dbContext.Database.ExecuteSqlRawAsync(query);
             }
@@ -129,6 +130,7 @@ public class SecurityTestBase
                 await dbContext.Permissions.ExecuteDeleteAsync();
                 await dbContext.ApplicationUsers.ExecuteDeleteAsync();
                 await dbContext.Applications.ExecuteDeleteAsync();
+                await dbContext.AuditLogs.ExecuteDeleteAsync();
             }
         }
         catch (Exception ex)

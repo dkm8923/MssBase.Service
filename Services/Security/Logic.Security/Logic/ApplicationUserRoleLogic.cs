@@ -16,6 +16,12 @@ using Shared.Models;
 using Shared.Logic;
 using Shared.Logic.Validators;
 using Shared.Logic.Common;
+using Shared.Models.Dtos;
+using static Shared.Logic.Common.Constants;
+using Shared.Data.Converters;
+using Data.Security.Models;
+using Shared.Data.Models;
+using System.Text.Json;
 
 namespace Logic.Security.Logic
 {
@@ -39,6 +45,8 @@ namespace Logic.Security.Logic
             _insertUpdateApplicationUserRoleRequestValidator = insertUpdateApplicationUserRoleRequestValidator;
         }
 
+        #region GetAll
+
         /// <summary>
         /// Retrieves a collection of application users based on the specified request parameters.
         /// </summary>
@@ -47,6 +55,10 @@ namespace Logic.Security.Logic
             var ret = await this.Filter(new FilterApplicationUserRoleLogicRequest { IncludeInactive = req.IncludeInactive, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly, CurrentUser = req.CurrentUser }, cancellationToken);
             return ret;
         }
+
+        #endregion
+
+        #region GetById
 
         /// <summary>
         /// Retrieves an application user by its unique identifier.
@@ -57,6 +69,26 @@ namespace Logic.Security.Logic
 
             return new ErrorValidationResult<ApplicationUserRoleDto> { Response = res.Response.FirstOrDefault() };
         }
+
+        #endregion
+
+        #region GetAuditLogsByApplicationUserRoleId
+
+        /// <summary>
+        /// Retrieves the audit logs for an application user role by its unique identifier.
+        /// </summary>
+        public async Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByApplicationUserRoleId(int applicationUserRoleId, CancellationToken cancellationToken = default)
+        {
+            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
+            {
+                var query = dbContext.AuditLogs.AsQueryable().AsNoTracking().Where(al => al.ReferenceType == EntityFieldNames.ApplicationUserRole && al.ReferenceId == applicationUserRoleId);
+                return new ErrorValidationResult<IEnumerable<AuditLogDto>> { Response = await query.ToDtos(cancellationToken) };
+            }
+        }
+
+        #endregion
+
+        #region Filter
 
         /// <summary>
         /// Filters application users based on the specified criteria.
@@ -106,6 +138,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Insert
+
         /// <summary>
         /// Inserts a new application user into the data store.
         /// </summary>
@@ -131,6 +167,10 @@ namespace Logic.Security.Logic
                 return new ErrorValidationResult<ApplicationUserRoleDto> { Response = entity.ToDto() };
             }
         }
+
+        #endregion
+
+        #region Update
 
         /// <summary>
         /// Updates the details of an existing application user.
@@ -163,16 +203,22 @@ namespace Logic.Security.Logic
                     return await _returnReadOnlyRecordErrorValidationResult();
                 }
 
+                await LogChange(dbContext, entity, req);
+
                 entity = entity.UpdateEntityFromRequest(req);
                 await dbContext.SaveChangesAsync();
                 return new ErrorValidationResult<ApplicationUserRoleDto> { Response = entity.ToDto() };
             }
         }
 
+        #endregion
+
+        #region Delete
+
         /// <summary>
         /// Deletes the application user with the specified identifier.
         /// </summary>
-        public async Task<ErrorValidationResult> Delete(int applicationUserRoleId)
+        public async Task<ErrorValidationResult> Delete(int applicationUserRoleId, string currentUser)
         {
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
@@ -186,6 +232,8 @@ namespace Logic.Security.Logic
                         return await _returnReadOnlyRecordErrorValidationResult();
                     }
 
+                    await LogDelete(dbContext, entity, currentUser);
+
                     dbContext.ApplicationUserRoles.Remove(entity);
 
                     await dbContext.SaveChangesAsync();
@@ -198,6 +246,8 @@ namespace Logic.Security.Logic
                 return errorValidationResult;
             }
         }
+
+        #endregion
 
         #region Validation
 
@@ -278,6 +328,83 @@ namespace Logic.Security.Logic
             var errorValidationResult = new ErrorValidationResult<ApplicationUserRoleDto>();
             errorValidationResult.Errors.Add(Constants.EntityFieldNames.ApplicationUserRole, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
             return errorValidationResult;
+        }
+
+        #endregion
+
+        #region Audit Log
+
+        private async Task LogChange(SecurityDBContext dbContext, ApplicationUserRole oldRecord, InsertUpdateApplicationUserRoleRequest req) 
+        {
+            var newRecord = req.ToEntityOnInsert();
+            
+            // Only capture fields that actually changed, not the full entity graph
+            var changeLog = new Dictionary<string, object?>();
+
+            if (oldRecord.ApplicationId != newRecord.ApplicationId)
+            {
+                changeLog[nameof(ApplicationUserRole.ApplicationId)] = newRecord.ApplicationId;
+            }
+            
+            if (oldRecord.ApplicationUserId != newRecord.ApplicationUserId)
+            {
+                changeLog[nameof(ApplicationUserRole.ApplicationUserId)] = newRecord.ApplicationUserId;
+            }
+
+            if (oldRecord.RoleId != newRecord.RoleId)
+            {
+                changeLog[nameof(ApplicationUserRole.RoleId)] = newRecord.RoleId;
+            }
+
+            if (oldRecord.Active != newRecord.Active)
+            {
+                changeLog[nameof(ApplicationUserRole.Active)] = newRecord.Active;
+            }
+
+            if (oldRecord.UpdatedBy != req.CurrentUser)
+            {
+                changeLog[nameof(ApplicationUserRole.UpdatedBy)] = req.CurrentUser;
+            }
+            
+            changeLog[nameof(ApplicationUserRole.UpdatedOn)] = oldRecord.UpdatedOn;
+            
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Update,
+                ReferenceType = EntityFieldNames.ApplicationUserRole,
+                ReferenceId = oldRecord.ApplicationUserRoleId,
+                ChangeLogJson = JsonSerializer.Serialize(changeLog),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(oldRecord),
+                CreatedBy = req.CurrentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private async Task LogDelete(SecurityDBContext dbContext, ApplicationUserRole record, string currentUser) 
+        {
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Delete,
+                ReferenceType = EntityFieldNames.ApplicationUserRole,
+                ReferenceId = record.ApplicationUserRoleId,
+                ChangeLogJson = JsonSerializer.Serialize(new {}),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(record),
+                CreatedBy = currentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private string GetRecordStateBeforeChangeJson(ApplicationUserRole record)
+        {
+            var log = new Dictionary<string, object?>();
+            log[nameof(ApplicationUserRole.ApplicationId)] = record.ApplicationId;
+            log[nameof(ApplicationUserRole.ApplicationUserId)] = record.ApplicationUserId;
+            log[nameof(ApplicationUserRole.RoleId)] = record.RoleId;
+            log[nameof(ApplicationUserRole.Active)] = record.Active;
+            log[nameof(ApplicationUserRole.CreatedBy)] = record.CreatedBy;
+            log[nameof(ApplicationUserRole.CreatedOn)] = record.CreatedOn;
+            log[nameof(ApplicationUserRole.UpdatedBy)] = record.UpdatedBy;
+            log[nameof(ApplicationUserRole.UpdatedOn)] = record.UpdatedOn;
+            
+            return JsonSerializer.Serialize(log);
         }
 
         #endregion

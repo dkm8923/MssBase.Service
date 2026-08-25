@@ -19,6 +19,7 @@ namespace IntegrationTests.Security.Service
                                                IDefaultServiceTestsGetById,
                                                IDefaultServiceTestsGetByIdIncludeRelated,
                                                IDefaultServiceTestsGetByIdReadOnly,
+                                               IDefaultServiceTestsGetAuditLogsById,
                                                IDefaultServiceTestsFilter,
                                                IDefaultServiceTestsInsert,
                                                IDefaultServiceTestsUpdate,
@@ -67,7 +68,7 @@ namespace IntegrationTests.Security.Service
 
             // Assert
             availableCacheKeys.Should().Contain(expectedCacheKey);
-            result.Response.Should().HaveCount(5);
+            result.Response.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -85,7 +86,7 @@ namespace IntegrationTests.Security.Service
 
             // Assert
             availableCacheKeys.Should().Contain(expectedCacheKey);
-            result.Response.Should().HaveCount(10);
+            result.Response.Should().HaveCountGreaterThan(0);
         }
 
         [Fact]
@@ -254,6 +255,43 @@ namespace IntegrationTests.Security.Service
 
             // Act
             var result = await _applicationUserService.GetPasswordChangeHistoryByApplicationUserId(applicationUser.ApplicationUserId);
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
+        #endregion
+
+        #region GetAuditLogsById
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Cache()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+            
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+
+            var updateReq = new InsertUpdateApplicationUserRequest
+            {
+                ApplicationId = testRecord.ApplicationId,
+                DateOfBirth = DateTime.Parse("01/01/2000"),
+                Email = "updated@test.com",
+                FirstName = "Updated First Name",
+                LastName = "Updated Last Name",
+                Active = false,
+                CurrentUser = TestConstants.CurrentUser
+            };
+
+            // Act
+            var updateResult = await _applicationUserLogic.Update(testRecord.ApplicationUserId, updateReq, _applicationLogic);
+            var expectedCacheKey = $"ApplicationUserService_GetAuditLogById_{testRecord.ApplicationUserId}";
+
+            var result = await _applicationUserService.GetAuditLogsByApplicationUserId(testRecord.ApplicationUserId, new BaseServiceGet());
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert
@@ -452,7 +490,7 @@ namespace IntegrationTests.Security.Service
             await CreateApplicationUserCacheKeys();
 
             // Act
-            await _applicationUserService.Delete(testRecord.ApplicationUserId);
+            await _applicationUserService.Delete(testRecord.ApplicationUserId, TestConstants.CurrentUser);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert

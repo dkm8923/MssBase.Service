@@ -11,6 +11,12 @@ using Shared.Models;
 using Shared.Logic;
 using Shared.Logic.Validators;
 using Shared.Logic.Common;
+using Data.Security.Models;
+using Shared.Data.Models;
+using Shared.Data.Converters;
+using System.Text.Json;
+using static Shared.Logic.Common.Constants;
+using Shared.Models.Dtos;
 
 namespace Logic.Security.Logic
 {
@@ -34,6 +40,8 @@ namespace Logic.Security.Logic
             _insertUpdateApplicationRequestValidator = insertUpdateApplicationRequestValidator;
         }
 
+        #region GetAll
+
         /// <summary>
         /// Retrieves a collection of applications based on the specified request parameters.
         /// </summary>
@@ -42,6 +50,10 @@ namespace Logic.Security.Logic
             var ret = await this.Filter(new FilterApplicationLogicRequest { IncludeInactive = req.IncludeInactive, CurrentUser = req.CurrentUser, IncludeRelated = req.IncludeRelated, IncludeReadOnly = req.IncludeReadOnly }, cancellationToken);
             return ret;
         }
+
+        #endregion
+
+        #region GetById
 
         /// <summary>
         /// Retrieves an application by its unique identifier.
@@ -52,6 +64,26 @@ namespace Logic.Security.Logic
 
             return new ErrorValidationResult<ApplicationDto> { Response = res.Response.FirstOrDefault() };
         }
+
+        #endregion
+
+        #region GetAuditLogsByApplicationId
+
+        /// <summary>
+        /// Retrieves the audit logs for an application by its unique identifier.
+        /// </summary>
+        public async Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByApplicationId(int applicationId, CancellationToken cancellationToken = default)
+        {
+            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
+            {
+                var query = dbContext.AuditLogs.AsQueryable().AsNoTracking().Where(al => al.ReferenceType == EntityFieldNames.Application && al.ReferenceId == applicationId);
+                return new ErrorValidationResult<IEnumerable<AuditLogDto>> { Response = await query.ToDtos(cancellationToken) };
+            }
+        }
+
+        #endregion
+
+        #region Filter
 
         /// <summary>
         /// Filters applications based on the specified criteria.
@@ -95,6 +127,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Insert
+
         /// <summary>
         /// Inserts a new application into the data store.
         /// </summary>
@@ -117,6 +153,10 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Update
+
         /// <summary>
         /// Updates the details of an existing application.
         /// </summary>
@@ -134,8 +174,11 @@ namespace Logic.Security.Logic
 
                 if (entity != null)
                 {
+                    await LogChange(dbContext, entity, req);
+                    
                     entity = entity.UpdateEntityFromRequest(req);
                     await dbContext.SaveChangesAsync();
+                    
                     return new ErrorValidationResult<ApplicationDto> { Response = entity.ToDto() };
                 }
                 else
@@ -146,10 +189,14 @@ namespace Logic.Security.Logic
             }
         }
 
+        #endregion
+
+        #region Delete
+
         /// <summary>
         /// Deletes the application with the specified identifier.
         /// </summary>
-        public async Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId)
+        public async Task<ErrorValidationResult<ApplicationDto>> Delete(int applicationId, string currentUser)
         {
             var errorValidationResult = await _validateApplicationOnDelete(applicationId);
 
@@ -158,6 +205,7 @@ namespace Logic.Security.Logic
                 using (var dbContext = _dbContextFactory.CreateContextReadWrite())
                 {
                     var entity = await dbContext.Applications.FirstOrDefaultAsync(ent => ent.ApplicationId == applicationId && !ent.ReadOnly);
+                    await LogDelete(dbContext, entity, currentUser);
                     dbContext.Applications.Remove(entity);
                     await dbContext.SaveChangesAsync();
                     errorValidationResult.Response = null;
@@ -166,6 +214,8 @@ namespace Logic.Security.Logic
 
             return errorValidationResult;
         }
+
+        #endregion
 
         #region Validation
 
@@ -264,6 +314,78 @@ namespace Logic.Security.Logic
             var errorValidationResult = new ErrorValidationResult<ApplicationDto>();
             errorValidationResult.Errors.Add(Constants.EntityFieldNames.Application, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
             return errorValidationResult;
+        }
+
+        #endregion
+
+        #region Audit Log
+
+        private async Task LogChange(SecurityDBContext dbContext, Application oldRecord, InsertUpdateApplicationRequest req) 
+        {
+            var newRecord = req.ToEntityOnInsert();
+            
+            // Only capture fields that actually changed, not the full entity graph
+            var changeLog = new Dictionary<string, object?>();
+
+            if (oldRecord.Name != newRecord.Name)
+            {
+                changeLog[nameof(Application.Name)] = newRecord.Name;
+            }
+
+            if (oldRecord.Description != newRecord.Description)
+            {
+                changeLog[nameof(Application.Description)] = newRecord.Description;
+            }
+
+            if (oldRecord.Active != newRecord.Active)
+            {
+                changeLog[nameof(Application.Active)] = newRecord.Active;
+            }
+
+            if (oldRecord.UpdatedBy != req.CurrentUser)
+            {
+                changeLog[nameof(Application.UpdatedBy)] = req.CurrentUser;
+            }
+            
+            changeLog[nameof(Application.UpdatedOn)] = oldRecord.UpdatedOn;
+            
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Update,
+                ReferenceType = EntityFieldNames.Application,
+                ReferenceId = oldRecord.ApplicationId,
+                ChangeLogJson = JsonSerializer.Serialize(changeLog),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(oldRecord),
+                CreatedBy = req.CurrentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private async Task LogDelete(SecurityDBContext dbContext, Application record, string currentUser) 
+        {
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Delete,
+                ReferenceType = EntityFieldNames.Application,
+                ReferenceId = record.ApplicationId,
+                ChangeLogJson = JsonSerializer.Serialize(new {}),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(record),
+                CreatedBy = currentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private string GetRecordStateBeforeChangeJson(Application record)
+        {
+            var log = new Dictionary<string, object?>();
+            log[nameof(Application.Name)] = record.Name;
+            log[nameof(Application.Description)] = record.Description;
+            log[nameof(Application.Active)] = record.Active;
+            log[nameof(Application.ReadOnly)] = record.ReadOnly;
+            log[nameof(Application.CreatedBy)] = record.CreatedBy;
+            log[nameof(Application.CreatedOn)] = record.CreatedOn;
+            log[nameof(Application.UpdatedBy)] = record.UpdatedBy;
+            log[nameof(Application.UpdatedOn)] = record.UpdatedOn;
+            
+            return JsonSerializer.Serialize(log);
         }
 
         #endregion

@@ -20,6 +20,7 @@ namespace IntegrationTests.Security.Service
                                            IDefaultServiceTestsGetById,
                                            IDefaultServiceTestsGetByIdIncludeRelated,
                                            IDefaultServiceTestsGetByIdReadOnly,
+                                           IDefaultServiceTestsGetAuditLogsById,
                                            IDefaultServiceTestsFilter,
                                            IDefaultServiceTestsInsert,
                                            IDefaultServiceTestsUpdate,
@@ -161,8 +162,7 @@ namespace IntegrationTests.Security.Service
             // Arrange
             await ClearAllSecurityTestTableData();
             await _cacheTestUtilities.DeleteAllKeyData();
-            await _cacheTestUtilities.DeleteAllKeyData();
-
+            
             var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var expectedCacheKey = $"ApplicationService_GetById_{testRecord.ApplicationId}_0_0_0";
 
@@ -244,6 +244,39 @@ namespace IntegrationTests.Security.Service
 
             // Act
             var result = await _applicationService.GetById(application.ApplicationId, new BaseServiceGet { IncludeRelated = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
+
+        #endregion
+
+        #region GetAuditLogsById
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Cache()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            await _cacheTestUtilities.DeleteAllKeyData();
+            
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+            var updateReq = new InsertUpdateApplicationRequest
+            {
+                Name = "Updated Application Name",
+                Description = "Updated Application Description",
+                Active = false,
+                CurrentUser = TestConstants.CurrentUser
+            };
+
+            // Act
+            var updateResult = await _applicationLogic.Update(testRecord.ApplicationId, updateReq);
+            var expectedCacheKey = $"ApplicationService_GetAuditLogById_{testRecord.ApplicationId}";
+
+            var result = await _applicationService.GetAuditLogsByApplicationId(testRecord.ApplicationId, new BaseServiceGet());
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             // Assert
@@ -394,7 +427,7 @@ namespace IntegrationTests.Security.Service
             var record = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
 
             // Act
-            await _applicationService.Delete(record.ApplicationId);
+            await _applicationService.Delete(record.ApplicationId, TestConstants.CurrentUser);
             var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
             //Assert

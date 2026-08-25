@@ -1,0 +1,30 @@
+info:
+  name: Filter Permissions
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/Permission/Filter"
+  body:
+    type: json
+    data: |-
+      {
+        "deleteCache": true,
+        "createdBy": null,
+        "createdOnDate": null,
+        "updatedBy": null,
+        "updatedOnDate": null,
+        "PermissionIds": null,
+        "name": null,
+        "includeInactive": false,
+        "includeRelated": false,
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

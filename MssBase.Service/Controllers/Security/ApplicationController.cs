@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
 using MssBase.Service.Shared.Authorization;
+using Shared.Logic.Common;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
@@ -26,6 +27,8 @@ namespace MssBase.Service.Controllers.Security
             _applicationSvc = applicationSvc;
         }
 
+        #region GetAll
+
         // GET: api/Security/Application
         
         [HttpGet()]
@@ -42,6 +45,10 @@ namespace MssBase.Service.Controllers.Security
                 return HandleControllerException(HttpContext, ex);
             }
         }
+
+        #endregion
+
+        #region GetById
 
         // GET: api/Security/Application/{applicationId}
 
@@ -66,6 +73,33 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        // GET: api/Security/Application/{applicationId}/AuditLogs
+
+        [HttpGet("{applicationId}/AuditLogs", Name = "GetApplicationAuditLogsById")]
+        [RequiredPermission(UserApiPermissions.ApplicationRead)]
+        public async Task<IActionResult> GetApplicationAuditLogsById(int applicationId, [FromQuery] bool deleteCache = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var record = await _applicationSvc.GetAuditLogsByApplicationId(applicationId, new BaseServiceGet { DeleteCache = deleteCache }, cancellationToken);
+
+                if (record.Response == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(record);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
+        #endregion
+
+        #region Filter
+
         // POST: api/Security/Application/Filter
 
         [HttpPost("Filter")]
@@ -82,6 +116,10 @@ namespace MssBase.Service.Controllers.Security
                 return HandleControllerException(HttpContext, ex);
             }
         }
+
+        #endregion
+
+        #region Insert
 
         // POST: api/Security/Application
 
@@ -106,6 +144,10 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        #endregion
+
+        #region Update
+
         // PUT: api/Security/Application
 
         [HttpPut("{applicationId}")]
@@ -128,15 +170,19 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        #endregion
+
+        #region Delete
+
         // DELETE: api/Security/Application
 
         [HttpDelete("{applicationId}")]
         [RequiredPermission(UserApiPermissions.ApplicationDelete)]
-        public async Task<IActionResult> DeleteApplication(int applicationId)
+        public async Task<IActionResult> DeleteApplication(int applicationId, [FromQuery] string currentUser = Constants.ApplicationName)
         {
             try
             {
-                var result = await _applicationSvc.Delete(applicationId);
+                var result = await _applicationSvc.Delete(applicationId, currentUser);
                 if (result.Errors.Count > 0)
                 {
                     return BadRequest(result);
@@ -149,5 +195,8 @@ namespace MssBase.Service.Controllers.Security
                 return HandleControllerException(HttpContext, ex);
             }
         }
+
+        #endregion
+
     }
 }

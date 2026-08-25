@@ -1,4 +1,4 @@
-using Dto.Security.Application;
+ using Dto.Security.Application;
 using Dto.Security.Application.Logic;
 using Dto.Security.Application.Service;
 using FluentAssertions;
@@ -7,6 +7,7 @@ using IntegrationTests.Shared;
 using Shared.Models;
 using IntegrationTests.Shared.Utilities;
 using IntegrationTests.Shared.Utilities.Contracts.Logic;
+using System.Text.Json;
 
 namespace IntegrationTests.Security.Logic
 {
@@ -18,6 +19,7 @@ namespace IntegrationTests.Security.Logic
                                          IDefaultLogicTestsGetById,
                                          IDefaultLogicTestsGetByIdIncludeRelated,
                                          IDefaultLogicTestsGetByIdReadOnly,
+                                         IDefaultLogicTestsGetAuditLogsById,
                                          IDefaultLogicTestsFilter,
                                          IDefaultLogicTestsFilterIncludeRelated,
                                          IDefaultLogicTestsFilterReadOnly,
@@ -673,7 +675,114 @@ namespace IntegrationTests.Security.Logic
             invalidNameResult.Response.Should().HaveCount(0);
         }
 
-        #endregion
+        #endregion 
+
+        #region Get Audit Logs By Id
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+            var updateReq = _securityTestUtilities.Application.ConvertApplicationDtoToInsertUpdateRequest(testRecord);
+            updateReq.Name = "Updated Name";
+            updateReq.Description = "Updated Description";
+
+            // Act
+            var updateResult = await _applicationLogic.Update(testRecord.ApplicationId, updateReq);
+            var auditLogResult = await _applicationLogic.GetAuditLogsByApplicationId(testRecord.ApplicationId);
+
+            // Assert
+            auditLogResult.Response.Should().HaveCount(1);
+
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplication);
+            res.ReferenceId.Should().Be(testRecord.ApplicationId);
+
+            var changeLog = ((JsonElement)res.ChangeLogJson).Deserialize<ApplicationChangeLog>();
+            changeLog.Should().NotBeNull();
+            changeLog.Name.Should().Be(updateReq.Name);
+            changeLog.Description.Should().Be(updateReq.Description);
+
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<ApplicationDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.ApplicationId = res.ReferenceId;
+
+            _securityTestUtilities.Application.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+            // Act
+            await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
+            var getResult = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet());
+            var auditLogResult = await _applicationLogic.GetAuditLogsByApplicationId(testRecord.ApplicationId);
+
+            // Assert
+            getResult.Response.Should().BeNull();
+
+            auditLogResult.Response.Should().HaveCount(1);
+
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeDelete);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplication);
+            res.ReferenceId.Should().Be(testRecord.ApplicationId);
+
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<ApplicationDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.ApplicationId = res.ReferenceId;
+
+            _securityTestUtilities.Application.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_And_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+
+            var updateReq = _securityTestUtilities.Application.ConvertApplicationDtoToInsertUpdateRequest(testRecord);
+            updateReq.Name = "Updated Name";
+            updateReq.Description = "Updated Description";
+
+            // Act
+            var updateResult = await _applicationLogic.Update(testRecord.ApplicationId, updateReq);
+            await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
+            var auditLogResult = await _applicationLogic.GetAuditLogsByApplicationId(testRecord.ApplicationId);
+
+            // Assert
+            auditLogResult.Response.Should().HaveCount(2);
+
+            var updateRes = auditLogResult.Response.First();
+            updateRes.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            updateRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplication);
+            updateRes.ReferenceId.Should().Be(testRecord.ApplicationId);
+
+            var deleteRes = auditLogResult.Response.Last();
+            deleteRes.LogType.Should().Be(TestConstants.LogTypeDelete);
+            deleteRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplication);
+            deleteRes.ReferenceId.Should().Be(testRecord.ApplicationId);
+        }
+
+        class ApplicationChangeLog
+        {
+            public string? Name { get; set; }
+            public string? Description { get; set; }
+            public bool? Active { get; set; }
+            public string? UpdatedBy { get; set; }
+            public DateTime? UpdatedOn { get; set; }
+        }
+
+        #endregion 
 
         #region Insert
 
@@ -875,7 +984,7 @@ namespace IntegrationTests.Security.Logic
             var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord(false);
 
             // Act
-            await _applicationLogic.Delete(testRecord.ApplicationId);
+            await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
             var getResult = await _applicationLogic.GetById(testRecord.ApplicationId, new BaseLogicGet());
 
             // Assert
@@ -891,7 +1000,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedRecordDoesNotExistErrors();
 
             // Act
-            var result = await _applicationLogic.Delete(-1);
+            var result = await _applicationLogic.Delete(-1, TestConstants.CurrentUser);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);
@@ -909,7 +1018,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Application.GetExpectedReadOnlyErrors();
 
             // Act
-            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
 
             // Assert
             result.Errors.Count.Should().Be(expectedFieldErrors.Count);
@@ -933,7 +1042,7 @@ namespace IntegrationTests.Security.Logic
             await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(testRecord.ApplicationId);
             
             // Act
-            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
             
             // Assert
             result.Errors.Count.Should().Be(1);
@@ -957,7 +1066,7 @@ namespace IntegrationTests.Security.Logic
             await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(testRecord.ApplicationId);
             
             // Act
-            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
             
             // Assert
             result.Errors.Count.Should().Be(1);
@@ -981,7 +1090,7 @@ namespace IntegrationTests.Security.Logic
             await _securityTestUtilities.Role.CreateSingleRoleTestRecord(testRecord.ApplicationId);
             
             // Act
-            var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+            var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
             
             // Assert
             result.Errors.Count.Should().Be(1);
@@ -1006,7 +1115,7 @@ namespace IntegrationTests.Security.Logic
         //     await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(testRecord.ApplicationId);
 
         //     // Act
-        //     var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+        //     var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
 
         //     // Assert
         //     result.Errors.Count.Should().Be(1);
@@ -1030,7 +1139,7 @@ namespace IntegrationTests.Security.Logic
         //     await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(testRecord.ApplicationId);
 
         //     // Act
-        //     var result = await _applicationLogic.Delete(testRecord.ApplicationId);
+        //     var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);
 
         //     // Assert
         //     result.Errors.Count.Should().Be(1);

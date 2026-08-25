@@ -11,6 +11,7 @@ using IntegrationTests.Shared.Utilities.Contracts.Controller;
 using Dto.Security.Application;
 using IntegrationTests.Shared.Models;
 using IntegrationTests.Shared.Utilities.Contracts.Logic;
+using Shared.Models.Dtos;
 
 namespace IntegrationTests.Security.Controller
 {
@@ -23,6 +24,7 @@ namespace IntegrationTests.Security.Controller
                                                   IDefaultControllerTestsGetById,
                                                   IDefaultControllerTestsGetByIdIncludeRelated,
                                                   IDefaultLogicTestsGetByIdReadOnly,
+                                                  IDefaultControllerTestsGetAuditLogsById,
                                                   IDefaultControllerTestsFilter,
                                                   IDefaultControllerTestsFilterIncludeRelated,
                                                   IDefaultLogicTestsFilterReadOnly, 
@@ -565,6 +567,104 @@ namespace IntegrationTests.Security.Controller
 
         #endregion
 
+        #region GetAuditLogById
+
+        [Fact]
+        public async Task Default_GetAuditLogById_Should_Return_Record()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUserRoles[0];
+
+            var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId);
+            var newRole = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(newApplication.ApplicationId);
+
+            var updateReq = new InsertUpdateApplicationUserRoleRequest
+            {
+                ApplicationId = newApplication.ApplicationId,
+                RoleId = newRole.RoleId,
+                ApplicationUserId = newApplicationUser.ApplicationUserId,
+                Active = false,
+                CurrentUser = TestConstants.CurrentUser
+            };
+
+            var updateResult = await ControllerTestUtilities.UpdateRecordWithValidationResult<ApplicationUserRoleDto>(new HttpPutRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserRoleApiEndPoint,
+                RecordId = testRecord.ApplicationUserRoleId,
+                Token = token, 
+                RequestObject = updateReq
+            });
+            
+            // Act
+            var result = await ControllerTestUtilities.GetAuditLogRecordsByIdWithValidationResult<AuditLogDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserRoleApiEndPoint,
+                RecordId = testRecord.ApplicationUserRoleId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogById_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var getAuditLogByIdResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationUserRoleApiEndPoint + "/1/AuditLogs", invalidToken);
+
+            //Assert
+            getAuditLogByIdResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogById_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+            
+            // Act
+            var getAuditLogByIdResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationUserRoleApiEndPoint + "/1/AuditLogs", token);
+
+            //Assert
+            getAuditLogByIdResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogById_Should_Return_NotFound()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var id = -1;
+
+            // Act
+            var result = await ControllerTestUtilities.GetAuditLogRecordsByIdWithValidationResult<ApplicationUserRoleDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultApplicationUserRoleApiEndPoint,
+                RecordId = id,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true },
+                ExpectedStatusCode = HttpStatusCode.NotFound
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().BeNull();
+        }
+
+        #endregion
+
         #region Filter
 
         [Fact]
@@ -728,9 +828,9 @@ namespace IntegrationTests.Security.Controller
             result.Errors.Should().HaveCount(0);
             result.Response.Should().HaveCount(arrangeTestDataResponse.ActiveApplicationUserRoles.Count + arrangeTestDataResponse.InactiveApplicationUserRoles.Count);  
 
-            foreach (var rolePermission in result.Response)
+            foreach (var applicationUserRole in result.Response)
             {
-                rolePermission.Role.Should().NotBeNull();
+                applicationUserRole.Role.Should().NotBeNull();
             }
         }
 
@@ -755,9 +855,9 @@ namespace IntegrationTests.Security.Controller
             result.Errors.Should().HaveCount(0);
             result.Response.Should().HaveCountGreaterThan(0);
 
-            foreach (var rolePermission in result.Response)
+            foreach (var applicationUserRole in result.Response)
             {
-                rolePermission.Role.Should().BeNull();
+                applicationUserRole.Role.Should().BeNull();
             }
         }
         

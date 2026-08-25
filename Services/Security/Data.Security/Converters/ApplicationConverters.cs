@@ -7,7 +7,7 @@ namespace Data.Security.Converters
 {
     public static class ApplicationConverters
     {
-        public static ApplicationDto ToDto(this Models.Application source)
+        public static ApplicationDto ToDto(this Application source)
         {
             if (source == null)
             {
@@ -55,7 +55,7 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static async Task<List<ApplicationDto>> ToDtos(this IQueryable<Models.Application> source, CancellationToken cancellationToken = default)
+        public static async Task<List<ApplicationDto>> ToDtos(this IQueryable<Application> source, CancellationToken cancellationToken = default)
         {
             if (source == null)
             {
@@ -67,14 +67,14 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static Models.Application ToEntityOnInsert(this InsertUpdateApplicationRequest source)
+        public static Application ToEntityOnInsert(this InsertUpdateApplicationRequest source)
         {
             if (source == null)
             {
                 return null;
             }
 
-            var target = new Models.Application
+            var target = new Application
             {
                 Active = source.Active,
                 Name = source.Name,
@@ -89,7 +89,7 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static Models.Application UpdateEntityFromRequest(this Models.Application entity, InsertUpdateApplicationRequest source)
+        public static Application UpdateEntityFromRequest(this Application entity, InsertUpdateApplicationRequest source)
         {
             if (source == null || entity == null)
             {

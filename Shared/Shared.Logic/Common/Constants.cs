@@ -3,7 +3,7 @@
     //Place all shared constants here...
     public static class Constants
     {
-        public const string ApplicationName = "MssBaseService";
+        public const string ApplicationName = "MssBase.Service";
         public const string ApplicationsClaim = "applications";
         public const string RolesClaim = "roles";
         public const string PermissionsClaim = "permissions";
@@ -38,6 +38,12 @@
             public const string Token = "Token";
             public const string RefreshToken = "RefreshToken";
             public const string CurrentUser = "CurrentUser";
+        }
+
+        public static class AuditLogLogTypes
+        {
+            public const string Update = "Update";
+            public const string Delete = "Delete";
         }
     }
 }

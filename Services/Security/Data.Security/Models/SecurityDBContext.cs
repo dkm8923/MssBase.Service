@@ -1,10 +1,13 @@
 using Microsoft.Extensions.Configuration;
 using Data.Security.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Shared.Data;
+using Shared.Data.Configuration;
+using Shared.Data.Models;
 
 namespace Data.Security.Models;
 
-public partial class SecurityDBContext : DbContext
+public partial class SecurityDBContext : DbContext, IAuditableDbContext
 {
     public SecurityDBContext(DbContextOptions<SecurityDBContext> options)
         : base(options)
@@ -25,6 +28,8 @@ public partial class SecurityDBContext : DbContext
     public virtual DbSet<ApplicationUserRole> ApplicationUserRoles { get; set; }
     public virtual DbSet<ApplicationUserLogChangePassword> ApplicationUserLogChangePasswords { get; set; }
     public virtual DbSet<ApplicationUserLogLogin> ApplicationUserLogLogins { get; set; }
+
+    public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -55,5 +60,6 @@ public partial class SecurityDBContext : DbContext
         modelBuilder.ApplyConfiguration(new ApplicationUserRoleConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserLogChangePasswordConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserLogLoginConfiguration());
+        modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
     }
 }

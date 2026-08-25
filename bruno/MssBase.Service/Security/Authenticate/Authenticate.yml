@@ -1,0 +1,23 @@
+info:
+  name: Authenticate
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/Authentication/Authenticate"
+  body:
+    type: json
+    data: |-
+      {
+          "Email": "{{TestUserEmail}}", 
+          "Password": "{{TestUserPassword}}",
+          "ApplicationName": "{{TestApplicationName}}" 
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
