@@ -67,6 +67,29 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        // GET: api/Security/ApplicationUserPermission/{applicationUserPermissionId}/AuditLogs
+
+        [HttpGet("{applicationUserPermissionId}/AuditLogs", Name = "GetApplicationUserPermissionAuditLogsById")]
+        [RequiredPermission(UserApiPermissions.ApplicationUserPermissionRead)]
+        public async Task<IActionResult> GetApplicationUserPermissionAuditLogsById(int applicationUserPermissionId, [FromQuery] bool deleteCache = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var record = await _applicationUserSvc.GetAuditLogsByApplicationUserPermissionId(applicationUserPermissionId, new BaseServiceGet { DeleteCache = deleteCache }, cancellationToken);
+
+                if (record.Response == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(record);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
         #endregion
 
         #region Filter

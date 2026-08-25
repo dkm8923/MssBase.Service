@@ -46,13 +46,36 @@ namespace MssBase.Service.Controllers.Security
 
         #region GetById
 
-        [HttpGet("{applicationUserId}", Name = "GetRolePermissionById")]
+        [HttpGet("{rolePermissionId}", Name = "GetRolePermissionById")]
         [RequiredPermission(UserApiPermissions.RolePermissionRead)]
-        public async Task<IActionResult> GetRolePermissionById(int applicationUserId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, [FromQuery] bool includeReadOnly = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetRolePermissionById(int rolePermissionId, [FromQuery] bool deleteCache = false, [FromQuery] bool includeInactive = false, [FromQuery] bool includeRelated = false, [FromQuery] bool includeReadOnly = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var record = await _rolePermissionSvc.GetById(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated, IncludeReadOnly = includeReadOnly }, cancellationToken);
+                var record = await _rolePermissionSvc.GetById(rolePermissionId, new BaseServiceGet { DeleteCache = deleteCache, IncludeInactive = includeInactive, IncludeRelated = includeRelated, IncludeReadOnly = includeReadOnly }, cancellationToken);
+
+                if (record.Response == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(record);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
+        // GET: api/Security/RolePermission/{rolePermissionId}/AuditLogs
+
+        [HttpGet("{rolePermissionId}/AuditLogs", Name = "GetRolePermissionAuditLogsById")]
+        [RequiredPermission(UserApiPermissions.RolePermissionRead)]
+        public async Task<IActionResult> GetRolePermissionAuditLogsById(int rolePermissionId, [FromQuery] bool deleteCache = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var record = await _rolePermissionSvc.GetAuditLogsByRolePermissionId(rolePermissionId, new BaseServiceGet { DeleteCache = deleteCache }, cancellationToken);
 
                 if (record.Response == null)
                 {
@@ -103,7 +126,7 @@ namespace MssBase.Service.Controllers.Security
                     return BadRequest(result);
                 }
 
-                return CreatedAtRoute("GetRolePermissionById", new { applicationUserId = result.Response.RolePermissionId }, result);
+                return CreatedAtRoute("GetRolePermissionById", new { rolePermissionId = result.Response.RolePermissionId }, result);
             }
             catch (Exception ex)
             {
@@ -115,13 +138,13 @@ namespace MssBase.Service.Controllers.Security
 
         #region Update
 
-        [HttpPut("{applicationUserId}")]
+        [HttpPut("{rolePermissionId}")]
         [RequiredPermission(UserApiPermissions.RolePermissionUpdate)]
-        public async Task<IActionResult> UpdateRolePermission(int applicationUserId, InsertUpdateRolePermissionRequest req)
+        public async Task<IActionResult> UpdateRolePermission(int rolePermissionId, InsertUpdateRolePermissionRequest req)
         {
             try
             {
-                var result = await _rolePermissionSvc.Update(applicationUserId, req);
+                var result = await _rolePermissionSvc.Update(rolePermissionId, req);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -134,13 +157,13 @@ namespace MssBase.Service.Controllers.Security
 
         #region Delete
 
-        [HttpDelete("{applicationUserId}")]
+        [HttpDelete("{rolePermissionId}")]
         [RequiredPermission(UserApiPermissions.RolePermissionDelete)]
-        public async Task<IActionResult> DeleteRolePermission(int applicationUserId, [FromQuery] string currentUser = Constants.ApplicationName)
+        public async Task<IActionResult> DeleteRolePermission(int rolePermissionId, [FromQuery] string currentUser = Constants.ApplicationName)
         {
             try
             {
-                var result = await _rolePermissionSvc.Delete(applicationUserId, currentUser);
+                var result = await _rolePermissionSvc.Delete(rolePermissionId, currentUser);
                 if (result.Errors.Count > 0)
                 {
                     return BadRequest(result);

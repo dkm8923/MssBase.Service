@@ -11,6 +11,7 @@ using IntegrationTests.Shared.Utilities.Contracts.Controller;
 using Dto.Security.Application;
 using IntegrationTests.Shared.Models;
 using IntegrationTests.Shared.Utilities.Contracts.Logic;
+using Shared.Models.Dtos;
 
 namespace IntegrationTests.Security.Controller
 {
@@ -21,6 +22,7 @@ namespace IntegrationTests.Security.Controller
                                                   IDefaultLogicTestsGetAllReadOnly,
                                                   IDefaultControllerTestsGetById,
                                                   IDefaultLogicTestsGetByIdReadOnly,
+                                                  IDefaultControllerTestsGetAuditLogsById,
                                                   IDefaultControllerTestsFilter,
                                                   IDefaultLogicTestsFilterReadOnly,
                                                   IDefaultControllerTestsInsert,
@@ -402,6 +404,100 @@ namespace IntegrationTests.Security.Controller
                 Token = token,
                 QueryStringParms = new BaseServiceGet { DeleteCache = true },
                 ExpectedStatusCode = System.Net.HttpStatusCode.NotFound
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().BeNull();
+        }
+
+        #endregion
+
+        #region GetAuditLogById
+
+        [Fact]
+        public async Task Default_GetAuditLogById_Should_Return_Record()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangePermissionTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var testRecord = arrangeTestDataResponse.ActivePermissions[0];
+
+            var updateReq = new InsertUpdatePermissionRequest
+            {
+                Name = "Updated Name",
+                Description = "Updated Description",
+                ApplicationId = testRecord.ApplicationId,
+                Active = false,
+                CurrentUser = TestConstants.CurrentUser
+            };
+
+            var updateResult = await ControllerTestUtilities.UpdateRecordWithValidationResult<PermissionDto>(new HttpPutRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultPermissionApiEndPoint,
+                RecordId = testRecord.PermissionId,
+                Token = token, 
+                RequestObject = updateReq
+            });
+            
+            // Act
+            var result = await ControllerTestUtilities.GetAuditLogRecordsByIdWithValidationResult<AuditLogDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultPermissionApiEndPoint,
+                RecordId = testRecord.PermissionId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
+            });
+
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogById_Should_Return_Unauthorized()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidToken = "someInvalidToken";
+
+            // Act
+            var getAuditLogByIdResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultPermissionApiEndPoint + "/1/AuditLogs", invalidToken);
+
+            //Assert
+            getAuditLogByIdResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogById_Should_Return_Forbidden()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
+            
+            // Act
+            var getAuditLogByIdResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultPermissionApiEndPoint + "/1/AuditLogs", token);
+
+            //Assert
+            getAuditLogByIdResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task Default_GetAuditLogById_Should_Return_NotFound()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationTestData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
+            var id = -1;
+
+            // Act
+            var result = await ControllerTestUtilities.GetAuditLogRecordsByIdWithValidationResult<PermissionDto>(new HttpGetRequestParms { 
+                Client = _client, 
+                ApiEndPoint = _defaultPermissionApiEndPoint,
+                RecordId = id,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true },
+                ExpectedStatusCode = HttpStatusCode.NotFound
             });
 
             // Assert

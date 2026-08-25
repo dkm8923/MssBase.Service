@@ -23,6 +23,7 @@ namespace IntegrationTests.Security.Controller
                                               IDefaultControllerTestsGetById,
                                               IDefaultControllerTestsGetByIdIncludeRelated,
                                               IDefaultLogicTestsGetByIdReadOnly,
+                                              IDefaultControllerTestsGetAuditLogsById,
                                               IDefaultControllerTestsFilter,
                                               IDefaultControllerTestsFilterIncludeRelated,
                                               IDefaultLogicTestsFilterReadOnly,
@@ -643,7 +644,7 @@ namespace IntegrationTests.Security.Controller
             var invalidToken = "someInvalidToken";
 
             // Act
-            var getAuditLogByIdResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationApiEndPoint + "/1/auditlog", invalidToken);
+            var getAuditLogByIdResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationApiEndPoint + "/1/AuditLogs", invalidToken);
 
             //Assert
             getAuditLogByIdResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -657,7 +658,7 @@ namespace IntegrationTests.Security.Controller
             var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
             
             // Act
-            var getAuditLogByIdResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationApiEndPoint + "/1/auditlog", token);
+            var getAuditLogByIdResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationApiEndPoint + "/1/AuditLogs", token);
 
             //Assert
             getAuditLogByIdResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -672,13 +673,13 @@ namespace IntegrationTests.Security.Controller
             var id = -1;
 
             // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<ApplicationDto>(new HttpGetRequestParms { 
+            var result = await ControllerTestUtilities.GetAuditLogRecordsByIdWithValidationResult<AuditLogDto>(new HttpGetRequestParms { 
                 Client = _client, 
                 ApiEndPoint = _defaultApplicationApiEndPoint,
                 RecordId = id,
                 Token = token,
-                ExpectedStatusCode = HttpStatusCode.NotFound,
-                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
+                QueryStringParms = new BaseServiceGet { DeleteCache = true },
+                ExpectedStatusCode = HttpStatusCode.NotFound
             });
 
             // Assert
