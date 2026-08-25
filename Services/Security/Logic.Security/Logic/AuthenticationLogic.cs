@@ -430,6 +430,7 @@ public class AuthenticationLogic : IAuthenticationLogic
                 entity.FailedPasswordAttemptCount = 0; //reset failed password attempt count on successful login
                 entity.RefreshToken = refreshToken;
                 entity.RefreshTokenExpiryTime = DateTime.Now.AddDays(jwtConfig.RefreshTokenExpiryInDays);
+                entity.ExcludeUpdateAudit = true;
 
                 await dbContext.SaveChangesAsync();
             }

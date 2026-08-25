@@ -78,13 +78,9 @@ namespace Data.Security.Converters
             {
                 Active = source.Active,
                 Name = source.Name,
-                Description = source.Description
+                Description = source.Description,
+                CurrentUser = source.CurrentUser
             };
-
-            target.CreatedOn = CommonUtilities.GetDateTimeUtcNow();
-            target.CreatedBy = source.CurrentUser;
-            target.UpdatedBy = source.CurrentUser;
-            target.UpdatedOn = CommonUtilities.GetDateTimeUtcNow();
 
             return target;
         }
@@ -99,8 +95,7 @@ namespace Data.Security.Converters
             entity.Active = source.Active;
             entity.Name = source.Name;
             entity.Description = source.Description;
-            entity.UpdatedBy = source.CurrentUser;
-            entity.UpdatedOn = CommonUtilities.GetDateTimeUtcNow();
+            entity.CurrentUser = source.CurrentUser;
 
             return entity;
         }

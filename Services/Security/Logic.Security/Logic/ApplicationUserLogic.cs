@@ -299,10 +299,12 @@ namespace Logic.Security.Logic
                 
                 if (entity != null)
                 {
+                    var currentUser = "ApplicationUserLogic.ResetPassword";
+                    var utcNow = CommonUtilities.GetDateTimeUtcNow();
                     var newHashedPassword = LogicUtilities.HashPassword(newPassword);
                     entity.Password = newHashedPassword;
                     entity.PasswordResetRequired = true;
-                    entity.LastPasswordChangeDate = CommonUtilities.GetDateTimeUtcNow();
+                    entity.LastPasswordChangeDate = utcNow;
 
                     //clear any existing refresh tokens when password is changed
                     entity.RefreshToken = null;
@@ -314,8 +316,8 @@ namespace Logic.Security.Logic
                         ApplicationUserId = entity.ApplicationUserId,
                         ApplicationId = entity.ApplicationId,
                         OldPassword = entity.Password,
-                        CreatedBy = "ApplicationUserLogic.ResetPassword",
-                        CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+                        CreatedBy = currentUser,
+                        CreatedOn = utcNow
                     });
 
                     await dbContext.SaveChangesAsync();
@@ -371,6 +373,8 @@ namespace Logic.Security.Logic
                     }
                 }
                 
+                var utcNow = CommonUtilities.GetDateTimeUtcNow();
+
                 //log password change
                 await dbContext.ApplicationUserLogChangePasswords.AddAsync(new ApplicationUserLogChangePassword
                 {
@@ -378,13 +382,13 @@ namespace Logic.Security.Logic
                     ApplicationId = applicationUserEntity.ApplicationId,
                     OldPassword = applicationUserEntity.Password,
                     CreatedBy = req.CurrentUser,
-                    CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+                    CreatedOn = utcNow
                 });
 
                 //change password
                 applicationUserEntity.Password = LogicUtilities.HashPassword(req.NewPassword);
                 applicationUserEntity.PasswordResetRequired = false;
-                applicationUserEntity.LastPasswordChangeDate = CommonUtilities.GetDateTimeUtcNow();
+                applicationUserEntity.LastPasswordChangeDate = utcNow;
                 
                 //clear any existing refresh tokens when password is changed
                 applicationUserEntity.RefreshToken = null;

@@ -98,13 +98,9 @@ namespace Data.Security.Converters
                 FirstName = source.FirstName,
                 LastName = source.LastName,
                 DateOfBirth = source.DateOfBirth,
-                ApplicationId = source.ApplicationId
+                ApplicationId = source.ApplicationId,
+                CurrentUser = source.CurrentUser
             };
-
-            target.CreatedOn = CommonUtilities.GetDateTimeUtcNow();
-            target.CreatedBy = source.CurrentUser;
-            target.UpdatedBy = source.CurrentUser;
-            target.UpdatedOn = CommonUtilities.GetDateTimeUtcNow();
 
             return target;
         }
@@ -122,8 +118,7 @@ namespace Data.Security.Converters
             entity.LastName = source.LastName;
             entity.DateOfBirth = source.DateOfBirth;
             entity.ApplicationId = source.ApplicationId;
-            entity.UpdatedBy = source.CurrentUser;
-            entity.UpdatedOn = CommonUtilities.GetDateTimeUtcNow();
+            entity.CurrentUser = source.CurrentUser;
 
             return entity;
         }
