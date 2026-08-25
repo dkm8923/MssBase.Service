@@ -98,6 +98,20 @@ namespace IntegrationTests.Shared
             return ret;
         }
 
+        public static async Task<ErrorValidationResult<IEnumerable<TResponse>>> GetAuditLogRecordsByIdWithValidationResult<TResponse>(HttpGetRequestParms req)
+        {
+            req.ApiEndPoint = req.ApiEndPoint + "/" + req.RecordId + "/AuditLogs";
+            
+            var response = await ExecuteDefaultGetRequest(req);
+            response.StatusCode.Should().Be(req.ExpectedStatusCode);
+
+            var ret = await GetResponseContent<ErrorValidationResult<IEnumerable<TResponse>>>(response);
+
+            Assert.IsType<ErrorValidationResult<IEnumerable<TResponse>>>(ret);
+
+            return ret;
+        }
+
        public static async Task<HttpResponseMessage> GetRecordById(HttpClient client, string apiEndPoint, int id, string token)
        {
             using var request = new HttpRequestMessage(HttpMethod.Get, apiEndPoint + "/" + id);
