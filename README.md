@@ -89,6 +89,19 @@ dotnet ef database drop \
   --startup-project MssBase.Service/MssBase.Service.csproj
 ```
 
+### Docker Commands
+
+```bash
+cd docker && docker compose up -d      # start
+cd docker && docker compose down       # stop (data persists in volumes)
+cd docker && docker compose down -v    # stop and wipe data
+```
+
+## API Urls:
+
+- GET /openapi/v1.json (Open API File)
+- /Scalar (Scalar UI)
+
 ## Next Reference
 
 If you are onboarding to the codebase, start with [docs/PROJECT_ARCHITECTURE.md](docs/PROJECT_ARCHITECTURE.md) and then review `ServiceExtensions.cs` plus the relevant domain folder under `Services/`.
