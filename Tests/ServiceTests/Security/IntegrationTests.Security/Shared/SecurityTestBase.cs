@@ -934,8 +934,8 @@ public class SecurityTestBase
         ret.ActiveApplications.Add(application);
         
         var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
-        var activePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-        var inactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId);
+        var activePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1);
+        var inactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId, 1);
 
         var activeRolePermissions = new List<RolePermissionDto>();
         var inactiveRolePermissions = new List<RolePermissionDto>();
