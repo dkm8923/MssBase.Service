@@ -15,15 +15,11 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext
     }
 
     public virtual DbSet<Application> Applications { get; set; }
-
     public virtual DbSet<ApplicationUser> ApplicationUsers { get; set; }
-
+    public virtual DbSet<ApplicationUserLogin> ApplicationUserLogins { get; set; }
     public virtual DbSet<Permission> Permissions { get; set; }
-
     public virtual DbSet<Role> Roles { get; set; }
-
     public virtual DbSet<RolePermission> RolePermissions { get; set; }
-
     public virtual DbSet<ApplicationUserPermission> ApplicationUserPermissions { get; set; }
     public virtual DbSet<ApplicationUserRole> ApplicationUserRoles { get; set; }
     public virtual DbSet<ApplicationUserLogChangePassword> ApplicationUserLogChangePasswords { get; set; }
@@ -53,6 +49,7 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext
     {
         modelBuilder.ApplyConfiguration(new ApplicationConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserConfiguration());
+        modelBuilder.ApplyConfiguration(new ApplicationUserLoginConfiguration());
         modelBuilder.ApplyConfiguration(new PermissionConfiguration());
         modelBuilder.ApplyConfiguration(new RoleConfiguration());
         modelBuilder.ApplyConfiguration(new RolePermissionConfiguration());

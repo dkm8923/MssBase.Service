@@ -1,6 +1,7 @@
 ﻿using Contract.Security;
 using Data.Security.Models;
 using Microsoft.EntityFrameworkCore;
+using Shared.Data.Interceptors;
 using Shared.Logic.Common;
 using Shared.Contracts;
 
@@ -41,6 +42,7 @@ namespace Data.Security
 
             var optionsBuilder = new DbContextOptionsBuilder<SecurityDBContext>()
                 .UseSqlServer(decryptedConnectionString)
+                .AddInterceptors(new AuditableEntitySaveChangesInterceptor())
                 .LogTo(Console.WriteLine);
 
             if (isDevelopment)

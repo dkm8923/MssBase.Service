@@ -60,13 +60,9 @@ namespace Data.Security.Converters
                 Active = source.Active,
                 Name = source.Name,
                 Description = source.Description,
-                ApplicationId = source.ApplicationId
+                ApplicationId = source.ApplicationId,
+                CurrentUser = source.CurrentUser
             };
-
-            target.CreatedOn = CommonUtilities.GetDateTimeUtcNow();
-            target.CreatedBy = source.CurrentUser;
-            target.UpdatedBy = source.CurrentUser;
-            target.UpdatedOn = CommonUtilities.GetDateTimeUtcNow();
 
             return target;
         }
@@ -82,8 +78,7 @@ namespace Data.Security.Converters
             entity.Name = source.Name;
             entity.Description = source.Description;
             entity.ApplicationId = source.ApplicationId;
-            entity.UpdatedBy = source.CurrentUser;
-            entity.UpdatedOn = CommonUtilities.GetDateTimeUtcNow();
+            entity.CurrentUser = source.CurrentUser;
 
             return entity;
         }

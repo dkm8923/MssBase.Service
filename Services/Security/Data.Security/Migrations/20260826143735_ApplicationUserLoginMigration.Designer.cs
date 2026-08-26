@@ -4,6 +4,7 @@ using Data.Security.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Security.Migrations
 {
     [DbContext(typeof(SecurityDBContext))]
-    partial class SecurityDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260826143735_ApplicationUserLoginMigration")]
+    partial class ApplicationUserLoginMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -110,21 +113,52 @@ namespace Data.Security.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(128)");
 
+                    b.Property<short?>("FailedPasswordAttemptCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((short)0);
+
                     b.Property<string>("FirstName")
                         .HasMaxLength(64)
                         .IsUnicode(false)
                         .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime?>("LastLockoutDate")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
+                    b.Property<DateTime?>("LastLoginDate")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
 
                     b.Property<string>("LastName")
                         .HasMaxLength(64)
                         .IsUnicode(false)
                         .HasColumnType("varchar(64)");
 
+                    b.Property<DateTime?>("LastPasswordChangeDate")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
                     b.Property<string>("Password")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("PasswordResetRequired")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("ReadOnly")
                         .HasColumnType("bit");
+
+                    b.Property<string>("RefreshToken")
+                        .HasMaxLength(2048)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
 
                     b.Property<string>("UpdatedBy")
                         .IsRequired()
@@ -286,9 +320,6 @@ namespace Data.Security.Migrations
                     b.HasKey("ApplicationUserLoginId");
 
                     b.HasIndex("ApplicationId");
-
-                    b.HasIndex("ApplicationUserId")
-                        .IsUnique();
 
                     b.HasIndex("ApplicationUserId", "ApplicationId")
                         .IsUnique()
@@ -689,8 +720,8 @@ namespace Data.Security.Migrations
                         .HasConstraintName("FK_ApplicationUserLogin_Application");
 
                     b.HasOne("Data.Security.Models.ApplicationUser", "ApplicationUser")
-                        .WithOne("ApplicationUserLogin")
-                        .HasForeignKey("Data.Security.Models.ApplicationUserLogin", "ApplicationUserId")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId")
                         .IsRequired()
                         .HasConstraintName("FK_ApplicationUserLogin_ApplicationUser");
 
@@ -819,9 +850,6 @@ namespace Data.Security.Migrations
 
             modelBuilder.Entity("Data.Security.Models.ApplicationUser", b =>
                 {
-                    b.Navigation("ApplicationUserLogin")
-                        .IsRequired();
-
                     b.Navigation("ApplicationUserPermissions");
 
                     b.Navigation("ApplicationUserRoles");

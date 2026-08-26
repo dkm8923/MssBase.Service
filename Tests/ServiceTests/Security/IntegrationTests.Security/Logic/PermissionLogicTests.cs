@@ -433,8 +433,8 @@ namespace IntegrationTests.Security.Logic
             await _permissionLogic.Update(testPermission2.Response.PermissionId, new InsertUpdatePermissionRequest
             {
                 ApplicationId = applicationId,
-                Name = "Test Permission Name 2",
-                Description = "Test Permission Description 2",
+                Name = "Test Permission Name 2 Update",
+                Description = "Test Permission Description 2 Update",
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, _applicationLogic);

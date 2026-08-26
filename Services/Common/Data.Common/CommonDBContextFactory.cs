@@ -2,6 +2,7 @@
 using Data.Common.Models;
 using Microsoft.EntityFrameworkCore;
 using Shared.Contracts;
+using Shared.Data.Interceptors;
 
 namespace Data.Common
 {
@@ -35,6 +36,7 @@ namespace Data.Common
 
             var options = new DbContextOptionsBuilder<CommonDBContext>()
             .UseSqlServer(decryptedConnectionString)
+            .AddInterceptors(new AuditableEntitySaveChangesInterceptor())
             .Options;
 
             return new CommonDBContext(options);

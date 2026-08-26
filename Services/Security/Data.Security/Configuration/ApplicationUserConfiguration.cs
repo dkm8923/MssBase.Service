@@ -20,16 +20,8 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.Property(t => t.FirstName).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.LastName).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.DateOfBirth).HasPrecision(2);
-        builder.Property(t => t.Password).HasMaxLength(256).IsUnicode(true);
-        builder.Property(t => t.PasswordResetRequired).IsRequired();
-        builder.Property(t => t.LastLoginDate).HasPrecision(2);
-        builder.Property(t => t.LastPasswordChangeDate).HasPrecision(2);
-        builder.Property(t => t.LastLockoutDate).HasPrecision(2);
-        builder.Property(t => t.FailedPasswordAttemptCount).HasDefaultValue((short)0);
         builder.Property(t => t.ApplicationId).IsRequired();
-        builder.Property(t => t.RefreshToken).HasMaxLength(2048).IsUnicode(false);
-        builder.Property(t => t.RefreshTokenExpiryTime).HasPrecision(2);
-
+        
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);
         CreateForeignKeys(builder);
@@ -59,50 +51,50 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .HasConstraintName( DataUtilities.CreateForeignKey(_tableName, "Application"));
     }
 
-    public void CreateTableData(EntityTypeBuilder<ApplicationUser> builder) 
-    {
-        var defaultPassword = "!0TestPassword1230!";
+    // public void CreateTableData(EntityTypeBuilder<ApplicationUser> builder) 
+    // {
+    //     var defaultPassword = "!0TestPassword1230!";
 
-        var dataArr = new List<ApplicationUser>();
-        dataArr.Add(new ApplicationUser { 
-             ApplicationUserId = 1
-            ,Email = "dkm8923@gmail.com"
-            ,FirstName = "Dan"
-            ,LastName = "Mauk"
-            ,DateOfBirth = new DateTime(1989, 6, 15)
-            //,Password = LogicUtilities.HashPassword(defaultPassword)
-            ,Password = defaultPassword
-            ,PasswordResetRequired = false
-            ,LastLoginDate = DataConstants.DefaultCreatedOn
-            ,LastPasswordChangeDate = DataConstants.DefaultCreatedOn
-            ,LastLockoutDate = null
-            ,FailedPasswordAttemptCount = 0
-            ,ApplicationId = 1
-            ,Active = true
-            ,ReadOnly = true
-        });
+    //     var dataArr = new List<ApplicationUser>();
+    //     dataArr.Add(new ApplicationUser { 
+    //          ApplicationUserId = 1
+    //         ,Email = "dkm8923@gmail.com"
+    //         ,FirstName = "Dan"
+    //         ,LastName = "Mauk"
+    //         ,DateOfBirth = new DateTime(1989, 6, 15)
+    //         //,Password = LogicUtilities.HashPassword(defaultPassword)
+    //         ,Password = defaultPassword
+    //         ,PasswordResetRequired = false
+    //         ,LastLoginDate = DataConstants.DefaultCreatedOn
+    //         ,LastPasswordChangeDate = DataConstants.DefaultCreatedOn
+    //         ,LastLockoutDate = null
+    //         ,FailedPasswordAttemptCount = 0
+    //         ,ApplicationId = 1
+    //         ,Active = true
+    //         ,ReadOnly = true
+    //     });
 
-        dataArr.Add(new ApplicationUser { 
-             ApplicationUserId = 2
-            ,Email = "thompsonswartz@gmail.com"
-            ,FirstName = "Rachel"
-            ,LastName = "Thompson"
-            ,DateOfBirth = new DateTime(1987, 12, 04)
-            //,Password = defaultPassword
-            ,Password = defaultPassword
-            ,PasswordResetRequired = false
-            ,LastLoginDate = DataConstants.DefaultCreatedOn
-            ,LastPasswordChangeDate = DataConstants.DefaultCreatedOn
-            ,LastLockoutDate = null
-            ,FailedPasswordAttemptCount = 0
-            ,ApplicationId = 1
-            ,Active = true
-            ,ReadOnly = true
-        });
+    //     dataArr.Add(new ApplicationUser { 
+    //          ApplicationUserId = 2
+    //         ,Email = "thompsonswartz@gmail.com"
+    //         ,FirstName = "Rachel"
+    //         ,LastName = "Thompson"
+    //         ,DateOfBirth = new DateTime(1987, 12, 04)
+    //         //,Password = defaultPassword
+    //         ,Password = defaultPassword
+    //         ,PasswordResetRequired = false
+    //         ,LastLoginDate = DataConstants.DefaultCreatedOn
+    //         ,LastPasswordChangeDate = DataConstants.DefaultCreatedOn
+    //         ,LastLockoutDate = null
+    //         ,FailedPasswordAttemptCount = 0
+    //         ,ApplicationId = 1
+    //         ,Active = true
+    //         ,ReadOnly = true
+    //     });
 
-        DataUtilities.SetAuditFields(dataArr);
+    //     DataUtilities.SetAuditFields(dataArr);
 
-        builder.HasData(dataArr);
-    }
+    //     builder.HasData(dataArr);
+    // }
 }
 

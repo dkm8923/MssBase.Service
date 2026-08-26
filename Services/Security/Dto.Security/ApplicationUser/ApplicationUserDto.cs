@@ -2,10 +2,11 @@ using System.Text.Json.Serialization;
 using Dto.Security.ApplicationUserPermission;
 using Dto.Security.ApplicationUserRole;
 using Shared.Models;
+using Shared.Models.Contracts;
 
 namespace Dto.Security.ApplicationUser
 {
-    public record ApplicationUserDto : AuditableDto
+    public record ApplicationUserDto : AuditableDto, IPerson
     {
         public int ApplicationUserId { get; set; }
         public string Email { get; set; } = null!;

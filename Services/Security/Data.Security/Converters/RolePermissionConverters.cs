@@ -60,13 +60,9 @@ namespace Data.Security.Converters
                 Active = source.Active,
                 ApplicationId = source.ApplicationId,
                 RoleId = source.RoleId,
-                PermissionId = source.PermissionId
+                PermissionId = source.PermissionId,
+                CurrentUser = source.CurrentUser
             };
-
-            target.CreatedOn = CommonUtilities.GetDateTimeUtcNow();
-            target.CreatedBy = source.CurrentUser;
-            target.UpdatedBy = source.CurrentUser;
-            target.UpdatedOn = CommonUtilities.GetDateTimeUtcNow();
 
             return target;
         }
@@ -82,8 +78,7 @@ namespace Data.Security.Converters
             entity.ApplicationId = source.ApplicationId;
             entity.RoleId = source.RoleId;
             entity.PermissionId = source.PermissionId;
-            entity.UpdatedBy = source.CurrentUser;
-            entity.UpdatedOn = CommonUtilities.GetDateTimeUtcNow();
+            entity.CurrentUser = source.CurrentUser;
 
             return entity;
         }

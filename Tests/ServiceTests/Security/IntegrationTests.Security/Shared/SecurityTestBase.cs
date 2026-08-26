@@ -115,6 +115,7 @@ public class SecurityTestBase
                     DELETE FROM [Permission];
                     DELETE FROM [ApplicationUser_Log_Login];
                     DELETE FROM [ApplicationUser_Log_ChangePassword];
+                    DELETE FROM [ApplicationUserLogin];
                     DELETE FROM [ApplicationUser];
                     DELETE FROM [Application];
                     DELETE FROM [AuditLog];
@@ -128,6 +129,7 @@ public class SecurityTestBase
                 await dbContext.RolePermissions.ExecuteDeleteAsync();
                 await dbContext.Roles.ExecuteDeleteAsync();
                 await dbContext.Permissions.ExecuteDeleteAsync();
+                await dbContext.ApplicationUserLogins.ExecuteDeleteAsync();
                 await dbContext.ApplicationUsers.ExecuteDeleteAsync();
                 await dbContext.Applications.ExecuteDeleteAsync();
                 await dbContext.AuditLogs.ExecuteDeleteAsync();
@@ -932,8 +934,8 @@ public class SecurityTestBase
         ret.ActiveApplications.Add(application);
         
         var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
-        var activePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId);
-        var inactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId);
+        var activePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1);
+        var inactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId, 1);
 
         var activeRolePermissions = new List<RolePermissionDto>();
         var inactiveRolePermissions = new List<RolePermissionDto>();

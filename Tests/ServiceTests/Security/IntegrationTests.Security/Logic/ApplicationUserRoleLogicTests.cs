@@ -557,11 +557,15 @@ namespace IntegrationTests.Security.Logic
                 CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic, _applicationUserLogic, _roleLogic);
 
+            var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId);
+            var newRole = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(newApplication.ApplicationId);
+
             await _applicationUserRoleLogic.Update(testApplicationUserRole1Res.Response.ApplicationUserRoleId, new InsertUpdateApplicationUserRoleRequest
             {
-                ApplicationId = applicationId,
-                ApplicationUserId = applicationUserId,
-                RoleId = testRole1.Response.RoleId,
+                ApplicationId = newApplication.ApplicationId,
+                ApplicationUserId = newApplicationUser.ApplicationUserId,
+                RoleId = newRole.RoleId,
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, _applicationLogic, _applicationUserLogic, _roleLogic);
