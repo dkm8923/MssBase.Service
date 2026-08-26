@@ -650,11 +650,15 @@ namespace IntegrationTests.Security.Logic
                 CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, _applicationLogic, _applicationUserLogic, _permissionLogic);
 
+            var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId);
+            var newPermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(newApplication.ApplicationId);
+
             await _applicationUserPermissionLogic.Update(testApplicationUserPermission1Res.Response.ApplicationUserPermissionId, new InsertUpdateApplicationUserPermissionRequest
             {
-                ApplicationId = applicationId,
-                ApplicationUserId = applicationUserId,
-                PermissionId = testPermission1.Response.PermissionId,
+                ApplicationId = newApplication.ApplicationId,
+                ApplicationUserId = newApplicationUser.ApplicationUserId,
+                PermissionId = newPermission.PermissionId,
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, _applicationLogic, _applicationUserLogic, _permissionLogic);

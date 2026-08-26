@@ -502,8 +502,8 @@ namespace IntegrationTests.Security.Logic
             await _applicationLogic.Update(testApplication2.Response.ApplicationId, new InsertUpdateApplicationRequest
             {
                 Active = true,
-                Name = "Test Application Name 2",
-                Description = "Test Application Description 2",
+                Name = "Test Application Name 2 Update",
+                Description = "Test Application Description 2 Update",
                 CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             });
 

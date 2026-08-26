@@ -561,8 +561,8 @@ namespace IntegrationTests.Security.Logic
             await _roleLogic.Update(testRole2.Response.RoleId, new InsertUpdateRoleRequest
             {
                 ApplicationId = applicationId,
-                Name = "Test Role Name 2",
-                Description = "Test Role Description 2",
+                Name = "Test Role Name 2 Update",
+                Description = "Test Role Description 2 Update",
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, _applicationLogic);

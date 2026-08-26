@@ -363,6 +363,7 @@ namespace Logic.Security.Logic
             var log = new Dictionary<string, object?>();
             log[nameof(Role.Name)] = record.Name;
             log[nameof(Role.Description)] = record.Description;
+            log[nameof(Role.ApplicationId)] = record.ApplicationId;
             log[nameof(Role.Active)] = record.Active;
             log[nameof(Role.CreatedBy)] = record.CreatedBy;
             log[nameof(Role.CreatedOn)] = record.CreatedOn;
