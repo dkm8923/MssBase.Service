@@ -204,10 +204,10 @@ namespace IntegrationTests.Security.Logic
             //manually update last password change date to be past expiry threshold
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
+                var entity = await dbContext.ApplicationUsers.Include(aul => aul.ApplicationUserLogin).FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
                 if (entity != null)
                 {
-                    entity.LastPasswordChangeDate = DateTime.UtcNow.AddDays(-(_passwordExpiryInDays + 1));
+                    entity.ApplicationUserLogin.LastPasswordChangeDate = DateTime.UtcNow.AddDays(-(_passwordExpiryInDays + 1));
                     await dbContext.SaveChangesAsync();
                 }
             }
@@ -422,10 +422,10 @@ namespace IntegrationTests.Security.Logic
             //manually update refresh token last updated date to be past expiry threshold
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
+                var entity = await dbContext.ApplicationUsers.Include(aul => aul.ApplicationUserLogin).FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
                 if (entity != null)
                 {
-                    entity.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(-(_refreshTokenExpiryInDays + 1));
+                    entity.ApplicationUserLogin.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(-(_refreshTokenExpiryInDays + 1));
                     await dbContext.SaveChangesAsync();
                 }
             }
@@ -469,9 +469,9 @@ namespace IntegrationTests.Security.Logic
             //verify refresh token info is nulled out on user
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
-                entity.RefreshToken.Should().BeNull();
-                entity.RefreshTokenExpiryTime.Should().BeNull();
+                var entity = await dbContext.ApplicationUsers.Include(aul => aul.ApplicationUserLogin).FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
+                entity.ApplicationUserLogin.RefreshToken.Should().BeNull();
+                entity.ApplicationUserLogin.RefreshTokenExpiryTime.Should().BeNull();
             }
         }
 
@@ -515,10 +515,10 @@ namespace IntegrationTests.Security.Logic
             //verify password was reset on user
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
+                var entity = await dbContext.ApplicationUsers.Include(aul => aul.ApplicationUserLogin).FirstOrDefaultAsync(ent => ent.ApplicationUserId == testUser.ApplicationUserId);
                 //entity.Password.Should().NotBe(testUser.Password); //TODO: Decrypt password and verify it was changed once we have a way to do that in our tests
-                entity.PasswordResetRequired.Should().BeTrue();
-                entity.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+                entity.ApplicationUserLogin.PasswordResetRequired.Should().BeTrue();
+                entity.ApplicationUserLogin.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
             }
         }
 

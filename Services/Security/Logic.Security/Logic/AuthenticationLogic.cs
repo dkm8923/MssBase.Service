@@ -90,7 +90,7 @@ public class AuthenticationLogic : IAuthenticationLogic
 
         if (!isValidPassword)
         {
-            var failedPasswordAttemptCount = await _updateFailedPasswordAttemptLogic(userInfoRes.ApplicationUserId);
+            var failedPasswordAttemptCount = await _updateFailedPasswordAttemptLogic(userInfoRes.ApplicationUserId, applicationRes.ApplicationId);
 
             if (failedPasswordAttemptCount >= _maxFailedPasswordAttemptCount)
             {
@@ -118,7 +118,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         var refreshToken = _generateRefreshToken();
     
         //successful auth occurred:
-        await _updateApplicationUserOnSuccessfulLogin(applicationUserWithRelatedData.Response.ApplicationUserId, refreshToken);
+        await _updateApplicationUserOnSuccessfulLogin(applicationUserWithRelatedData.Response.ApplicationUserId, applicationRes.ApplicationId, refreshToken);
 
         if (_authenticationSettingsConfigMonitor.CurrentValue.LogSuccessfulAuthentication)
         {
@@ -176,7 +176,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         var refreshToken = _generateRefreshToken();
     
         //successful auth occurred, update user accordingly 
-        await _updateApplicationUserOnSuccessfulTokenRefresh(applicationUserWithRelatedData.Response.ApplicationUserId, refreshToken);
+        await _updateApplicationUserOnSuccessfulTokenRefresh(applicationUserWithRelatedData.Response.ApplicationUserId, applicationRes.ApplicationId, refreshToken);
 
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
     }
@@ -328,17 +328,17 @@ public class AuthenticationLogic : IAuthenticationLogic
     {
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var query = dbContext.ApplicationUsers.AsQueryable().AsNoTracking();
+            var query = dbContext.ApplicationUsers.AsQueryable().AsNoTracking().Include(aul => aul.ApplicationUserLogin);
             var user = await query.Where(x => x.ApplicationId == applicationId && x.Email == email && x.Active)
                                   .Select(au => new { 
                                     au.ApplicationUserId, 
                                     au.Email, 
-                                    au.Password,
-                                    au.PasswordResetRequired, 
-                                    au.LastLockoutDate, 
-                                    au.LastPasswordChangeDate,
-                                    au.RefreshToken,
-                                    au.RefreshTokenExpiryTime
+                                    au.ApplicationUserLogin.Password,
+                                    au.ApplicationUserLogin.PasswordResetRequired, 
+                                    au.ApplicationUserLogin.LastLockoutDate, 
+                                    au.ApplicationUserLogin.LastPasswordChangeDate,
+                                    au.ApplicationUserLogin.RefreshToken,
+                                    au.ApplicationUserLogin.RefreshTokenExpiryTime
                                   })
                                   .FirstOrDefaultAsync();
 
@@ -388,11 +388,11 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// </summary>
     /// <param name="applicationUserId"></param>
     /// <returns></returns>
-    private async Task<short> _updateFailedPasswordAttemptLogic(int applicationUserId)
+    private async Task<short> _updateFailedPasswordAttemptLogic(int applicationUserId, int applicationId)
     {
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
+            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId && ent.ApplicationId == applicationId);
 
             if (entity != null)
             {
@@ -416,13 +416,13 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// </summary>
     /// <param name="applicationUserId"></param>
     /// <returns></returns>
-    private async Task _updateApplicationUserOnSuccessfulLogin(int applicationUserId, string refreshToken)
+    private async Task _updateApplicationUserOnSuccessfulLogin(int applicationUserId, int applicationId, string refreshToken)
     {
         var jwtConfig = _jwtConfigMonitor.CurrentValue;
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
+            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId && ent.ApplicationId == applicationId);
 
             if (entity != null)
             {
@@ -430,8 +430,7 @@ public class AuthenticationLogic : IAuthenticationLogic
                 entity.FailedPasswordAttemptCount = 0; //reset failed password attempt count on successful login
                 entity.RefreshToken = refreshToken;
                 entity.RefreshTokenExpiryTime = DateTime.Now.AddDays(jwtConfig.RefreshTokenExpiryInDays);
-                entity.ExcludeUpdateAudit = true;
-
+                
                 await dbContext.SaveChangesAsync();
             }
         }
@@ -453,13 +452,13 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
     }
 
-    private async Task _updateApplicationUserOnSuccessfulTokenRefresh(int applicationUserId, string refreshToken)
+    private async Task _updateApplicationUserOnSuccessfulTokenRefresh(int applicationUserId, int applicationId, string refreshToken)
     {
         var jwtConfig = _jwtConfigMonitor.CurrentValue;
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
+            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId && ent.ApplicationId == applicationId);
 
             if (entity != null)
             {
@@ -477,7 +476,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.Email == email);
+            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUser.Email == email);
 
             if (entity != null)
             {

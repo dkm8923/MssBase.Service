@@ -14,6 +14,8 @@ namespace Data.Security.Converters
                 return null;
             }
 
+            var applicationUserLogin = source.ApplicationUserLogin != null ? source.ApplicationUserLogin : new ApplicationUserLogin();
+
             var target = new ApplicationUserDto
             {
                 ApplicationUserId = source.ApplicationUserId,
@@ -27,12 +29,12 @@ namespace Data.Security.Converters
                 FirstName = source.FirstName,
                 LastName = source.LastName,
                 DateOfBirth = source.DateOfBirth,
-                Password = source.Password,
-                PasswordResetRequired = source.PasswordResetRequired,
-                LastLoginDate = source.LastLoginDate,
-                LastPasswordChangeDate = source.LastPasswordChangeDate,
-                LastLockoutDate = source.LastLockoutDate,
-                FailedPasswordAttemptCount = source.FailedPasswordAttemptCount,
+                Password = applicationUserLogin.Password,
+                PasswordResetRequired = applicationUserLogin.PasswordResetRequired,
+                LastLoginDate = applicationUserLogin.LastLoginDate,
+                LastPasswordChangeDate = applicationUserLogin.LastPasswordChangeDate,
+                LastLockoutDate = applicationUserLogin.LastLockoutDate,
+                FailedPasswordAttemptCount = applicationUserLogin.FailedPasswordAttemptCount,
                 ApplicationId = source.ApplicationId
             };
 

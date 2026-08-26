@@ -115,6 +115,7 @@ public class SecurityTestBase
                     DELETE FROM [Permission];
                     DELETE FROM [ApplicationUser_Log_Login];
                     DELETE FROM [ApplicationUser_Log_ChangePassword];
+                    DELETE FROM [ApplicationUserLogin];
                     DELETE FROM [ApplicationUser];
                     DELETE FROM [Application];
                     DELETE FROM [AuditLog];
@@ -128,6 +129,7 @@ public class SecurityTestBase
                 await dbContext.RolePermissions.ExecuteDeleteAsync();
                 await dbContext.Roles.ExecuteDeleteAsync();
                 await dbContext.Permissions.ExecuteDeleteAsync();
+                await dbContext.ApplicationUserLogins.ExecuteDeleteAsync();
                 await dbContext.ApplicationUsers.ExecuteDeleteAsync();
                 await dbContext.Applications.ExecuteDeleteAsync();
                 await dbContext.AuditLogs.ExecuteDeleteAsync();

@@ -109,7 +109,8 @@ namespace Logic.Security.Logic
             using (var dbContext = _dbContextFactory.CreateContextReadOnly())
             {
                 var query = dbContext.ApplicationUsers.AsQueryable().AsNoTracking();
-
+                
+                query = query.Include(aul => aul.ApplicationUserLogin);
                 query = query.ApplyIncludeInactiveFilter(req);
                 query = query.ApplyIncludeReadOnlyFilter(req);
                 query = query.ApplyAuditableFilters(req);
@@ -179,13 +180,19 @@ namespace Logic.Security.Logic
 
                 var randomPassword = _generateRandomPassword();
 
-                entity.Password = LogicUtilities.HashPassword(randomPassword);
-                entity.PasswordResetRequired = true;
+                // Assign via navigation property so EF Core fixes up ApplicationUserId after it's generated on save
+                entity.ApplicationUserLogin = new ApplicationUserLogin
+                {
+                    ApplicationId = entity.ApplicationId,
+                    Password = LogicUtilities.HashPassword(randomPassword),
+                    PasswordResetRequired = true
+                };
 
                 await dbContext.ApplicationUsers.AddAsync(entity);
+
                 await dbContext.SaveChangesAsync();
 
-                entity.Password = randomPassword;
+                entity.ApplicationUserLogin.Password = randomPassword;
 
                 return new ErrorValidationResult<ApplicationUserDto> { Response = entity.ToDto() };
             }
@@ -209,7 +216,7 @@ namespace Logic.Security.Logic
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
                 var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
-
+                
                 if (entity == null)
                 {
                     errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors); 
@@ -223,7 +230,12 @@ namespace Logic.Security.Logic
 
                 await LogChange(dbContext, entity, req);
 
+                var aulEntity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId && ent.ApplicationId == entity.ApplicationId);
+                
                 entity = entity.UpdateEntityFromRequest(req);
+                
+                aulEntity.ApplicationId = entity.ApplicationId;
+
                 await dbContext.SaveChangesAsync();
                 return new ErrorValidationResult<ApplicationUserDto> { Response = entity.ToDtoWithoutPassword() };
             }
@@ -252,6 +264,7 @@ namespace Logic.Security.Logic
                 {
                     dbContext.ApplicationUserLogChangePasswords.RemoveRange(dbContext.ApplicationUserLogChangePasswords.Where(log => log.ApplicationUserId == applicationUserId));
                     dbContext.ApplicationUserLogLogins.RemoveRange(dbContext.ApplicationUserLogLogins.Where(log => log.ApplicationUserId == applicationUserId));
+                    dbContext.ApplicationUserLogins.RemoveRange(dbContext.ApplicationUserLogins.Where(login => login.ApplicationUserId == applicationUserId));
 
                     await LogDelete(dbContext, entity, currentUser);
 
@@ -295,27 +308,27 @@ namespace Logic.Security.Logic
             
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
+                var entity = await dbContext.ApplicationUsers.Include(aul => aul.ApplicationUserLogin).FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId);
                 
                 if (entity != null)
                 {
                     var currentUser = "ApplicationUserLogic.ResetPassword";
                     var utcNow = CommonUtilities.GetDateTimeUtcNow();
                     var newHashedPassword = LogicUtilities.HashPassword(newPassword);
-                    entity.Password = newHashedPassword;
-                    entity.PasswordResetRequired = true;
-                    entity.LastPasswordChangeDate = utcNow;
+                    entity.ApplicationUserLogin.Password = newHashedPassword;
+                    entity.ApplicationUserLogin.PasswordResetRequired = true;
+                    entity.ApplicationUserLogin.LastPasswordChangeDate = utcNow;
 
                     //clear any existing refresh tokens when password is changed
-                    entity.RefreshToken = null;
-                    entity.RefreshTokenExpiryTime = null;    
+                    entity.ApplicationUserLogin.RefreshToken = null;
+                    entity.ApplicationUserLogin.RefreshTokenExpiryTime = null;    
                     
                     //log password change
                     await dbContext.ApplicationUserLogChangePasswords.AddAsync(new ApplicationUserLogChangePassword
                     {
                         ApplicationUserId = entity.ApplicationUserId,
                         ApplicationId = entity.ApplicationId,
-                        OldPassword = entity.Password,
+                        OldPassword = entity.ApplicationUserLogin.Password,
                         CreatedBy = currentUser,
                         CreatedOn = utcNow
                     });
@@ -344,14 +357,14 @@ namespace Logic.Security.Logic
             
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var applicationUserEntity = await dbContext.ApplicationUsers.FirstOrDefaultAsync(ent => ent.ApplicationUserId == req.ApplicationUserId);
+                var applicationUserEntity = await dbContext.ApplicationUsers.Include(aul => aul.ApplicationUserLogin).FirstOrDefaultAsync(ent => ent.ApplicationUserId == req.ApplicationUserId);
                 
                 if (applicationUserEntity is null) 
                 {
                     return _createUserNotFoundError<object?>();
                 }
 
-                var passwordsMatch = SecurityLogicUtilities.VerifyPasswordMatchesHash(applicationUserEntity.Password, req.NewPassword);
+                var passwordsMatch = SecurityLogicUtilities.VerifyPasswordMatchesHash(applicationUserEntity.ApplicationUserLogin.Password, req.NewPassword);
 
                 if (passwordsMatch)
                 {
@@ -380,19 +393,19 @@ namespace Logic.Security.Logic
                 {
                     ApplicationUserId = req.ApplicationUserId,
                     ApplicationId = applicationUserEntity.ApplicationId,
-                    OldPassword = applicationUserEntity.Password,
+                    OldPassword = applicationUserEntity.ApplicationUserLogin.Password,
                     CreatedBy = req.CurrentUser,
                     CreatedOn = utcNow
                 });
 
                 //change password
-                applicationUserEntity.Password = LogicUtilities.HashPassword(req.NewPassword);
-                applicationUserEntity.PasswordResetRequired = false;
-                applicationUserEntity.LastPasswordChangeDate = utcNow;
+                applicationUserEntity.ApplicationUserLogin.Password = LogicUtilities.HashPassword(req.NewPassword);
+                applicationUserEntity.ApplicationUserLogin.PasswordResetRequired = false;
+                applicationUserEntity.ApplicationUserLogin.LastPasswordChangeDate = utcNow;
                 
                 //clear any existing refresh tokens when password is changed
-                applicationUserEntity.RefreshToken = null;
-                applicationUserEntity.RefreshTokenExpiryTime = null;    
+                applicationUserEntity.ApplicationUserLogin.RefreshToken = null;
+                applicationUserEntity.ApplicationUserLogin.RefreshTokenExpiryTime = null;    
 
                 await dbContext.SaveChangesAsync();
 

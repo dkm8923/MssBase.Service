@@ -4,6 +4,7 @@ using Data.Security.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Security.Migrations
 {
     [DbContext(typeof(SecurityDBContext))]
-    partial class SecurityDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260826173824_ApplicationUserRemoveColumnsMigration")]
+    partial class ApplicationUserRemoveColumnsMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -249,6 +252,9 @@ namespace Data.Security.Migrations
                     b.Property<int>("ApplicationUserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ApplicationUserId1")
+                        .HasColumnType("int");
+
                     b.Property<short?>("FailedPasswordAttemptCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
@@ -287,8 +293,9 @@ namespace Data.Security.Migrations
 
                     b.HasIndex("ApplicationId");
 
-                    b.HasIndex("ApplicationUserId")
-                        .IsUnique();
+                    b.HasIndex("ApplicationUserId1")
+                        .IsUnique()
+                        .HasFilter("[ApplicationUserId1] IS NOT NULL");
 
                     b.HasIndex("ApplicationUserId", "ApplicationId")
                         .IsUnique()
@@ -689,10 +696,14 @@ namespace Data.Security.Migrations
                         .HasConstraintName("FK_ApplicationUserLogin_Application");
 
                     b.HasOne("Data.Security.Models.ApplicationUser", "ApplicationUser")
-                        .WithOne("ApplicationUserLogin")
-                        .HasForeignKey("Data.Security.Models.ApplicationUserLogin", "ApplicationUserId")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId")
                         .IsRequired()
                         .HasConstraintName("FK_ApplicationUserLogin_ApplicationUser");
+
+                    b.HasOne("Data.Security.Models.ApplicationUser", null)
+                        .WithOne("ApplicationUserLogin")
+                        .HasForeignKey("Data.Security.Models.ApplicationUserLogin", "ApplicationUserId1");
 
                     b.Navigation("Application");
 
