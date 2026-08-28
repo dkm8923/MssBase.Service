@@ -1,3 +1,4 @@
+using Dto.Security.ApplicationUser;
 using Dto.Security.Authentication;
 using FluentValidation;
 using Microsoft.Extensions.Options;

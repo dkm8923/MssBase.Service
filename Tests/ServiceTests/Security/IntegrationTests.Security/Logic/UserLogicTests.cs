@@ -1090,351 +1090,347 @@ namespace IntegrationTests.Security.Logic
     
         #region Reset Password
 
-        // [Fact]
-        // public async Task ApplicationUser_ResetPassword_Should_Reset_Password()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+        [Fact]
+        public async Task User_ResetPassword_Should_Reset_Password()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
 
-        //     //change password to ensure PasswordResetRequired is false before reset password test
-        //     await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
-        //         ApplicationUserId = testUser.Response.ApplicationUserId, 
-        //         NewPassword = TestConstants.DefaultTestUserPassword,
-        //         CurrentUser = TestConstants.CurrentUser 
-        //     });
+            //change password to ensure PasswordResetRequired is false before reset password test
+            await _userLogic.ChangePassword(new ChangePasswordRequest { 
+                UserId = testUser.Response.UserId, 
+                NewPassword = TestConstants.DefaultTestUserPassword,
+                CurrentUser = TestConstants.CurrentUser 
+            });
 
-        //     var testUserAfterPasswordChange = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet());
+            var testUserAfterPasswordChange = await _userLogic.GetById(testUser.Response.UserId, new BaseLogicGet());
             
-        //     // Act
-        //     var resetPasswordResult = await _applicationUserLogic.ResetPassword(testUser.Response.ApplicationUserId);
-        //     var testUserAfterPasswordReset = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet());
+            // Act
+            var resetPasswordResult = await _userLogic.ResetPassword(testUser.Response.UserId);
+            var testUserAfterPasswordReset = await _userLogic.GetById(testUser.Response.UserId, new BaseLogicGet());
 
-        //     var passwordChangeHistoryAfterPasswordReset = await _applicationUserLogic.GetPasswordChangeHistoryByApplicationUserId(testUser.Response.ApplicationUserId); 
+            var passwordChangeHistoryAfterPasswordReset = await _userLogic.GetPasswordChangeHistoryByUserId(testUser.Response.UserId); 
 
-        //     // Assert
-        //     testUserAfterPasswordChange.Response.PasswordResetRequired.Should().BeFalse();
-        //     testUserAfterPasswordChange.Response.LastPasswordChangeDate.Should().NotBeNull();
-        //     testUserAfterPasswordChange.Response.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+            // Assert
+            testUserAfterPasswordChange.Response.PasswordResetRequired.Should().BeFalse();
+            testUserAfterPasswordChange.Response.LastPasswordChangeDate.Should().NotBeNull();
+            testUserAfterPasswordChange.Response.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 
-        //     resetPasswordResult.Errors.Should().BeNullOrEmpty();
-        //     resetPasswordResult.Response.Should().NotBeNull();
-        //     resetPasswordResult.Response.NewPassword.Should().NotBeNullOrEmpty();
-        //     resetPasswordResult.Response.NewPassword.Should().NotBeEquivalentTo(testUser.Response.Password);
+            resetPasswordResult.Errors.Should().BeNullOrEmpty();
+            resetPasswordResult.Response.Should().NotBeNull();
+            resetPasswordResult.Response.NewPassword.Should().NotBeNullOrEmpty();
+            resetPasswordResult.Response.NewPassword.Should().NotBeEquivalentTo(testUser.Response.Password);
             
-        //     testUserAfterPasswordReset.Response.PasswordResetRequired.Should().BeTrue();
-        //     testUserAfterPasswordReset.Response.LastPasswordChangeDate.Should().NotBeNull();
-        //     testUserAfterPasswordReset.Response.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+            testUserAfterPasswordReset.Response.PasswordResetRequired.Should().BeTrue();
+            testUserAfterPasswordReset.Response.LastPasswordChangeDate.Should().NotBeNull();
+            testUserAfterPasswordReset.Response.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 
-        //     passwordChangeHistoryAfterPasswordReset.Errors.Should().BeNullOrEmpty();
-        //     passwordChangeHistoryAfterPasswordReset.Response.Should().HaveCount(2);
-        // }
+            passwordChangeHistoryAfterPasswordReset.Errors.Should().BeNullOrEmpty();
+            passwordChangeHistoryAfterPasswordReset.Response.Should().HaveCount(2);
+        }
             
-        // [Fact]
-        // public async Task ApplicationUser_ResetPassword_Should_Not_Reset_Password_Invalid_ApplicationUserId()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+        [Fact]
+        public async Task User_ResetPassword_Should_Not_Reset_Password_Invalid_UserId()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
 
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedRecordDoesNotExistErrors();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedRecordDoesNotExistErrors();
 
-        //     // Act
-        //     var resetPasswordResult = await _applicationUserLogic.ResetPassword(-1);
+            // Act
+            var resetPasswordResult = await _userLogic.ResetPassword(-1);
             
-        //     // Assert
-        //     resetPasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            // Assert
+            resetPasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-        //     LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, resetPasswordResult.Errors);     
-        // }
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, resetPasswordResult.Errors);     
+        }
 
         #endregion
 
         #region Change Password
 
-        // [Fact]
-        // public async Task ApplicationUser_ChangePassword_Should_Change_Password()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+        [Fact]
+        public async Task User_ChangePassword_Should_Change_Password()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
 
-        //     // Act
-        //     var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
-        //         ApplicationUserId = testUser.Response.ApplicationUserId, 
-        //         NewPassword = TestConstants.DefaultTestUserPassword,
-        //         CurrentUser = TestConstants.CurrentUser 
-        //     });
+            // Act
+            var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
+                UserId = testUser.Response.UserId, 
+                NewPassword = TestConstants.DefaultTestUserPassword,
+                CurrentUser = TestConstants.CurrentUser 
+            });
             
-        //     var testUserAfterChangePassword = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet());
+            var testUserAfterChangePassword = await _userLogic.GetById(testUser.Response.UserId, new BaseLogicGet());
 
-        //     var passwordChangeHistory = await _applicationUserLogic.GetPasswordChangeHistoryByApplicationUserId(testUser.Response.ApplicationUserId); 
+            var passwordChangeHistory = await _userLogic.GetPasswordChangeHistoryByUserId(testUser.Response.UserId); 
 
-        //     // Assert
-        //     changePasswordResult.Errors.Should().BeNullOrEmpty();
+            // Assert
+            changePasswordResult.Errors.Should().BeNullOrEmpty();
 
-        //     testUserAfterChangePassword.Response.PasswordResetRequired.Should().BeFalse();
-        //     testUserAfterChangePassword.Response.LastPasswordChangeDate.Should().NotBeNull();
-        //     testUserAfterChangePassword.Response.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+            testUserAfterChangePassword.Response.PasswordResetRequired.Should().BeFalse();
+            testUserAfterChangePassword.Response.LastPasswordChangeDate.Should().NotBeNull();
+            testUserAfterChangePassword.Response.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 
-        //     passwordChangeHistory.Errors.Should().BeNullOrEmpty();
-        //     passwordChangeHistory.Response.Should().HaveCount(1);
-        // }
+            passwordChangeHistory.Errors.Should().BeNullOrEmpty();
+            passwordChangeHistory.Response.Should().HaveCount(1);
+        }
 
-        // [Fact]
-        // public async Task ApplicationUser_ChangePassword_Should_Not_Change_Password_Required_Field_Errors()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+        [Fact]
+        public async Task User_ChangePassword_Should_Not_Change_Password_Required_Field_Errors()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
 
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordRequiredFieldErrors();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordRequiredFieldErrors();
 
-        //     // Act
-        //     var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest());
+            // Act
+            var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest());
             
-        //     // Assert
-        //     changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            // Assert
+            changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-        //     LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
-        // }
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
+        }
 
-        // [Fact]
-        // public async Task ApplicationUser_ChangePassword_Should_Not_Change_Password_Invalid_ApplicationUserId()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+        [Fact]
+        public async Task User_ChangePassword_Should_Not_Change_Password_Invalid_UserId()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
 
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedRecordDoesNotExistErrors();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedRecordDoesNotExistErrors();
 
-        //     // Act
-        //     var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
-        //         ApplicationUserId = 999, 
-        //         NewPassword = TestConstants.DefaultTestUserPassword,
-        //         CurrentUser = TestConstants.CurrentUser 
-        //     });
+            // Act
+            var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
+                UserId = 999, 
+                NewPassword = TestConstants.DefaultTestUserPassword,
+                CurrentUser = TestConstants.CurrentUser 
+            });
             
-        //     // Assert
-        //     changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            // Assert
+            changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-        //     LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
-        // }
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
+        }
 
-        // [Fact]
-        // public async Task ApplicationUser_ChangePassword_Should_Not_Change_Password_Invalid_Password()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
-        //     var acceptablePassword = "!0TestPassword10!";
+        [Fact]
+        public async Task User_ChangePassword_Should_Not_Change_Password_Invalid_Password()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
+            var acceptablePassword = "!0TestPassword10!";
             
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordInvalidPasswordErrors();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordInvalidPasswordErrors();
 
-        //     await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
-        //         ApplicationUserId = testUser.Response.ApplicationUserId, 
-        //         NewPassword = acceptablePassword,
-        //         CurrentUser = TestConstants.CurrentUser 
-        //     });
+            await _userLogic.ChangePassword(new ChangePasswordRequest { 
+                UserId = testUser.Response.UserId, 
+                NewPassword = acceptablePassword,
+                CurrentUser = TestConstants.CurrentUser 
+            });
 
-        //     // Act
-        //     var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
-        //         ApplicationUserId = testUser.Response.ApplicationUserId, 
-        //         NewPassword = acceptablePassword, //setting new password to current password which should not be allowed    
-        //         CurrentUser = TestConstants.CurrentUser 
-        //     });
+            // Act
+            var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
+                UserId = testUser.Response.UserId, 
+                NewPassword = acceptablePassword, //setting new password to current password which should not be allowed    
+                CurrentUser = TestConstants.CurrentUser 
+            });
             
-        //     // Assert
-        //     changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            // Assert
+            changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-        //     LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
-        // }
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
+        }
 
-        // [Fact]
-        // public async Task ApplicationUser_ChangePassword_Should_Not_Change_Password_Max_Length_Errors()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+        [Fact]
+        public async Task User_ChangePassword_Should_Not_Change_Password_Max_Length_Errors()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
 
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordMinMaxLengthErrors();
+            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordMinMaxLengthErrors();
 
-        //     // Act
-        //     var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
-        //         ApplicationUserId = testUser.Response.ApplicationUserId, 
-        //         NewPassword = CommonUtilities.GenerateRandomAlphaNumericString(_passwordValidationConfigMonitor.CurrentValue.MaxLength + 1, true),
-        //         CurrentUser = TestConstants.CurrentUser 
-        //     });
+            // Act
+            var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
+                UserId = testUser.Response.UserId, 
+                NewPassword = CommonUtilities.GenerateRandomAlphaNumericString(_passwordValidationConfigMonitor.CurrentValue.MaxLength + 1, true),
+                CurrentUser = TestConstants.CurrentUser 
+            });
             
-        //     // Assert
-        //     changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            // Assert
+            changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-        //     LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
-        // }
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
+        }
 
-        // [Fact]
-        // public async Task ApplicationUser_ChangePassword_Should_Not_Change_Password_Min_Length_Errors()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+        [Fact]
+        public async Task User_ChangePassword_Should_Not_Change_Password_Min_Length_Errors()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
 
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordMinMaxLengthErrors();
+            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordMinMaxLengthErrors();
 
-        //     // Act
-        //     var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
-        //         ApplicationUserId = testUser.Response.ApplicationUserId, 
-        //         NewPassword = "!aB1", //special char, upper / lower case, and number
-        //         CurrentUser = TestConstants.CurrentUser 
-        //     });
+            // Act
+            var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
+                UserId = testUser.Response.UserId, 
+                NewPassword = "!aB1", //special char, upper / lower case, and number
+                CurrentUser = TestConstants.CurrentUser 
+            });
             
-        //     // Assert
-        //     changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            // Assert
+            changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-        //     LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
-        // }
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors);   
+        }
 
-        // [Fact]
-        // public async Task ApplicationUser_ChangePassword_Should_Not_Change_Password_UpperCase_Letter_Required_Errors()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+        [Fact]
+        public async Task User_ChangePassword_Should_Not_Change_Password_UpperCase_Letter_Required_Errors()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
 
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordUpperCaseRequiredErrors();
+            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordUpperCaseRequiredErrors();
 
-        //     // Act
-        //     var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
-        //         ApplicationUserId = testUser.Response.ApplicationUserId, 
-        //         NewPassword = "!0testpassword0!", 
-        //         CurrentUser = TestConstants.CurrentUser 
-        //     });
+            // Act
+            var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
+                UserId = testUser.Response.UserId, 
+                NewPassword = "!0testpassword0!", 
+                CurrentUser = TestConstants.CurrentUser 
+            });
             
-        //     // Assert
-        //     if (_passwordValidationConfigMonitor.CurrentValue.RequireUppercase)
-        //     {
-        //         changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            // Assert
+            if (_passwordValidationConfigMonitor.CurrentValue.RequireUppercase)
+            {
+                changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-        //         LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
-        //     }
-        //     else
-        //     {
-        //         changePasswordResult.Errors.Count.Should().Be(0);
-        //     }
-        // }
+                LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
+            }
+            else
+            {
+                changePasswordResult.Errors.Count.Should().Be(0);
+            }
+        }
 
-        // [Fact]
-        // public async Task ApplicationUser_ChangePassword_Should_Not_Change_Password_LowerCase_Letter_Required_Errors()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+        [Fact]
+        public async Task User_ChangePassword_Should_Not_Change_Password_LowerCase_Letter_Required_Errors()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
 
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordLowerCaseRequiredErrors();
+            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordLowerCaseRequiredErrors();
 
-        //     // Act
-        //     var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
-        //         ApplicationUserId = testUser.Response.ApplicationUserId, 
-        //         NewPassword = "!0TESTPASSWORD0!", 
-        //         CurrentUser = TestConstants.CurrentUser 
-        //     });
+            // Act
+            var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
+                UserId = testUser.Response.UserId, 
+                NewPassword = "!0TESTPASSWORD0!", 
+                CurrentUser = TestConstants.CurrentUser 
+            });
             
-        //     // Assert
-        //     if (_passwordValidationConfigMonitor.CurrentValue.RequireLowercase)
-        //     {
-        //         changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            // Assert
+            if (_passwordValidationConfigMonitor.CurrentValue.RequireLowercase)
+            {
+                changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-        //         LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
-        //     }
-        //     else
-        //     {
-        //         changePasswordResult.Errors.Count.Should().Be(0);
-        //     }  
-        // }
+                LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
+            }
+            else
+            {
+                changePasswordResult.Errors.Count.Should().Be(0);
+            }  
+        }
 
-        // [Fact]
-        // public async Task ApplicationUser_ChangePassword_Should_Not_Change_Password_Special_Character_Required_Errors()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+        [Fact]
+        public async Task User_ChangePassword_Should_Not_Change_Password_Special_Character_Required_Errors()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
 
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordSpecialCharacterRequiredErrors();
+            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordSpecialCharacterRequiredErrors();
 
-        //     // Act
-        //     var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
-        //         ApplicationUserId = testUser.Response.ApplicationUserId, 
-        //         //NewPassword = CommonUtilities.GenerateRandomAlphaNumericString(129, true),
-        //         NewPassword = "TestPassword1", 
-        //         CurrentUser = TestConstants.CurrentUser 
-        //     });
+            // Act
+            var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
+                UserId = testUser.Response.UserId, 
+                //NewPassword = CommonUtilities.GenerateRandomAlphaNumericString(129, true),
+                NewPassword = "TestPassword1", 
+                CurrentUser = TestConstants.CurrentUser 
+            });
             
-        //     // Assert
-        //     if (_passwordValidationConfigMonitor.CurrentValue.RequireNonAlphanumeric)
-        //     {
-        //         changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            // Assert
+            if (_passwordValidationConfigMonitor.CurrentValue.RequireNonAlphanumeric)
+            {
+                changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-        //         LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
-        //     }
-        //     else
-        //     {
-        //         changePasswordResult.Errors.Count.Should().Be(0);
-        //     }     
-        // }
+                LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
+            }
+            else
+            {
+                changePasswordResult.Errors.Count.Should().Be(0);
+            }     
+        }
 
-        // [Fact]
-        // public async Task ApplicationUser_ChangePassword_Should_Not_Change_Password_Number_Required_Errors()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var recordToCreate = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId, true);
-        //     var testUser = await _applicationUserLogic.Insert(recordToCreate, _applicationLogic);
+        [Fact]
+        public async Task User_ChangePassword_Should_Not_Change_Password_Number_Required_Errors()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
+            var testUser = await _userLogic.Insert(recordToCreate);
 
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordNumberRequiredErrors();
+            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordNumberRequiredErrors();
 
-        //     // Act
-        //     var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { 
-        //         ApplicationUserId = testUser.Response.ApplicationUserId, 
-        //         //NewPassword = CommonUtilities.GenerateRandomAlphaNumericString(129, true),
-        //         NewPassword = "TestPassword!", 
-        //         CurrentUser = TestConstants.CurrentUser 
-        //     });
+            // Act
+            var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
+                UserId = testUser.Response.UserId, 
+                //NewPassword = CommonUtilities.GenerateRandomAlphaNumericString(129, true),
+                NewPassword = "TestPassword!", 
+                CurrentUser = TestConstants.CurrentUser 
+            });
             
-        //     // Assert
-        //    if (_passwordValidationConfigMonitor.CurrentValue.RequireDigit)
-        //     {
-        //         changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            // Assert
+           if (_passwordValidationConfigMonitor.CurrentValue.RequireDigit)
+            {
+                changePasswordResult.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-        //         LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
-        //     }
-        //     else
-        //     {
-        //         changePasswordResult.Errors.Count.Should().Be(0);
-        //     }      
-        // }
+                LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, changePasswordResult.Errors); 
+            }
+            else
+            {
+                changePasswordResult.Errors.Count.Should().Be(0);
+            }      
+        }
 
         #endregion
 

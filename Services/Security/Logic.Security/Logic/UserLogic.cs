@@ -1,5 +1,4 @@
 using Contract.Security;
-using Contract.Security.Application;
 using Data.Security;
 using Data.Security.Converters;
 using Dto.Security.User;
@@ -12,7 +11,6 @@ using Shared.Logic;
 using Shared.Logic.Validators;
 using Shared.Logic.Common;
 using Shared.Data.Converters;
-using Microsoft.AspNetCore.Identity;
 using Dto.Security.Authentication;
 using Data.Security.Models;
 using Microsoft.Extensions.Options;
@@ -31,23 +29,23 @@ namespace Logic.Security.Logic
 
         private IValidator<FilterUserLogicRequest> _filterUserLogicRequestValidator;
         private IValidator<InsertUpdateUserRequest> _insertUpdateUserRequestValidator;
-        // private IValidator<ChangePasswordRequest> _changePasswordRequestValidator;
-        // private IOptions<PasswordValidationConfig> _passwordValidationConfig;
+        private IValidator<ChangePasswordRequest> _changePasswordRequestValidator;
+        private IOptions<PasswordValidationConfig> _passwordValidationConfig;
         
         public UserLogic(
                             ISecurityConnectionStrings connectionStrings,
                             IValidator<FilterUserLogicRequest> filterUserLogicRequestValidator,
-                            IValidator<InsertUpdateUserRequest> insertUpdateUserRequestValidator
-                            //IValidator<ChangePasswordRequest> changePasswordRequestValidator,
-                            //IOptions<PasswordValidationConfig> passwordValidationConfig
+                            IValidator<InsertUpdateUserRequest> insertUpdateUserRequestValidator,
+                            IValidator<ChangePasswordRequest> changePasswordRequestValidator,
+                            IOptions<PasswordValidationConfig> passwordValidationConfig
         )
         {
             _connectionStrings = connectionStrings;
             _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
             _filterUserLogicRequestValidator = filterUserLogicRequestValidator;
             _insertUpdateUserRequestValidator = insertUpdateUserRequestValidator;
-            // _changePasswordRequestValidator = changePasswordRequestValidator;
-            // _passwordValidationConfig = passwordValidationConfig;
+            _changePasswordRequestValidator = changePasswordRequestValidator;
+            _passwordValidationConfig = passwordValidationConfig;
         }
 
         #region GetAll
@@ -290,127 +288,125 @@ namespace Logic.Security.Logic
         /// <param name="userId">The unique identifier of the user.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A result containing the list of password change history records for the specified user.</returns>
-        // public async Task<ErrorValidationResult<IEnumerable<UserLogChangePasswordDto>>> GetPasswordChangeHistoryByUserId(int userId, CancellationToken cancellationToken = default)
-        // {
-        //     using (var dbContext = _dbContextFactory.CreateContextReadOnly())
-        //     {
-        //         var query = dbContext.UserLogChangePasswords.AsQueryable().AsNoTracking().Where(log => log.UserId == userId);
-        //         return new ErrorValidationResult<IEnumerable<UserLogChangePasswordDto>> { Response = await query.ToDtos(cancellationToken) };
-        //     }
-        // }
+        public async Task<ErrorValidationResult<IEnumerable<UserLogChangePasswordDto>>> GetPasswordChangeHistoryByUserId(int userId, CancellationToken cancellationToken = default)
+        {
+            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
+            {
+                var query = dbContext.UserLogChangePasswords.AsQueryable().AsNoTracking().Where(log => log.UserId == userId);
+                return new ErrorValidationResult<IEnumerable<UserLogChangePasswordDto>> { Response = await query.ToDtos(cancellationToken) };
+            }
+        }
 
-        // public async Task<ErrorValidationResult<ResetPasswordResponse>> ResetPassword(int userId)
-        // {
-        //     //TODO: Send email to user with new password instead of returning in response
+        public async Task<ErrorValidationResult<ResetPasswordResponse>> ResetPassword(int userId)
+        {
+            //TODO: Send email to user with new password instead of returning in response
 
-        //     var newPassword = _generateRandomPassword();
+            var newPassword = _generateRandomPassword();
             
-        //     using (var dbContext = _dbContextFactory.CreateContextReadWrite())
-        //     {
-        //         var entity = await dbContext.Users.Include(aul => aul.UserLogin).FirstOrDefaultAsync(ent => ent.UserId == userId);
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                var entity = await dbContext.Users.Include(aul => aul.UserLogin).FirstOrDefaultAsync(ent => ent.UserId == userId);
                 
-        //         if (entity != null)
-        //         {
-        //             var currentUser = "UserLogic.ResetPassword";
-        //             var utcNow = CommonUtilities.GetDateTimeUtcNow();
-        //             var newHashedPassword = LogicUtilities.HashPassword(newPassword);
-        //             entity.UserLogin.Password = newHashedPassword;
-        //             entity.UserLogin.PasswordResetRequired = true;
-        //             entity.UserLogin.LastPasswordChangeDate = utcNow;
+                if (entity != null)
+                {
+                    var currentUser = "UserLogic.ResetPassword";
+                    var utcNow = CommonUtilities.GetDateTimeUtcNow();
+                    var newHashedPassword = LogicUtilities.HashPassword(newPassword);
+                    entity.UserLogin.Password = newHashedPassword;
+                    entity.UserLogin.PasswordResetRequired = true;
+                    entity.UserLogin.LastPasswordChangeDate = utcNow;
 
-        //             //clear any existing refresh tokens when password is changed
-        //             entity.UserLogin.RefreshToken = null;
-        //             entity.UserLogin.RefreshTokenExpiryTime = null;    
+                    //clear any existing refresh tokens when password is changed
+                    entity.UserLogin.RefreshToken = null;
+                    entity.UserLogin.RefreshTokenExpiryTime = null;    
                     
-        //             //log password change
-        //             await dbContext.UserLogChangePasswords.AddAsync(new UserLogChangePassword
-        //             {
-        //                 UserId = entity.UserId,
-        //                 ApplicationId = entity.ApplicationId,
-        //                 OldPassword = entity.UserLogin.Password,
-        //                 CreatedBy = currentUser,
-        //                 CreatedOn = utcNow
-        //             });
+                    //log password change
+                    await dbContext.UserLogChangePasswords.AddAsync(new UserLogChangePassword
+                    {
+                        UserId = entity.UserId,
+                        OldPassword = entity.UserLogin.Password,
+                        CreatedBy = currentUser,
+                        CreatedOn = utcNow
+                    });
 
-        //             await dbContext.SaveChangesAsync();
+                    await dbContext.SaveChangesAsync();
 
-        //             var ret = new ResetPasswordResponse { NewPassword = newPassword };
-        //             return new ErrorValidationResult<ResetPasswordResponse> { Response = ret };
-        //         }
-        //         else
-        //         {
-        //             return _createUserNotFoundError<ResetPasswordResponse>(null);
-        //         }
-        //     }
-        // }
+                    var ret = new ResetPasswordResponse { NewPassword = newPassword };
+                    return new ErrorValidationResult<ResetPasswordResponse> { Response = ret };
+                }
+                else
+                {
+                    return _createUserNotFoundError<ResetPasswordResponse>(null);
+                }
+            }
+        }
 
-        // public async Task<ErrorValidationResult> ChangePassword(ChangePasswordRequest req)
-        // {
-        //     ValidationResult result = await _changePasswordRequestValidator.ValidateAsync(req);
-        //     var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<object>(result);
+        public async Task<ErrorValidationResult> ChangePassword(ChangePasswordRequest req)
+        {
+            ValidationResult result = await _changePasswordRequestValidator.ValidateAsync(req);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<object>(result);
 
-        //     if (errorValidationResult.Errors.Count > 0) 
-        //     {
-        //         return errorValidationResult;
-        //     }
+            if (errorValidationResult.Errors.Count > 0) 
+            {
+                return errorValidationResult;
+            }
             
-        //     using (var dbContext = _dbContextFactory.CreateContextReadWrite())
-        //     {
-        //         var applicationUserEntity = await dbContext.Users.Include(aul => aul.UserLogin).FirstOrDefaultAsync(ent => ent.UserId == req.UserId);
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                var userEntity = await dbContext.Users.Include(aul => aul.UserLogin).FirstOrDefaultAsync(ent => ent.UserId == req.UserId);
                 
-        //         if (applicationUserEntity is null) 
-        //         {
-        //             return _createUserNotFoundError<object?>();
-        //         }
+                if (userEntity is null) 
+                {
+                    return _createUserNotFoundError<object?>();
+                }
 
-        //         var passwordsMatch = SecurityLogicUtilities.VerifyPasswordMatchesHash(applicationUserEntity.UserLogin.Password, req.NewPassword);
+                var passwordsMatch = SecurityLogicUtilities.VerifyPasswordMatchesHash(userEntity.UserLogin.Password, req.NewPassword);
 
-        //         if (passwordsMatch)
-        //         {
-        //             return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { "ChangePassword", new List<string> { $"New password must be different from the old password!" } } } };
-        //         }
+                if (passwordsMatch)
+                {
+                    return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { "ChangePassword", new List<string> { $"New password must be different from the old password!" } } } };
+                }
 
-        //         //verify new password is not the same as last 5 passwords
-        //         if (_passwordValidationConfig.Value.RequirePasswordHistoryCheck)
-        //         {
-        //             var oldPasswords = dbContext.ApplicationUserLogChangePasswords.Where(log => log.UserId == req.UserId)
-        //             .OrderByDescending(log => log.CreatedOn)
-        //             .Take(_passwordValidationConfig.Value.RequirePasswordHistoryCheckOldPasswordCount)
-        //             .Select(log => log.OldPassword)
-        //             .ToList();
+                //verify new password is not the same as last 5 passwords
+                if (_passwordValidationConfig.Value.RequirePasswordHistoryCheck)
+                {
+                    var oldPasswords = dbContext.UserLogChangePasswords.Where(log => log.UserId == req.UserId)
+                    .OrderByDescending(log => log.CreatedOn)
+                    .Take(_passwordValidationConfig.Value.RequirePasswordHistoryCheckOldPasswordCount)
+                    .Select(log => log.OldPassword)
+                    .ToList();
 
-        //             if (oldPasswords.Any(oldPassword => SecurityLogicUtilities.VerifyPasswordMatchesHash(oldPassword, req.NewPassword)))
-        //             {
-        //                 return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { "ChangePassword", new List<string> { $"New password must be different from the last {_passwordValidationConfig.Value.RequirePasswordHistoryCheckOldPasswordCount} passwords!" } } } };
-        //             }
-        //         }
+                    if (oldPasswords.Any(oldPassword => SecurityLogicUtilities.VerifyPasswordMatchesHash(oldPassword, req.NewPassword)))
+                    {
+                        return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { "ChangePassword", new List<string> { $"New password must be different from the last {_passwordValidationConfig.Value.RequirePasswordHistoryCheckOldPasswordCount} passwords!" } } } };
+                    }
+                }
                 
-        //         var utcNow = CommonUtilities.GetDateTimeUtcNow();
+                var utcNow = CommonUtilities.GetDateTimeUtcNow();
 
-        //         //log password change
-        //         await dbContext.ApplicationUserLogChangePasswords.AddAsync(new ApplicationUserLogChangePassword
-        //         {
-        //             UserId = req.UserId,
-        //             ApplicationId = applicationUserEntity.ApplicationId,
-        //             OldPassword = applicationUserEntity.ApplicationUserLogin.Password,
-        //             CreatedBy = req.CurrentUser,
-        //             CreatedOn = utcNow
-        //         });
+                //log password change
+                await dbContext.UserLogChangePasswords.AddAsync(new UserLogChangePassword
+                {
+                    UserId = req.UserId,
+                    OldPassword = userEntity.UserLogin.Password,
+                    CreatedBy = req.CurrentUser,
+                    CreatedOn = utcNow
+                });
 
-        //         //change password
-        //         applicationUserEntity.ApplicationUserLogin.Password = LogicUtilities.HashPassword(req.NewPassword);
-        //         applicationUserEntity.ApplicationUserLogin.PasswordResetRequired = false;
-        //         applicationUserEntity.ApplicationUserLogin.LastPasswordChangeDate = utcNow;
+                //change password
+                userEntity.UserLogin.Password = LogicUtilities.HashPassword(req.NewPassword);
+                userEntity.UserLogin.PasswordResetRequired = false;
+                userEntity.UserLogin.LastPasswordChangeDate = utcNow;
                 
-        //         //clear any existing refresh tokens when password is changed
-        //         applicationUserEntity.ApplicationUserLogin.RefreshToken = null;
-        //         applicationUserEntity.ApplicationUserLogin.RefreshTokenExpiryTime = null;    
+                //clear any existing refresh tokens when password is changed
+                userEntity.UserLogin.RefreshToken = null;
+                userEntity.UserLogin.RefreshTokenExpiryTime = null;    
 
-        //         await dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync();
 
-        //         return new ErrorValidationResult();
-        //     }
-        // }
+                return new ErrorValidationResult();
+            }
+        }
 
         #endregion
 

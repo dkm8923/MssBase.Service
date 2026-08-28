@@ -51,6 +51,8 @@ using Contract.Security.User;
 using Dto.Security.User.Logic;
 using Dto.Security.User;
 using Logic.Security.Validators.User;
+using UserChangePasswordRequestValidator = Logic.Security.Validators.User.ChangePasswordRequestValidator;
+using ApplicationUserChangePasswordRequestValidator = Logic.Security.Validators.ApplicationUser.ChangePasswordRequestValidator;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -119,6 +121,8 @@ public class SecurityTestBase
                     DELETE FROM [RolePermission];
                     DELETE FROM [Role];
                     DELETE FROM [Permission];
+                    DELETE FROM [User_Log_Login];
+                    DELETE FROM [User_Log_ChangePassword]
                     DELETE FROM [UserLogin];
                     DELETE FROM [User];
                     DELETE FROM [ApplicationUser_Log_Login];
@@ -177,7 +181,7 @@ public class SecurityTestBase
             if (testUser.Response != null)
             {
                 //change password for users so they can be used for authentication testing...
-                await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = testUser.Response.ApplicationUserId, NewPassword = TestConstants.DefaultTestUserPassword, CurrentUser = TestConstants.CurrentUser });
+                await _applicationUserLogic.ChangePassword(new Dto.Security.ApplicationUser.ChangePasswordRequest { ApplicationUserId = testUser.Response.ApplicationUserId, NewPassword = TestConstants.DefaultTestUserPassword, CurrentUser = TestConstants.CurrentUser });
             }
 
             var applicationUserId = testUser.Response.ApplicationUserId;
@@ -611,6 +615,12 @@ public class SecurityTestBase
         return ret;
     }
 
+    protected async Task<ErrorValidationResult> ArrangeUserPasswordChangeHistoryTestData(int userId)
+    {
+        var passwordChangeResponse = await _userLogic.ChangePassword(new Dto.Security.User.ChangePasswordRequest { UserId = userId, NewPassword = TestConstants.DefaultTestUserPassword + "1", CurrentUser = TestConstants.CurrentUser });
+        return passwordChangeResponse;
+    }
+
     protected async Task<SecurityTestData> ArrangeApplicationUserTestData()
     {
         // Arrange
@@ -643,7 +653,7 @@ public class SecurityTestBase
 
     protected async Task<ErrorValidationResult> ArrangeApplicationUserPasswordChangeHistoryTestData(int applicationUserId)
     {
-        var passwordChangeResponse = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = applicationUserId, NewPassword = TestConstants.DefaultTestUserPassword + "1", CurrentUser = TestConstants.CurrentUser });
+        var passwordChangeResponse = await _applicationUserLogic.ChangePassword(new Dto.Security.ApplicationUser.ChangePasswordRequest { ApplicationUserId = applicationUserId, NewPassword = TestConstants.DefaultTestUserPassword + "1", CurrentUser = TestConstants.CurrentUser });
         return passwordChangeResponse;
     }
 
@@ -1259,7 +1269,7 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterUserLogicRequest>, FilterUserLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateUserRequest>, InsertUpdateUserRequestValidator>();
-        //services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
+        services.AddTransient<IValidator<Dto.Security.User.ChangePasswordRequest>, UserChangePasswordRequestValidator>();
 
         #endregion
 
@@ -1271,7 +1281,7 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
-        services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
+        services.AddTransient<IValidator<Dto.Security.ApplicationUser.ChangePasswordRequest>, ApplicationUserChangePasswordRequestValidator>();
 
         #endregion
 

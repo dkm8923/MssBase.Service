@@ -246,7 +246,7 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterUserLogicRequest>, FilterUserLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateUserRequest>, InsertUpdateUserRequestValidator>();
-            //services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
+            services.AddTransient<IValidator<Dto.Security.User.ChangePasswordRequest>, Logic.Security.Validators.User.ChangePasswordRequestValidator>();
 
             #endregion
 
@@ -258,7 +258,7 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
-            services.AddTransient<IValidator<ChangePasswordRequest>, Logic.Security.Validators.ApplicationUser.ChangePasswordRequestValidator>();
+            services.AddTransient<IValidator<Dto.Security.ApplicationUser.ChangePasswordRequest>, Logic.Security.Validators.ApplicationUser.ChangePasswordRequestValidator>();
 
             #endregion
 

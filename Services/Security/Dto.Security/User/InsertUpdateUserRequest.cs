@@ -4,8 +4,6 @@ namespace Dto.Security.User
 {
     public record InsertUpdateUserRequest : ICurrentUser
     {
-        
-
         public string? FirstName { get; set; }
 
         public string? LastName { get; set; }
