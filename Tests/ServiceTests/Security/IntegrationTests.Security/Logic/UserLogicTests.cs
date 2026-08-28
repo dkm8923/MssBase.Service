@@ -20,16 +20,16 @@ namespace IntegrationTests.Security.Logic
                                   IDefaultLogicTestsGetAllReadOnly,
                                   IDefaultLogicTestsGetById,
                                 //   IDefaultLogicTestsGetByIdIncludeRelated,
-                                  IDefaultLogicTestsGetByIdReadOnly
-                                //   IDefaultLogicTestsGetAuditLogsById,
-                                //   IDefaultLogicTestsFilter,
+                                  IDefaultLogicTestsGetByIdReadOnly,
+                                  IDefaultLogicTestsGetAuditLogsById,
+                                  IDefaultLogicTestsFilter,
                                 //   IDefaultLogicTestsFilterIncludeRelated,  
-                                //   IDefaultLogicTestsFilterReadOnly,   
-                                //   IDefaultLogicTestsInsert, 
-                                //   IDefaultLogicTestsUpdate,
-                                //   IDefaultLogicTestsUpdateReadOnly,
-                                //   IDefaultLogicTestsDelete,
-                                //   IDefaultLogicTestsDeleteReadOnly
+                                  IDefaultLogicTestsFilterReadOnly,   
+                                  IDefaultLogicTestsInsert, 
+                                  IDefaultLogicTestsUpdate,
+                                  IDefaultLogicTestsUpdateReadOnly,
+                                  IDefaultLogicTestsDelete,
+                                  IDefaultLogicTestsDeleteReadOnly
     {
         #region GetAll
 
@@ -370,263 +370,271 @@ namespace IntegrationTests.Security.Logic
 
         #endregion
 
-        // #region Get Audit Logs By Id
+        #region Get Audit Logs By Id
 
-        // [Fact]
-        // public async Task Default_GetAuditLogsById_Should_Return_Update_Data()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var testRecord = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var testRecord = (await _securityTestUtilities.User.CreateActiveTestRecords(1)).First();
             
-        //     var updateReq = _securityTestUtilities.ApplicationUser.ConvertApplicationUserDtoToInsertUpdateRequest(testRecord);
-        //     updateReq.Email = "UpdatedEmail@Test.com";
-        //     updateReq.FirstName = "Updated FirstName";
-        //     updateReq.LastName = "Updated LastName";
-        //     updateReq.DateOfBirth = new DateTime(2000, 1, 1);
+            var updateReq = _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(testRecord);
+            updateReq.Email = "UpdatedEmail@Test.com";
+            updateReq.FirstName = "Updated FirstName";
+            updateReq.LastName = "Updated LastName";
+            updateReq.DateOfBirth = new DateTime(2000, 1, 1);
 
-        //     // Act
-        //     var updateResult = await _applicationUserLogic.Update(testRecord.ApplicationUserId, updateReq, _applicationLogic);
-        //     var auditLogResult = await _applicationUserLogic.GetAuditLogsByApplicationUserId(testRecord.ApplicationUserId);
+            // Act
+            var updateResult = await _userLogic.Update(testRecord.UserId, updateReq);
+            var auditLogResult = await _userLogic.GetAuditLogsByUserId(testRecord.UserId);
 
-        //     // Assert
-        //     auditLogResult.Response.Should().HaveCount(1);
+            // Assert
+            auditLogResult.Response.Should().HaveCount(1);
 
-        //     var res = auditLogResult.Response.First();
-        //     res.LogType.Should().Be(TestConstants.LogTypeUpdate);
-        //     res.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
-        //     res.ReferenceId.Should().Be(testRecord.ApplicationUserId);
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeUser);
+            res.ReferenceId.Should().Be(testRecord.UserId);
 
-        //     var changeLog = ((JsonElement)res.ChangeLogJson).Deserialize<ApplicationUserChangeLog>();
-        //     changeLog.Should().NotBeNull();
-        //     changeLog.Email.Should().Be(updateReq.Email);
-        //     changeLog.FirstName.Should().Be(updateReq.FirstName);
-        //     changeLog.LastName.Should().Be(updateReq.LastName);
-        //     changeLog.DateOfBirth.Should().Be(updateReq.DateOfBirth);
+            var changeLog = ((JsonElement)res.ChangeLogJson).Deserialize<UserChangeLog>();
+            changeLog.Should().NotBeNull();
+            changeLog.Email.Should().Be(updateReq.Email);
+            changeLog.FirstName.Should().Be(updateReq.FirstName);
+            changeLog.LastName.Should().Be(updateReq.LastName);
+            changeLog.DateOfBirth.Should().Be(updateReq.DateOfBirth);
 
-        //     var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<ApplicationUserDto>();
-        //     recordStateBeforeChange.Should().NotBeNull();
-        //     recordStateBeforeChange.ApplicationUserId = res.ReferenceId;
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<UserDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.UserId = res.ReferenceId;
 
-        //     _securityTestUtilities.ApplicationUser.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
-        // }
+            _securityTestUtilities.User.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
 
-        // [Fact]
-        // public async Task Default_GetAuditLogsById_Should_Return_Delete_Data()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var testRecord = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var testRecord = (await _securityTestUtilities.User.CreateActiveTestRecords(1)).First();
 
-        //     // Act
-        //     await _applicationUserLogic.Delete(testRecord.ApplicationUserId, TestConstants.CurrentUser);
-        //     var getResult = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet());
-        //     var auditLogResult = await _applicationUserLogic.GetAuditLogsByApplicationUserId(testRecord.ApplicationUserId);
+            // Act
+            await _userLogic.Delete(testRecord.UserId, TestConstants.CurrentUser);
+            var getResult = await _userLogic.GetById(testRecord.UserId, new BaseLogicGet());
+            var auditLogResult = await _userLogic.GetAuditLogsByUserId(testRecord.UserId);
 
-        //     // Assert
-        //     getResult.Response.Should().BeNull();
+            // Assert
+            getResult.Response.Should().BeNull();
 
-        //     auditLogResult.Response.Should().HaveCount(1);
+            auditLogResult.Response.Should().HaveCount(1);
 
-        //     var res = auditLogResult.Response.First();
-        //     res.LogType.Should().Be(TestConstants.LogTypeDelete);
-        //     res.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
-        //     res.ReferenceId.Should().Be(testRecord.ApplicationUserId);
+            var res = auditLogResult.Response.First();
+            res.LogType.Should().Be(TestConstants.LogTypeDelete);
+            res.ReferenceType.Should().Be(TestConstants.ReferenceTypeUser);
+            res.ReferenceId.Should().Be(testRecord.UserId);
 
-        //     var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<ApplicationUserDto>();
-        //     recordStateBeforeChange.Should().NotBeNull();
-        //     recordStateBeforeChange.ApplicationUserId = res.ReferenceId;
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<UserDto>();
+            recordStateBeforeChange.Should().NotBeNull();
+            recordStateBeforeChange.UserId = res.ReferenceId;
 
-        //     _securityTestUtilities.ApplicationUser.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
-        // }
+            _securityTestUtilities.User.VerifyTestRecordValuesMatch(recordStateBeforeChange, testRecord);
+        }
 
-        // [Fact]
-        // public async Task Default_GetAuditLogsById_Should_Return_Update_And_Delete_Data()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var testRecord = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1)).First();
+        [Fact]
+        public async Task Default_GetAuditLogsById_Should_Return_Update_And_Delete_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var testRecord = (await _securityTestUtilities.User.CreateActiveTestRecords(1)).First();
 
-        //     var updateReq = _securityTestUtilities.ApplicationUser.ConvertApplicationUserDtoToInsertUpdateRequest(testRecord);
-        //     updateReq.Email = "UpdatedEmail@Test.com";
-        //     updateReq.FirstName = "Updated FirstName";
-        //     updateReq.LastName = "Updated LastName";
-        //     updateReq.DateOfBirth = new DateTime(2000, 1, 1);
+            var updateReq = _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(testRecord);
+            updateReq.Email = "UpdatedEmail@Test.com";
+            updateReq.FirstName = "Updated FirstName";
+            updateReq.LastName = "Updated LastName";
+            updateReq.DateOfBirth = new DateTime(2000, 1, 1);
 
-        //     // Act
-        //     var updateResult = await _applicationUserLogic.Update(testRecord.ApplicationUserId, updateReq, _applicationLogic);
-        //     await _applicationUserLogic.Delete(testRecord.ApplicationUserId, TestConstants.CurrentUser);
-        //     var auditLogResult = await _applicationUserLogic.GetAuditLogsByApplicationUserId(testRecord.ApplicationUserId);
+            // Act
+            var updateResult = await _userLogic.Update(testRecord.UserId, updateReq);
+            await _userLogic.Delete(testRecord.UserId, TestConstants.CurrentUser);
+            var auditLogResult = await _userLogic.GetAuditLogsByUserId(testRecord.UserId);
 
-        //     // Assert
-        //     auditLogResult.Response.Should().HaveCount(2);
+            // Assert
+            auditLogResult.Response.Should().HaveCount(2);
 
-        //     var updateRes = auditLogResult.Response.First();
-        //     updateRes.LogType.Should().Be(TestConstants.LogTypeUpdate);
-        //     updateRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
-        //     updateRes.ReferenceId.Should().Be(testRecord.ApplicationUserId);
+            var updateRes = auditLogResult.Response.First();
+            updateRes.LogType.Should().Be(TestConstants.LogTypeUpdate);
+            updateRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeUser);
+            updateRes.ReferenceId.Should().Be(testRecord.UserId);
 
-        //     var deleteRes = auditLogResult.Response.Last();
-        //     deleteRes.LogType.Should().Be(TestConstants.LogTypeDelete);
-        //     deleteRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeApplicationUser);
-        //     deleteRes.ReferenceId.Should().Be(testRecord.ApplicationUserId);
-        // }
+            var deleteRes = auditLogResult.Response.Last();
+            deleteRes.LogType.Should().Be(TestConstants.LogTypeDelete);
+            deleteRes.ReferenceType.Should().Be(TestConstants.ReferenceTypeUser);
+            deleteRes.ReferenceId.Should().Be(testRecord.UserId);
+        }
 
-        // class ApplicationUserChangeLog
-        // {
-        //     public string? Email { get; set; }
-        //     public string? FirstName { get; set; }
-        //     public string? LastName { get; set; }
-        //     public DateTime? DateOfBirth { get; set; }
-        //     public bool? Active { get; set; }
-        //     public string? UpdatedBy { get; set; }
-        //     public DateTime? UpdatedOn { get; set; }
-        // }
+        class UserChangeLog
+        {
+            public string? Email { get; set; }
+            public string? FirstName { get; set; }
+            public string? LastName { get; set; }
+            public DateTime? DateOfBirth { get; set; }
+            public bool? Active { get; set; }
+            public string? UpdatedBy { get; set; }
+            public DateTime? UpdatedOn { get; set; }
+        }
 
-        // #endregion
+        #endregion
 
-        // #region Filter
+        #region Filter
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Return_Active_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+        [Fact]
+        public async Task Default_Filter_Should_Return_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestData();
             
-        //     var postReq = new FilterApplicationUserLogicRequest { };
+            var postReq = new FilterUserLogicRequest { };
 
-        //     // Act
-        //     var result = await _applicationUserLogic.Filter(postReq);
+            // Act
+            var result = await _userLogic.Filter(postReq);
 
-        //     // Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCountGreaterThan(0);
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
             
-        //     foreach (var r in result.Response)
-        //     {
-        //         r.Active.Should().BeTrue();
-        //     }
-        // }
+            foreach (var r in result.Response)
+            {
+                r.Active.Should().BeTrue();
+            }
+        }
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Return_Inactive_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+        [Fact]
+        public async Task Default_Filter_Should_Return_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestData();
 
-        //     var postReq = new FilterApplicationUserLogicRequest { IncludeInactive = true };
+            var postReq = new FilterUserLogicRequest { IncludeInactive = true };
 
-        //     // Act
-        //     var result = await _applicationUserLogic.Filter(postReq);
+            // Act
+            var result = await _userLogic.Filter(postReq);
 
-        //     // Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCountGreaterThan(0);
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
 
-        //     result.Response.Where(r => r.Active).ToList().Should().HaveCountGreaterThan(0);
-        //     result.Response.Where(r => !r.Active).ToList().Should().HaveCountGreaterThan(0);
-        // }
+            result.Response.Where(r => r.Active).ToList().Should().HaveCountGreaterThan(0);
+            result.Response.Where(r => !r.Active).ToList().Should().HaveCountGreaterThan(0);
+        }
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Return_Zero_Records()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+        [Fact]
+        public async Task Default_Filter_Should_Return_Zero_Records()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestData();
             
-        //     var postReqInvalidEmail = new FilterApplicationUserServiceRequest { Email = "invalid@test.com" };
-        //     var postReqInvalidApplicationId = new FilterApplicationUserServiceRequest { ApplicationId = -1 };
+            var postReqInvalidCreatedBy = new FilterUserLogicRequest { CreatedBy = "InvalidCreatedBy" };
+            var postReqInvalidCreatedOnDate = new FilterUserLogicRequest { CreatedOnDate = DateOnly.FromDateTime(new DateTime(1900, 1, 1)) };
+            var postReqInvalidUpdatedBy = new FilterUserLogicRequest { UpdatedBy = "InvalidUpdatedBy" };
+            var postReqInvalidUpdatedOnDate = new FilterUserLogicRequest { UpdatedOnDate = DateOnly.FromDateTime(new DateTime(1900, 1, 1)) };
+            var postReqInvalidEmail = new FilterUserLogicRequest { Email = "invalid@test.com" };
+            var postReqInvalidFirstName = new FilterUserLogicRequest { FirstName = "InvalidFirstName" };
+            var postReqInvalidLastName = new FilterUserLogicRequest { LastName = "InvalidLastName" };
+            var postReqInvalidDateOfBirth = new FilterUserLogicRequest { DateOfBirth = new DateTime(1900, 1, 1) };
             
-        //     // Act
-        //     var invalidEmailResult = await _applicationUserLogic.Filter(postReqInvalidEmail);
-        //     var invalidApplicationIdResult = await _applicationUserLogic.Filter(postReqInvalidApplicationId);
+            // Act
+            var invalidCreatedByResult = await _userLogic.Filter(postReqInvalidCreatedBy);
+            var invalidCreatedOnDateResult = await _userLogic.Filter(postReqInvalidCreatedOnDate);
+            var invalidUpdatedByResult = await _userLogic.Filter(postReqInvalidUpdatedBy);
+            var invalidUpdatedOnDateResult = await _userLogic.Filter(postReqInvalidUpdatedOnDate);
+            var invalidEmailResult = await _userLogic.Filter(postReqInvalidEmail);
+            var invalidFirstNameResult = await _userLogic.Filter(postReqInvalidFirstName);
+            var invalidLastNameResult = await _userLogic.Filter(postReqInvalidLastName);
+            var invalidDateOfBirthResult = await _userLogic.Filter(postReqInvalidDateOfBirth);
             
-        //     // Assert
-        //     invalidEmailResult.Response.Should().HaveCount(0);
-        //     invalidApplicationIdResult.Response.Should().HaveCount(0);
-        // }
+            // Assert
+            invalidCreatedByResult.Response.Should().HaveCount(0);
+            invalidCreatedOnDateResult.Response.Should().HaveCount(0);
+            invalidUpdatedByResult.Response.Should().HaveCount(0);
+            invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
+            invalidEmailResult.Response.Should().HaveCount(0);
+            invalidFirstNameResult.Response.Should().HaveCount(0);
+            invalidLastNameResult.Response.Should().HaveCount(0);
+            invalidDateOfBirthResult.Response.Should().HaveCount(0);
+        }
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Filter_Records()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var applicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);
+        [Fact]
+        public async Task Default_Filter_Should_Filter_Records()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var users = await _securityTestUtilities.User.CreateActiveTestRecords();
 
-        //     //create test roles for filtering tests
-        //     var testApplicationUser1 = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest
-        //     {
-        //         ApplicationId = application.ApplicationId,
-        //         Email = "testEmail1@test.com",
-        //         FirstName = "TestFirstName1",
-        //         LastName = "TestLastName1",
-        //         DateOfBirth = new DateTime(1990, 1, 1),
-        //         Active = true,
-        //         CurrentUser = TestConstants.SpecificCurrentUserForInsert
-        //     }, _applicationLogic);
+            //create test roles for filtering tests
+            var testUser1 = await _userLogic.Insert(new InsertUpdateUserRequest
+            {
+                Email = "testEmail1@test.com",
+                FirstName = "TestFirstName1",
+                LastName = "TestLastName1",
+                DateOfBirth = new DateTime(1990, 1, 1),
+                Active = true,
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
+            });
 
-        //     var testApplicationUser2 = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest
-        //     {
-        //         ApplicationId = application.ApplicationId,
-        //         Email = "testEmail2@test.com",
-        //         FirstName = "TestFirstName2",
-        //         LastName = "TestLastName2",
-        //         DateOfBirth = new DateTime(1991, 2, 2),
-        //         Active = true,
-        //         CurrentUser = TestConstants.SpecificCurrentUserForInsert
-        //     }, _applicationLogic);
+            var testUser2 = await _userLogic.Insert(new InsertUpdateUserRequest
+            {
+                Email = "testEmail2@test.com",
+                FirstName = "TestFirstName2",
+                LastName = "TestLastName2",
+                DateOfBirth = new DateTime(1991, 2, 2),
+                Active = true,
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert
+            });
 
-        //     await _applicationUserLogic.Update(testApplicationUser2.Response.ApplicationUserId, new InsertUpdateApplicationUserRequest
-        //     {
-        //         ApplicationId = application.ApplicationId,
-        //         Email = "testEmail2@test.com",
-        //         FirstName = "TestFirstName2",
-        //         LastName = "TestLastName2",
-        //         DateOfBirth = new DateTime(1991, 3, 2),
-        //         Active = true,
-        //         CurrentUser = TestConstants.SpecificCurrentUserForUpdate
-        //     }, _applicationLogic);
+            await _userLogic.Update(testUser2.Response.UserId, new InsertUpdateUserRequest
+            {
+                Email = "testEmail2@test.com",
+                FirstName = "TestFirstName2",
+                LastName = "TestLastName2",
+                DateOfBirth = new DateTime(1991, 3, 2),
+                Active = true,
+                CurrentUser = TestConstants.SpecificCurrentUserForUpdate
+            });
 
-        //     var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
+            var todaysUtcDate = LogicTestUtilities.GetTodaysUtcDateOnly();
 
-        //     var postReqFilterCreatedBy = new FilterApplicationUserLogicRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
-        //     var postReqFilterCreatedOnDate = new FilterApplicationUserLogicRequest { CreatedOnDate = todaysUtcDate };
-        //     var postReqFilterUpdatedBy = new FilterApplicationUserLogicRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
-        //     var postReqFilterUpdatedOnDate = new FilterApplicationUserLogicRequest { UpdatedOnDate = todaysUtcDate };
-        //     var postReqFilterApplicationUserIds = new FilterApplicationUserLogicRequest { ApplicationUserIds = new List<int> { applicationUsers[0].ApplicationUserId, applicationUsers[1].ApplicationUserId, applicationUsers[2].ApplicationUserId } };
-        //     var postReqFilterEmail = new FilterApplicationUserLogicRequest { Email = testApplicationUser1.Response.Email };
-        //     var postReqFilterFirstName = new FilterApplicationUserLogicRequest { FirstName = testApplicationUser1.Response.FirstName };
-        //     var postReqFilterLastName = new FilterApplicationUserLogicRequest { LastName = testApplicationUser1.Response.LastName };
-        //     var postReqFilterDateOfBirth = new FilterApplicationUserLogicRequest { DateOfBirth = testApplicationUser1.Response.DateOfBirth };
-        //     var postReqFilterApplicationId = new FilterApplicationUserLogicRequest { ApplicationId = application.ApplicationId };
+            var postReqFilterCreatedBy = new FilterUserLogicRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
+            var postReqFilterCreatedOnDate = new FilterUserLogicRequest { CreatedOnDate = todaysUtcDate };
+            var postReqFilterUpdatedBy = new FilterUserLogicRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
+            var postReqFilterUpdatedOnDate = new FilterUserLogicRequest { UpdatedOnDate = todaysUtcDate };
+            var postReqFilterUserIds = new FilterUserLogicRequest { UserIds = new List<int> { users[0].UserId } };
+            var postReqFilterEmail = new FilterUserLogicRequest { Email = testUser1.Response.Email };
+            var postReqFilterFirstName = new FilterUserLogicRequest { FirstName = testUser1.Response.FirstName };
+            var postReqFilterLastName = new FilterUserLogicRequest { LastName = testUser1.Response.LastName };
+            var postReqFilterDateOfBirth = new FilterUserLogicRequest { DateOfBirth = testUser1.Response.DateOfBirth };
             
-        //     // Act
-        //     var filterCreatedByResult = await _applicationUserLogic.Filter(postReqFilterCreatedBy);
-        //     var filterCreatedOnDateResult = await _applicationUserLogic.Filter(postReqFilterCreatedOnDate);
-        //     var filterUpdatedByResult = await _applicationUserLogic.Filter(postReqFilterUpdatedBy);
-        //     var filterUpdatedOnDateResult = await _applicationUserLogic.Filter(postReqFilterUpdatedOnDate);
-        //     var filterApplicationUserIdsResult = await _applicationUserLogic.Filter(postReqFilterApplicationUserIds);
-        //     var filterEmailResult = await _applicationUserLogic.Filter(postReqFilterEmail);
-        //     var filterFirstNameResult = await _applicationUserLogic.Filter(postReqFilterFirstName);
-        //     var filterLastNameResult = await _applicationUserLogic.Filter(postReqFilterLastName);
-        //     var filterDateOfBirthResult = await _applicationUserLogic.Filter(postReqFilterDateOfBirth);
-        //     var filterApplicationIdResult = await _applicationUserLogic.Filter(postReqFilterApplicationId);
+            // Act
+            var filterCreatedByResult = await _userLogic.Filter(postReqFilterCreatedBy);
+            var filterCreatedOnDateResult = await _userLogic.Filter(postReqFilterCreatedOnDate);
+            var filterUpdatedByResult = await _userLogic.Filter(postReqFilterUpdatedBy);
+            var filterUpdatedOnDateResult = await _userLogic.Filter(postReqFilterUpdatedOnDate);
+            var filterUserIdsResult = await _userLogic.Filter(postReqFilterUserIds);
+            var filterEmailResult = await _userLogic.Filter(postReqFilterEmail);
+            var filterFirstNameResult = await _userLogic.Filter(postReqFilterFirstName);
+            var filterLastNameResult = await _userLogic.Filter(postReqFilterLastName);
+            var filterDateOfBirthResult = await _userLogic.Filter(postReqFilterDateOfBirth);
             
-        //     // Assert
-        //     filterCreatedByResult.Response.Should().HaveCount(2);
-        //     filterCreatedOnDateResult.Response.Should().HaveCount(7);
-        //     filterUpdatedByResult.Response.Should().HaveCount(1);
-        //     filterUpdatedOnDateResult.Response.Should().HaveCount(7);
-        //     filterApplicationUserIdsResult.Response.Should().HaveCount(3);
-        //     filterEmailResult.Response.Should().HaveCount(1);
-        //     filterFirstNameResult.Response.Should().HaveCount(1);
-        //     filterLastNameResult.Response.Should().HaveCount(1);
-        //     filterDateOfBirthResult.Response.Should().HaveCount(1);
-        //     filterApplicationIdResult.Response.Should().HaveCount(7);
-        // }
+            // Assert
+            filterCreatedByResult.Response.Should().HaveCount(2);
+            filterCreatedOnDateResult.Response.Should().HaveCountGreaterThan(0);
+            filterUpdatedByResult.Response.Should().HaveCount(1);
+            filterUpdatedOnDateResult.Response.Should().HaveCountGreaterThan(0);
+            filterUserIdsResult.Response.Should().HaveCount(1);
+            filterEmailResult.Response.Should().HaveCount(1);
+            filterFirstNameResult.Response.Should().HaveCount(1);
+            filterLastNameResult.Response.Should().HaveCount(1);
+            filterDateOfBirthResult.Response.Should().HaveCount(1);
+        }
 
         // [Fact]
         // public async Task Default_Filter_Should_Return_Related_Active_Data()
@@ -694,99 +702,93 @@ namespace IntegrationTests.Security.Logic
         //     }
         // }
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Return_Active_ReadOnly_Data()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
+        [Fact]
+        public async Task Default_Filter_Should_Return_Active_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
 
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
-        //     await _securityTestUtilities.ApplicationUser.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
+            await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1);
+            await _securityTestUtilities.User.CreateInactiveReadOnlyTestRecords(1);
 
-        //    var postReq = new FilterApplicationUserLogicRequest { IncludeReadOnly = true };
+           var postReq = new FilterUserLogicRequest { IncludeReadOnly = true };
 
-        //     // Act
-        //     var result = await _applicationUserLogic.Filter(postReq);
+            // Act
+            var result = await _userLogic.Filter(postReq);
 
-        //     // Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCount(1);
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
             
-        //     foreach (var r in result.Response)
-        //     {
-        //         r.Active.Should().BeTrue();
-        //         r.ReadOnly.Should().BeTrue();
-        //     }
-        // }
+            foreach (var r in result.Response)
+            {
+                r.Active.Should().BeTrue();
+                r.ReadOnly.Should().BeTrue();
+            }
+        }
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Return_Inactive_ReadOnly_Data()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
+        [Fact]
+        public async Task Default_Filter_Should_Return_Inactive_ReadOnly_Data()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
 
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
-        //     await _securityTestUtilities.ApplicationUser.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
+            await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1);
+            await _securityTestUtilities.User.CreateInactiveReadOnlyTestRecords(1);
 
-        //     var postReq = new FilterApplicationUserLogicRequest { IncludeInactive = true, IncludeReadOnly = true };
+            var postReq = new FilterUserLogicRequest { IncludeInactive = true, IncludeReadOnly = true };
 
-        //     // Act
-        //     var result = await _applicationUserLogic.Filter(postReq);
+            // Act
+            var result = await _userLogic.Filter(postReq);
 
-        //     // Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCountGreaterThan(0);
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
 
-        //     result.Response.Where(r => r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //activeReadOnlyRecords
-        //     result.Response.Where(r => !r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //inactiveReadOnlyRecords
-        // }
+            result.Response.Where(r => r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //activeReadOnlyRecords
+            result.Response.Where(r => !r.Active && r.ReadOnly).ToList().Should().HaveCountGreaterThan(0); //inactiveReadOnlyRecords
+        }
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Return_Zero_ReadOnly_Records()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
+        [Fact]
+        public async Task Default_Filter_Should_Return_Zero_ReadOnly_Records()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
 
-        //     var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-        //     var testRecord = (await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1)).First();
-        //     await _securityTestUtilities.ApplicationUser.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
+            var testRecord = (await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1)).First();
+            await _securityTestUtilities.User.CreateInactiveReadOnlyTestRecords(1);
             
-        //     var postReqInvalidCreatedBy = new FilterApplicationUserLogicRequest { CreatedBy = testRecord.CreatedBy };
-        //     var postReqInvalidCreatedOnDate = new FilterApplicationUserLogicRequest { CreatedOnDate = DateOnly.FromDateTime(testRecord.CreatedOn) };
-        //     var postReqInvalidUpdatedBy = new FilterApplicationUserLogicRequest { UpdatedBy = testRecord.UpdatedBy };
-        //     var postReqInvalidUpdatedOnDate = new FilterApplicationUserLogicRequest { UpdatedOnDate = DateOnly.FromDateTime((DateTime)testRecord.UpdatedOn) };
-        //     var postReqInvalidEmail = new FilterApplicationUserLogicRequest { Email = testRecord.Email };
-        //     var postReqInvalidFirstName = new FilterApplicationUserLogicRequest { FirstName = testRecord.FirstName };
-        //     var postReqInvalidLastName = new FilterApplicationUserLogicRequest { LastName = testRecord.LastName };
-        //     var postReqInvalidDateofBirth = new FilterApplicationUserLogicRequest { DateOfBirth = testRecord.DateOfBirth };
-        //     var postReqInvalidApplicationId = new FilterApplicationUserLogicRequest { ApplicationId = testRecord.ApplicationId };
+            var postReqInvalidCreatedBy = new FilterUserLogicRequest { CreatedBy = testRecord.CreatedBy };
+            var postReqInvalidCreatedOnDate = new FilterUserLogicRequest { CreatedOnDate = DateOnly.FromDateTime(testRecord.CreatedOn) };
+            var postReqInvalidUpdatedBy = new FilterUserLogicRequest { UpdatedBy = testRecord.UpdatedBy };
+            var postReqInvalidUpdatedOnDate = new FilterUserLogicRequest { UpdatedOnDate = DateOnly.FromDateTime((DateTime)testRecord.UpdatedOn) };
+            var postReqInvalidEmail = new FilterUserLogicRequest { Email = testRecord.Email };
+            var postReqInvalidFirstName = new FilterUserLogicRequest { FirstName = testRecord.FirstName };
+            var postReqInvalidLastName = new FilterUserLogicRequest { LastName = testRecord.LastName };
+            var postReqInvalidDateofBirth = new FilterUserLogicRequest { DateOfBirth = testRecord.DateOfBirth };
 
-        //     // Act
-        //     var invalidCreatedByResult = await _applicationUserLogic.Filter(postReqInvalidCreatedBy);
-        //     var invalidCreatedOnDateResult = await _applicationUserLogic.Filter(postReqInvalidCreatedOnDate);
-        //     var invalidUpdatedByResult = await _applicationUserLogic.Filter(postReqInvalidUpdatedBy);
-        //     var invalidUpdatedOnDateResult = await _applicationUserLogic.Filter(postReqInvalidUpdatedOnDate);
-        //     var invalidEmailResult = await _applicationUserLogic.Filter(postReqInvalidEmail);
-        //     var invalidFirstNameResult = await _applicationUserLogic.Filter(postReqInvalidFirstName);
-        //     var invalidLastNameResult = await _applicationUserLogic.Filter(postReqInvalidLastName);
-        //     var invalidDateofBirthResult = await _applicationUserLogic.Filter(postReqInvalidDateofBirth);
-        //     var invalidApplicationIdResult = await _applicationUserLogic.Filter(postReqInvalidApplicationId);
+            // Act
+            var invalidCreatedByResult = await _userLogic.Filter(postReqInvalidCreatedBy);
+            var invalidCreatedOnDateResult = await _userLogic.Filter(postReqInvalidCreatedOnDate);
+            var invalidUpdatedByResult = await _userLogic.Filter(postReqInvalidUpdatedBy);
+            var invalidUpdatedOnDateResult = await _userLogic.Filter(postReqInvalidUpdatedOnDate);
+            var invalidEmailResult = await _userLogic.Filter(postReqInvalidEmail);
+            var invalidFirstNameResult = await _userLogic.Filter(postReqInvalidFirstName);
+            var invalidLastNameResult = await _userLogic.Filter(postReqInvalidLastName);
+            var invalidDateofBirthResult = await _userLogic.Filter(postReqInvalidDateofBirth);
             
-        //     // Assert
-        //     invalidCreatedByResult.Response.Should().HaveCount(0);
-        //     invalidCreatedOnDateResult.Response.Should().HaveCount(0);
-        //     invalidUpdatedByResult.Response.Should().HaveCount(0);
-        //     invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
-        //     invalidEmailResult.Response.Should().HaveCount(0);
-        //     invalidFirstNameResult.Response.Should().HaveCount(0);
-        //     invalidLastNameResult.Response.Should().HaveCount(0);
-        //     invalidDateofBirthResult.Response.Should().HaveCount(0);
-        //     invalidApplicationIdResult.Response.Should().HaveCount(0);
-        // }
+            // Assert
+            invalidCreatedByResult.Response.Should().HaveCount(0);
+            invalidCreatedOnDateResult.Response.Should().HaveCount(0);
+            invalidUpdatedByResult.Response.Should().HaveCount(0);
+            invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
+            invalidEmailResult.Response.Should().HaveCount(0);
+            invalidFirstNameResult.Response.Should().HaveCount(0);
+            invalidLastNameResult.Response.Should().HaveCount(0);
+            invalidDateofBirthResult.Response.Should().HaveCount(0);
+        }
 
-        // #endregion
+        #endregion
 
         #region Insert
 
@@ -862,11 +864,10 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_Insert_Should_Not_Create_Record_Invalid_Email_Error()
+        public async Task User_Insert_Should_Not_Create_Record_Invalid_Email_Error()
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
             recordToCreate.Email = "invalidEmail";
 
@@ -950,7 +951,7 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task ApplicationUser_Update_Should_Not_Create_Record_Invalid_Email_Error()
+        public async Task User_Update_Should_Not_Create_Record_Invalid_Email_Error()
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
@@ -1087,7 +1088,7 @@ namespace IntegrationTests.Security.Logic
 
         #endregion
     
-        // #region Reset Password
+        #region Reset Password
 
         // [Fact]
         // public async Task ApplicationUser_ResetPassword_Should_Reset_Password()
@@ -1151,9 +1152,9 @@ namespace IntegrationTests.Security.Logic
         //     LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, resetPasswordResult.Errors);     
         // }
 
-        // #endregion
+        #endregion
 
-        // #region Change Password
+        #region Change Password
 
         // [Fact]
         // public async Task ApplicationUser_ChangePassword_Should_Change_Password()
@@ -1435,7 +1436,7 @@ namespace IntegrationTests.Security.Logic
         //     }      
         // }
 
-        // #endregion
+        #endregion
 
     }
 }

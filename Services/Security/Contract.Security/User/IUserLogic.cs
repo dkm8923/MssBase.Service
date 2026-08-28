@@ -11,7 +11,7 @@ namespace Contract.Security.User
     {
         public Task<ErrorValidationResult<IEnumerable<UserDto>>> GetAll(BaseLogicGet req, CancellationToken cancellationToken = default);
         public Task<ErrorValidationResult<UserDto>> GetById(int userId, BaseLogicGet req, CancellationToken cancellationToken = default);
-        // public Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByUserId(int userId, CancellationToken cancellationToken = default);
+        public Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByUserId(int userId, CancellationToken cancellationToken = default);
         // public Task<ErrorValidationResult<IEnumerable<UserLogChangePasswordDto>>> GetPasswordChangeHistoryByUserId(int userId, CancellationToken cancellationToken = default);
         public Task<ErrorValidationResult<IEnumerable<UserDto>>> Filter(FilterUserLogicRequest req, CancellationToken cancellationToken = default);
         public Task<ErrorValidationResult<UserDto>> Insert(InsertUpdateUserRequest req);

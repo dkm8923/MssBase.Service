@@ -285,17 +285,17 @@ namespace Logic.Security.Logic
         #region Password Logic
 
         /// <summary>
-        /// Retrieves the password change history for a specific application user by their unique identifier. This includes a list of previous password changes, along with details such as the old password (hashed), the date of the change, and who initiated the change.
+        /// Retrieves the password change history for a specific user by their unique identifier. This includes a list of previous password changes, along with details such as the old password (hashed), the date of the change, and who initiated the change.
         /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        // public async Task<ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>> GetPasswordChangeHistoryByUserId(int userId, CancellationToken cancellationToken = default)
+        /// <param name="userId">The unique identifier of the user.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <returns>A result containing the list of password change history records for the specified user.</returns>
+        // public async Task<ErrorValidationResult<IEnumerable<UserLogChangePasswordDto>>> GetPasswordChangeHistoryByUserId(int userId, CancellationToken cancellationToken = default)
         // {
         //     using (var dbContext = _dbContextFactory.CreateContextReadOnly())
         //     {
         //         var query = dbContext.UserLogChangePasswords.AsQueryable().AsNoTracking().Where(log => log.UserId == userId);
-        //         return new ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>> { Response = await query.ToDtos(cancellationToken) };
+        //         return new ErrorValidationResult<IEnumerable<UserLogChangePasswordDto>> { Response = await query.ToDtos(cancellationToken) };
         //     }
         // }
 
@@ -311,7 +311,7 @@ namespace Logic.Security.Logic
                 
         //         if (entity != null)
         //         {
-        //             var currentUser = "ApplicationUserLogic.ResetPassword";
+        //             var currentUser = "UserLogic.ResetPassword";
         //             var utcNow = CommonUtilities.GetDateTimeUtcNow();
         //             var newHashedPassword = LogicUtilities.HashPassword(newPassword);
         //             entity.UserLogin.Password = newHashedPassword;
@@ -323,7 +323,7 @@ namespace Logic.Security.Logic
         //             entity.UserLogin.RefreshTokenExpiryTime = null;    
                     
         //             //log password change
-        //             await dbContext.ApplicationUserLogChangePasswords.AddAsync(new ApplicationUserLogChangePassword
+        //             await dbContext.UserLogChangePasswords.AddAsync(new UserLogChangePassword
         //             {
         //                 UserId = entity.UserId,
         //                 ApplicationId = entity.ApplicationId,
