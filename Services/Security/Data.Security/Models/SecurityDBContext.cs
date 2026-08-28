@@ -15,6 +15,8 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext
     }
 
     public virtual DbSet<Application> Applications { get; set; }
+    public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<UserLogin> UserLogins { get; set; }
     public virtual DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public virtual DbSet<ApplicationUserLogin> ApplicationUserLogins { get; set; }
     public virtual DbSet<Permission> Permissions { get; set; }
@@ -48,6 +50,8 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new ApplicationConfiguration());
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new UserLoginConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserLoginConfiguration());
         modelBuilder.ApplyConfiguration(new PermissionConfiguration());

@@ -47,6 +47,10 @@ using Shared.Models;
 using MssBase.Service.Shared.Authorization;
 using Microsoft.EntityFrameworkCore;
 using IntegrationTests.Shared.Models.Config;
+using Contract.Security.User;
+using Dto.Security.User.Logic;
+using Dto.Security.User;
+using Logic.Security.Validators.User;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -60,6 +64,7 @@ public class SecurityTestBase
     protected readonly ILoggerService _loggerSvc;
     protected readonly IAuthenticationLogic _authenticationLogic;
     protected readonly IApplicationLogic _applicationLogic;
+    protected readonly IUserLogic _userLogic;
     protected readonly IApplicationUserLogic _applicationUserLogic;
     protected readonly IApplicationUserPermissionLogic _applicationUserPermissionLogic;
     protected readonly IApplicationUserRoleLogic _applicationUserRoleLogic;
@@ -90,6 +95,7 @@ public class SecurityTestBase
         _passwordValidationConfigMonitor = _serviceProvider.GetService<IOptionsMonitor<PasswordValidationConfig>>();
         _authenticationLogic = _serviceProvider.GetService<IAuthenticationLogic>();
         _applicationLogic = _serviceProvider.GetService<IApplicationLogic>();
+        _userLogic = _serviceProvider.GetService<IUserLogic>(); 
         _applicationUserLogic = _serviceProvider.GetService<IApplicationUserLogic>();
         _applicationUserPermissionLogic = _serviceProvider.GetService<IApplicationUserPermissionLogic>();
         _applicationUserRoleLogic = _serviceProvider.GetService<IApplicationUserRoleLogic>();
@@ -113,6 +119,8 @@ public class SecurityTestBase
                     DELETE FROM [RolePermission];
                     DELETE FROM [Role];
                     DELETE FROM [Permission];
+                    DELETE FROM [UserLogin];
+                    DELETE FROM [User];
                     DELETE FROM [ApplicationUser_Log_Login];
                     DELETE FROM [ApplicationUser_Log_ChangePassword];
                     DELETE FROM [ApplicationUserLogin];
@@ -129,6 +137,8 @@ public class SecurityTestBase
                 await dbContext.RolePermissions.ExecuteDeleteAsync();
                 await dbContext.Roles.ExecuteDeleteAsync();
                 await dbContext.Permissions.ExecuteDeleteAsync();
+                await dbContext.UserLogins.ExecuteDeleteAsync();
+                await dbContext.Users.ExecuteDeleteAsync();
                 await dbContext.ApplicationUserLogins.ExecuteDeleteAsync();
                 await dbContext.ApplicationUsers.ExecuteDeleteAsync();
                 await dbContext.Applications.ExecuteDeleteAsync();
@@ -575,6 +585,28 @@ public class SecurityTestBase
                 ret.InactivePermissions.Add(inactivePermission);
             }
         }
+
+        return ret;
+    }
+
+    protected async Task<SecurityTestData> ArrangeUserTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        ret.ActiveUsers = await _securityTestUtilities.User.CreateActiveTestRecords(1);
+        ret.InactiveUsers = await _securityTestUtilities.User.CreateInactiveTestRecords(1);
+
+        return ret;
+    }
+
+    protected async Task<SecurityTestData> ArrangeReadOnlyUserTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        ret.ActiveUsers = await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1);
+        ret.InactiveUsers = await _securityTestUtilities.User.CreateInactiveReadOnlyTestRecords(1);
 
         return ret;
     }
@@ -1185,6 +1217,7 @@ public class SecurityTestBase
         services.AddTransient<ISecurityTestUtilitiesManager, SecurityTestUtilitiesManager>();
         services.AddTransient<IAuthenticationUtilities, AuthenticationUtilities>();
         services.AddTransient<IApplicationUtilities, ApplicationUtilities>();
+        services.AddTransient<IUserUtilities, UserUtilities>();
         services.AddTransient<IApplicationUserUtilities, ApplicationUserUtilities>();
         services.AddTransient<IRoleUtilities, RoleUtilities>();
         services.AddTransient<IPermissionUtilities, PermissionUtilities>();
@@ -1215,6 +1248,18 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterApplicationLogicRequest>, FilterApplicationLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateApplicationRequest>, InsertUpdateApplicationRequestValidator>();
+
+        #endregion
+
+        #region User
+
+        //services.AddTransient<IUserService, UserService>();
+        services.AddTransient<IUserLogic, UserLogic>();
+
+        //Configure Fluent Validation Validators
+        services.AddTransient<IValidator<FilterUserLogicRequest>, FilterUserLogicRequestValidator>();
+        services.AddTransient<IValidator<InsertUpdateUserRequest>, InsertUpdateUserRequestValidator>();
+        //services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
 
         #endregion
 

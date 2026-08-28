@@ -6,6 +6,7 @@ public class SecurityTestUtilitiesManager : ISecurityTestUtilitiesManager
 {
     private IAuthenticationUtilities _authenticationUtilities;
     private IApplicationUtilities _applicationUtilities;
+    private IUserUtilities _userUtilities;
     private IApplicationUserUtilities _applicationUserUtilities;
     private IApplicationUserPermissionUtilities _applicationUserPermissionUtilities;
     private IApplicationUserRoleUtilities _applicationUserRoleUtilities;
@@ -16,6 +17,7 @@ public class SecurityTestUtilitiesManager : ISecurityTestUtilitiesManager
     public SecurityTestUtilitiesManager(
            IAuthenticationUtilities authenticationUtilities,
            IApplicationUtilities applicationUtilities,
+           IUserUtilities userUtilities,
            IApplicationUserUtilities applicationUserUtilities,
            IApplicationUserPermissionUtilities applicationUserPermissionUtilities,
            IApplicationUserRoleUtilities applicationUserRoleUtilities,
@@ -26,6 +28,7 @@ public class SecurityTestUtilitiesManager : ISecurityTestUtilitiesManager
     {
         _authenticationUtilities = authenticationUtilities;
         _applicationUtilities = applicationUtilities;
+        _userUtilities = userUtilities;
         _applicationUserUtilities = applicationUserUtilities;
         _applicationUserPermissionUtilities = applicationUserPermissionUtilities;
         _applicationUserRoleUtilities = applicationUserRoleUtilities;
@@ -47,6 +50,14 @@ public class SecurityTestUtilitiesManager : ISecurityTestUtilitiesManager
         get
         {
             return _applicationUtilities;
+        }
+    }
+
+    public IUserUtilities User
+    {
+        get
+        {
+            return _userUtilities;
         }
     }
 

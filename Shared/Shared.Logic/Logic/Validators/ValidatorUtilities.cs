@@ -121,6 +121,17 @@ namespace Shared.Logic.Validators
         }
 
         /// <summary>
+        /// Validate UserId is required and greater than 0. Default Value: FieldName = "UserId"
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ruleBuilder"></param>
+        /// <returns></returns>
+        public static IRuleBuilderOptions<T, int> ValidateUserIdIsRequired<T>(this IRuleBuilder<T, int> ruleBuilder)
+        {
+            return ruleBuilder.GreaterThan(0).WithMessage(CreateRequiredFieldErrorMessage(Constants.EntityFieldNames.UserId));
+        }
+
+        /// <summary>
         /// Validate RoleId is required and greater than 0. Default Value: FieldName = "RoleId"
         /// </summary>
         /// <typeparam name="T"></typeparam>

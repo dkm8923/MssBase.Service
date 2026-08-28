@@ -10,6 +10,8 @@
         
         public static class EntityFieldNames
         {
+            public const string User = "User";
+            public const string UserId = "UserId";
             public const string Application = "Application";
             public const string ApplicationId = "ApplicationId";
             public const string ApplicationName = "ApplicationName";
