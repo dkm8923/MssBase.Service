@@ -240,7 +240,7 @@ namespace MssBase.Service
 
             #region User
 
-            //services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IUserService, UserService>();
             services.AddScoped<IUserLogic, UserLogic>();
 
             //Configure Fluent Validation Validators
