@@ -16,14 +16,14 @@ namespace IntegrationTests.Security.Logic
     [Collection("SecurityIntegrationTests")]
     public class UserLogicTests : SecurityTestBase,
                                   IDefaultLogicTestsGetAll,
-                                //   IDefaultLogicTestsGetAllIncludeRelated,
+                                  IDefaultLogicTestsGetAllIncludeRelated,
                                   IDefaultLogicTestsGetAllReadOnly,
                                   IDefaultLogicTestsGetById,
-                                //   IDefaultLogicTestsGetByIdIncludeRelated,
+                                  IDefaultLogicTestsGetByIdIncludeRelated,
                                   IDefaultLogicTestsGetByIdReadOnly,
                                   IDefaultLogicTestsGetAuditLogsById,
                                   IDefaultLogicTestsFilter,
-                                //   IDefaultLogicTestsFilterIncludeRelated,  
+                                  IDefaultLogicTestsFilterIncludeRelated,  
                                   IDefaultLogicTestsFilterReadOnly,   
                                   IDefaultLogicTestsInsert, 
                                   IDefaultLogicTestsUpdate,
@@ -72,60 +72,60 @@ namespace IntegrationTests.Security.Logic
             result.Response.Should().HaveCount(0);
         }
 
-        // [Fact]
-        // public async Task Default_GetAll_Should_Return_Related_Active_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
 
-        //     // Act
-        //     var result = await _applicationUserLogic.GetAll(new BaseLogicGet { IncludeRelated = true });
+            // Act
+            var result = await _userLogic.GetAll(new BaseLogicGet { IncludeRelated = true });
 
-        //     // Assert
-        //     result.Response.Should().HaveCount(1);
+            // Assert
+            result.Response.Should().HaveCount(1);
 
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: false);
-        //     }
-        // }
+            foreach (var user in result.Response)
+            {
+                _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(user, includeInactive: false);
+            }
+        }
 
-        // [Fact]
-        // public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
 
-        //     // Act
-        //     var result = await _applicationUserLogic.GetAll(new BaseLogicGet { IncludeRelated = true, IncludeInactive = true });
+            // Act
+            var result = await _userLogic.GetAll(new BaseLogicGet { IncludeRelated = true, IncludeInactive = true });
 
-        //     // Assert
-        //     result.Response.Should().HaveCount(2);
+            // Assert
+            result.Response.Should().HaveCount(2);
 
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: true);
-        //     }
-        // }
+            foreach (var user in result.Response)
+            {
+                _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(user, includeInactive: true);
+            }
+        }
 
-        // [Fact]
-        // public async Task Default_GetAll_Should_Not_Return_Related_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+        [Fact]
+        public async Task Default_GetAll_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
 
-        //     // Act
-        //     var result = await _applicationUserLogic.GetAll(new BaseLogicGet());
+            // Act
+            var result = await _userLogic.GetAll(new BaseLogicGet());
 
-        //     // Assert
-        //     result.Response.Should().HaveCount(1);
+            // Assert
+            result.Response.Should().HaveCount(1);
 
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         applicationUser.ApplicationUserPermissions.Should().BeNull();
-        //         applicationUser.ApplicationUserRoles.Should().BeNull();
-        //     }
-        // }
+            foreach (var user in result.Response)
+            {
+                user.ApplicationUserPermissions.Should().BeNull();
+                user.ApplicationUserRoles.Should().BeNull();
+            }
+        }
 
         [Fact]
         public async Task Default_GetAll_Should_Return_Active_ReadOnly_Data()
@@ -235,87 +235,87 @@ namespace IntegrationTests.Security.Logic
             result.Response.Should().NotBeNull();
         }
 
-        // [Fact]
-        // public async Task Default_GetById_Should_Return_Related_Active_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
-        //     var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();  
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();  
 
-        //     // Act
-        //     var result = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet { IncludeRelated = true });
+            // Act
+            var result = await _userLogic.GetById(testRecord.UserId, new BaseLogicGet { IncludeRelated = true });
 
-        //     // Assert
-        //     result.Response.Should().NotBeNull();
-        //     result.Response.Active.Should().BeTrue();
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeTrue();
 
-        //      _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(result.Response, includeInactive: false); 
-        // }
+             _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(result.Response, includeInactive: false); 
+        }
 
-        // [Fact]
-        // public async Task Default_GetById_Should_Return_Related_Inactive_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
-        //     var testRecord = arrangeTestDataResponse.InactiveApplicationUsers.FirstOrDefault();  
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.InactiveApplicationUsers.FirstOrDefault();  
 
-        //     // Act
-        //     var result = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet { IncludeRelated = true, IncludeInactive = true });
+            // Act
+            var result = await _userLogic.GetById(testRecord.UserId, new BaseLogicGet { IncludeRelated = true, IncludeInactive = true });
 
-        //     // Assert
-        //     result.Response.Should().NotBeNull();
-        //     result.Response.Active.Should().BeFalse();
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeFalse();
 
-        //     _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(result.Response, includeInactive: true); 
-        // }
+            _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(result.Response, includeInactive: true); 
+        }
 
-        // [Fact]
-        // public async Task Default_GetById_Should_Not_Return_Related_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
-        //     var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();  
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();  
 
-        //     // Act
-        //     var result = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet());
+            // Act
+            var result = await _userLogic.GetById(testRecord.UserId, new BaseLogicGet());
 
-        //     // Assert
-        //     result.Response.Should().NotBeNull();
-        //     result.Response.ApplicationUserPermissions.Should().BeNull();
-        //     result.Response.ApplicationUserRoles.Should().BeNull();
-        // }
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.ApplicationUserPermissions.Should().BeNull();
+            result.Response.ApplicationUserRoles.Should().BeNull();
+        }
 
-        // [Fact]
-        // public async Task PasswordChangeHistory_GetByApplicationUserId_Should_Return_Record()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
-        //     var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
-        //     var pswdChangeHistoryResponse = await ArrangeApplicationUserPasswordChangeHistoryTestData(testRecord.ApplicationUserId);
+        [Fact]
+        public async Task PasswordChangeHistory_GetByUserId_Should_Return_Record()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
+            var pswdChangeHistoryResponse = await ArrangeUserPasswordChangeHistoryTestData(testRecord.UserId);
 
-        //     // Act
-        //     var result = await _applicationUserLogic.GetPasswordChangeHistoryByApplicationUserId(testRecord.ApplicationUserId);
+            // Act
+            var result = await _userLogic.GetPasswordChangeHistoryByUserId(testRecord.UserId);
 
-        //     // Assert
-        //     result.Errors.Count.Should().Be(0);
-        //     result.Response.Should().NotBeNull();
-        //     result.Response.Should().HaveCount(1);
-        // }
+            // Assert
+            result.Errors.Count.Should().Be(0);
+            result.Response.Should().NotBeNull();
+            result.Response.Should().HaveCount(1);
+        }
 
-        // [Fact]
-        // public async Task PasswordChangeHistory_GetByApplicationUserId_Should_Not_Return_Record_Invalid_Id()
-        // {
-        //     // Arrange
-        //     await ClearAllSecurityTestTableData();
-        //     var invalidApplicationUserId = -1;
+        [Fact]
+        public async Task PasswordChangeHistory_GetByUserId_Should_Not_Return_Record_Invalid_Id()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var invalidUserId = -1;
 
-        //     // Act
-        //     var result = await _applicationUserLogic.GetPasswordChangeHistoryByApplicationUserId(invalidApplicationUserId);
+            // Act
+            var result = await _userLogic.GetPasswordChangeHistoryByUserId(invalidUserId);
 
-        //     // Assert
-        //     result.Errors.Count.Should().Be(0);
-        //     result.Response.Should().HaveCount(0);
-        // }
+            // Assert
+            result.Errors.Count.Should().Be(0);
+            result.Response.Should().HaveCount(0);
+        }
 
         [Fact]
         public async Task Default_GetById_Should_Return_Active_ReadOnly_Record()
@@ -324,14 +324,14 @@ namespace IntegrationTests.Security.Logic
             await ClearAllSecurityTestTableData();
 
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var res = await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
+            var res = await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1);
             var testRecord = res[0];
             
             // Act
-            var result = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet { IncludeReadOnly = true });
+            var result = await _userLogic.GetById(testRecord.UserId, new BaseLogicGet { IncludeReadOnly = true });
 
             // Assert
-            _securityTestUtilities.ApplicationUser.VerifyTestRecordValuesMatch(result.Response, testRecord);
+            _securityTestUtilities.User.VerifyTestRecordValuesMatch(result.Response, testRecord);
         }
 
         [Fact]
@@ -340,15 +340,14 @@ namespace IntegrationTests.Security.Logic
             // Arrange
             await ClearAllSecurityTestTableData();
             
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var res = await _securityTestUtilities.ApplicationUser.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
+            var res = await _securityTestUtilities.User.CreateInactiveReadOnlyTestRecords(1);
             var testRecord = res[0];
     
             // Act
-            var result = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet { IncludeInactive = true, IncludeReadOnly = true });
+            var result = await _userLogic.GetById(testRecord.UserId, new BaseLogicGet { IncludeInactive = true, IncludeReadOnly = true });
 
             // Assert
-            _securityTestUtilities.ApplicationUser.VerifyTestRecordValuesMatch(result.Response, testRecord);
+            _securityTestUtilities.User.VerifyTestRecordValuesMatch(result.Response, testRecord);
         }
 
         [Fact]
@@ -357,12 +356,11 @@ namespace IntegrationTests.Security.Logic
             // Arrange
             await ClearAllSecurityTestTableData();
             
-            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var res = await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
+            var res = await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1);
             var testRecord = res[0];
 
             // Act
-            var result = await _applicationUserLogic.GetById(testRecord.ApplicationUserId, new BaseLogicGet());
+            var result = await _userLogic.GetById(testRecord.UserId, new BaseLogicGet());
 
             // Assert
             result.Response.Should().BeNull();
@@ -636,71 +634,71 @@ namespace IntegrationTests.Security.Logic
             filterDateOfBirthResult.Response.Should().HaveCount(1);
         }
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Return_Related_Active_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
 
-        //     var postReq = new FilterApplicationUserLogicRequest { IncludeRelated = true };
+            var postReq = new FilterUserLogicRequest { IncludeRelated = true };
 
-        //     // Act
-        //     var result = await _applicationUserLogic.Filter(postReq);
+            // Act
+            var result = await _userLogic.Filter(postReq);
 
-        //     // Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCount(1);
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
             
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         applicationUser.Active.Should().BeTrue();
+            foreach (var user in result.Response)
+            {
+                user.Active.Should().BeTrue();
                 
-        //         _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: false); 
-        //     }
-        // }
+                _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(user, includeInactive: false); 
+            }
+        }
         
-        // [Fact]
-        // public async Task Default_Filter_Should_Return_Related_Inactive_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
 
-        //     var postReq = new FilterApplicationUserLogicRequest { IncludeRelated = true, IncludeInactive = true };
+            var postReq = new FilterUserLogicRequest { IncludeRelated = true, IncludeInactive = true };
 
-        //     // Act
-        //     var result = await _applicationUserLogic.Filter(postReq);
+            // Act
+            var result = await _userLogic.Filter(postReq);
 
-        //     // Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCount(2);
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(2);
             
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: true);
-        //     }
-        // }
+            foreach (var user in result.Response)
+            {
+                _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(user, includeInactive: true);
+            }
+        }
         
-        // [Fact]
-        // public async Task Default_Filter_Should_Not_Return_Related_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+        [Fact]
+        public async Task Default_Filter_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
 
-        //     var postReq = new FilterApplicationUserLogicRequest();
+            var postReq = new FilterUserLogicRequest();
 
-        //     // Act
-        //     var result = await _applicationUserLogic.Filter(postReq);
+            // Act
+            var result = await _userLogic.Filter(postReq);
 
-        //     // Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCountGreaterThan(0);
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
             
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         applicationUser.ApplicationUserPermissions.Should().BeNull();
-        //         applicationUser.ApplicationUserRoles.Should().BeNull();
-        //     }
-        // }
+            foreach (var user in result.Response)
+            {
+                user.ApplicationUserPermissions.Should().BeNull();
+                user.ApplicationUserRoles.Should().BeNull();
+            }
+        }
 
         [Fact]
         public async Task Default_Filter_Should_Return_Active_ReadOnly_Data()
@@ -926,7 +924,7 @@ namespace IntegrationTests.Security.Logic
             var updateResult = await _userLogic.Update(recordToUpdate.UserId, updateReq);
 
             //Assert
-            var expectedUniqueEmailError = _securityTestUtilities.ApplicationUser.GetExpectedUniqueFieldErrors();
+            var expectedUniqueEmailError = _securityTestUtilities.User.GetExpectedUniqueFieldErrors();
 
             updateResult.Errors.Should().HaveCount(1);
             updateResult.Errors.Should().BeEquivalentTo(expectedUniqueEmailError);
@@ -958,7 +956,7 @@ namespace IntegrationTests.Security.Logic
             var recordToUpdate = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
             recordToUpdate.Email = "invalidEmail";
 
-            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedInvalidEmailFieldErrors();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidEmailFieldErrors();
 
             // Act
             var result = await _userLogic.Update(recordToUpdate.UserId, _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(recordToUpdate));
@@ -1035,12 +1033,12 @@ namespace IntegrationTests.Security.Logic
         //     var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
         //     var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
         //     var permission = _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(testRecord.ApplicationId).Result;
-        //     await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(testRecord.ApplicationId, testRecord.ApplicationUserId, permission.PermissionId);
+        //     await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(testRecord.ApplicationId, testRecord.UserId, permission.PermissionId);
 
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedApplicationUserPermissionForeignKeyErrors();
+        //     var expectedFieldErrors = _securityTestUtilities.User.GetExpectedApplicationUserPermissionForeignKeyErrors();
 
         //     // Act
-        //     var result = await _applicationUserLogic.Delete(testRecord.ApplicationUserId, TestConstants.CurrentUser);
+        //     var result = await _userLogic.Delete(testRecord.UserId, TestConstants.CurrentUser);
             
         //     // Assert
         //     result.Errors.Count.Should().Be(expectedFieldErrors.Count);
@@ -1055,12 +1053,12 @@ namespace IntegrationTests.Security.Logic
         //     var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
         //     var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
         //     var role = _securityTestUtilities.Role.CreateSingleRoleTestRecord(testRecord.ApplicationId).Result;
-        //     await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(testRecord.ApplicationId, testRecord.ApplicationUserId, role.RoleId);
+        //     await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(testRecord.ApplicationId, testRecord.UserId, role.RoleId);
 
-        //     var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedApplicationUserRoleForeignKeyErrors();
+        //     var expectedFieldErrors = _securityTestUtilities.User.GetExpectedApplicationUserRoleForeignKeyErrors();
 
         //     // Act
-        //     var result = await _applicationUserLogic.Delete(testRecord.ApplicationUserId, TestConstants.CurrentUser);
+        //     var result = await _userLogic.Delete(testRecord.UserId, TestConstants.CurrentUser);
             
         //     // Assert
         //     result.Errors.Count.Should().Be(expectedFieldErrors.Count);
@@ -1267,7 +1265,7 @@ namespace IntegrationTests.Security.Logic
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
             var testUser = await _userLogic.Insert(recordToCreate);
 
-            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordMinMaxLengthErrors();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordMinMaxLengthErrors();
 
             // Act
             var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
@@ -1291,7 +1289,7 @@ namespace IntegrationTests.Security.Logic
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
             var testUser = await _userLogic.Insert(recordToCreate);
 
-            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordMinMaxLengthErrors();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordMinMaxLengthErrors();
 
             // Act
             var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
@@ -1315,7 +1313,7 @@ namespace IntegrationTests.Security.Logic
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
             var testUser = await _userLogic.Insert(recordToCreate);
 
-            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordUpperCaseRequiredErrors();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordUpperCaseRequiredErrors();
 
             // Act
             var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
@@ -1346,7 +1344,7 @@ namespace IntegrationTests.Security.Logic
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
             var testUser = await _userLogic.Insert(recordToCreate);
 
-            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordLowerCaseRequiredErrors();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordLowerCaseRequiredErrors();
 
             // Act
             var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
@@ -1377,7 +1375,7 @@ namespace IntegrationTests.Security.Logic
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
             var testUser = await _userLogic.Insert(recordToCreate);
 
-            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordSpecialCharacterRequiredErrors();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordSpecialCharacterRequiredErrors();
 
             // Act
             var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
@@ -1409,7 +1407,7 @@ namespace IntegrationTests.Security.Logic
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
             var testUser = await _userLogic.Insert(recordToCreate);
 
-            var expectedFieldErrors = _securityTestUtilities.ApplicationUser.GetExpectedChangePasswordNumberRequiredErrors();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordNumberRequiredErrors();
 
             // Act
             var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 

@@ -4,9 +4,7 @@ using Shared.Models;
 using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities;
 using Dto.Security.Authentication;
-using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
-using Dto.Security.ApplicationUser;
 using Dto.Security.User;
 
 namespace IntegrationTests.Security.Logic
@@ -548,7 +546,7 @@ namespace IntegrationTests.Security.Logic
             
             //change password after initial user creation
             await _userLogic.ChangePassword(new ChangePasswordRequest {
-                ApplicationUserId = testUser.Response.UserId,
+                UserId = testUser.Response.UserId,
                 NewPassword = TestConstants.DefaultTestUserPassword,
                 CurrentUser = TestConstants.CurrentUser
             });

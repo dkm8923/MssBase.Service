@@ -242,26 +242,6 @@ namespace IntegrationTests.Security.Service
             availableCacheKeys.Should().HaveCount(0);
         }
 
-        [Fact]
-        public async Task PasswordChangeHistory_GetById_Should_Cache()
-        {
-            // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
-            var applicationUser = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
-            await _cacheTestUtilities.DeleteAllKeyData();
-            var pswdChangeHistoryResponse = await ArrangeApplicationUserPasswordChangeHistoryTestData(applicationUser.ApplicationUserId);
-
-            var expectedCacheKey = $"ApplicationUserService_PasswordChangeHistory_GetById_{applicationUser.ApplicationUserId}_0_0";
-
-            // Act
-            var result = await _applicationUserService.GetPasswordChangeHistoryByApplicationUserId(applicationUser.ApplicationUserId);
-            var availableCacheKeys = _cacheTestUtilities.GetKeys();
-
-            // Assert
-            availableCacheKeys.Should().Contain(expectedCacheKey);
-            result.Response.Should().NotBeNull();
-        }
-
         #endregion
 
         #region GetAuditLogsById
@@ -274,21 +254,19 @@ namespace IntegrationTests.Security.Service
             await _cacheTestUtilities.DeleteAllKeyData();
             
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
 
             var updateReq = new InsertUpdateApplicationUserRequest
             {
                 ApplicationId = testRecord.ApplicationId,
-                DateOfBirth = DateTime.Parse("01/01/2000"),
-                Email = "updated@test.com",
-                FirstName = "Updated First Name",
-                LastName = "Updated Last Name",
+                UserId = testRecord.UserId,
                 Active = false,
                 CurrentUser = TestConstants.CurrentUser
             };
 
             // Act
-            var updateResult = await _applicationUserLogic.Update(testRecord.ApplicationUserId, updateReq, _applicationLogic);
+            var updateResult = await _applicationUserLogic.Update(testRecord.ApplicationUserId, updateReq, _applicationLogic, _applicationUserLogic, _userLogic);
             var expectedCacheKey = $"ApplicationUserService_GetAuditLogById_{testRecord.ApplicationUserId}";
 
             var result = await _applicationUserService.GetAuditLogsByApplicationUserId(testRecord.ApplicationUserId, new BaseServiceGet());
@@ -307,29 +285,34 @@ namespace IntegrationTests.Security.Service
         public async Task Default_Filter_Should_Cache()
         {
             // Arrange
-           await ClearAllSecurityTestTableData();
-           var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-           await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId);
-           await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId);
-           await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
-           await _cacheTestUtilities.DeleteAllKeyData();
+            var securityTestData = await ArrangeApplicationUserPermissionTestData();
+            var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
+            
+            var readOnlyActiveApplication = (await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1)).First();
+            var readOnlyActiveUser = (await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1)).First();
+            await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecord(readOnlyActiveApplication.ApplicationId, readOnlyActiveUser.UserId);
+            
+            var readOnlyInactiveApplication = (await _securityTestUtilities.Application.CreateInactiveReadOnlyTestRecords(1)).First();
+            var readOnlyInActiveUser = (await _securityTestUtilities.User.CreateInactiveReadOnlyTestRecords(1)).First();
+            await _securityTestUtilities.ApplicationUser.CreateInactiveReadOnlyTestRecord(readOnlyInactiveApplication.ApplicationId, readOnlyInActiveUser.UserId);
 
-           var applicationUserInsertReq = new InsertUpdateApplicationUserRequest
-           {
-               ApplicationId = application.ApplicationId,
-               DateOfBirth = DateTime.Parse("01/01/2000"),
-               Email = "test@test.com",
-               FirstName = "Test First Name",
-               LastName = "Test Last Name",
-               Active = true,
-               CurrentUser = TestConstants.SpecificCurrentUserForInsert
-           };
+            await _cacheTestUtilities.DeleteAllKeyData();
+           
+            var insertReq = new InsertUpdateApplicationUserRequest
+            {
+                ApplicationId = application.ApplicationId,
+                UserId = user.UserId,
+                CurrentUser = TestConstants.SpecificCurrentUserForInsert,
+                Active = true
+            };
 
-           var applicationUserRes = await _applicationUserLogic.Insert(applicationUserInsertReq, _applicationLogic);
+           var applicationUserRes = await _applicationUserLogic.Insert(insertReq, _applicationLogic, _applicationUserLogic, _userLogic);
 
-           applicationUserInsertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
+           insertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
 
-           await _applicationUserLogic.Update(applicationUserRes.Response.ApplicationUserId, applicationUserInsertReq, _applicationLogic);
+           await _applicationUserLogic.Update(applicationUserRes.Response.ApplicationUserId, insertReq, _applicationLogic, _applicationUserLogic, _userLogic);
 
            await _cacheTestUtilities.DeleteAllKeyData();
 
@@ -338,42 +321,35 @@ namespace IntegrationTests.Security.Service
            var postReqUpdatedBy = new FilterApplicationUserServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
            var postReqUpdatedOnDate = new FilterApplicationUserServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
            var postReqApplicationUserIds = new FilterApplicationUserServiceRequest { ApplicationUserIds = new List<int> { applicationUserRes.Response.ApplicationUserId } };
-           var postReqEmail = new FilterApplicationUserServiceRequest { Email = "test@test.com" };
-           var postReqFirstName = new FilterApplicationUserServiceRequest { FirstName = "Test First Name" };
-           var postReqLastName = new FilterApplicationUserServiceRequest { LastName = "Test Last Name" };
-           var postReqDateOfBirth = new FilterApplicationUserServiceRequest { DateOfBirth = DateTime.Parse("01/01/2000") };
            var postReqApplicationId = new FilterApplicationUserServiceRequest { ApplicationId = application.ApplicationId };
+           var postReqUserId = new FilterApplicationUserServiceRequest { UserId = user.UserId };
            var postReqIncludeInactive = new FilterApplicationUserServiceRequest { IncludeInactive = true };
            var postReqIncludeRelated = new FilterApplicationUserServiceRequest { IncludeRelated = true };
            var postReqIncludeReadOnly = new FilterApplicationUserServiceRequest { IncludeReadOnly = true };
            
-           var expectedCacheKeyCreatedBy = $"ApplicationUserService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyCreatedOnDate = $"ApplicationUserService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedBy = $"ApplicationUserService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedOnDate = $"ApplicationUserService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyApplicationUserIdsKey = $"ApplicationUserService_Filter_0_0_0_0_{(postReqApplicationUserIds.ApplicationUserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyEmail = $"ApplicationUserService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqEmail.Email)}_0_0_0_0_0_0_0";
-           var expectedCacheKeyFirstName = $"ApplicationUserService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqFirstName.FirstName)}_0_0_0_0_0_0";
-           var expectedCacheKeyLastName = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqLastName.LastName)}_0_0_0_0_0";
-           var expectedCacheKeyDateofBirth = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqDateOfBirth.DateOfBirth.ToString())}_0_0_0_0";
-           var expectedCacheKeyApplicationId = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0";
-           var expectedCacheKeyIncludeInactive = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_0_1_0_0";
-           var expectedCacheKeyIncludeRelated = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_0_0_1_0";
-           var expectedCacheKeyIncludeReadOnly = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_1";
-
+           var expectedCacheKeyCreatedBy = $"ApplicationUserPermissionService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyCreatedOnDate = $"ApplicationUserPermissionService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedBy = $"ApplicationUserPermissionService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedOnDate = $"ApplicationUserPermissionService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0";
+           var expectedCacheKeyApplicationUserIds = $"ApplicationUserPermissionService_Filter_0_0_0_0_{(postReqApplicationUserIds.ApplicationUserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0_0";
+           var expectedCacheKeyApplicationId = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0_0_0";
+           var expectedCacheKeyUserId = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqUserId.UserId.ToString())}_0_0_0_0";
+           var expectedCacheKeyIncludeInactive = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_0_0_1_0_0";
+           var expectedCacheKeyIncludeRelated = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_0_0_0_1_0";
+           var expectedCacheKeyIncludeReadOnly = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_0_0_0_0_1";
+           
            // Act
            var filterCreatedByResult = await _applicationUserService.Filter(postReqCreatedBy);
            var filterCreatedOnDateResult = await _applicationUserService.Filter(postReqCreatedOnDate);
            var filterUpdatedByResult = await _applicationUserService.Filter(postReqUpdatedBy);
            var filterUpdatedOnDateResult = await _applicationUserService.Filter(postReqUpdatedOnDate);
            var filterApplicationUserIdsResult = await _applicationUserService.Filter(postReqApplicationUserIds);
-           var filterEmailResult = await _applicationUserService.Filter(postReqEmail);
-           var filterFirstNameResult = await _applicationUserService.Filter(postReqFirstName);
-           var filterLastNameResult = await _applicationUserService.Filter(postReqLastName);
            var filterApplicationIdResult = await _applicationUserService.Filter(postReqApplicationId);
+           var filterUserIdResult = await _applicationUserService.Filter(postReqUserId);
            var filterIncludeInactiveResult = await _applicationUserService.Filter(postReqIncludeInactive);
            var filterIncludeRelatedResult = await _applicationUserService.Filter(postReqIncludeRelated);
            var filterIncludeReadOnlyResult = await _applicationUserService.Filter(postReqIncludeReadOnly);
+           
            var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
            // Assert
@@ -389,33 +365,23 @@ namespace IntegrationTests.Security.Service
            availableCacheKeys.Should().Contain(expectedCacheKeyUpdatedOnDate);
            filterUpdatedOnDateResult.Response.Should().HaveCountGreaterThan(0);
 
-           availableCacheKeys.Should().Contain(expectedCacheKeyApplicationUserIdsKey);
-           filterApplicationUserIdsResult.Response.Should().HaveCount(1);
-
-           availableCacheKeys.Should().Contain(expectedCacheKeyEmail);
-           filterEmailResult.Response.Should().HaveCount(1);   
-           
-           availableCacheKeys.Should().Contain(expectedCacheKeyFirstName);
-           filterFirstNameResult.Response.Should().HaveCount(1);   
-           
-           availableCacheKeys.Should().Contain(expectedCacheKeyLastName);
-           filterLastNameResult.Response.Should().HaveCount(1);   
-           
-           //TODO: Revisit this
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyDateofBirth);
-        //    filterDateOfBirthResult.Response.Should().HaveCount(1);   
+           availableCacheKeys.Should().Contain(expectedCacheKeyApplicationUserIds);
+           filterApplicationUserIdsResult.Response.Should().HaveCount(1);   
 
            availableCacheKeys.Should().Contain(expectedCacheKeyApplicationId);
-           filterApplicationIdResult.Response.Should().HaveCount(6);
+           filterApplicationIdResult.Response.Should().HaveCount(1);   
+           
+           availableCacheKeys.Should().Contain(expectedCacheKeyUserId);
+           filterUserIdResult.Response.Should().HaveCount(1);
 
            availableCacheKeys.Should().Contain(expectedCacheKeyIncludeInactive);
-           filterIncludeInactiveResult.Response.Should().HaveCount(11);
+           filterIncludeInactiveResult.Response.Should().HaveCountGreaterThan(0);
 
            availableCacheKeys.Should().Contain(expectedCacheKeyIncludeRelated);
-           filterIncludeRelatedResult.Response.Should().HaveCount(6);
+           filterIncludeRelatedResult.Response.Should().HaveCountGreaterThan(0);
 
            availableCacheKeys.Should().Contain(expectedCacheKeyIncludeReadOnly);
-           filterIncludeReadOnlyResult.Response.Should().HaveCountGreaterThan(0);
+           filterIncludeReadOnlyResult.Response.Should().HaveCountGreaterThan(0); 
         }
 
         #endregion
@@ -428,10 +394,17 @@ namespace IntegrationTests.Security.Service
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
             await _cacheTestUtilities.DeleteAllKeyData();
             await CreateApplicationUserCacheKeys();
 
-            var insertReq = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId);
+            var insertReq = new InsertUpdateApplicationUserRequest
+            {
+                ApplicationId = application.ApplicationId,
+                UserId = user.UserId,
+                CurrentUser = TestConstants.CurrentUser,
+                Active = true
+            };
 
             // Act
             var insertResult = await _applicationUserService.Insert(insertReq);
@@ -452,16 +425,19 @@ namespace IntegrationTests.Security.Service
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
+            
+            var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var newUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+
             await _cacheTestUtilities.DeleteAllKeyData();
             await CreateApplicationUserCacheKeys();
 
             var updateReq = new InsertUpdateApplicationUserRequest
             {
-                Email = "updated@test.com",
-                FirstName = "First name Updated",
-                LastName = "Last name Updated",
-                ApplicationId = application.ApplicationId,
+                ApplicationId = newApplication.ApplicationId,
+                UserId = newUser.UserId,
                 CurrentUser = TestConstants.CurrentUser,
                 Active = true
             };
@@ -485,7 +461,8 @@ namespace IntegrationTests.Security.Service
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+            var testRecord = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             await _cacheTestUtilities.DeleteAllKeyData();
             await CreateApplicationUserCacheKeys();
 

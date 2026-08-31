@@ -14,6 +14,7 @@ using Dto.Security.ApplicationUserPermission;
 using Dto.Security.RolePermission;
 using Dto.Security.ApplicationUserRole;
 using Dto.Security.Role.Logic;
+using Dto.Security.User;
 
 namespace IntegrationTests.Security.Shared.SeedDatabase;
 
@@ -47,7 +48,7 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         // var applicationUserPermissions = await CreateTestApplicationUserPermissions(applications, applicationUsers, permissions);
         // var roles = await CreateTestRoles(applications);
 
-        await CreateSpecificTestData();
+        //await CreateSpecificTestData();
 
        // Assert
         1.Should().Be(1);
@@ -311,19 +312,19 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         return createdPermissions;
     }
 
-    private async Task<ApplicationUserDto> CreateApplicationUserWithPasswordReset(InsertUpdateApplicationUserRequest req)
+    private async Task<UserDto> CreateUserWithPasswordReset(InsertUpdateUserRequest req)
     {
         req.CurrentUser = TestConstants.CurrentUser;
-        var insertedAppUser = await _applicationUserLogic.Insert(req, _applicationLogic);
+        var insertedUser = await _userLogic.Insert(req);
         
-        if (insertedAppUser.Response != null)
+        if (insertedUser.Response != null)
         {
             //change password for users so they can be used for authentication testing...
-            var changePasswordResult = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = insertedAppUser.Response.ApplicationUserId, NewPassword = TestConstants.DefaultTestUserPassword, CurrentUser = TestConstants.CurrentUser });
+            var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { UserId = insertedUser.Response.UserId, NewPassword = TestConstants.DefaultTestUserPassword, CurrentUser = TestConstants.CurrentUser });
             changePasswordResult.Errors.Count.Should().Be(0);
         }
 
-        return insertedAppUser.Response;
+        return insertedUser.Response;
     }
 
     private record CreateTestDataRequest
@@ -457,167 +458,167 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         return ret.Response;
     }
 
-    private async Task CreateSpecificTestData()
-    {
-        //Create Application
-        //var applicationReq = new InsertUpdateApplicationRequest { CurrentUser = TestConstants.CurrentUser, Active = true, Name = "Workout Tracker App", Description = "Keeps Track of Workout Sets / Reps" };    
-        var applicationReq = new InsertUpdateApplicationRequest { CurrentUser = TestConstants.CurrentUser, Active = true, Name = "MSS Security", Description = "Enterprise application security management for Mauk Software Solutions LLC." };    
-        var insertedApp = await _applicationLogic.Insert(applicationReq);
-        var applicationId = insertedApp.Response.ApplicationId;
+    // private async Task CreateSpecificTestData()
+    // {
+    //     //Create Application
+    //     //var applicationReq = new InsertUpdateApplicationRequest { CurrentUser = TestConstants.CurrentUser, Active = true, Name = "Workout Tracker App", Description = "Keeps Track of Workout Sets / Reps" };    
+    //     var applicationReq = new InsertUpdateApplicationRequest { CurrentUser = TestConstants.CurrentUser, Active = true, Name = "MSS Security", Description = "Enterprise application security management for Mauk Software Solutions LLC." };    
+    //     var insertedApp = await _applicationLogic.Insert(applicationReq);
+    //     var applicationId = insertedApp.Response.ApplicationId;
         
-        //Create Application usrs
-        var applicationUsersToCreate = new List<InsertUpdateApplicationUserRequest>();
-        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "dmauk@echohealthinc.com", FirstName = "Daniel", LastName = "Mauk", DateOfBirth = new DateTime(1989, 6, 15) });
-        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "rthompson@metrohealth.org", FirstName = "Rachel", LastName = "Thompson", DateOfBirth = new DateTime(1987, 12, 04) });
-        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "PawPatrolOverEverything@gmail.com", FirstName = "Laura", LastName = "Mauk", DateOfBirth = new DateTime(2019, 9, 2) });
-        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "BigTruckPup@yahoo.com", FirstName = "Cameron", LastName = "Mauk", DateOfBirth = new DateTime(2022, 5, 19) });
-        applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "SweetWilliam@aol.com", FirstName = "William", LastName = "Mauk", DateOfBirth = new DateTime(2024, 12, 15) });
+    //     //Create Application usrs
+    //     var applicationUsersToCreate = new List<InsertUpdateApplicationUserRequest>();
+    //     applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "dmauk@echohealthinc.com", FirstName = "Daniel", LastName = "Mauk", DateOfBirth = new DateTime(1989, 6, 15) });
+    //     applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "rthompson@metrohealth.org", FirstName = "Rachel", LastName = "Thompson", DateOfBirth = new DateTime(1987, 12, 04) });
+    //     applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "PawPatrolOverEverything@gmail.com", FirstName = "Laura", LastName = "Mauk", DateOfBirth = new DateTime(2019, 9, 2) });
+    //     applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "BigTruckPup@yahoo.com", FirstName = "Cameron", LastName = "Mauk", DateOfBirth = new DateTime(2022, 5, 19) });
+    //     applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)applicationId, Email = "SweetWilliam@aol.com", FirstName = "William", LastName = "Mauk", DateOfBirth = new DateTime(2024, 12, 15) });
         
-        var insertedAppUsers = new List<ApplicationUserDto>();
-        foreach (var applicationUser in applicationUsersToCreate)
-        {
-            applicationUser.CurrentUser = TestConstants.CurrentUser;
-            var insertedAppUser = await _applicationUserLogic.Insert(applicationUser, _applicationLogic);
+    //     var insertedAppUsers = new List<ApplicationUserDto>();
+    //     foreach (var applicationUser in applicationUsersToCreate)
+    //     {
+    //         applicationUser.CurrentUser = TestConstants.CurrentUser;
+    //         var insertedAppUser = await _applicationUserLogic.Insert(applicationUser, _applicationLogic);
             
-            if (insertedAppUser.Response != null)
-            {
-                insertedAppUsers.Add(insertedAppUser.Response);
+    //         if (insertedAppUser.Response != null)
+    //         {
+    //             insertedAppUsers.Add(insertedAppUser.Response);
 
-                //change password for users so they can be used for authentication testing...
-                await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = insertedAppUser.Response.ApplicationUserId, NewPassword = "Test@1234", CurrentUser = TestConstants.CurrentUser });
-            }
-        }
+    //             //change password for users so they can be used for authentication testing...
+    //             await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = insertedAppUser.Response.ApplicationUserId, NewPassword = "Test@1234", CurrentUser = TestConstants.CurrentUser });
+    //         }
+    //     }
 
-        //Create Application Permissions
-        var permissionsToCreate = new List<InsertUpdatePermissionRequest>();
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Admin Permission 1", Description = "Test Admin Permission 1 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Admin Permission 2", Description = "Test Admin Permission 2 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Admin Permission 3", Description = "Test Admin Permission 3 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Admin Permission 4", Description = "Test Admin Permission 4 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Admin Permission 5", Description = "Test Admin Permission 5 Desc." });
+    //     //Create Application Permissions
+    //     var permissionsToCreate = new List<InsertUpdatePermissionRequest>();
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Admin Permission 1", Description = "Test Admin Permission 1 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Admin Permission 2", Description = "Test Admin Permission 2 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Admin Permission 3", Description = "Test Admin Permission 3 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Admin Permission 4", Description = "Test Admin Permission 4 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Admin Permission 5", Description = "Test Admin Permission 5 Desc." });
 
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Regular User Permission 1", Description = "Test Regular User Permission 1 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Regular User Permission 2", Description = "Test Regular User Permission 2 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Regular User Permission 3", Description = "Test Regular User Permission 3 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Regular User Permission 4", Description = "Test Regular User Permission 4 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Regular User Permission 5", Description = "Test Regular User Permission 5 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Regular User Permission 1", Description = "Test Regular User Permission 1 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Regular User Permission 2", Description = "Test Regular User Permission 2 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Regular User Permission 3", Description = "Test Regular User Permission 3 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Regular User Permission 4", Description = "Test Regular User Permission 4 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test Regular User Permission 5", Description = "Test Regular User Permission 5 Desc." });
 
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test ReadOnly Permission 1", Description = "Test ReadOnly Permission 1 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test ReadOnly Permission 2", Description = "Test ReadOnly Permission 2 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test ReadOnly Permission 3", Description = "Test ReadOnly Permission 3 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test ReadOnly Permission 4", Description = "Test ReadOnly Permission 4 Desc." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test ReadOnly Permission 5", Description = "Test ReadOnly Permission 5 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test ReadOnly Permission 1", Description = "Test ReadOnly Permission 1 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test ReadOnly Permission 2", Description = "Test ReadOnly Permission 2 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test ReadOnly Permission 3", Description = "Test ReadOnly Permission 3 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test ReadOnly Permission 4", Description = "Test ReadOnly Permission 4 Desc." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Test ReadOnly Permission 5", Description = "Test ReadOnly Permission 5 Desc." });
 
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "App User Permission 1", Description = "Specific Permission For App User 1." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "App User Permission 2", Description = "Specific Permission For App User 2." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "App User Permission 3", Description = "Specific Permission For App User 3." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "App User Permission 4", Description = "Specific Permission For App User 4." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "App User Permission 5", Description = "Specific Permission For App User 5." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "App User Permission 1", Description = "Specific Permission For App User 1." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "App User Permission 2", Description = "Specific Permission For App User 2." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "App User Permission 3", Description = "Specific Permission For App User 3." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "App User Permission 4", Description = "Specific Permission For App User 4." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "App User Permission 5", Description = "Specific Permission For App User 5." });
 
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "PayRoll Admin", Description = "Allows access to payroll administration features." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "PayRoll Read Only", Description = "Allows access to payroll administration features in read only mode." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Workout Admin", Description = "Allows access to maintain workout data." });
-        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "View Workouts", Description = "Allows read-only access to workout data and reports." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "PayRoll Admin", Description = "Allows access to payroll administration features." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "PayRoll Read Only", Description = "Allows access to payroll administration features in read only mode." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "Workout Admin", Description = "Allows access to maintain workout data." });
+    //     permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = "View Workouts", Description = "Allows read-only access to workout data and reports." });
         
-        var insertedAppPermissions = new List<PermissionDto>();
-        foreach (var permission in permissionsToCreate)
-        {
-            permission.CurrentUser = TestConstants.CurrentUser;
-            var insertedPermission = await _permissionLogic.Insert(permission, _applicationLogic);
+    //     var insertedAppPermissions = new List<PermissionDto>();
+    //     foreach (var permission in permissionsToCreate)
+    //     {
+    //         permission.CurrentUser = TestConstants.CurrentUser;
+    //         var insertedPermission = await _permissionLogic.Insert(permission, _applicationLogic);
 
-            if (insertedPermission.Response != null)
-            {
-                insertedAppPermissions.Add(insertedPermission.Response);
-            }
-        }
+    //         if (insertedPermission.Response != null)
+    //         {
+    //             insertedAppPermissions.Add(insertedPermission.Response);
+    //         }
+    //     }
 
-        //Create Application Roles
-        var rolesToCreate = new List<InsertUpdateRoleRequest>();
+    //     //Create Application Roles
+    //     var rolesToCreate = new List<InsertUpdateRoleRequest>();
 
-        rolesToCreate.Add(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = "Admin", Description = "Full Access to all Application Functionality." });
-        rolesToCreate.Add(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = "User", Description = "Regular App User" });
-        rolesToCreate.Add(new InsertUpdateRoleRequest { Active = false, ApplicationId = applicationId, Name = "Read Only", Description = "ReadOnly View of Regular User." });
+    //     rolesToCreate.Add(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = "Admin", Description = "Full Access to all Application Functionality." });
+    //     rolesToCreate.Add(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = "User", Description = "Regular App User" });
+    //     rolesToCreate.Add(new InsertUpdateRoleRequest { Active = false, ApplicationId = applicationId, Name = "Read Only", Description = "ReadOnly View of Regular User." });
 
-        var insertedAppRoles = new List<RoleDto>();
-        foreach (var role in rolesToCreate)
-        {
-            role.CurrentUser = TestConstants.CurrentUser;
-            var insertedRole = await _roleLogic.Insert(role, _applicationLogic);
+    //     var insertedAppRoles = new List<RoleDto>();
+    //     foreach (var role in rolesToCreate)
+    //     {
+    //         role.CurrentUser = TestConstants.CurrentUser;
+    //         var insertedRole = await _roleLogic.Insert(role, _applicationLogic);
 
-            if (insertedRole.Response != null)
-            {
-                insertedAppRoles.Add(insertedRole.Response);
-            }
-        }
+    //         if (insertedRole.Response != null)
+    //         {
+    //             insertedAppRoles.Add(insertedRole.Response);
+    //         }
+    //     }
 
-        //Create Role Permissions
-        var rolesPermissionsToCreate = new List<InsertUpdateRolePermissionRequest>();
+    //     //Create Role Permissions
+    //     var rolesPermissionsToCreate = new List<InsertUpdateRolePermissionRequest>();
 
-        var adminRoleId = insertedAppRoles.FirstOrDefault(x => x.Name == "Admin").RoleId;
-        var adminPermissions = insertedAppPermissions.Where(x => x.Name.Contains("Admin")).ToList();
+    //     var adminRoleId = insertedAppRoles.FirstOrDefault(x => x.Name == "Admin").RoleId;
+    //     var adminPermissions = insertedAppPermissions.Where(x => x.Name.Contains("Admin")).ToList();
 
-        foreach (var permission in adminPermissions)
-        {
-            rolesPermissionsToCreate.Add(new InsertUpdateRolePermissionRequest { Active = true, ApplicationId = applicationId, RoleId = adminRoleId, PermissionId = permission.PermissionId });
-        }
+    //     foreach (var permission in adminPermissions)
+    //     {
+    //         rolesPermissionsToCreate.Add(new InsertUpdateRolePermissionRequest { Active = true, ApplicationId = applicationId, RoleId = adminRoleId, PermissionId = permission.PermissionId });
+    //     }
 
-        var regularUserRoleId = insertedAppRoles.FirstOrDefault(x => x.Name == "User").RoleId;
-        var regularUserPermissions = insertedAppPermissions.Where(x => x.Name.Contains("Regular User")).ToList();
+    //     var regularUserRoleId = insertedAppRoles.FirstOrDefault(x => x.Name == "User").RoleId;
+    //     var regularUserPermissions = insertedAppPermissions.Where(x => x.Name.Contains("Regular User")).ToList();
 
-        foreach (var permission in regularUserPermissions)
-        {
-            rolesPermissionsToCreate.Add(new InsertUpdateRolePermissionRequest { Active = true, ApplicationId = applicationId, RoleId = regularUserRoleId, PermissionId = permission.PermissionId });
-        }
+    //     foreach (var permission in regularUserPermissions)
+    //     {
+    //         rolesPermissionsToCreate.Add(new InsertUpdateRolePermissionRequest { Active = true, ApplicationId = applicationId, RoleId = regularUserRoleId, PermissionId = permission.PermissionId });
+    //     }
 
-        var readOnlyRoleId = insertedAppRoles.FirstOrDefault(x => x.Name == "Read Only").RoleId;
-        var readOnlyPermissions = insertedAppPermissions.Where(x => x.Name.Contains("ReadOnly")).ToList();
+    //     var readOnlyRoleId = insertedAppRoles.FirstOrDefault(x => x.Name == "Read Only").RoleId;
+    //     var readOnlyPermissions = insertedAppPermissions.Where(x => x.Name.Contains("ReadOnly")).ToList();
 
-        foreach (var permission in readOnlyPermissions)
-        {
-            rolesPermissionsToCreate.Add(new InsertUpdateRolePermissionRequest { Active = true, ApplicationId = applicationId, RoleId = readOnlyRoleId, PermissionId = permission.PermissionId });
-        }
+    //     foreach (var permission in readOnlyPermissions)
+    //     {
+    //         rolesPermissionsToCreate.Add(new InsertUpdateRolePermissionRequest { Active = true, ApplicationId = applicationId, RoleId = readOnlyRoleId, PermissionId = permission.PermissionId });
+    //     }
 
-        var insertedAppRolePermissions = new List<RolePermissionDto>();
-        foreach (var rolePermission in rolesPermissionsToCreate)
-        {
-            rolePermission.CurrentUser = TestConstants.CurrentUser;
-            var insertedRolePermission = await _rolePermissionLogic.Insert(rolePermission, _applicationLogic, _roleLogic, _permissionLogic);
+    //     var insertedAppRolePermissions = new List<RolePermissionDto>();
+    //     foreach (var rolePermission in rolesPermissionsToCreate)
+    //     {
+    //         rolePermission.CurrentUser = TestConstants.CurrentUser;
+    //         var insertedRolePermission = await _rolePermissionLogic.Insert(rolePermission, _applicationLogic, _roleLogic, _permissionLogic);
 
-            if (insertedRolePermission.Response != null)
-            {
-                insertedAppRolePermissions.Add(insertedRolePermission.Response);
-            }
-        }
+    //         if (insertedRolePermission.Response != null)
+    //         {
+    //             insertedAppRolePermissions.Add(insertedRolePermission.Response);
+    //         }
+    //     }
 
-        //Create Application User Role
-        var applicationUserRolesToCreate = new List<InsertUpdateApplicationUserRoleRequest>();
+    //     //Create Application User Role
+    //     var applicationUserRolesToCreate = new List<InsertUpdateApplicationUserRoleRequest>();
 
-        var danMaukInserted = insertedAppUsers.FirstOrDefault(x => x.Email == "dmauk@echohealthinc.com");
-        applicationUserRolesToCreate.Add(new InsertUpdateApplicationUserRoleRequest { Active = true, ApplicationId = applicationId, RoleId = adminRoleId, ApplicationUserId = danMaukInserted.ApplicationUserId });
+    //     var danMaukInserted = insertedAppUsers.FirstOrDefault(x => x.Email == "dmauk@echohealthinc.com");
+    //     applicationUserRolesToCreate.Add(new InsertUpdateApplicationUserRoleRequest { Active = true, ApplicationId = applicationId, RoleId = adminRoleId, ApplicationUserId = danMaukInserted.ApplicationUserId });
         
-        var rachelThompsonInserted = insertedAppUsers.FirstOrDefault(x => x.Email == "rthompson@metrohealth.org");
-        applicationUserRolesToCreate.Add(new InsertUpdateApplicationUserRoleRequest { Active = true, ApplicationId = applicationId, RoleId = regularUserRoleId, ApplicationUserId = rachelThompsonInserted.ApplicationUserId });
+    //     var rachelThompsonInserted = insertedAppUsers.FirstOrDefault(x => x.Email == "rthompson@metrohealth.org");
+    //     applicationUserRolesToCreate.Add(new InsertUpdateApplicationUserRoleRequest { Active = true, ApplicationId = applicationId, RoleId = regularUserRoleId, ApplicationUserId = rachelThompsonInserted.ApplicationUserId });
 
-        var lauraMaukInserted = insertedAppUsers.FirstOrDefault(x => x.Email == "PawPatrolOverEverything@gmail.com");
-        applicationUserRolesToCreate.Add(new InsertUpdateApplicationUserRoleRequest { Active = true, ApplicationId = applicationId, RoleId = readOnlyRoleId, ApplicationUserId = lauraMaukInserted.ApplicationUserId });
+    //     var lauraMaukInserted = insertedAppUsers.FirstOrDefault(x => x.Email == "PawPatrolOverEverything@gmail.com");
+    //     applicationUserRolesToCreate.Add(new InsertUpdateApplicationUserRoleRequest { Active = true, ApplicationId = applicationId, RoleId = readOnlyRoleId, ApplicationUserId = lauraMaukInserted.ApplicationUserId });
 
-        var insertedapplicationUserRoles = new List<ApplicationUserRoleDto>();
-        foreach (var applicationUserRole in applicationUserRolesToCreate)
-        {
-            applicationUserRole.CurrentUser = TestConstants.CurrentUser;
-            var insertedApplicationUserRole = await _applicationUserRoleLogic.Insert(applicationUserRole, _applicationLogic, _applicationUserLogic, _roleLogic);
+    //     var insertedapplicationUserRoles = new List<ApplicationUserRoleDto>();
+    //     foreach (var applicationUserRole in applicationUserRolesToCreate)
+    //     {
+    //         applicationUserRole.CurrentUser = TestConstants.CurrentUser;
+    //         var insertedApplicationUserRole = await _applicationUserRoleLogic.Insert(applicationUserRole, _applicationLogic, _applicationUserLogic, _roleLogic);
 
-            if (insertedApplicationUserRole.Response != null)
-            {
-                insertedapplicationUserRoles.Add(insertedApplicationUserRole.Response);
-            }
-        }
+    //         if (insertedApplicationUserRole.Response != null)
+    //         {
+    //             insertedapplicationUserRoles.Add(insertedApplicationUserRole.Response);
+    //         }
+    //     }
 
-        //Create Application User Permissions
-        var appUserPermissions = insertedAppPermissions.Where(x => x.Name.Contains("App User Permission")).ToList();
-        await _applicationUserPermissionLogic.Insert(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = applicationId, ApplicationUserId = danMaukInserted.ApplicationUserId, PermissionId = appUserPermissions.FirstOrDefault(x => x.Name == "App User Permission 1").PermissionId, CurrentUser = TestConstants.CurrentUser }, _applicationLogic, _applicationUserLogic, _permissionLogic);
-        await _applicationUserPermissionLogic.Insert(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = applicationId, ApplicationUserId = danMaukInserted.ApplicationUserId, PermissionId = appUserPermissions.FirstOrDefault(x => x.Name == "App User Permission 2").PermissionId, CurrentUser = TestConstants.CurrentUser }, _applicationLogic, _applicationUserLogic, _permissionLogic);
-    }
+    //     //Create Application User Permissions
+    //     var appUserPermissions = insertedAppPermissions.Where(x => x.Name.Contains("App User Permission")).ToList();
+    //     await _applicationUserPermissionLogic.Insert(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = applicationId, ApplicationUserId = danMaukInserted.ApplicationUserId, PermissionId = appUserPermissions.FirstOrDefault(x => x.Name == "App User Permission 1").PermissionId, CurrentUser = TestConstants.CurrentUser }, _applicationLogic, _applicationUserLogic, _permissionLogic);
+    //     await _applicationUserPermissionLogic.Insert(new InsertUpdateApplicationUserPermissionRequest { Active = true, ApplicationId = applicationId, ApplicationUserId = danMaukInserted.ApplicationUserId, PermissionId = appUserPermissions.FirstOrDefault(x => x.Name == "App User Permission 2").PermissionId, CurrentUser = TestConstants.CurrentUser }, _applicationLogic, _applicationUserLogic, _permissionLogic);
+    // }
 
     private async Task<List<ApplicationDto>> CreateTestApplications()
     {
@@ -651,71 +652,71 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         return ret;
     }
 
-    private async Task<List<ApplicationUserDto>> CreateTestApplicationUsers(List<ApplicationDto> applications)
-    {
-        var ret = new List<ApplicationUserDto>();
+    // private async Task<List<ApplicationUserDto>> CreateTestApplicationUsers(List<ApplicationDto> applications)
+    // {
+    //     var ret = new List<ApplicationUserDto>();
 
-        var applicationUsersToCreate = new List<InsertUpdateApplicationUserRequest>();
+    //     var applicationUsersToCreate = new List<InsertUpdateApplicationUserRequest>();
 
-        //Commission Calculator Test Application
-        var commissionCalculatorAppId = applications.FirstOrDefault(x => x.Name == "Commission Calculator")?.ApplicationId;
-        if (commissionCalculatorAppId != null)
-        {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)commissionCalculatorAppId, Email = "alice.johnson@test.com", FirstName = "Alice", LastName = "Johnson", DateOfBirth = new DateTime(1990, 3, 15) });
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)commissionCalculatorAppId, Email = "bob.smith@test.com", FirstName = "Bob", LastName = "Smith", DateOfBirth = new DateTime(1985, 7, 22) });
-        }
+    //     //Commission Calculator Test Application
+    //     var commissionCalculatorAppId = applications.FirstOrDefault(x => x.Name == "Commission Calculator")?.ApplicationId;
+    //     if (commissionCalculatorAppId != null)
+    //     {
+    //         applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)commissionCalculatorAppId, Email = "alice.johnson@test.com", FirstName = "Alice", LastName = "Johnson", DateOfBirth = new DateTime(1990, 3, 15) });
+    //         applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)commissionCalculatorAppId, Email = "bob.smith@test.com", FirstName = "Bob", LastName = "Smith", DateOfBirth = new DateTime(1985, 7, 22) });
+    //     }
 
-        //Payroll Processing Test Application
-        var payrollProcessingAppId = applications.FirstOrDefault(x => x.Name == "Payroll Processing")?.ApplicationId;
-        if (payrollProcessingAppId != null)
-        {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)payrollProcessingAppId, Email = "carol.white@test.com", FirstName = "Carol", LastName = "White", DateOfBirth = new DateTime(1992, 11, 5) });
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = false, ApplicationId = (int)payrollProcessingAppId, Email = "dan.brown@test.com", FirstName = "Dan", LastName = "Brown", DateOfBirth = new DateTime(1978, 4, 30) });
-        }
+    //     //Payroll Processing Test Application
+    //     var payrollProcessingAppId = applications.FirstOrDefault(x => x.Name == "Payroll Processing")?.ApplicationId;
+    //     if (payrollProcessingAppId != null)
+    //     {
+    //         applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)payrollProcessingAppId, Email = "carol.white@test.com", FirstName = "Carol", LastName = "White", DateOfBirth = new DateTime(1992, 11, 5) });
+    //         applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = false, ApplicationId = (int)payrollProcessingAppId, Email = "dan.brown@test.com", FirstName = "Dan", LastName = "Brown", DateOfBirth = new DateTime(1978, 4, 30) });
+    //     }
 
-        //Invoice Manager Test Application
-        var invoiceManagerAppId = applications.FirstOrDefault(x => x.Name == "Invoice Manager")?.ApplicationId;
-        if (invoiceManagerAppId != null)
-        {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)invoiceManagerAppId, Email = "eve.davis@test.com", FirstName = "Eve", LastName = "Davis", DateOfBirth = new DateTime(1995, 9, 18) });
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)invoiceManagerAppId, Email = "frank.miller@test.com", FirstName = "Frank", LastName = "Miller", DateOfBirth = null });
-        }
+    //     //Invoice Manager Test Application
+    //     var invoiceManagerAppId = applications.FirstOrDefault(x => x.Name == "Invoice Manager")?.ApplicationId;
+    //     if (invoiceManagerAppId != null)
+    //     {
+    //         applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)invoiceManagerAppId, Email = "eve.davis@test.com", FirstName = "Eve", LastName = "Davis", DateOfBirth = new DateTime(1995, 9, 18) });
+    //         applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)invoiceManagerAppId, Email = "frank.miller@test.com", FirstName = "Frank", LastName = "Miller", DateOfBirth = null });
+    //     }
 
-        //Analytics Dashboard Test Application
-        var analyticsDashboardAppId = applications.FirstOrDefault(x => x.Name == "Analytics Dashboard")?.ApplicationId;
-        if (analyticsDashboardAppId != null)
-        {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)analyticsDashboardAppId, Email = "grace.wilson@test.com", FirstName = "Grace", LastName = "Wilson", DateOfBirth = new DateTime(1988, 1, 25) });
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = false, ApplicationId = (int)analyticsDashboardAppId, Email = "henry.moore@test.com", FirstName = "Henry", LastName = "Moore", DateOfBirth = new DateTime(1970, 6, 12) });
-        }
+    //     //Analytics Dashboard Test Application
+    //     var analyticsDashboardAppId = applications.FirstOrDefault(x => x.Name == "Analytics Dashboard")?.ApplicationId;
+    //     if (analyticsDashboardAppId != null)
+    //     {
+    //         applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)analyticsDashboardAppId, Email = "grace.wilson@test.com", FirstName = "Grace", LastName = "Wilson", DateOfBirth = new DateTime(1988, 1, 25) });
+    //         applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = false, ApplicationId = (int)analyticsDashboardAppId, Email = "henry.moore@test.com", FirstName = "Henry", LastName = "Moore", DateOfBirth = new DateTime(1970, 6, 12) });
+    //     }
 
-        //User Access Portal Test Application
-        var userAccessPortalAppId = applications.FirstOrDefault(x => x.Name == "User Access Portal")?.ApplicationId;
-        if (userAccessPortalAppId != null)
-        {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)userAccessPortalAppId, Email = "irene.taylor@test.com", FirstName = "Irene", LastName = "Taylor", DateOfBirth = new DateTime(1993, 8, 8) });
-        }
+    //     //User Access Portal Test Application
+    //     var userAccessPortalAppId = applications.FirstOrDefault(x => x.Name == "User Access Portal")?.ApplicationId;
+    //     if (userAccessPortalAppId != null)
+    //     {
+    //         applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)userAccessPortalAppId, Email = "irene.taylor@test.com", FirstName = "Irene", LastName = "Taylor", DateOfBirth = new DateTime(1993, 8, 8) });
+    //     }
 
-        //Audit Log Viewer Test Application
-        var auditLogViewerAppId = applications.FirstOrDefault(x => x.Name == "Audit Log Viewer")?.ApplicationId;
-        if (auditLogViewerAppId != null)
-        {
-            applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)auditLogViewerAppId, Email = "jack.anderson@test.com", FirstName = null, LastName = null, DateOfBirth = null });
-        }
+    //     //Audit Log Viewer Test Application
+    //     var auditLogViewerAppId = applications.FirstOrDefault(x => x.Name == "Audit Log Viewer")?.ApplicationId;
+    //     if (auditLogViewerAppId != null)
+    //     {
+    //         applicationUsersToCreate.Add(new InsertUpdateApplicationUserRequest { Active = true, ApplicationId = (int)auditLogViewerAppId, Email = "jack.anderson@test.com", FirstName = null, LastName = null, DateOfBirth = null });
+    //     }
 
-        foreach (var applicationUser in applicationUsersToCreate)
-        {
-            applicationUser.CurrentUser = TestConstants.CurrentUser;
-            var insertedAppUser = await _applicationUserLogic.Insert(applicationUser, _applicationLogic);
+    //     foreach (var applicationUser in applicationUsersToCreate)
+    //     {
+    //         applicationUser.CurrentUser = TestConstants.CurrentUser;
+    //         var insertedAppUser = await _applicationUserLogic.Insert(applicationUser, _applicationLogic);
 
-            if (insertedAppUser.Response != null)
-            {
-                ret.Add(insertedAppUser.Response);
-            }
-        }
+    //         if (insertedAppUser.Response != null)
+    //         {
+    //             ret.Add(insertedAppUser.Response);
+    //         }
+    //     }
 
-        return ret;
-    }
+    //     return ret;
+    // }
 
     private async Task<List<PermissionDto>> CreateTestPermissions(List<ApplicationDto> applications)
     {

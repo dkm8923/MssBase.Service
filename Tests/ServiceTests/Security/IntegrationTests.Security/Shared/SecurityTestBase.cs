@@ -51,8 +51,6 @@ using Contract.Security.User;
 using Dto.Security.User.Logic;
 using Dto.Security.User;
 using Logic.Security.Validators.User;
-using UserChangePasswordRequestValidator = Logic.Security.Validators.User.ChangePasswordRequestValidator;
-using ApplicationUserChangePasswordRequestValidator = Logic.Security.Validators.ApplicationUser.ChangePasswordRequestValidator;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -143,7 +141,6 @@ public class SecurityTestBase
                 await dbContext.Permissions.ExecuteDeleteAsync();
                 await dbContext.UserLogins.ExecuteDeleteAsync();
                 await dbContext.Users.ExecuteDeleteAsync();
-                await dbContext.ApplicationUserLogins.ExecuteDeleteAsync();
                 await dbContext.ApplicationUsers.ExecuteDeleteAsync();
                 await dbContext.Applications.ExecuteDeleteAsync();
                 await dbContext.AuditLogs.ExecuteDeleteAsync();
@@ -681,16 +678,16 @@ public class SecurityTestBase
         var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
         ret.ActiveApplications.Add(application);
 
-        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
-        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
+        var activeReadOnlyApplication = (await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1)).First();
+        var activeReadOnlyUser = (await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1)).First();
+
+        var inactiveReadOnlyApplication = (await _securityTestUtilities.Application.CreateInactiveReadOnlyTestRecords(1)).First();
+        var inactiveReadOnlyUser = (await _securityTestUtilities.User.CreateInactiveReadOnlyTestRecords(1)).First();
+
+        ret.ActiveApplicationUsers.Add(await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecord(activeReadOnlyApplication.ApplicationId, activeReadOnlyUser.UserId));
+        ret.InactiveApplicationUsers.Add(await _securityTestUtilities.ApplicationUser.CreateInactiveReadOnlyTestRecord(inactiveReadOnlyApplication.ApplicationId, inactiveReadOnlyUser.UserId));
 
         return ret;
-    }
-
-    protected async Task<ErrorValidationResult> ArrangeApplicationUserPasswordChangeHistoryTestData(int applicationUserId)
-    {
-        var passwordChangeResponse = await _applicationUserLogic.ChangePassword(new Dto.Security.ApplicationUser.ChangePasswordRequest { ApplicationUserId = applicationUserId, NewPassword = TestConstants.DefaultTestUserPassword + "1", CurrentUser = TestConstants.CurrentUser });
-        return passwordChangeResponse;
     }
 
     protected async Task<SecurityTestData> ArrangeApplicationUserTestDataWithRelatedData()
@@ -863,7 +860,10 @@ public class SecurityTestBase
         var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
         ret.ActiveApplications.Add(application);
         
-        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+        var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+        ret.ActiveUsers.Add(user);
+
+        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
         var activePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1);
         var inactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId, 1);
 
@@ -900,7 +900,10 @@ public class SecurityTestBase
         var application = (await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1)).First();
         ret.ActiveApplications.Add(application);
         
-        var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId)).First();
+        var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+        ret.ActiveUsers.Add(user);
+
+        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecord(application.ApplicationId, user.UserId);
         var activePermissions = await _securityTestUtilities.Permission.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
         var inactivePermissions = await _securityTestUtilities.Permission.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
 
@@ -937,7 +940,10 @@ public class SecurityTestBase
         var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
         ret.ActiveApplications.Add(application);
         
-        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+        var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+        ret.ActiveUsers.Add(user);
+
+        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
         var activeRoles = await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1);
         var inactiveRoles = await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId, 1);
 
@@ -974,7 +980,10 @@ public class SecurityTestBase
         var application = (await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1)).First();
         ret.ActiveApplications.Add(application);
         
-        var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId)).First();
+        var user = (await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1)).First();
+        ret.ActiveUsers.Add(user);
+
+        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecord(application.ApplicationId, user.UserId);
         var activeRoles = await _securityTestUtilities.Role.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
         var inactiveRoles = await _securityTestUtilities.Role.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
 
@@ -1306,7 +1315,7 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterUserLogicRequest>, FilterUserLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateUserRequest>, InsertUpdateUserRequestValidator>();
-        services.AddTransient<IValidator<Dto.Security.User.ChangePasswordRequest>, UserChangePasswordRequestValidator>();
+        services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
 
         #endregion
 
@@ -1318,8 +1327,7 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateUserRequest>, InsertUpdateUserRequestValidator>();
-        services.AddTransient<IValidator<Dto.Security.ApplicationUser.ChangePasswordRequest>, ApplicationUserChangePasswordRequestValidator>();
-
+        
         #endregion
 
         #region ApplicationUserPermission

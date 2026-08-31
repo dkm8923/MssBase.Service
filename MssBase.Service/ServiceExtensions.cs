@@ -204,7 +204,6 @@ namespace MssBase.Service
                 services.AddSingleton<ILoggerService, LoggerService>();
             }
         }
-
         public static void ConfigureCommonService(this IServiceCollection services, WebApplicationBuilder builder)
         {
             services.Configure<CommonConnectionStrings>(builder.Configuration.GetSection("CommonConnectionStrings"));
@@ -246,7 +245,7 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterUserLogicRequest>, FilterUserLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateUserRequest>, InsertUpdateUserRequestValidator>();
-            services.AddTransient<IValidator<Dto.Security.User.ChangePasswordRequest>, Logic.Security.Validators.User.ChangePasswordRequestValidator>();
+            services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
 
             #endregion
 
@@ -258,8 +257,7 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
-            services.AddTransient<IValidator<Dto.Security.ApplicationUser.ChangePasswordRequest>, Logic.Security.Validators.ApplicationUser.ChangePasswordRequestValidator>();
-
+            
             #endregion
 
             #region ApplicationUserPermission
