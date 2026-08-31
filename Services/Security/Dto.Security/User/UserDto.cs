@@ -21,7 +21,6 @@ namespace Dto.Security.User
         public DateTime? LastPasswordChangeDate { get; set; }
         public DateTime? LastLockoutDate { get; set; }
         public short? FailedPasswordAttemptCount { get; set; }
-        public int ApplicationId { get; set; }
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IEnumerable<ApplicationUserPermissionDto> ApplicationUserPermissions { get; set; }

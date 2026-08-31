@@ -167,7 +167,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
         return new Dictionary<string, List<string>>
         {
             { "ApplicationId", new List<string> { "ApplicationId is a required field!" } },
-            { "ApplicationUserId", new List<string> { "ApplicationUserId is a required field!" } },
             { "UserId", new List<string> { "UserId is a required field!" } },
             { "CurrentUser", new List<string> { "CurrentUser is a required field!" } }
         };

@@ -259,8 +259,8 @@ namespace Logic.Security.Logic
                 
                 if (entity != null)
                 {
-                    // dbContext.UserLogChangePasswords.RemoveRange(dbContext.UserLogChangePasswords.Where(log => log.UserId == userId));
-                    // dbContext.UserLogLogins.RemoveRange(dbContext.UserLogLogins.Where(log => log.UserId == userId));
+                    dbContext.UserLogChangePasswords.RemoveRange(dbContext.UserLogChangePasswords.Where(log => log.UserId == userId));
+                    dbContext.UserLogLogins.RemoveRange(dbContext.UserLogLogins.Where(log => log.UserId == userId));
                     dbContext.UserLogins.RemoveRange(dbContext.UserLogins.Where(login => login.UserId == userId));
 
                     await LogDelete(dbContext, entity, currentUser);

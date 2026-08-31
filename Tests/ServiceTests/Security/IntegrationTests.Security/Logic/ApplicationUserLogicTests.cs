@@ -80,7 +80,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetAll_Should_Return_Related_Active_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
 
             // Act
             var result = await _applicationUserLogic.GetAll(new BaseLogicGet { IncludeRelated = true });
@@ -98,7 +98,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
 
             // Act
             var result = await _applicationUserLogic.GetAll(new BaseLogicGet { IncludeRelated = true, IncludeInactive = true });
@@ -139,7 +139,7 @@ namespace IntegrationTests.Security.Logic
             
             var application = (await _securityTestUtilities.Application.CreateActiveTestRecords(1)).FirstOrDefault();
             var user =  (await _securityTestUtilities.User.CreateActiveTestRecords(1)).FirstOrDefault();
-            var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, user.UserId, 1)).FirstOrDefault();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecord(application.ApplicationId, user.UserId);
 
             // Act
             var result = await _applicationUserLogic.GetAll(new BaseLogicGet { IncludeReadOnly = true });
@@ -254,7 +254,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetById_Should_Return_Related_Active_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
             var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();  
 
             // Act
@@ -271,7 +271,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_GetById_Should_Return_Related_Inactive_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
             var testRecord = arrangeTestDataResponse.InactiveApplicationUsers.FirstOrDefault();  
 
             // Act
@@ -281,14 +281,14 @@ namespace IntegrationTests.Security.Logic
             result.Response.Should().NotBeNull();
             result.Response.Active.Should().BeFalse();
 
-            _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(result.Response, includeInactive: false); 
+            _securityTestUtilities.ApplicationUser.VerifyIncludeRelatedDataOnApplicationUser(result.Response, includeInactive: true); 
         }
 
         [Fact]
         public async Task Default_GetById_Should_Not_Return_Related_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
             var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();  
 
             // Act
@@ -581,7 +581,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Return_Related_Active_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
 
             var postReq = new FilterApplicationUserLogicRequest { IncludeRelated = true };
 
@@ -602,7 +602,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Filter_Should_Return_Related_Inactive_Data()
         {
             // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
+            var arrangeTestDataResponse = await ArrangeApplicationUserTestDataWithRelatedData();
 
             var postReq = new FilterApplicationUserLogicRequest { IncludeRelated = true, IncludeInactive = true };
 

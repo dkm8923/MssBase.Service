@@ -123,7 +123,7 @@ public class AuthenticationLogic : IAuthenticationLogic
 
         if (_authenticationSettingsConfigMonitor.CurrentValue.LogSuccessfulAuthentication)
         {
-            await _logSuccessfulLogin(userWithRelatedData.Response, jwtToken, refreshToken);
+            await _logSuccessfulLogin(userWithRelatedData.Response, applicationRes.ApplicationId, jwtToken, refreshToken);
         }
         
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
@@ -437,12 +437,13 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
     }
 
-    private async Task _logSuccessfulLogin(UserDto user, string authToken, string refreshToken)
+    private async Task _logSuccessfulLogin(UserDto user, int applicationId, string authToken, string refreshToken)
     {
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
             dbContext.UserLogLogins.Add(new UserLogLogin { 
-                ApplicationId = user.ApplicationId, 
+                ApplicationId = applicationId,
+                UserId = user.UserId, 
                 AuthToken = authToken, 
                 RefreshToken = refreshToken, 
                 CreatedBy = user.Email, 

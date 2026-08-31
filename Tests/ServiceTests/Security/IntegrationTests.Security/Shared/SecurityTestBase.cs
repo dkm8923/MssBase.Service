@@ -119,15 +119,12 @@ public class SecurityTestBase
                     DELETE FROM [RolePermission];
                     DELETE FROM [Role];
                     DELETE FROM [Permission];
+                    DELETE FROM [ApplicationUser];
                     DELETE FROM [User_Log_Login];
                     DELETE FROM [User_Log_ChangePassword]
                     DELETE FROM [UserLogin];
-                    DELETE FROM [User];
-                    DELETE FROM [ApplicationUser_Log_Login];
-                    DELETE FROM [ApplicationUser_Log_ChangePassword];
-                    DELETE FROM [ApplicationUserLogin];
-                    DELETE FROM [ApplicationUser];
                     DELETE FROM [Application];
+                    DELETE FROM [User];
                     DELETE FROM [AuditLog];
                 ";
                 await dbContext.Database.ExecuteSqlRawAsync(query);
@@ -139,10 +136,10 @@ public class SecurityTestBase
                 await dbContext.RolePermissions.ExecuteDeleteAsync();
                 await dbContext.Roles.ExecuteDeleteAsync();
                 await dbContext.Permissions.ExecuteDeleteAsync();
-                await dbContext.UserLogins.ExecuteDeleteAsync();
-                await dbContext.Users.ExecuteDeleteAsync();
                 await dbContext.ApplicationUsers.ExecuteDeleteAsync();
                 await dbContext.Applications.ExecuteDeleteAsync();
+                await dbContext.UserLogins.ExecuteDeleteAsync();
+                await dbContext.Users.ExecuteDeleteAsync();
                 await dbContext.AuditLogs.ExecuteDeleteAsync();
             }
         }
@@ -573,7 +570,9 @@ public class SecurityTestBase
 
         foreach (var activeApplication in ret.ActiveApplications)
         {
-            ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(activeApplication.ApplicationId, 1);
+            var activeUser = (await _securityTestUtilities.User.CreateActiveTestRecords(1)).First();
+            ret.ActiveUsers.Add(activeUser);
+            ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(activeApplication.ApplicationId, activeUser.UserId, 1);
             ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(activeApplication.ApplicationId);
             ret.ActiveRoles = await _securityTestUtilities.Role.CreateActiveTestRecords(activeApplication.ApplicationId, 1);
 
@@ -599,7 +598,9 @@ public class SecurityTestBase
 
         foreach (var inactiveApplication in ret.InactiveApplications)
         {
-            ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(inactiveApplication.ApplicationId, 1);
+            var inactiveUser = (await _securityTestUtilities.User.CreateActiveTestRecords(1)).First();
+            ret.InactiveUsers.Add(inactiveUser);
+            ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(inactiveApplication.ApplicationId, inactiveUser.UserId, 1);
             ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(inactiveApplication.ApplicationId, 1);
             ret.InactiveRoles = await _securityTestUtilities.Role.CreateInactiveTestRecords(inactiveApplication.ApplicationId, 1);
 
@@ -631,6 +632,7 @@ public class SecurityTestBase
         // Arrange
         var ret = new SecurityTestData();
         await ClearAllSecurityTestTableData();
+        ret.ActiveApplications = await _securityTestUtilities.Application.CreateActiveTestRecords(1);
         ret.ActiveUsers = await _securityTestUtilities.User.CreateActiveTestRecords(1);
         ret.InactiveUsers = await _securityTestUtilities.User.CreateInactiveTestRecords(1);
 
@@ -659,12 +661,18 @@ public class SecurityTestBase
         // Arrange
         var ret = new SecurityTestData();
         await ClearAllSecurityTestTableData();
+        
         var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-
         ret.ActiveApplications.Add(application);
 
-        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1);
-        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, 1);
+        var activeUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+        ret.ActiveUsers.Add(activeUser);
+
+        var inactiveUser = await _securityTestUtilities.User.CreateSingleUserTestRecord(false);
+        ret.InactiveUsers.Add(inactiveUser);
+
+        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, activeUser.UserId, 1);
+        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, inactiveUser.UserId, 1);
 
         return ret;
     }
@@ -695,12 +703,18 @@ public class SecurityTestBase
         // Arrange
         var ret = new SecurityTestData();
         await ClearAllSecurityTestTableData();
-        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
         
+        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
         ret.ActiveApplications.Add(application);
 
-        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1);
-        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, 1);
+        var activeUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+        ret.ActiveUsers.Add(activeUser);
+
+        var inactiveUser = await _securityTestUtilities.User.CreateSingleUserTestRecord(false);
+        ret.InactiveUsers.Add(inactiveUser);
+
+        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, activeUser.UserId, 1);
+        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, inactiveUser.UserId, 1);
 
         ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1);
         ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId, 1);
@@ -1326,7 +1340,7 @@ public class SecurityTestBase
 
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
-        services.AddTransient<IValidator<InsertUpdateUserRequest>, InsertUpdateUserRequestValidator>();
+        services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
         
         #endregion
 
