@@ -1,8 +1,8 @@
 using Contract.Security.Application;
 using Contract.Security.ApplicationUser;
+using Contract.Security.User;
 using Dto.Security.ApplicationUser;
 using Dto.Security.ApplicationUser.Service;
-using Dto.Security.Authentication;
 using Shared.Contracts;
 using Shared.Models;
 using Shared.Models.Dtos;
@@ -15,12 +15,21 @@ namespace Service.Security.Service
         private readonly string cacheKeySectionName = ICacheService.ApplicationUserService;
         private readonly IApplicationLogic _applicationLogic;
         private readonly IApplicationUserLogic _applicationUserLogic;
+        private readonly IUserLogic _userLogic;
+        private readonly IApplicationUserLogic _applicationUserUserLogic;
         private readonly ICacheService _cacheService;
 
-        public ApplicationUserService(IApplicationLogic applicationLogic, IApplicationUserLogic applicationUserLogic, ICacheService cacheService)
+        public ApplicationUserService(IApplicationLogic applicationLogic,
+                                                IApplicationUserLogic applicationUserLogic,
+                                                IUserLogic userLogic,
+                                                IApplicationUserLogic applicationUserUserLogic, 
+                                                ICacheService cacheService
+                                               )
         {
             _applicationLogic = applicationLogic;
             _applicationUserLogic = applicationUserLogic;
+            _userLogic = userLogic;
+            _applicationUserUserLogic = applicationUserUserLogic;
             _cacheService = cacheService;
         }
 
@@ -29,25 +38,19 @@ namespace Service.Security.Service
         public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> GetAll(BaseServiceGet req, CancellationToken cancellationToken = default)
         {
             var cacheKeyName = CacheUtilities.CreateGetAllCacheKey(cacheKeySectionName, req.IncludeInactive, req.IncludeRelated, req.IncludeReadOnly);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.GetAll(req, cancellationToken));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserUserLogic.GetAll(req, cancellationToken));
         }
 
         public async Task<ErrorValidationResult<ApplicationUserDto>> GetById(int applicationUserId, BaseServiceGet req, CancellationToken cancellationToken = default)
         {
             var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName, applicationUserId, req.IncludeInactive, req.IncludeRelated, req.IncludeReadOnly);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.GetById(applicationUserId, req, cancellationToken));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserUserLogic.GetById(applicationUserId, req, cancellationToken));
         }
 
-        public async Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByApplicationUserId(int applicationUserId, BaseServiceGet req, CancellationToken cancellationToken = default)
+        public async Task<ErrorValidationResult<IEnumerable<AuditLogDto>>> GetAuditLogsByApplicationUserId(int applicationUserUserId, BaseServiceGet req, CancellationToken cancellationToken = default)
         {
-            var cacheKeyName = CacheUtilities.CreateGetAuditLogByIdCacheKey(cacheKeySectionName, applicationUserId);
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.GetAuditLogsByApplicationUserId(applicationUserId, cancellationToken));
-        }
-
-        public async Task<ErrorValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>> GetPasswordChangeHistoryByApplicationUserId(int applicationUserId, bool deleteCache = false, CancellationToken cancellationToken = default)
-        {
-            var cacheKeyName = CacheUtilities.CreateGetByIdCacheKey(cacheKeySectionName + "_PasswordChangeHistory", applicationUserId);
-            return await _cacheService.GetByKeyAsync(deleteCache, cacheKeyName, () => _applicationUserLogic.GetPasswordChangeHistoryByApplicationUserId(applicationUserId, cancellationToken));
+            var cacheKeyName = CacheUtilities.CreateGetAuditLogByIdCacheKey(cacheKeySectionName, applicationUserUserId);
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserUserLogic.GetAuditLogsByApplicationUserId(applicationUserUserId, cancellationToken));
         }
 
         public async Task<ErrorValidationResult<IEnumerable<ApplicationUserDto>>> Filter(FilterApplicationUserServiceRequest req, CancellationToken cancellationToken = default)
@@ -56,13 +59,9 @@ namespace Service.Security.Service
             var createdOnKey = CacheUtilities.CreateKeyFromDateOnly(req.CreatedOnDate);
             var updatedByKey = CacheUtilities.CreateKeyFromString(req.UpdatedBy);
             var updatedOnKey = CacheUtilities.CreateKeyFromDateOnly(req.UpdatedOnDate);
-            var applicationUserIdsKey = (req.ApplicationUserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString();
-            var emailKey = CacheUtilities.CreateKeyFromString(req.Email);
-            var firstNameKey = CacheUtilities.CreateKeyFromString(req.FirstName);
-            var lastNameKey = CacheUtilities.CreateKeyFromString(req.LastName);
-            //var dateOfBirthKey = CacheUtilities.CreateKeyFromString(req.DateOfBirth.ToString());
-            var dateOfBirthKey = "0"; //TODO: Make this work, should be DateOnly
-            var applicationIdKey = (req.ApplicationId ?? 0).ToString();
+            var applicationUserUserIdsKey = (req.ApplicationUserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString();
+            var applicationIdKey = CacheUtilities.CreateKeyFromInt(req.ApplicationId);
+            var userIdKey = CacheUtilities.CreateKeyFromInt(req.UserId);
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
             var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
             var includeReadOnlyKey = CacheUtilities.CreateKeyFromBool(req.IncludeReadOnly);
@@ -72,18 +71,15 @@ namespace Service.Security.Service
                 ,createdOnKey
                 ,updatedByKey
                 ,updatedOnKey
-                ,applicationUserIdsKey
-                ,emailKey
-                ,firstNameKey
-                ,lastNameKey
-                ,dateOfBirthKey
+                ,applicationUserUserIdsKey
                 ,applicationIdKey
+                ,userIdKey
                 ,includeInactiveKey
                 ,includeRelatedKey
                 ,includeReadOnlyKey
             });
 
-            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserLogic.Filter(req, cancellationToken));
+            return await _cacheService.GetByKeyAsync(req.DeleteCache, cacheKeyName, () => _applicationUserUserLogic.Filter(req, cancellationToken));
         }
 
         #endregion
@@ -94,7 +90,7 @@ namespace Service.Security.Service
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _applicationUserLogic.Insert(req, _applicationLogic);
+            return await _applicationUserUserLogic.Insert(req, _applicationLogic, _applicationUserLogic, _userLogic);
         }
 
         #endregion
@@ -105,7 +101,7 @@ namespace Service.Security.Service
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _applicationUserLogic.Update(applicationUserId, req, _applicationLogic);
+            return await _applicationUserUserLogic.Update(applicationUserId, req, _applicationLogic, _applicationUserLogic, _userLogic);
         }
 
         #endregion
@@ -116,19 +112,9 @@ namespace Service.Security.Service
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
-            return await _applicationUserLogic.Delete(applicationUserId, currentUser);
+            return await _applicationUserUserLogic.Delete(applicationUserId, currentUser);
         }
 
         #endregion
-
-        public async Task<ErrorValidationResult<ResetPasswordResponse>> ResetPassword(int applicationUserId)
-        {
-            return await _applicationUserLogic.ResetPassword(applicationUserId);
-        }
-
-        public async Task<ErrorValidationResult> ChangePassword(ChangePasswordRequest req)
-        {
-            return await _applicationUserLogic.ChangePassword(req);
-        }
     }
 }

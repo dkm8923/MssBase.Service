@@ -14,8 +14,6 @@ namespace Data.Security.Converters
                 return null;
             }
 
-            var applicationUserLogin = source.ApplicationUserLogin != null ? source.ApplicationUserLogin : new ApplicationUserLogin();
-
             var target = new ApplicationUserDto
             {
                 ApplicationUserId = source.ApplicationUserId,
@@ -25,16 +23,7 @@ namespace Data.Security.Converters
                 CreatedOn = source.CreatedOn,
                 UpdatedBy = source.UpdatedBy,
                 UpdatedOn = source.UpdatedOn,
-                Email = source.Email,
-                FirstName = source.FirstName,
-                LastName = source.LastName,
-                DateOfBirth = source.DateOfBirth,
-                Password = applicationUserLogin.Password,
-                PasswordResetRequired = applicationUserLogin.PasswordResetRequired,
-                LastLoginDate = applicationUserLogin.LastLoginDate,
-                LastPasswordChangeDate = applicationUserLogin.LastPasswordChangeDate,
-                LastLockoutDate = applicationUserLogin.LastLockoutDate,
-                FailedPasswordAttemptCount = applicationUserLogin.FailedPasswordAttemptCount,
+                UserId = source.UserId,
                 ApplicationId = source.ApplicationId
             };
 
@@ -51,17 +40,6 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static ApplicationUserDto ToDtoWithoutPassword(this ApplicationUser source)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            source.Password = null;
-            return source.ToDto();
-        }
-
         public static async Task<List<ApplicationUserDto>> ToDtos(this IQueryable<ApplicationUser> source, CancellationToken cancellationToken = default)
         {
             if (source == null)
@@ -70,18 +48,6 @@ namespace Data.Security.Converters
             }
 
             var target = await source.Select(src => src.ToDto()).ToListAsync(cancellationToken);
-
-            return target;
-        }
-
-        public static async Task<List<ApplicationUserDto>> ToDtosWithoutPassword(this IQueryable<ApplicationUser> source, CancellationToken cancellationToken = default)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            var target = await source.Select(src => src.ToDtoWithoutPassword()).ToListAsync(cancellationToken);
 
             return target;
         }
@@ -96,10 +62,7 @@ namespace Data.Security.Converters
             var target = new ApplicationUser
             {
                 Active = source.Active,
-                Email = source.Email,
-                FirstName = source.FirstName,
-                LastName = source.LastName,
-                DateOfBirth = source.DateOfBirth,
+                UserId = source.UserId,
                 ApplicationId = source.ApplicationId,
                 CurrentUser = source.CurrentUser
             };
@@ -115,10 +78,7 @@ namespace Data.Security.Converters
             }
 
             entity.Active = source.Active;
-            entity.Email = source.Email;
-            entity.FirstName = source.FirstName;
-            entity.LastName = source.LastName;
-            entity.DateOfBirth = source.DateOfBirth;
+            entity.UserId = source.UserId;
             entity.ApplicationId = source.ApplicationId;
             entity.CurrentUser = source.CurrentUser;
 

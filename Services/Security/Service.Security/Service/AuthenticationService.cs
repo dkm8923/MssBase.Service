@@ -1,6 +1,6 @@
 using Contract.Security.Authentication;
 using Dto.Security.Authentication;
-using Contract.Security.ApplicationUser;
+using Contract.Security.User;
 using Contract.Security.Application;
 using Shared.Models;
 
@@ -9,24 +9,24 @@ namespace Service.Security.Service;
 public class AuthenticationService : IAuthenticationService
 {
     private readonly IAuthenticationLogic _authenticationLogic;
-    private readonly IApplicationUserLogic _applicationUserLogic;
+    private readonly IUserLogic _userLogic;
     private readonly IApplicationLogic _applicationLogic;
 
-    public AuthenticationService(IAuthenticationLogic authenticationLogic, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic)
+    public AuthenticationService(IAuthenticationLogic authenticationLogic, IUserLogic userLogic, IApplicationLogic applicationLogic)
     {
         _authenticationLogic = authenticationLogic;
-        _applicationUserLogic = applicationUserLogic;
+        _userLogic = userLogic;
         _applicationLogic = applicationLogic;
     }
 
     public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req)
     {
-        return await _authenticationLogic.Authenticate(req, _applicationUserLogic, _applicationLogic);
+        return await _authenticationLogic.Authenticate(req, _userLogic, _applicationLogic);
     }
     
     public async Task<ErrorValidationResult<AuthenticationResponse>> RefreshToken(RefreshTokenRequest req)
     {
-        return await _authenticationLogic.RefreshToken(req, _applicationUserLogic, _applicationLogic);
+        return await _authenticationLogic.RefreshToken(req, _userLogic, _applicationLogic);
     }
 
     public async Task<ErrorValidationResult> RevokeToken(RevokeTokenRequest req)
@@ -36,6 +36,6 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotPassword(ForgotPasswordRequest req)
     {
-        return await _authenticationLogic.ForgotPassword(req, _applicationUserLogic);
+        return await _authenticationLogic.ForgotPassword(req, _userLogic);
     }
 }

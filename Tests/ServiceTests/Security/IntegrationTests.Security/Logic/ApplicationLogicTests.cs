@@ -1037,9 +1037,10 @@ namespace IntegrationTests.Security.Logic
             expectedFieldErrors = expectedFieldErrors.Where(x => x.Key == "ApplicationUsers").ToDictionary();
 
             var testRecord = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-
+            var testUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+            
             //create test application user
-            await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(testRecord.ApplicationId);
+            await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(testRecord.ApplicationId, testUser.UserId);
             
             // Act
             var result = await _applicationLogic.Delete(testRecord.ApplicationId, TestConstants.CurrentUser);

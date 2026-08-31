@@ -5,7 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
-using Contract.Security.ApplicationUser;
+using Contract.Security.User;
 using FluentValidation;
 using Shared.Models;
 using FluentValidation.Results;
@@ -15,13 +15,14 @@ using Data.Security;
 using Microsoft.EntityFrameworkCore;
 using Contract.Security;
 using Shared.Logic.Common;
-using Dto.Security.ApplicationUser.Logic;
-using Dto.Security.ApplicationUser;
+using Dto.Security.User.Logic;
+using Dto.Security.User;
 using System.Text.Json;
 using Dto.Security.Application.Logic;
 using Dto.Security.Application;
 using System.Security.Cryptography;
 using Data.Security.Models;
+using static Shared.Logic.Common.Constants;
 
 namespace Logic.Security.Logic;
 
@@ -61,7 +62,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         _forgotPasswordRequestValidator = forgotPasswordRequestValidator;
     }
 
-    public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic)
+    public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req, IUserLogic userLogic, IApplicationLogic applicationLogic)
     {
         var applicationRes = await _retrieveApplicationInfoForAuthentication(req, applicationLogic);
 
@@ -71,11 +72,11 @@ public class AuthenticationLogic : IAuthenticationLogic
             return errorValidationResult;
         }
 
-        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(req.Email, applicationRes.ApplicationId);
+        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(req.Email);
 
         if (userInfoRes is null)
         {
-            //user not found with that email address / application id combo
+            //user not found with that email address
             return _createInvalidCredentialsError();
         }
 
@@ -90,7 +91,7 @@ public class AuthenticationLogic : IAuthenticationLogic
 
         if (!isValidPassword)
         {
-            var failedPasswordAttemptCount = await _updateFailedPasswordAttemptLogic(userInfoRes.ApplicationUserId, applicationRes.ApplicationId);
+            var failedPasswordAttemptCount = await _updateFailedPasswordAttemptLogic(userInfoRes.UserId, applicationRes.ApplicationId);
 
             if (failedPasswordAttemptCount >= _maxFailedPasswordAttemptCount)
             {
@@ -110,25 +111,25 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
 
         //generate JWT token and return
-        var applicationUserWithRelatedData = await applicationUserLogic.GetById(userInfoRes.ApplicationUserId, new BaseLogicGet { CurrentUser = userInfoRes.Email, IncludeRelated = true });
+        var userWithRelatedData = await userLogic.GetById(userInfoRes.UserId, new BaseLogicGet { CurrentUser = userInfoRes.Email, IncludeRelated = true });
         
-        var authCredentials = _extractAuthorizationCredentialsFromApplicationUserResponse(applicationUserWithRelatedData.Response, applicationRes);
+        var authCredentials = _extractAuthorizationCredentialsFromUserResponse(userWithRelatedData.Response, applicationRes);
 
         var jwtToken = _generateJwtToken(authCredentials);
         var refreshToken = _generateRefreshToken();
     
         //successful auth occurred:
-        await _updateApplicationUserOnSuccessfulLogin(applicationUserWithRelatedData.Response.ApplicationUserId, applicationRes.ApplicationId, refreshToken);
+        await _updateUserOnSuccessfulLogin(userWithRelatedData.Response.UserId, applicationRes.ApplicationId, refreshToken);
 
         if (_authenticationSettingsConfigMonitor.CurrentValue.LogSuccessfulAuthentication)
         {
-            await _logSuccessfulLogin(applicationUserWithRelatedData.Response, jwtToken, refreshToken);
+            await _logSuccessfulLogin(userWithRelatedData.Response, jwtToken, refreshToken);
         }
         
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
     }
 
-    public async Task<ErrorValidationResult<AuthenticationResponse>> RefreshToken(RefreshTokenRequest req, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic)
+    public async Task<ErrorValidationResult<AuthenticationResponse>> RefreshToken(RefreshTokenRequest req, IUserLogic userLogic, IApplicationLogic applicationLogic)
     {
         ValidationResult result = await _refreshTokenRequestValidator.ValidateAsync(req);
         var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<AuthenticationResponse>(result);
@@ -150,7 +151,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         var applicationClaim = principal.Claims.FirstOrDefault(c => c.Type == Constants.ApplicationsClaim);
 
         var applicationRes = await _retrieveApplicationInfoForAuthentication(new AuthenticationRequest { ApplicationName = applicationClaim?.Value, Email = email }, applicationLogic);
-        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(email, applicationRes.ApplicationId);
+        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(email);
 
         if (userInfoRes is null)
         {
@@ -168,15 +169,15 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
 
         //generate JWT token and return
-        var applicationUserWithRelatedData = await applicationUserLogic.GetById(userInfoRes.ApplicationUserId, new BaseLogicGet { CurrentUser = userInfoRes.Email, IncludeRelated = true });
+        var userWithRelatedData = await userLogic.GetById(userInfoRes.UserId, new BaseLogicGet { CurrentUser = userInfoRes.Email, IncludeRelated = true });
         
-        var authCredentials = _extractAuthorizationCredentialsFromApplicationUserResponse(applicationUserWithRelatedData.Response, applicationRes);
+        var authCredentials = _extractAuthorizationCredentialsFromUserResponse(userWithRelatedData.Response, applicationRes);
 
         var jwtToken = _generateJwtToken(authCredentials);
         var refreshToken = _generateRefreshToken();
     
         //successful auth occurred, update user accordingly 
-        await _updateApplicationUserOnSuccessfulTokenRefresh(applicationUserWithRelatedData.Response.ApplicationUserId, applicationRes.ApplicationId, refreshToken);
+        await _updateUserOnSuccessfulTokenRefresh(userWithRelatedData.Response.UserId, refreshToken);
 
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
     }
@@ -194,12 +195,12 @@ public class AuthenticationLogic : IAuthenticationLogic
 
         //TODO: Do we care about this logic actually checking integrity of anything?
 
-        await _revokeApplicationUserAuthToken(req.Email);
+        await _revokeUserAuthToken(req.Email);
 
         return new ErrorValidationResult();
     }
 
-    public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotPassword(ForgotPasswordRequest req, IApplicationUserLogic applicationUserLogic)
+    public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotPassword(ForgotPasswordRequest req, IUserLogic userLogic)
     {
         ValidationResult result = await _forgotPasswordRequestValidator.ValidateAsync(req);
         var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<NotificationMessageResponse>(result);
@@ -210,7 +211,7 @@ public class AuthenticationLogic : IAuthenticationLogic
             return errorValidationResult;
         }
 
-        var userRes = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { Email = req.Email, CurrentUser = req.CurrentUser  });
+        var userRes = await userLogic.Filter(new FilterUserLogicRequest { Email = req.Email, CurrentUser = req.CurrentUser  });
 
         if (userRes.Errors.Count > 0 || userRes.Response is null || userRes.Response.Count() == 0)
         {
@@ -219,7 +220,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
 
         //reset password to a new random password and email to user
-        var resetPasswordResponse = await applicationUserLogic.ResetPassword(userRes.Response.First().ApplicationUserId);
+        var resetPasswordResponse = await userLogic.ResetPassword(userRes.Response.First().UserId);
 
         //TODO: Actually email user...
 
@@ -324,21 +325,21 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// </summary>
     /// <param name="req"></param>
     /// <returns></returns>
-    private async Task<RequiredUserInfoForAuthenticationResponse> _retrieveRequiredUserInfoForAuthentication(string email, int applicationId)
+    private async Task<RequiredUserInfoForAuthenticationResponse> _retrieveRequiredUserInfoForAuthentication(string email)
     {
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var query = dbContext.ApplicationUsers.AsQueryable().AsNoTracking().Include(aul => aul.ApplicationUserLogin);
-            var user = await query.Where(x => x.ApplicationId == applicationId && x.Email == email && x.Active)
+            var query = dbContext.Users.AsQueryable().AsNoTracking().Include(ul => ul.UserLogin);
+            var user = await query.Where(x => x.Email == email && x.Active)
                                   .Select(au => new { 
-                                    au.ApplicationUserId, 
+                                    au.UserId, 
                                     au.Email, 
-                                    au.ApplicationUserLogin.Password,
-                                    au.ApplicationUserLogin.PasswordResetRequired, 
-                                    au.ApplicationUserLogin.LastLockoutDate, 
-                                    au.ApplicationUserLogin.LastPasswordChangeDate,
-                                    au.ApplicationUserLogin.RefreshToken,
-                                    au.ApplicationUserLogin.RefreshTokenExpiryTime
+                                    au.UserLogin.Password,
+                                    au.UserLogin.PasswordResetRequired, 
+                                    au.UserLogin.LastLockoutDate, 
+                                    au.UserLogin.LastPasswordChangeDate,
+                                    au.UserLogin.RefreshToken,
+                                    au.UserLogin.RefreshTokenExpiryTime
                                   })
                                   .FirstOrDefaultAsync();
 
@@ -348,7 +349,7 @@ public class AuthenticationLogic : IAuthenticationLogic
              }
 
              return new RequiredUserInfoForAuthenticationResponse { 
-                ApplicationUserId = user.ApplicationUserId, 
+                UserId = user.UserId, 
                 Email = user.Email, 
                 PasswordHash = user.Password, 
                 PasswordResetRequired = user.PasswordResetRequired, 
@@ -376,7 +377,7 @@ public class AuthenticationLogic : IAuthenticationLogic
             // Validate Application exists
             if (applicationRes == null)
             {
-                errorValidationResult.Errors.Add("ApplicationName", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationName") });
+                errorValidationResult.Errors.Add(EntityFieldNames.ApplicationName, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(EntityFieldNames.ApplicationName) });
             }
         }
 
@@ -386,13 +387,13 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <summary>
     /// Increments the failed password attempt count for the application user. If the failed password attempt count exceeds the configured maximum, also sets the last lockout date to the current date and time to indicate that the user is locked out. Returns the updated failed password attempt count after incrementing. This method is used to track failed login attempts and lock out users who exceed the maximum allowed attempts to help prevent brute force attacks.
     /// </summary>
-    /// <param name="applicationUserId"></param>
+    /// <param name="UserId"></param>
     /// <returns></returns>
-    private async Task<short> _updateFailedPasswordAttemptLogic(int applicationUserId, int applicationId)
+    private async Task<short> _updateFailedPasswordAttemptLogic(int UserId, int applicationId)
     {
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId && ent.ApplicationId == applicationId);
+            var entity = await dbContext.UserLogins.FirstOrDefaultAsync(ent => ent.UserId == UserId);
 
             if (entity != null)
             {
@@ -414,15 +415,15 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <summary>
     /// Updates the application user's last login date to the current date and time, and resets the failed password attempt count to 0 on successful login.
     /// </summary>
-    /// <param name="applicationUserId"></param>
+    /// <param name="UserId"></param>
     /// <returns></returns>
-    private async Task _updateApplicationUserOnSuccessfulLogin(int applicationUserId, int applicationId, string refreshToken)
+    private async Task _updateUserOnSuccessfulLogin(int UserId, int applicationId, string refreshToken)
     {
         var jwtConfig = _jwtConfigMonitor.CurrentValue;
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId && ent.ApplicationId == applicationId);
+            var entity = await dbContext.UserLogins.FirstOrDefaultAsync(ent => ent.UserId == UserId);
 
             if (entity != null)
             {
@@ -436,29 +437,28 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
     }
 
-    private async Task _logSuccessfulLogin(ApplicationUserDto applicationUser, string authToken, string refreshToken)
+    private async Task _logSuccessfulLogin(UserDto user, string authToken, string refreshToken)
     {
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            dbContext.ApplicationUserLogLogins.Add(new ApplicationUserLogLogin { 
-                ApplicationUserId = applicationUser.ApplicationUserId, 
-                ApplicationId = applicationUser.ApplicationId, 
+            dbContext.UserLogLogins.Add(new UserLogLogin { 
+                ApplicationId = user.ApplicationId, 
                 AuthToken = authToken, 
                 RefreshToken = refreshToken, 
-                CreatedBy = applicationUser.Email, 
+                CreatedBy = user.Email, 
                 CreatedOn = CommonUtilities.GetDateTimeUtcNow() });
 
             await dbContext.SaveChangesAsync();
         }
     }
 
-    private async Task _updateApplicationUserOnSuccessfulTokenRefresh(int applicationUserId, int applicationId, string refreshToken)
+    private async Task _updateUserOnSuccessfulTokenRefresh(int UserId, string refreshToken)
     {
         var jwtConfig = _jwtConfigMonitor.CurrentValue;
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId && ent.ApplicationId == applicationId);
+            var entity = await dbContext.UserLogins.FirstOrDefaultAsync(ent => ent.UserId == UserId);
 
             if (entity != null)
             {
@@ -470,13 +470,13 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
     }
 
-    private async Task _revokeApplicationUserAuthToken(string email)
+    private async Task _revokeUserAuthToken(string email)
     {
         var jwtConfig = _jwtConfigMonitor.CurrentValue;
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUser.Email == email);
+            var entity = await dbContext.UserLogins.FirstOrDefaultAsync(ent => ent.User.Email == email);
 
             if (entity != null)
             {
@@ -488,22 +488,22 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
     }
     
-    private AuthorizationCredentialsResponse _extractAuthorizationCredentialsFromApplicationUserResponse(ApplicationUserDto applicationUser, ApplicationDto applicationRes)
+    private AuthorizationCredentialsResponse _extractAuthorizationCredentialsFromUserResponse(UserDto user, ApplicationDto applicationRes)
     {
         var permissions = new List<string>();
         var roles = new List<string>();
         
-        if (applicationUser.ApplicationUserPermissions != null)
+        if (user.ApplicationUserPermissions != null)
         {
-            foreach (var aup in applicationUser.ApplicationUserPermissions)
+            foreach (var aup in user.ApplicationUserPermissions)
             {
                 permissions.Add(aup.Permission.Name);
             }
         }
         
-        if (applicationUser.ApplicationUserRoles != null)
+        if (user.ApplicationUserRoles != null)
         {
-            foreach (var aur in applicationUser.ApplicationUserRoles)
+            foreach (var aur in user.ApplicationUserRoles)
             {
                 roles.Add(aur.Role.Name);
 
@@ -523,7 +523,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         return new AuthorizationCredentialsResponse
         {
             ApplicationName = applicationRes.Name,
-            Email = applicationUser.Email,
+            Email = user.Email,
             Permissions = permissions,
             Roles = roles
         };
@@ -618,7 +618,7 @@ public class AuthenticationLogic : IAuthenticationLogic
 
     private record RequiredUserInfoForAuthenticationResponse
     {
-        public int ApplicationUserId { get; set; }
+        public int UserId { get; set; }
         public string Email { get; set; }
         public string PasswordHash { get; set; }
         public DateTime? LastLockoutDate { get; set; }

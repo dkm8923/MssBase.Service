@@ -16,16 +16,12 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
 
         builder.Property(t => t.ApplicationUserId).IsRequired();
         builder.ConfigureAuditFields();
-        builder.Property(t => t.Email).HasMaxLength(128).IsRequired().IsUnicode(false);
-        builder.Property(t => t.FirstName).HasMaxLength(64).IsUnicode(false);
-        builder.Property(t => t.LastName).HasMaxLength(64).IsUnicode(false);
-        builder.Property(t => t.DateOfBirth).HasPrecision(2);
+        builder.Property(t => t.UserId).IsRequired();
         builder.Property(t => t.ApplicationId).IsRequired();
         
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);
         CreateForeignKeys(builder);
-        //CreateTableData(builder);
     }
         
     public void SetTableName(EntityTypeBuilder<ApplicationUser> builder)
@@ -39,7 +35,7 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
     }
     public void CreateUniqueKey(EntityTypeBuilder<ApplicationUser> builder)
     {
-        builder.HasIndex(e => e.Email).IsUnique().HasDatabaseName(DataUtilities.CreateUniqueKey(_tableName, "Email"));
+        builder.HasIndex(e => new { e.UserId, e.ApplicationId }).IsUnique().HasDatabaseName(DataUtilities.CreateUniqueKey(_tableName, "UserId_ApplicationId"));
     }
 
     public void CreateForeignKeys(EntityTypeBuilder<ApplicationUser> builder) 
@@ -49,52 +45,12 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .HasForeignKey(d => d.ApplicationId)
             .OnDelete(DeleteBehavior.ClientSetNull)
             .HasConstraintName( DataUtilities.CreateForeignKey(_tableName, "Application"));
+
+        builder.HasOne(d => d.User)
+            .WithMany(p => p.ApplicationUsers)
+            .HasForeignKey(d => d.UserId)
+            .OnDelete(DeleteBehavior.ClientSetNull)
+            .HasConstraintName( DataUtilities.CreateForeignKey(_tableName, "User"));
     }
-
-    // public void CreateTableData(EntityTypeBuilder<ApplicationUser> builder) 
-    // {
-    //     var defaultPassword = "!0TestPassword1230!";
-
-    //     var dataArr = new List<ApplicationUser>();
-    //     dataArr.Add(new ApplicationUser { 
-    //          ApplicationUserId = 1
-    //         ,Email = "dkm8923@gmail.com"
-    //         ,FirstName = "Dan"
-    //         ,LastName = "Mauk"
-    //         ,DateOfBirth = new DateTime(1989, 6, 15)
-    //         //,Password = LogicUtilities.HashPassword(defaultPassword)
-    //         ,Password = defaultPassword
-    //         ,PasswordResetRequired = false
-    //         ,LastLoginDate = DataConstants.DefaultCreatedOn
-    //         ,LastPasswordChangeDate = DataConstants.DefaultCreatedOn
-    //         ,LastLockoutDate = null
-    //         ,FailedPasswordAttemptCount = 0
-    //         ,ApplicationId = 1
-    //         ,Active = true
-    //         ,ReadOnly = true
-    //     });
-
-    //     dataArr.Add(new ApplicationUser { 
-    //          ApplicationUserId = 2
-    //         ,Email = "thompsonswartz@gmail.com"
-    //         ,FirstName = "Rachel"
-    //         ,LastName = "Thompson"
-    //         ,DateOfBirth = new DateTime(1987, 12, 04)
-    //         //,Password = defaultPassword
-    //         ,Password = defaultPassword
-    //         ,PasswordResetRequired = false
-    //         ,LastLoginDate = DataConstants.DefaultCreatedOn
-    //         ,LastPasswordChangeDate = DataConstants.DefaultCreatedOn
-    //         ,LastLockoutDate = null
-    //         ,FailedPasswordAttemptCount = 0
-    //         ,ApplicationId = 1
-    //         ,Active = true
-    //         ,ReadOnly = true
-    //     });
-
-    //     DataUtilities.SetAuditFields(dataArr);
-
-    //     builder.HasData(dataArr);
-    // }
 }
 

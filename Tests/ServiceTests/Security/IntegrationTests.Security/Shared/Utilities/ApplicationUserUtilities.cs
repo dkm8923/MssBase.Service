@@ -9,6 +9,7 @@ using Contract.Security;
 using Data.Security;
 using Data.Security.Converters;
 using Microsoft.EntityFrameworkCore;
+using Contract.Security.User;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
@@ -16,51 +17,47 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
 {
     private readonly ISecurityConnectionStrings _connectionStrings;
     private readonly SecurityDBContextFactory _dbContextFactory;
+    
     protected readonly IApplicationUserLogic _applicationUserLogic;
     protected readonly IApplicationLogic _applicationLogic;
-    public ApplicationUserUtilities(ISecurityConnectionStrings connectionStrings, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic) 
+    protected readonly IUserLogic _userLogic;
+    
+    public ApplicationUserUtilities(ISecurityConnectionStrings connectionStrings, IApplicationUserLogic applicationUserPermissionLogic, IApplicationLogic applicationLogic, IUserLogic userLogic) 
     {
         _connectionStrings = connectionStrings;
         _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
-        _applicationUserLogic = applicationUserLogic;
+        _applicationUserLogic = applicationUserPermissionLogic;
         _applicationLogic = applicationLogic;
+        _userLogic = userLogic;
     }
 
     public InsertUpdateApplicationUserRequest ConvertApplicationUserDtoToInsertUpdateRequest(ApplicationUserDto req)
     {
         return new InsertUpdateApplicationUserRequest
         {
-            Email = req.Email,
-            FirstName = req.FirstName,
-            LastName = req.LastName,
-            DateOfBirth = req.DateOfBirth,
             Active = req.Active,
             ApplicationId = req.ApplicationId,
+            UserId = req.UserId,
             CurrentUser = TestConstants.CurrentUser
         };
     }
 
-    public InsertUpdateApplicationUserRequest CreateInsertUpdateRequestWithMaxLengthErrors()
+    public InsertUpdateApplicationUserRequest CreateInsertUpdateRequestWithMaxLengthErrors(int applicationId, int userId)
     {
         return new InsertUpdateApplicationUserRequest
         { 
-            Email = LogicTestUtilities.GenerateRandomString(120) + "@test.com",
-            FirstName = LogicTestUtilities.GenerateRandomString(65),
-            LastName = LogicTestUtilities.GenerateRandomString(65),
+            UserId = userId,
             Active = true,
-            ApplicationId = 1,
+            ApplicationId = applicationId,
             CurrentUser = LogicTestUtilities.GenerateRandomString(65)
         };
     }
     
-    public InsertUpdateApplicationUserRequest CreateInsertUpdateRequestWithRandomValues(int applicationId, bool active = true)
+    public InsertUpdateApplicationUserRequest CreateInsertUpdateRequestWithSpecificValues(int applicationId, int userId, bool active = true)
     {
         return new InsertUpdateApplicationUserRequest
         {
-            Email = LogicTestUtilities.GenerateRandomString(64) + "@test.com",
-            FirstName = LogicTestUtilities.GenerateRandomString(32),
-            LastName = LogicTestUtilities.GenerateRandomString(32),
-            DateOfBirth = LogicTestUtilities.GetRandomDateTime(2000),
+            UserId = userId,
             Active = active,
             ApplicationId = applicationId,
             CurrentUser = TestConstants.CurrentUser
@@ -68,24 +65,24 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     }
 
     /// <summary>
-    /// Creates a single application user test record with randomized data for integration testing purposes.
+    /// Creates a single application user permission test record with specific data for integration testing purposes.
     /// </summary>
-    public async Task<ApplicationUserDto> CreateSingleApplicationUserTestRecord(int applicationId, bool active = true)
+    public async Task<ApplicationUserDto> CreateSingleApplicationUserTestRecord(int applicationId, int userId, bool active = true)
     {
         //create test record
-        var insertReq = CreateInsertUpdateRequestWithRandomValues(applicationId, active);
+        var insertReq = CreateInsertUpdateRequestWithSpecificValues(applicationId, userId, active);
 
-        var ret = await _applicationUserLogic.Insert(insertReq, _applicationLogic);
+        var ret = await _applicationUserLogic.Insert(insertReq, _applicationLogic, _applicationUserLogic, _userLogic);
 
-        ret.Errors.Should().BeNullOrEmpty("Insert of application user test record failed when it should have succeeded.");
+        ret.Errors.Should().BeNullOrEmpty("Insert of application user permission test record failed when it should have succeeded.");
 
         return ret.Response;
     }
 
     /// <summary>
-    /// Asynchronously creates a set of predefined active test application user records in the data store.
+    /// Asynchronously creates a set of predefined active test application user permission records in the data store.
     /// </summary>
-    public async Task<List<ApplicationUserDto>> CreateActiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
+    public async Task<List<ApplicationUserDto>> CreateActiveTestRecords(int applicationId, int userId, short numberOfRecordsToCreate = 5)
     {
         //create test records
         var ret = new List<ApplicationUserDto>();
@@ -93,16 +90,16 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
 
         for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
         {
-            ret.Add(await CreateSingleApplicationUserTestRecord(applicationId, true));
+            ret.Add(await CreateSingleApplicationUserTestRecord(applicationId, userId, true));
         }
 
         return ret;
     }
 
     /// <summary>
-    /// Asynchronously creates a set of predefined inactive test application user records in the data store.
+    /// Asynchronously creates a set of predefined inactive test application user permission records in the data store.
     /// </summary>
-    public async Task<List<ApplicationUserDto>> CreateInactiveTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
+    public async Task<List<ApplicationUserDto>> CreateInactiveTestRecords(int applicationId, int userId, short numberOfRecordsToCreate = 5)
     {
         //create test records
         var ret = new List<ApplicationUserDto>();
@@ -110,32 +107,34 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
 
         for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
         {
-            ret.Add(await CreateSingleApplicationUserTestRecord(applicationId, false));
+            ret.Add(await CreateSingleApplicationUserTestRecord(applicationId, userId, false));
         }
 
         return ret;
     }
-
+    
     /// <summary>
-    /// Asynchronously creates a set of predefined test active read-only application user records in the data store.
+    /// Asynchronously creates a test active read-only application user permission record in the data store.
     /// </summary>
-    /// <param name="applicationId">The ID of the application to which the application users belong.</param>
-    /// <param name="numberOfRecordsToCreate">The number of active read-only test records to create. Default is 5.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created active read-only application user DTOs.</returns>
-    public async Task<List<ApplicationUserDto>> CreateActiveReadOnlyTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
+    /// <param name="applicationId">The ID of the application for the test record.</param>
+    /// <param name="applicationUserId">The ID of the application user for the test record.</param>
+    /// <param name="userId">The ID of the permission for the test record.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the created active read-only application user permission DTO.</returns>
+    public async Task<ApplicationUserDto> CreateActiveReadOnlyTestRecord(int applicationId, int userId)
     {
-        return await CreateReadOnlyTestRecords(applicationId, true, numberOfRecordsToCreate);
+        return await CreateReadOnlyTestRecord(applicationId, userId, true);
     }
 
     /// <summary>
-    /// Asynchronously creates a set of predefined test inactive read-only application user records in the data store.
+    /// Asynchronously creates a test inactive read-only application user permission record in the data store.
     /// </summary>
-    /// <param name="applicationId">The ID of the application to which the application users belong.</param>
-    /// <param name="numberOfRecordsToCreate">The number of inactive read-only test records to create. Default is 5.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created inactive read-only application user DTOs.</returns>
-    public async Task<List<ApplicationUserDto>> CreateInactiveReadOnlyTestRecords(int applicationId, short numberOfRecordsToCreate = 5)
+    /// <param name="applicationId">The ID of the application for the test record.</param>
+    /// <param name="applicationUserId">The ID of the application user for the test record.</param>
+    /// <param name="userId">The ID of the permission for the test record.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the created inactive read-only application user permission DTO.</returns>
+    public async Task<ApplicationUserDto> CreateInactiveReadOnlyTestRecord(int applicationId, int userId)
     {
-        return await CreateReadOnlyTestRecords(applicationId, false, numberOfRecordsToCreate);
+        return await CreateReadOnlyTestRecord(applicationId, userId, false);
     }
 
     /// <summary>
@@ -144,16 +143,13 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     public async Task DeleteAllRecords()
     {
         using var dbContext = _dbContextFactory.CreateContextReadWrite();
-        await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM [ApplicationUser]");
+        await dbContext.ApplicationUsers.ExecuteDeleteAsync();
     }
 
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors()
     {
         return new Dictionary<string, List<string>>
         {
-            { "Email", new List<string> { "Email cannot exceed 128 characters!" } },
-            { "FirstName", new List<string> { "FirstName cannot exceed 64 characters!" } },
-            { "LastName", new List<string> { "LastName cannot exceed 64 characters!" } },
             { "CurrentUser", new List<string> { "CurrentUser cannot exceed 64 characters!" } }
         };
     }
@@ -170,27 +166,20 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     {
         return new Dictionary<string, List<string>>
         {
-            { "Email", new List<string> { "Email is a required field!" } },
             { "ApplicationId", new List<string> { "ApplicationId is a required field!" } },
+            { "ApplicationUserId", new List<string> { "ApplicationUserId is a required field!" } },
+            { "UserId", new List<string> { "UserId is a required field!" } },
             { "CurrentUser", new List<string> { "CurrentUser is a required field!" } }
         };
     }
 
-    public Dictionary<string, List<string>> GetExpectedInvalidEmailFieldErrors()
-    {
+   public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors()
+   {
         return new Dictionary<string, List<string>>
         {
-            { "Email", new List<string> { "Invalid email address!" } }
+            { "ApplicationUser", new List<string> { "ApplicationUser must be unique!" } }
         };
-    }
-
-    public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "Email", new List<string> { "Email must be unique!" } }
-        };
-    }
+   }
 
     /// <summary>
     /// Retrieves a dictionary of expected read-only field validation error messages.
@@ -204,89 +193,15 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
         };
     }
 
-    public Dictionary<string, List<string>> GetExpectedApplicationUserPermissionForeignKeyErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "ApplicationUserPermissions", new List<string> { "Record still contains child dependencies! IE: ApplicationUserPermissions" } }
-        };
-    }
-
-    public Dictionary<string, List<string>> GetExpectedApplicationUserRoleForeignKeyErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "ApplicationUserRoles", new List<string> { "Record still contains child dependencies! IE: ApplicationUserRoles" } }
-        };
-    }
-
-    public Dictionary<string, List<string>> GetExpectedChangePasswordRequiredFieldErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "ApplicationUserId", new List<string> { "ApplicationUserId is a required field!" } },
-            { "NewPassword", new List<string> { "NewPassword is a required field!" } },
-            { "CurrentUser", new List<string> { "CurrentUser is a required field!" } }
-        };
-    }
-
-    public Dictionary<string, List<string>> GetExpectedChangePasswordInvalidPasswordErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "ChangePassword", new List<string> { "New password must be different from the old password!" } }
-        };
-    }
-
-    public Dictionary<string, List<string>> GetExpectedChangePasswordMinMaxLengthErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "NewPassword", new List<string> { "NewPassword must be between 12 and 128 characters!" } }
-        };
-    }
-
-    public Dictionary<string, List<string>> GetExpectedChangePasswordUpperCaseRequiredErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "NewPassword", new List<string> { "NewPassword must contain at least one uppercase letter!" } }
-        };
-    }
-
-    public Dictionary<string, List<string>> GetExpectedChangePasswordLowerCaseRequiredErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "NewPassword", new List<string> { "NewPassword must contain at least one lowercase letter!" } }
-        };
-    }
-
-    public Dictionary<string, List<string>> GetExpectedChangePasswordSpecialCharacterRequiredErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "NewPassword", new List<string> { "NewPassword must contain at least one special character!" } }
-        };
-    }
-
-    public Dictionary<string, List<string>> GetExpectedChangePasswordNumberRequiredErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "NewPassword", new List<string> { "NewPassword must contain at least one number!" } }
-        };
-    }
-
     /// <summary>
-    /// Verifies that all relevant property values of two application user records are equal.
+    /// Verifies that all relevant property values of two application user permission records are equal.
     /// </summary>
     public void VerifyTestRecordValuesMatch(ApplicationUserDto recordA, ApplicationUserDto recordB)
     {
         recordA.ApplicationUserId.Should().Be(recordB.ApplicationUserId);
-        recordA.Email.Should().Be(recordB.Email);
-        recordA.FirstName.Should().Be(recordB.FirstName);
-        recordA.LastName.Should().Be(recordB.LastName);
+        recordA.ApplicationId.Should().Be(recordB.ApplicationId);
+        recordA.ApplicationUserId.Should().Be(recordB.ApplicationUserId);
+        recordA.UserId.Should().Be(recordB.UserId);
         recordA.Active.Should().Be(recordB.Active);
         recordA.ReadOnly.Should().Be(recordB.ReadOnly);
         recordA.ApplicationId.Should().Be(recordB.ApplicationId);
@@ -335,35 +250,34 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
         }
     }
 
-    #region Private
+     #region Private
 
     /// <summary>
-    /// Asynchronously creates a set of predefined test read-only permission records in the data store.
+    /// Asynchronously creates a predefined test read-only application user record in the data store.
     /// </summary>
+    /// <param name="applicationId">The ID of the application associated with the test record.</param>
+    /// <param name="userId">The ID of the user associated with the test record.</param>
     /// <param name="active">Indicates whether the created read-only test records should be active. Default is true.</param>
-    /// <param name="numberOfRecordsToCreate">The number of read-only test records to create. Default is 5.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a list of created read-only permission DTOs.</returns>
-    private async Task<List<ApplicationUserDto>> CreateReadOnlyTestRecords(int applicationId, bool active = true, short numberOfRecordsToCreate = 5)
+    /// <returns>A task that represents the asynchronous operation. The task result contains the created read-only application user DTO.</returns>
+    private async Task<ApplicationUserDto> CreateReadOnlyTestRecord(int applicationId, int userId, bool active = true)
     {
         //create test records
-        var ret = new List<ApplicationUserDto>();
+        ApplicationUserDto ret;
         
-        for (var idx = 0; idx < numberOfRecordsToCreate; idx++)
-        {
-            var insertReq = CreateInsertUpdateRequestWithRandomValues(applicationId, active);
-            var ent = insertReq.ToEntityOnInsert();
-            ent.ReadOnly = true;
+        var insertReq = CreateInsertUpdateRequestWithSpecificValues(applicationId, userId, active);
+        var ent = insertReq.ToEntityOnInsert();
+        ent.ReadOnly = true;
 
-            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
-            {
-                await dbContext.ApplicationUsers.AddAsync(ent);
-                await dbContext.SaveChangesAsync();
-                ret.Add(ent.ToDto());
-            }
+        using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+        {
+            await dbContext.ApplicationUsers.AddAsync(ent);
+            await dbContext.SaveChangesAsync();
+            ret = ent.ToDto();
         }
 
         return ret;
     }
 
-    #endregion  
+    #endregion 
 }
+

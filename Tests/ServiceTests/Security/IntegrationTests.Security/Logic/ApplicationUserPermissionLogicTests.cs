@@ -458,12 +458,14 @@ namespace IntegrationTests.Security.Logic
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var user =  (await _securityTestUtilities.User.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var permission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
             var testRecord = (await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, permission.PermissionId));
             
             var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId);
+            var newUser =  (await _securityTestUtilities.User.CreateActiveTestRecords(1)).FirstOrDefault();
+            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId, newUser.UserId);
             var newPermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(newApplication.ApplicationId);
 
             var updateReq = _securityTestUtilities.ApplicationUserPermission.ConvertApplicationUserPermissionDtoToInsertUpdateRequest(testRecord);
@@ -502,7 +504,8 @@ namespace IntegrationTests.Security.Logic
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var user =  (await _securityTestUtilities.User.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var permission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
             var testRecord = (await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, permission.PermissionId));
             
@@ -534,12 +537,14 @@ namespace IntegrationTests.Security.Logic
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var user =  (await _securityTestUtilities.User.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var permission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
             var testRecord = (await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, permission.PermissionId));
             
             var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId);
+            var newUser =  (await _securityTestUtilities.User.CreateActiveTestRecords(1)).FirstOrDefault();
+            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId, newUser.UserId);
             var newPermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(newApplication.ApplicationId);
 
             var updateReq = _securityTestUtilities.ApplicationUserPermission.ConvertApplicationUserPermissionDtoToInsertUpdateRequest(testRecord);
@@ -651,7 +656,8 @@ namespace IntegrationTests.Security.Logic
             }, _applicationLogic, _applicationUserLogic, _permissionLogic);
 
             var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId);
+            var newUser =  (await _securityTestUtilities.User.CreateActiveTestRecords(1)).FirstOrDefault();
+            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId, newUser.UserId);
             var newPermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(newApplication.ApplicationId);
 
             await _applicationUserPermissionLogic.Update(testApplicationUserPermission1Res.Response.ApplicationUserPermissionId, new InsertUpdateApplicationUserPermissionRequest
@@ -922,7 +928,8 @@ namespace IntegrationTests.Security.Logic
             var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
             var recordToUpdate = arrangeTestDataResponse.ActiveApplicationUserPermissions.FirstOrDefault();   
             
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
+            var user =  (await _securityTestUtilities.User.CreateActiveTestRecords(1)).FirstOrDefault();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, user.UserId);
             var activePermission = (await _securityTestUtilities.Permission.CreateActiveTestRecords(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, 1)).FirstOrDefault();
             var recordToCopy = (await _securityTestUtilities.ApplicationUserPermission.CreateActiveTestRecords(arrangeTestDataResponse.ActiveApplications[0].ApplicationId, applicationUser.ApplicationUserId, activePermission.PermissionId, 1)).FirstOrDefault();
             
