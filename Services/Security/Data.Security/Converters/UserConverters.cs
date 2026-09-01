@@ -38,15 +38,10 @@ namespace Data.Security.Converters
                 FailedPasswordAttemptCount = applicationUserLogin.FailedPasswordAttemptCount,
             };
 
-            // if (source.ApplicationUserPermissions.NotNullAndHasRecords())
-            // {
-            //     target.ApplicationUserPermissions = source.ApplicationUserPermissions.Select(au => au.ToDto());
-            // }
-
-            // if (source.ApplicationUserRoles.NotNullAndHasRecords())
-            // {
-            //     target.ApplicationUserRoles = source.ApplicationUserRoles.Select(au => au.ToDto());
-            // }
+            if (source.ApplicationUsers.NotNullAndHasRecords())
+            {
+                target.ApplicationUsers = source.ApplicationUsers.Select(au => au.ToDto());
+            }
 
             return target;
         }

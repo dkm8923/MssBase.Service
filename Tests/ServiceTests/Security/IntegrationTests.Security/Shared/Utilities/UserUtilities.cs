@@ -295,35 +295,41 @@ public class UserUtilities : IUserUtilities
     /// <param name="includeInactive">Indicates whether inactive related data should be included in the verification.</param>
     public void VerifyIncludeRelatedDataOnUser(UserDto user, bool includeInactive = false)
     {
-        user.ApplicationUserPermissions.Should().NotBeNull();
-        user.ApplicationUserPermissions.Count().Should().BeGreaterThan(0);
+        user.ApplicationUsers.Should().NotBeNull();
+        user.ApplicationUsers.Count().Should().BeGreaterThan(0);
             
-        foreach (var permission in user.ApplicationUserPermissions)
+        foreach (var applicationUser in user.ApplicationUsers)
         {
-            permission.Permission.Should().NotBeNull();
-            
-            if (!includeInactive)
+            applicationUser.ApplicationUserPermissions.Should().NotBeNull();
+            applicationUser.ApplicationUserPermissions.Count().Should().BeGreaterThan(0);
+
+            foreach (var permission in applicationUser.ApplicationUserPermissions)
             {
-                permission.Permission.Active.Should().BeTrue();
-            }
-        }
-
-        user.ApplicationUserRoles.Should().NotBeNull();
-        user.ApplicationUserRoles.Count().Should().BeGreaterThan(0);
-
-        foreach (var applicationUserRole in user.ApplicationUserRoles)
-        {
-            applicationUserRole.Role.Should().NotBeNull();
-            applicationUserRole.Role.RolePermissions.Should().NotBeNull();
-            applicationUserRole.Role.RolePermissions.Count().Should().BeGreaterThan(0);
-
-            foreach (var rolePermission in applicationUserRole.Role.RolePermissions)
-            {
-                rolePermission.Permission.Should().NotBeNull();
+                permission.Permission.Should().NotBeNull();
                 
                 if (!includeInactive)
                 {
-                    rolePermission.Permission.Active.Should().BeTrue();
+                    permission.Permission.Active.Should().BeTrue();
+                }
+            }
+
+            applicationUser.ApplicationUserRoles.Should().NotBeNull();
+            applicationUser.ApplicationUserRoles.Count().Should().BeGreaterThan(0);
+
+            foreach (var applicationUserRole in applicationUser.ApplicationUserRoles)
+            {
+                applicationUserRole.Role.Should().NotBeNull();
+                applicationUserRole.Role.RolePermissions.Should().NotBeNull();
+                applicationUserRole.Role.RolePermissions.Count().Should().BeGreaterThan(0);
+
+                foreach (var rolePermission in applicationUserRole.Role.RolePermissions)
+                {
+                    rolePermission.Permission.Should().NotBeNull();
+                    
+                    if (!includeInactive)
+                    {
+                        rolePermission.Permission.Active.Should().BeTrue();
+                    }
                 }
             }
         }

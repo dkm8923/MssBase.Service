@@ -494,30 +494,25 @@ public class AuthenticationLogic : IAuthenticationLogic
         var permissions = new List<string>();
         var roles = new List<string>();
         
-        if (user.ApplicationUserPermissions != null)
+        if (user.ApplicationUsers != null && user.ApplicationUsers.ToList().Count > 0)
         {
-            foreach (var aup in user.ApplicationUserPermissions)
+            foreach (var applicationUser in user.ApplicationUsers)
             {
-                permissions.Add(aup.Permission.Name);
-            }
-        }
-        
-        if (user.ApplicationUserRoles != null)
-        {
-            foreach (var aur in user.ApplicationUserRoles)
-            {
-                roles.Add(aur.Role.Name);
-
-                if (aur.Role.RolePermissions != null)
+                foreach (var applicationUserPermission in applicationUser.ApplicationUserPermissions)
                 {
-                    foreach (var p in aur.Role.RolePermissions)
+                    permissions.Add(applicationUserPermission.Permission.Name);
+                }
+
+                foreach (var applicationUserRole in applicationUser.ApplicationUserRoles)
+                {
+                    foreach (var rolePermission in applicationUserRole.Role.RolePermissions)
                     {
-                        permissions.Add(p.Permission.Name);
+                        permissions.Add(rolePermission.Permission.Name);
                     }
                 }
             }
         }
-        
+
         permissions = permissions.Distinct().ToList();
         roles = roles.Distinct().ToList();
 

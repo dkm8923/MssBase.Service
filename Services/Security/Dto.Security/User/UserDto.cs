@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
-using Dto.Security.ApplicationUserPermission;
-using Dto.Security.ApplicationUserRole;
+using Dto.Security.ApplicationUser;
 using Shared.Models;
 using Shared.Models.Contracts;
 
@@ -23,9 +22,6 @@ namespace Dto.Security.User
         public short? FailedPasswordAttemptCount { get; set; }
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public IEnumerable<ApplicationUserPermissionDto> ApplicationUserPermissions { get; set; }
-        
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public IEnumerable<ApplicationUserRoleDto> ApplicationUserRoles { get; set; }
+        public IEnumerable<ApplicationUserDto> ApplicationUsers { get; set; } = null!;
     }
 }

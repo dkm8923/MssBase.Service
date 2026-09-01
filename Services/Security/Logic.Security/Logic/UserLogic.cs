@@ -113,15 +113,23 @@ namespace Logic.Security.Logic
                 query = query.ApplyIncludeReadOnlyFilter(req);
                 query = query.ApplyAuditableFilters(req);
 
-                // if (req.IncludeRelated)
-                // {
-                //     query = query.Include(application => application.UserPermissions.Where(aup => req.IncludeInactive || aup.Active)).ThenInclude(rp => rp.Permission)
-                //                  .Include(application => application.UserRoles
-                //                     .Where(aur => req.IncludeInactive || aur.Active))
-                //                     .ThenInclude(aur => aur.Role)
-                //                     .ThenInclude(r => r.RolePermissions)
-                //                     .ThenInclude(rp => rp.Permission);
-                // }
+                if (req.IncludeRelated)
+                {
+                    query = query.Include(user => user.ApplicationUsers
+                                       .Where(applicationUser => (req.IncludeInactive || applicationUser.Active) && (req.IncludeReadOnly || !applicationUser.ReadOnly)))
+                                 .ThenInclude(applicationUser => applicationUser.ApplicationUserPermissions
+                                     .Where(permission => (req.IncludeInactive || permission.Active) && (req.IncludeReadOnly || !permission.ReadOnly)))
+                                 .ThenInclude(permission => permission.Permission);
+                    
+                    query = query.Include(user => user.ApplicationUsers
+                                       .Where(applicationUser => (req.IncludeInactive || applicationUser.Active) && (req.IncludeReadOnly || !applicationUser.ReadOnly)))
+                                 .ThenInclude(applicationUser => applicationUser.ApplicationUserRoles
+                                     .Where(role => (req.IncludeInactive || role.Active) && (req.IncludeReadOnly || !role.ReadOnly)))
+                                 .ThenInclude(role => role.Role)
+                                 .ThenInclude(role => role.RolePermissions
+                                     .Where(permission => (req.IncludeInactive || permission.Active) && (req.IncludeReadOnly || !permission.ReadOnly)))
+                                 .ThenInclude(permission => permission.Permission);
+                }
 
                 if (req.UserIds != null && req.UserIds.Count > 0)
                 {
