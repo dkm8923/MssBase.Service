@@ -307,8 +307,10 @@ namespace IntegrationTests.Security.Service
 
            var applicationUserRoleRes = await _applicationUserRoleLogic.Insert(insertReq, _applicationLogic, _applicationUserLogic, _roleLogic);
 
+           var newRole = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
            insertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
-
+           insertReq.RoleId = newRole.RoleId;
+           
            await _applicationUserRoleLogic.Update(applicationUserRoleRes.Response.ApplicationUserRoleId, insertReq, _applicationLogic, _applicationUserLogic, _roleLogic);
 
            await _cacheTestUtilities.DeleteAllKeyData();
@@ -320,7 +322,7 @@ namespace IntegrationTests.Security.Service
            var postReqApplicationUserRoleIds = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoleRes.Response.ApplicationUserRoleId } };
            var postReqApplicationId = new FilterApplicationUserRoleServiceRequest { ApplicationId = application.ApplicationId };
            var postReqApplicationUserId = new FilterApplicationUserRoleServiceRequest { ApplicationUserId = applicationUser.ApplicationUserId };
-           var postReqRoleId = new FilterApplicationUserRoleServiceRequest { RoleId = role.RoleId };
+           var postReqRoleId = new FilterApplicationUserRoleServiceRequest { RoleId = newRole.RoleId };
            var postReqIncludeInactive = new FilterApplicationUserRoleServiceRequest { IncludeInactive = true };
            var postReqIncludeRelated = new FilterApplicationUserRoleServiceRequest { IncludeRelated = true };
            var postReqIncludeReadOnly = new FilterApplicationUserRoleServiceRequest { IncludeReadOnly = true };

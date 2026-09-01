@@ -300,17 +300,23 @@ namespace IntegrationTests.Security.Service
 
             await _cacheTestUtilities.DeleteAllKeyData();
            
+            var userForInsert = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+
             var insertReq = new InsertUpdateApplicationUserRequest
             {
                 ApplicationId = application.ApplicationId,
-                UserId = user.UserId,
+                UserId = userForInsert.UserId,
                 CurrentUser = TestConstants.SpecificCurrentUserForInsert,
                 Active = true
             };
 
            var applicationUserRes = await _applicationUserLogic.Insert(insertReq, _applicationLogic, _applicationUserLogic, _userLogic);
 
+           var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+           var newUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
            insertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
+           insertReq.ApplicationId = newApplication.ApplicationId;
+           insertReq.UserId = newUser.UserId;
 
            await _applicationUserLogic.Update(applicationUserRes.Response.ApplicationUserId, insertReq, _applicationLogic, _applicationUserLogic, _userLogic);
 
@@ -321,22 +327,22 @@ namespace IntegrationTests.Security.Service
            var postReqUpdatedBy = new FilterApplicationUserServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
            var postReqUpdatedOnDate = new FilterApplicationUserServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
            var postReqApplicationUserIds = new FilterApplicationUserServiceRequest { ApplicationUserIds = new List<int> { applicationUserRes.Response.ApplicationUserId } };
-           var postReqApplicationId = new FilterApplicationUserServiceRequest { ApplicationId = application.ApplicationId };
-           var postReqUserId = new FilterApplicationUserServiceRequest { UserId = user.UserId };
+           var postReqApplicationId = new FilterApplicationUserServiceRequest { ApplicationId = newApplication.ApplicationId };
+           var postReqUserId = new FilterApplicationUserServiceRequest { UserId = newUser.UserId };
            var postReqIncludeInactive = new FilterApplicationUserServiceRequest { IncludeInactive = true };
            var postReqIncludeRelated = new FilterApplicationUserServiceRequest { IncludeRelated = true };
            var postReqIncludeReadOnly = new FilterApplicationUserServiceRequest { IncludeReadOnly = true };
            
-           var expectedCacheKeyCreatedBy = $"ApplicationUserPermissionService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyCreatedOnDate = $"ApplicationUserPermissionService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedBy = $"ApplicationUserPermissionService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedOnDate = $"ApplicationUserPermissionService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0";
-           var expectedCacheKeyApplicationUserIds = $"ApplicationUserPermissionService_Filter_0_0_0_0_{(postReqApplicationUserIds.ApplicationUserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0_0";
-           var expectedCacheKeyApplicationId = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0_0_0";
-           var expectedCacheKeyUserId = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqUserId.UserId.ToString())}_0_0_0_0";
-           var expectedCacheKeyIncludeInactive = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_0_0_1_0_0";
-           var expectedCacheKeyIncludeRelated = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_0_0_0_1_0";
-           var expectedCacheKeyIncludeReadOnly = $"ApplicationUserPermissionService_Filter_0_0_0_0_0_0_0_0_0_0_1";
+           var expectedCacheKeyCreatedBy = $"ApplicationUserService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyCreatedOnDate = $"ApplicationUserService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedBy = $"ApplicationUserService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedOnDate = $"ApplicationUserService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0";
+           var expectedCacheKeyApplicationUserIds = $"ApplicationUserService_Filter_0_0_0_0_{(postReqApplicationUserIds.ApplicationUserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0";
+           var expectedCacheKeyApplicationId = $"ApplicationUserService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0_0";
+           var expectedCacheKeyUserId = $"ApplicationUserService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqUserId.UserId.ToString())}_0_0_0";
+           var expectedCacheKeyIncludeInactive = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_1_0_0";
+           var expectedCacheKeyIncludeRelated = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_1_0";
+           var expectedCacheKeyIncludeReadOnly = $"ApplicationUserService_Filter_0_0_0_0_0_0_0_0_0_1";
            
            // Act
            var filterCreatedByResult = await _applicationUserService.Filter(postReqCreatedBy);

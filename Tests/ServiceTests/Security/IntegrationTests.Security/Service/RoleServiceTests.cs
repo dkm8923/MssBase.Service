@@ -304,6 +304,7 @@ namespace IntegrationTests.Security.Service
            var roleRes = await _roleLogic.Insert(roleInsertReq, _applicationLogic);
 
            roleInsertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
+           roleInsertReq.Name = "Test Name Updated";
 
            await _roleLogic.Update(roleRes.Response.RoleId, roleInsertReq, _applicationLogic);
 
@@ -314,7 +315,7 @@ namespace IntegrationTests.Security.Service
            var postReqUpdatedBy = new FilterRoleServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
            var postReqUpdatedOnDate = new FilterRoleServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
            var postReqRoleIds = new FilterRoleServiceRequest { RoleIds = new List<int> { roleRes.Response.RoleId } };
-           var postReqName = new FilterRoleServiceRequest { Name = "Test Name" };
+           var postReqName = new FilterRoleServiceRequest { Name = "Test Name Updated" };
            var postReqApplicationId = new FilterRoleServiceRequest { ApplicationId = application.ApplicationId };
            var postReqIncludeInactive = new FilterRoleServiceRequest { IncludeInactive = true };
            var postReqIncludeRelated = new FilterRoleServiceRequest { IncludeRelated = true };
