@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Dto.Security.Application;
 using Dto.Security.ApplicationUserPermission;
 using Dto.Security.ApplicationUserRole;
 using Shared.Models;
@@ -10,6 +11,9 @@ namespace Dto.Security.ApplicationUser
         public int ApplicationUserId { get; set; }
         public int UserId { get; set; }
         public int ApplicationId { get; set; }
+        
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public ApplicationDto Application { get; set; }
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IEnumerable<ApplicationUserPermissionDto> ApplicationUserPermissions { get; set; }
