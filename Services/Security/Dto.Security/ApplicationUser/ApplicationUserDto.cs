@@ -13,9 +13,6 @@ namespace Dto.Security.ApplicationUser
         public int ApplicationId { get; set; }
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public ApplicationDto Application { get; set; }
-        
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IEnumerable<ApplicationUserPermissionDto> ApplicationUserPermissions { get; set; }
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

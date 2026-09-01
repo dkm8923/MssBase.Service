@@ -300,8 +300,6 @@ public class UserUtilities : IUserUtilities
             
         foreach (var applicationUser in user.ApplicationUsers)
         {
-            applicationUser.Application.Should().NotBeNull();
-            
             applicationUser.ApplicationUserPermissions.Should().NotBeNull();
             applicationUser.ApplicationUserPermissions.Count().Should().BeGreaterThan(0);
 

@@ -215,8 +215,6 @@ public class ApplicationUserUtilities : IApplicationUserUtilities
     /// <param name="includeInactive">Indicates whether inactive related data should be included in the verification.</param>
     public void VerifyIncludeRelatedDataOnApplicationUser(ApplicationUserDto applicationUser, bool includeInactive = false)
     {
-        applicationUser.Application.Should().NotBeNull();
-        
         applicationUser.ApplicationUserPermissions.Should().NotBeNull();
         applicationUser.ApplicationUserPermissions.Count().Should().BeGreaterThan(0);
             

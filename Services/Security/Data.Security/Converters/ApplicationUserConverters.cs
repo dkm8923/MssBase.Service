@@ -28,11 +28,6 @@ namespace Data.Security.Converters
                 ApplicationId = source.ApplicationId
             };
 
-            if (source.Application != null)
-            {
-                target.Application = source.Application.ToDto();
-            }
-
             if (source.ApplicationUserPermissions.NotNullAndHasRecords())
             {
                 target.ApplicationUserPermissions = source.ApplicationUserPermissions.Select(au => au.ToDto());

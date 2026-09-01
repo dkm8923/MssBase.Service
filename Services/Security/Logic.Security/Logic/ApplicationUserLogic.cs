@@ -111,8 +111,6 @@ namespace Logic.Security.Logic
 
                 if (req.IncludeRelated)
                 {
-                    query = query.Include(applicationUser => applicationUser.Application);
-
                     query = query.Include(applicationUser => applicationUser.ApplicationUserPermissions
                                        .Where(permission => (req.IncludeInactive || permission.Active) && (req.IncludeReadOnly || !permission.ReadOnly)))
                                  .ThenInclude(permission => permission.Permission);
