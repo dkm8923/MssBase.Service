@@ -100,29 +100,6 @@ namespace Data.Security.Migrations
                         .HasPrecision(2)
                         .HasColumnType("datetime2(2)");
 
-                    b.Property<DateTime?>("DateOfBirth")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(128)");
-
-                    b.Property<string>("FirstName")
-                        .HasMaxLength(64)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(64)");
-
-                    b.Property<string>("LastName")
-                        .HasMaxLength(64)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(64)");
-
-                    b.Property<string>("Password")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("ReadOnly")
                         .HasColumnType("bit");
 
@@ -136,165 +113,18 @@ namespace Data.Security.Migrations
                         .HasPrecision(2)
                         .HasColumnType("datetime2(2)");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("ApplicationUserId");
 
                     b.HasIndex("ApplicationId");
 
-                    b.HasIndex("Email")
+                    b.HasIndex("UserId", "ApplicationId")
                         .IsUnique()
-                        .HasDatabaseName("UQ_ApplicationUser_Email");
+                        .HasDatabaseName("UQ_ApplicationUser_UserId_ApplicationId");
 
                     b.ToTable("ApplicationUser", (string)null);
-                });
-
-            modelBuilder.Entity("Data.Security.Models.ApplicationUserLogChangePassword", b =>
-                {
-                    b.Property<int>("LogId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LogId"));
-
-                    b.Property<int>("ApplicationId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ApplicationUserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(128)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.Property<string>("OldPassword")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .IsUnicode(true)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("LogId");
-
-                    b.HasIndex("ApplicationId");
-
-                    b.HasIndex("ApplicationUserId", "ApplicationId", "OldPassword")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_ApplicationUser_Log_ChangePassword_ApplicationUserId_ApplicationId_OldPassword");
-
-                    b.ToTable("ApplicationUser_Log_ChangePassword", (string)null);
-                });
-
-            modelBuilder.Entity("Data.Security.Models.ApplicationUserLogLogin", b =>
-                {
-                    b.Property<int>("LogId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LogId"));
-
-                    b.Property<int>("ApplicationId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ApplicationUserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("AuthToken")
-                        .IsRequired()
-                        .HasMaxLength(4096)
-                        .IsUnicode(true)
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(128)");
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.Property<string>("RefreshToken")
-                        .IsRequired()
-                        .HasMaxLength(2048)
-                        .IsUnicode(true)
-                        .HasColumnType("nvarchar(2048)");
-
-                    b.HasKey("LogId");
-
-                    b.HasIndex("ApplicationId");
-
-                    b.HasIndex("ApplicationUserId", "ApplicationId", "CreatedOn")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_ApplicationUser_Log_Login_ApplicationUserId_ApplicationId_CreatedOn");
-
-                    b.ToTable("ApplicationUser_Log_Login", (string)null);
-                });
-
-            modelBuilder.Entity("Data.Security.Models.ApplicationUserLogin", b =>
-                {
-                    b.Property<int>("ApplicationUserLoginId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ApplicationUserLoginId"));
-
-                    b.Property<int>("ApplicationId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ApplicationUserId")
-                        .HasColumnType("int");
-
-                    b.Property<short?>("FailedPasswordAttemptCount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue((short)0);
-
-                    b.Property<DateTime?>("LastLockoutDate")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.Property<DateTime?>("LastLoginDate")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.Property<DateTime?>("LastPasswordChangeDate")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.Property<string>("Password")
-                        .HasMaxLength(256)
-                        .IsUnicode(true)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("PasswordResetRequired")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("RefreshToken")
-                        .HasMaxLength(2048)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(2048)");
-
-                    b.Property<DateTime?>("RefreshTokenExpiryTime")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.HasKey("ApplicationUserLoginId");
-
-                    b.HasIndex("ApplicationId");
-
-                    b.HasIndex("ApplicationUserId")
-                        .IsUnique();
-
-                    b.HasIndex("ApplicationUserId", "ApplicationId")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_ApplicationUserLogin_ApplicationUserId_ApplicationId");
-
-                    b.ToTable("ApplicationUserLogin", (string)null);
                 });
 
             modelBuilder.Entity("Data.Security.Models.ApplicationUserPermission", b =>
@@ -583,6 +413,234 @@ namespace Data.Security.Migrations
                     b.ToTable("RolePermission", (string)null);
                 });
 
+            modelBuilder.Entity("Data.Security.Models.User", b =>
+                {
+                    b.Property<int>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ReadOnly")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_User_Email");
+
+                    b.ToTable("User", (string)null);
+                });
+
+            modelBuilder.Entity("Data.Security.Models.UserLogChangePassword", b =>
+                {
+                    b.Property<int>("LogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LogId"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
+                    b.Property<string>("OldPassword")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LogId");
+
+                    b.HasIndex("UserId", "OldPassword")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_User_Log_ChangePassword_UserId_OldPassword");
+
+                    b.ToTable("User_Log_ChangePassword", (string)null);
+                });
+
+            modelBuilder.Entity("Data.Security.Models.UserLogLogin", b =>
+                {
+                    b.Property<int>("LogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LogId"));
+
+                    b.Property<int>("ApplicationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AuthToken")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LogId");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("UserId", "ApplicationId", "CreatedOn")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_User_Log_Login_UserId_ApplicationId_CreatedOn");
+
+                    b.ToTable("User_Log_Login", (string)null);
+                });
+
+            modelBuilder.Entity("Data.Security.Models.UserLogin", b =>
+                {
+                    b.Property<int>("UserLoginId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserLoginId"));
+
+                    b.Property<short?>("FailedPasswordAttemptCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((short)0);
+
+                    b.Property<DateTime?>("LastLockoutDate")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
+                    b.Property<DateTime?>("LastLoginDate")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
+                    b.Property<DateTime?>("LastPasswordChangeDate")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
+                    b.Property<string>("Password")
+                        .HasMaxLength(256)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("PasswordResetRequired")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserLoginId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_UserLogin_UserId");
+
+                    b.ToTable("UserLogin", (string)null);
+                });
+
+            modelBuilder.Entity("Data.Security.Models.UserRefreshToken", b =>
+                {
+                    b.Property<int>("UserRefreshTokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserRefreshTokenId"));
+
+                    b.Property<int>("ApplicationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RefreshToken")
+                        .HasMaxLength(2048)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserRefreshTokenId");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.HasIndex("UserId", "ApplicationId")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_UserRefreshToken_UserId_ApplicationId");
+
+                    b.ToTable("UserRefreshToken", (string)null);
+                });
+
             modelBuilder.Entity("Shared.Data.Models.AuditLog", b =>
                 {
                     b.Property<int>("AuditLogId")
@@ -639,64 +697,15 @@ namespace Data.Security.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_ApplicationUser_Application");
 
-                    b.Navigation("Application");
-                });
-
-            modelBuilder.Entity("Data.Security.Models.ApplicationUserLogChangePassword", b =>
-                {
-                    b.HasOne("Data.Security.Models.Application", "Application")
-                        .WithMany()
-                        .HasForeignKey("ApplicationId")
+                    b.HasOne("Data.Security.Models.User", "User")
+                        .WithMany("ApplicationUsers")
+                        .HasForeignKey("UserId")
                         .IsRequired()
-                        .HasConstraintName("FK_ApplicationUser_Log_ChangePassword_Application");
-
-                    b.HasOne("Data.Security.Models.ApplicationUser", "ApplicationUser")
-                        .WithMany()
-                        .HasForeignKey("ApplicationUserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ApplicationUser_Log_ChangePassword_User");
+                        .HasConstraintName("FK_ApplicationUser_User");
 
                     b.Navigation("Application");
 
-                    b.Navigation("ApplicationUser");
-                });
-
-            modelBuilder.Entity("Data.Security.Models.ApplicationUserLogLogin", b =>
-                {
-                    b.HasOne("Data.Security.Models.Application", "Application")
-                        .WithMany()
-                        .HasForeignKey("ApplicationId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ApplicationUser_Log_Login_Application");
-
-                    b.HasOne("Data.Security.Models.ApplicationUser", "ApplicationUser")
-                        .WithMany()
-                        .HasForeignKey("ApplicationUserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ApplicationUser_Log_Login_User");
-
-                    b.Navigation("Application");
-
-                    b.Navigation("ApplicationUser");
-                });
-
-            modelBuilder.Entity("Data.Security.Models.ApplicationUserLogin", b =>
-                {
-                    b.HasOne("Data.Security.Models.Application", "Application")
-                        .WithMany()
-                        .HasForeignKey("ApplicationId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ApplicationUserLogin_Application");
-
-                    b.HasOne("Data.Security.Models.ApplicationUser", "ApplicationUser")
-                        .WithOne("ApplicationUserLogin")
-                        .HasForeignKey("Data.Security.Models.ApplicationUserLogin", "ApplicationUserId")
-                        .IsRequired()
-                        .HasConstraintName("FK_ApplicationUserLogin_ApplicationUser");
-
-                    b.Navigation("Application");
-
-                    b.Navigation("ApplicationUser");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Data.Security.Models.ApplicationUserPermission", b =>
@@ -802,6 +811,66 @@ namespace Data.Security.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("Data.Security.Models.UserLogChangePassword", b =>
+                {
+                    b.HasOne("Data.Security.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .IsRequired()
+                        .HasConstraintName("FK_User_Log_ChangePassword_User");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Data.Security.Models.UserLogLogin", b =>
+                {
+                    b.HasOne("Data.Security.Models.Application", "Application")
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .IsRequired()
+                        .HasConstraintName("FK_User_Log_Login_Application");
+
+                    b.HasOne("Data.Security.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .IsRequired()
+                        .HasConstraintName("FK_User_Log_Login_User");
+
+                    b.Navigation("Application");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Data.Security.Models.UserLogin", b =>
+                {
+                    b.HasOne("Data.Security.Models.User", "User")
+                        .WithOne("UserLogin")
+                        .HasForeignKey("Data.Security.Models.UserLogin", "UserId")
+                        .IsRequired()
+                        .HasConstraintName("FK_UserLogin_User");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Data.Security.Models.UserRefreshToken", b =>
+                {
+                    b.HasOne("Data.Security.Models.Application", "Application")
+                        .WithMany("UserRefreshTokens")
+                        .HasForeignKey("ApplicationId")
+                        .IsRequired()
+                        .HasConstraintName("FK_UserRefreshToken_Application");
+
+                    b.HasOne("Data.Security.Models.User", "User")
+                        .WithMany("UserRefreshTokens")
+                        .HasForeignKey("UserId")
+                        .IsRequired()
+                        .HasConstraintName("FK_UserRefreshToken_User");
+
+                    b.Navigation("Application");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Data.Security.Models.Application", b =>
                 {
                     b.Navigation("ApplicationUserPermissions");
@@ -815,13 +884,12 @@ namespace Data.Security.Migrations
                     b.Navigation("RolePermissions");
 
                     b.Navigation("Roles");
+
+                    b.Navigation("UserRefreshTokens");
                 });
 
             modelBuilder.Entity("Data.Security.Models.ApplicationUser", b =>
                 {
-                    b.Navigation("ApplicationUserLogin")
-                        .IsRequired();
-
                     b.Navigation("ApplicationUserPermissions");
 
                     b.Navigation("ApplicationUserRoles");
@@ -839,6 +907,16 @@ namespace Data.Security.Migrations
                     b.Navigation("ApplicationUserRoles");
 
                     b.Navigation("RolePermissions");
+                });
+
+            modelBuilder.Entity("Data.Security.Models.User", b =>
+                {
+                    b.Navigation("ApplicationUsers");
+
+                    b.Navigation("UserLogin")
+                        .IsRequired();
+
+                    b.Navigation("UserRefreshTokens");
                 });
 #pragma warning restore 612, 618
         }

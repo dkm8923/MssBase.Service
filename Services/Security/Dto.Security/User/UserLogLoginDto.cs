@@ -1,9 +1,9 @@
-namespace Dto.Security.ApplicationUser
+namespace Dto.Security.User
 {
-    public record ApplicationUserLogLoginDto
+    public record UserLogLoginDto
     {
         public int LogId { get; set; }
-        public int ApplicationUserId { get; set; }
+        public int UserId { get; set; }
         public int ApplicationId { get; set; }
         public string AuthToken { get; set; }
         public string RefreshToken { get; set; }

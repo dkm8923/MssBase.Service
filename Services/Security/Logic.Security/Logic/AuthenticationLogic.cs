@@ -5,7 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
-using Contract.Security.ApplicationUser;
+using Contract.Security.User;
 using FluentValidation;
 using Shared.Models;
 using FluentValidation.Results;
@@ -15,13 +15,16 @@ using Data.Security;
 using Microsoft.EntityFrameworkCore;
 using Contract.Security;
 using Shared.Logic.Common;
-using Dto.Security.ApplicationUser.Logic;
-using Dto.Security.ApplicationUser;
+using Dto.Security.User.Logic;
+using Dto.Security.User;
 using System.Text.Json;
 using Dto.Security.Application.Logic;
 using Dto.Security.Application;
 using System.Security.Cryptography;
 using Data.Security.Models;
+using static Shared.Logic.Common.Constants;
+using Contract.Security.ApplicationUser;
+using Dto.Security.ApplicationUser.Logic;
 
 namespace Logic.Security.Logic;
 
@@ -61,7 +64,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         _forgotPasswordRequestValidator = forgotPasswordRequestValidator;
     }
 
-    public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic)
+    public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req, IUserLogic userLogic, IApplicationLogic applicationLogic, IApplicationUserLogic applicationUserLogic)
     {
         var applicationRes = await _retrieveApplicationInfoForAuthentication(req, applicationLogic);
 
@@ -75,8 +78,16 @@ public class AuthenticationLogic : IAuthenticationLogic
 
         if (userInfoRes is null)
         {
-            //user not found with that email address / application id combo
+            //user not found with that email address
             return _createInvalidCredentialsError();
+        }
+
+        //verify user is assigned to application being authenticated against
+        var isUserAssignedToApplication = await _isUserAssignedToApplication(userInfoRes.UserId, applicationRes.ApplicationId, applicationUserLogic);
+        if (!isUserAssignedToApplication)
+        {
+            //user is not assigned to the application being authenticated against
+            return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.Authentication, new List<string> { "User is not assigned to Application in Context!" } } } };
         }
 
         //check if user is currently locked out due to too many failed password attempts. If so, return lockout message instead of invalid credentials message
@@ -90,7 +101,7 @@ public class AuthenticationLogic : IAuthenticationLogic
 
         if (!isValidPassword)
         {
-            var failedPasswordAttemptCount = await _updateFailedPasswordAttemptLogic(userInfoRes.ApplicationUserId, applicationRes.ApplicationId);
+            var failedPasswordAttemptCount = await _updateFailedPasswordAttemptLogic(userInfoRes.UserId, applicationRes.ApplicationId);
 
             if (failedPasswordAttemptCount >= _maxFailedPasswordAttemptCount)
             {
@@ -110,25 +121,25 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
 
         //generate JWT token and return
-        var applicationUserWithRelatedData = await applicationUserLogic.GetById(userInfoRes.ApplicationUserId, new BaseLogicGet { CurrentUser = userInfoRes.Email, IncludeRelated = true });
+        var userWithRelatedData = await userLogic.GetById(userInfoRes.UserId, new BaseLogicGet { CurrentUser = userInfoRes.Email, IncludeRelated = true });
         
-        var authCredentials = _extractAuthorizationCredentialsFromApplicationUserResponse(applicationUserWithRelatedData.Response, applicationRes);
+        var authCredentials = _extractAuthorizationCredentialsFromUserResponse(userWithRelatedData.Response, applicationRes);
 
         var jwtToken = _generateJwtToken(authCredentials);
         var refreshToken = _generateRefreshToken();
     
         //successful auth occurred:
-        await _updateApplicationUserOnSuccessfulLogin(applicationUserWithRelatedData.Response.ApplicationUserId, applicationRes.ApplicationId, refreshToken);
+        await _updateUserOnSuccessfulLogin(userWithRelatedData.Response.UserId, applicationRes.ApplicationId, refreshToken);
 
         if (_authenticationSettingsConfigMonitor.CurrentValue.LogSuccessfulAuthentication)
         {
-            await _logSuccessfulLogin(applicationUserWithRelatedData.Response, jwtToken, refreshToken);
+            await _logSuccessfulLogin(userWithRelatedData.Response, applicationRes.ApplicationId, jwtToken, refreshToken);
         }
         
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
     }
 
-    public async Task<ErrorValidationResult<AuthenticationResponse>> RefreshToken(RefreshTokenRequest req, IApplicationUserLogic applicationUserLogic, IApplicationLogic applicationLogic)
+    public async Task<ErrorValidationResult<AuthenticationResponse>> RefreshToken(RefreshTokenRequest req, IUserLogic userLogic, IApplicationLogic applicationLogic)
     {
         ValidationResult result = await _refreshTokenRequestValidator.ValidateAsync(req);
         var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<AuthenticationResponse>(result);
@@ -168,15 +179,15 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
 
         //generate JWT token and return
-        var applicationUserWithRelatedData = await applicationUserLogic.GetById(userInfoRes.ApplicationUserId, new BaseLogicGet { CurrentUser = userInfoRes.Email, IncludeRelated = true });
+        var userWithRelatedData = await userLogic.GetById(userInfoRes.UserId, new BaseLogicGet { CurrentUser = userInfoRes.Email, IncludeRelated = true });
         
-        var authCredentials = _extractAuthorizationCredentialsFromApplicationUserResponse(applicationUserWithRelatedData.Response, applicationRes);
+        var authCredentials = _extractAuthorizationCredentialsFromUserResponse(userWithRelatedData.Response, applicationRes);
 
         var jwtToken = _generateJwtToken(authCredentials);
         var refreshToken = _generateRefreshToken();
     
         //successful auth occurred, update user accordingly 
-        await _updateApplicationUserOnSuccessfulTokenRefresh(applicationUserWithRelatedData.Response.ApplicationUserId, applicationRes.ApplicationId, refreshToken);
+        await _updateUserOnSuccessfulTokenRefresh(userWithRelatedData.Response.UserId, applicationRes.ApplicationId, refreshToken);
 
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
     }
@@ -193,13 +204,12 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
 
         //TODO: Do we care about this logic actually checking integrity of anything?
-
-        await _revokeApplicationUserAuthToken(req.Email);
+        await _revokeUserAuthToken(req.Email);
 
         return new ErrorValidationResult();
     }
 
-    public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotPassword(ForgotPasswordRequest req, IApplicationUserLogic applicationUserLogic)
+    public async Task<ErrorValidationResult<NotificationMessageResponse>> ForgotPassword(ForgotPasswordRequest req, IUserLogic userLogic)
     {
         ValidationResult result = await _forgotPasswordRequestValidator.ValidateAsync(req);
         var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<NotificationMessageResponse>(result);
@@ -210,7 +220,7 @@ public class AuthenticationLogic : IAuthenticationLogic
             return errorValidationResult;
         }
 
-        var userRes = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { Email = req.Email, CurrentUser = req.CurrentUser  });
+        var userRes = await userLogic.Filter(new FilterUserLogicRequest { Email = req.Email, CurrentUser = req.CurrentUser  });
 
         if (userRes.Errors.Count > 0 || userRes.Response is null || userRes.Response.Count() == 0)
         {
@@ -219,7 +229,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
 
         //reset password to a new random password and email to user
-        var resetPasswordResponse = await applicationUserLogic.ResetPassword(userRes.Response.First().ApplicationUserId);
+        var resetPasswordResponse = await userLogic.ResetPassword(userRes.Response.First().UserId);
 
         //TODO: Actually email user...
 
@@ -244,7 +254,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createInvalidCredentialsError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "Authentication", new List<string> { "Invalid email address or password!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.Authentication, new List<string> { "Invalid email address or password!" } } } };
     }
 
     /// <summary>
@@ -253,7 +263,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createAccountLockedError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "Authentication", new List<string> { $"Account is locked due to too many failed login attempts. Please try again after {_lockoutDurationInMinutes} minutes!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.Authentication, new List<string> { $"Account is locked due to too many failed login attempts. Please try again after {_lockoutDurationInMinutes} minutes!" } } } };
     }
 
     /// <summary>
@@ -262,7 +272,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createPasswordChangeRequiredError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "Authentication", new List<string> { "Password change is required. Please update your password!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.Authentication, new List<string> { "Password change is required. Please update your password!" } } } };
     }
 
     /// <summary>
@@ -271,7 +281,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createUserNotFoundError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "User Not Found!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.RefreshToken, new List<string> { "User Not Found!" } } } };
     }
 
     /// <summary>
@@ -280,7 +290,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createInvalidAuthTokenError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "Invalid Token!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.RefreshToken, new List<string> { "Invalid Token!" } } } };
     }
 
     /// <summary>
@@ -289,7 +299,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createInvalidRefreshTokenError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "Invalid Refresh Token!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.RefreshToken, new List<string> { "Invalid Refresh Token!" } } } };
     }
 
     /// <summary>
@@ -298,7 +308,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createExpiredRefreshTokenError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "Refresh Token Expired!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.RefreshToken, new List<string> { "Refresh Token Expired!" } } } };
     }
 
     /// <summary>
@@ -328,36 +338,42 @@ public class AuthenticationLogic : IAuthenticationLogic
     {
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var query = dbContext.ApplicationUsers.AsQueryable().AsNoTracking().Include(aul => aul.ApplicationUserLogin);
-            var user = await query.Where(x => x.ApplicationId == applicationId && x.Email == email && x.Active)
+            var query = dbContext.Users.AsQueryable().AsNoTracking().Include(ul => ul.UserLogin);
+            var user = await query.Where(x => x.Email == email && x.Active)
                                   .Select(au => new { 
-                                    au.ApplicationUserId, 
+                                    au.UserId, 
                                     au.Email, 
-                                    au.ApplicationUserLogin.Password,
-                                    au.ApplicationUserLogin.PasswordResetRequired, 
-                                    au.ApplicationUserLogin.LastLockoutDate, 
-                                    au.ApplicationUserLogin.LastPasswordChangeDate,
-                                    au.ApplicationUserLogin.RefreshToken,
-                                    au.ApplicationUserLogin.RefreshTokenExpiryTime
+                                    au.UserLogin.Password,
+                                    au.UserLogin.PasswordResetRequired, 
+                                    au.UserLogin.LastLockoutDate, 
+                                    au.UserLogin.LastPasswordChangeDate
                                   })
                                   .FirstOrDefaultAsync();
 
-             if (user == null)
-             {
-                 return null;
-             }
+            if (user == null)
+            {
+                return null;
+            }
 
-             return new RequiredUserInfoForAuthenticationResponse { 
-                ApplicationUserId = user.ApplicationUserId, 
+            var userRefreshToken = dbContext.UserRefreshTokens.AsQueryable().AsNoTracking().FirstOrDefault(ent => ent.User.Email == email && ent.ApplicationId == applicationId);
+
+            return new RequiredUserInfoForAuthenticationResponse { 
+                UserId = user.UserId, 
                 Email = user.Email, 
                 PasswordHash = user.Password, 
                 PasswordResetRequired = user.PasswordResetRequired, 
                 LastLockoutDate = user.LastLockoutDate, 
                 LastPasswordChangeDate = user.LastPasswordChangeDate,
-                RefreshToken = user.RefreshToken,
-                RefreshTokenExpiryTime = user.RefreshTokenExpiryTime
+                RefreshToken = userRefreshToken?.RefreshToken,
+                RefreshTokenExpiryTime = userRefreshToken?.RefreshTokenExpiryTime
             };
         }
+    }
+
+    private async Task<bool> _isUserAssignedToApplication(int userId, int applicationId, IApplicationUserLogic applicationUserLogic) 
+    {
+        var applicationUserFilterRes = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { ApplicationId = applicationId, UserId = userId });
+        return applicationUserFilterRes.Errors.Count == 0 && applicationUserFilterRes.Response.Count() == 1;
     }
 
     /// <summary>
@@ -376,7 +392,7 @@ public class AuthenticationLogic : IAuthenticationLogic
             // Validate Application exists
             if (applicationRes == null)
             {
-                errorValidationResult.Errors.Add("ApplicationName", new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage("ApplicationName") });
+                errorValidationResult.Errors.Add(EntityFieldNames.ApplicationName, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(EntityFieldNames.ApplicationName) });
             }
         }
 
@@ -386,13 +402,13 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <summary>
     /// Increments the failed password attempt count for the application user. If the failed password attempt count exceeds the configured maximum, also sets the last lockout date to the current date and time to indicate that the user is locked out. Returns the updated failed password attempt count after incrementing. This method is used to track failed login attempts and lock out users who exceed the maximum allowed attempts to help prevent brute force attacks.
     /// </summary>
-    /// <param name="applicationUserId"></param>
+    /// <param name="UserId"></param>
     /// <returns></returns>
-    private async Task<short> _updateFailedPasswordAttemptLogic(int applicationUserId, int applicationId)
+    private async Task<short> _updateFailedPasswordAttemptLogic(int UserId, int applicationId)
     {
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId && ent.ApplicationId == applicationId);
+            var entity = await dbContext.UserLogins.FirstOrDefaultAsync(ent => ent.UserId == UserId);
 
             if (entity != null)
             {
@@ -414,51 +430,68 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <summary>
     /// Updates the application user's last login date to the current date and time, and resets the failed password attempt count to 0 on successful login.
     /// </summary>
-    /// <param name="applicationUserId"></param>
+    /// <param name="UserId"></param>
     /// <returns></returns>
-    private async Task _updateApplicationUserOnSuccessfulLogin(int applicationUserId, int applicationId, string refreshToken)
+    private async Task _updateUserOnSuccessfulLogin(int UserId, int applicationId, string refreshToken)
     {
         var jwtConfig = _jwtConfigMonitor.CurrentValue;
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId && ent.ApplicationId == applicationId);
+            var userLoginEntity = await dbContext.UserLogins.FirstOrDefaultAsync(ent => ent.UserId == UserId);
+            var userRefreshTokenEntity = await dbContext.UserRefreshTokens.FirstOrDefaultAsync(ent => ent.UserId == UserId && ent.ApplicationId == applicationId);
 
-            if (entity != null)
+            if (userLoginEntity != null)
             {
-                entity.LastLoginDate = CommonUtilities.GetDateTimeUtcNow();
-                entity.FailedPasswordAttemptCount = 0; //reset failed password attempt count on successful login
-                entity.RefreshToken = refreshToken;
-                entity.RefreshTokenExpiryTime = DateTime.Now.AddDays(jwtConfig.RefreshTokenExpiryInDays);
-                
+                userLoginEntity.LastLoginDate = CommonUtilities.GetDateTimeUtcNow();
+                userLoginEntity.FailedPasswordAttemptCount = 0; //reset failed password attempt count on successful login
+
+                if (userRefreshTokenEntity != null)
+                {
+                    userRefreshTokenEntity.RefreshToken = refreshToken;
+                    userRefreshTokenEntity.RefreshTokenExpiryTime = DateTime.Now.AddDays(jwtConfig.RefreshTokenExpiryInDays);
+                }
+                else
+                {
+                    // If no existing refresh token entity exists for this user and application, create a new one
+                    var newRefreshTokenEntity = new UserRefreshToken
+                    {
+                        UserId = UserId,
+                        ApplicationId = applicationId,
+                        RefreshToken = refreshToken,
+                        RefreshTokenExpiryTime = DateTime.Now.AddDays(jwtConfig.RefreshTokenExpiryInDays)
+                    };
+                    dbContext.UserRefreshTokens.Add(newRefreshTokenEntity);
+                }
+
                 await dbContext.SaveChangesAsync();
             }
         }
     }
 
-    private async Task _logSuccessfulLogin(ApplicationUserDto applicationUser, string authToken, string refreshToken)
+    private async Task _logSuccessfulLogin(UserDto user, int applicationId, string authToken, string refreshToken)
     {
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            dbContext.ApplicationUserLogLogins.Add(new ApplicationUserLogLogin { 
-                ApplicationUserId = applicationUser.ApplicationUserId, 
-                ApplicationId = applicationUser.ApplicationId, 
+            dbContext.UserLogLogins.Add(new UserLogLogin { 
+                ApplicationId = applicationId,
+                UserId = user.UserId, 
                 AuthToken = authToken, 
                 RefreshToken = refreshToken, 
-                CreatedBy = applicationUser.Email, 
+                CreatedBy = user.Email, 
                 CreatedOn = CommonUtilities.GetDateTimeUtcNow() });
 
             await dbContext.SaveChangesAsync();
         }
     }
 
-    private async Task _updateApplicationUserOnSuccessfulTokenRefresh(int applicationUserId, int applicationId, string refreshToken)
+    private async Task _updateUserOnSuccessfulTokenRefresh(int userId, int applicationId, string refreshToken)
     {
         var jwtConfig = _jwtConfigMonitor.CurrentValue;
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUserId == applicationUserId && ent.ApplicationId == applicationId);
+            var entity = await dbContext.UserRefreshTokens.FirstOrDefaultAsync(ent => ent.UserId == userId && ent.ApplicationId == applicationId);
 
             if (entity != null)
             {
@@ -470,60 +503,57 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
     }
 
-    private async Task _revokeApplicationUserAuthToken(string email)
+    private async Task _revokeUserAuthToken(string email)
     {
         var jwtConfig = _jwtConfigMonitor.CurrentValue;
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.ApplicationUserLogins.FirstOrDefaultAsync(ent => ent.ApplicationUser.Email == email);
-
-            if (entity != null)
-            {
-                entity.RefreshToken = null;
-                entity.RefreshTokenExpiryTime = null;
-
-                await dbContext.SaveChangesAsync();
-            }
+            dbContext.UserRefreshTokens.RemoveRange(dbContext.UserRefreshTokens.Where(ent => ent.User.Email == email));
+            await dbContext.SaveChangesAsync();
         }
     }
     
-    private AuthorizationCredentialsResponse _extractAuthorizationCredentialsFromApplicationUserResponse(ApplicationUserDto applicationUser, ApplicationDto applicationRes)
+    private AuthorizationCredentialsResponse _extractAuthorizationCredentialsFromUserResponse(UserDto user, ApplicationDto applicationRes)
     {
         var permissions = new List<string>();
         var roles = new List<string>();
         
-        if (applicationUser.ApplicationUserPermissions != null)
+        if (user.ApplicationUsers != null && user.ApplicationUsers.ToList().Count > 0)
         {
-            foreach (var aup in applicationUser.ApplicationUserPermissions)
+            foreach (var applicationUser in user.ApplicationUsers)
             {
-                permissions.Add(aup.Permission.Name);
-            }
-        }
-        
-        if (applicationUser.ApplicationUserRoles != null)
-        {
-            foreach (var aur in applicationUser.ApplicationUserRoles)
-            {
-                roles.Add(aur.Role.Name);
-
-                if (aur.Role.RolePermissions != null)
+                if (applicationUser.ApplicationUserPermissions != null)
                 {
-                    foreach (var p in aur.Role.RolePermissions)
+                    foreach (var applicationUserPermission in applicationUser.ApplicationUserPermissions)
                     {
-                        permissions.Add(p.Permission.Name);
+                        permissions.Add(applicationUserPermission.Permission.Name);
+                    }
+                }
+
+                if (applicationUser.ApplicationUserRoles != null)
+                {
+                    foreach (var applicationUserRole in applicationUser.ApplicationUserRoles)
+                    {
+                        if (applicationUserRole.Role.RolePermissions != null)
+                        {
+                            foreach (var rolePermission in applicationUserRole.Role.RolePermissions)
+                            {
+                                permissions.Add(rolePermission.Permission.Name);
+                            }
+                        }
                     }
                 }
             }
         }
-        
+
         permissions = permissions.Distinct().ToList();
         roles = roles.Distinct().ToList();
 
         return new AuthorizationCredentialsResponse
         {
             ApplicationName = applicationRes.Name,
-            Email = applicationUser.Email,
+            Email = user.Email,
             Permissions = permissions,
             Roles = roles
         };
@@ -618,7 +648,7 @@ public class AuthenticationLogic : IAuthenticationLogic
 
     private record RequiredUserInfoForAuthenticationResponse
     {
-        public int ApplicationUserId { get; set; }
+        public int UserId { get; set; }
         public string Email { get; set; }
         public string PasswordHash { get; set; }
         public DateTime? LastLockoutDate { get; set; }

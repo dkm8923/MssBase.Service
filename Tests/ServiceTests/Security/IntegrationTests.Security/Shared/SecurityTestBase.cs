@@ -47,6 +47,10 @@ using Shared.Models;
 using MssBase.Service.Shared.Authorization;
 using Microsoft.EntityFrameworkCore;
 using IntegrationTests.Shared.Models.Config;
+using Contract.Security.User;
+using Dto.Security.User.Logic;
+using Dto.Security.User;
+using Logic.Security.Validators.User;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -60,6 +64,7 @@ public class SecurityTestBase
     protected readonly ILoggerService _loggerSvc;
     protected readonly IAuthenticationLogic _authenticationLogic;
     protected readonly IApplicationLogic _applicationLogic;
+    protected readonly IUserLogic _userLogic;
     protected readonly IApplicationUserLogic _applicationUserLogic;
     protected readonly IApplicationUserPermissionLogic _applicationUserPermissionLogic;
     protected readonly IApplicationUserRoleLogic _applicationUserRoleLogic;
@@ -90,6 +95,7 @@ public class SecurityTestBase
         _passwordValidationConfigMonitor = _serviceProvider.GetService<IOptionsMonitor<PasswordValidationConfig>>();
         _authenticationLogic = _serviceProvider.GetService<IAuthenticationLogic>();
         _applicationLogic = _serviceProvider.GetService<IApplicationLogic>();
+        _userLogic = _serviceProvider.GetService<IUserLogic>(); 
         _applicationUserLogic = _serviceProvider.GetService<IApplicationUserLogic>();
         _applicationUserPermissionLogic = _serviceProvider.GetService<IApplicationUserPermissionLogic>();
         _applicationUserRoleLogic = _serviceProvider.GetService<IApplicationUserRoleLogic>();
@@ -113,11 +119,13 @@ public class SecurityTestBase
                     DELETE FROM [RolePermission];
                     DELETE FROM [Role];
                     DELETE FROM [Permission];
-                    DELETE FROM [ApplicationUser_Log_Login];
-                    DELETE FROM [ApplicationUser_Log_ChangePassword];
-                    DELETE FROM [ApplicationUserLogin];
                     DELETE FROM [ApplicationUser];
+                    DELETE FROM [User_Log_Login];
+                    DELETE FROM [User_Log_ChangePassword];
+                    DELETE FROM [UserRefreshToken];
+                    DELETE FROM [UserLogin];
                     DELETE FROM [Application];
+                    DELETE FROM [User];
                     DELETE FROM [AuditLog];
                 ";
                 await dbContext.Database.ExecuteSqlRawAsync(query);
@@ -129,9 +137,11 @@ public class SecurityTestBase
                 await dbContext.RolePermissions.ExecuteDeleteAsync();
                 await dbContext.Roles.ExecuteDeleteAsync();
                 await dbContext.Permissions.ExecuteDeleteAsync();
-                await dbContext.ApplicationUserLogins.ExecuteDeleteAsync();
                 await dbContext.ApplicationUsers.ExecuteDeleteAsync();
                 await dbContext.Applications.ExecuteDeleteAsync();
+                await dbContext.UserRefreshTokens.ExecuteDeleteAsync();
+                await dbContext.UserLogins.ExecuteDeleteAsync();
+                await dbContext.Users.ExecuteDeleteAsync();
                 await dbContext.AuditLogs.ExecuteDeleteAsync();
             }
         }
@@ -150,27 +160,34 @@ public class SecurityTestBase
         }
     }
 
-    protected async Task<ApplicationUserDto> CreateTestUserWithPermissions(int applicationId, AssignRoleRequest req)
+    protected async Task<UserDto> CreateTestUserWithPermissions(int applicationId, AssignRoleRequest req)
     {
         try
         {
-            var testUser = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest { 
+            var testUser = await _userLogic.Insert(new InsertUpdateUserRequest { 
                 Active = true, 
-                ApplicationId = applicationId, 
                 Email = TestConstants.DefaultTestUserEmail, 
                 FirstName = "Bob", 
                 LastName = "Smith", 
                 DateOfBirth = new DateTime(1987, 2, 12),
                 CurrentUser = TestConstants.CurrentUser 
-            }, _applicationLogic);
+            });
 
             if (testUser.Response != null)
             {
                 //change password for users so they can be used for authentication testing...
-                await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = testUser.Response.ApplicationUserId, NewPassword = TestConstants.DefaultTestUserPassword, CurrentUser = TestConstants.CurrentUser });
+                await _userLogic.ChangePassword(new Dto.Security.User.ChangePasswordRequest { UserId = testUser.Response.UserId, NewPassword = TestConstants.DefaultTestUserPassword, CurrentUser = TestConstants.CurrentUser });
             }
 
-            var applicationUserId = testUser.Response.ApplicationUserId;
+            //create application user
+            var applicationUser = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest {
+                Active = true,
+                ApplicationId = applicationId,
+                UserId = testUser.Response.UserId,
+                CurrentUser = TestConstants.CurrentUser
+            }, _applicationLogic, _applicationUserLogic, _userLogic);
+
+            var applicationUserId = applicationUser.Response.ApplicationUserId;
 
             //Create default application user permissions for user
             await CreateDefaultApplicationUserPermissionsForTestUser(applicationId, applicationUserId);
@@ -180,6 +197,15 @@ public class SecurityTestBase
                 var applicationRolesWithPermissions = await CreateDefaultApplicationRolesWithPermissions(applicationId);
                 var roleId = req.ApplicationAdmin ? applicationRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationAdmin).FirstOrDefault().RoleId 
                     : applicationRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationReadOnly).FirstOrDefault().RoleId;
+
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
+            }
+
+            if (req.UserAdmin || req.UserReadOnly)
+            {
+                var userRolesWithPermissions = await CreateDefaultUserRolesWithPermissions(applicationId);
+                var roleId = req.UserAdmin ? userRolesWithPermissions.Where(x => x.Name == UserApiRoles.UserAdmin).FirstOrDefault().RoleId 
+                    : userRolesWithPermissions.Where(x => x.Name == UserApiRoles.UserReadOnly).FirstOrDefault().RoleId;
 
                 await AssignRoleToUser(applicationId, applicationUserId, roleId);
             }
@@ -238,7 +264,7 @@ public class SecurityTestBase
                 await AssignRoleToUser(applicationId, applicationUserId, roleId);
             }
 
-            var ret = await _applicationUserLogic.GetById(testUser.Response.ApplicationUserId, new BaseLogicGet { IncludeRelated = true });
+            var ret = await _userLogic.GetById(testUser.Response.UserId, new BaseLogicGet { IncludeRelated = true });
 
             return ret.Response;
         }
@@ -327,6 +353,34 @@ public class SecurityTestBase
         var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationAdmin, Description = "Full Access to all Application Functionality." });
         var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.ApplicationReadOnly, Description = "ReadOnly Access to Application Functionality." });
         var readOnlyPermissions = createdPermissions.Where(x => x.Name == UserApiPermissions.ApplicationRead).ToList();
+
+        // create admin role permissions
+        await CreateRolePermissions(applicationId, createdPermissions, adminRole.RoleId);
+
+        // create readonly role permissions
+        await CreateRolePermissions(applicationId, readOnlyPermissions, readOnlyRole.RoleId);
+        
+        var ret = await _roleLogic.Filter(new FilterRoleLogicRequest { RoleIds = new List<int> { adminRole.RoleId, readOnlyRole.RoleId }, IncludeRelated = true });
+        return ret.Response.ToList();
+    }
+
+    private async Task<List<RoleDto>> CreateDefaultUserRolesWithPermissions(int applicationId)
+    {
+        var permissionsToCreate = new List<InsertUpdatePermissionRequest>();
+        
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.UserRead, Description = "Allows for retrieving all User data in a read only state" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.UserInsert, Description = "Allows for creating new User data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.UserUpdate, Description = "Allows for updating existing User data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.UserDelete, Description = "Allows for deleting User data" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.UserResetPassword, Description = "Allows for resetting User password" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.UserChangePassword, Description = "Allows for changing User password" });
+        permissionsToCreate.Add(new InsertUpdatePermissionRequest { Active = true, ApplicationId = applicationId, Name = UserApiPermissions.UserPasswordChangeHistoryRead, Description = "Allows for reading User password change history" });
+
+        var createdPermissions = await CreatePermissions(permissionsToCreate);
+
+        var adminRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.UserAdmin, Description = "Full Access to all User Functionality." });
+        var readOnlyRole = await CreateRole(new InsertUpdateRoleRequest { Active = true, ApplicationId = applicationId, Name = UserApiRoles.UserReadOnly, Description = "ReadOnly Access to all User Functionality." });
+        var readOnlyPermissions = createdPermissions.Where(x => x.Name == UserApiPermissions.UserRead).ToList();
 
         // create admin role permissions
         await CreateRolePermissions(applicationId, createdPermissions, adminRole.RoleId);
@@ -526,7 +580,9 @@ public class SecurityTestBase
 
         foreach (var activeApplication in ret.ActiveApplications)
         {
-            ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(activeApplication.ApplicationId, 1);
+            var activeUser = (await _securityTestUtilities.User.CreateActiveTestRecords(1)).First();
+            ret.ActiveUsers.Add(activeUser);
+            ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(activeApplication.ApplicationId, activeUser.UserId, 1);
             ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(activeApplication.ApplicationId);
             ret.ActiveRoles = await _securityTestUtilities.Role.CreateActiveTestRecords(activeApplication.ApplicationId, 1);
 
@@ -552,7 +608,9 @@ public class SecurityTestBase
 
         foreach (var inactiveApplication in ret.InactiveApplications)
         {
-            ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(inactiveApplication.ApplicationId, 1);
+            var inactiveUser = (await _securityTestUtilities.User.CreateActiveTestRecords(1)).First();
+            ret.InactiveUsers.Add(inactiveUser);
+            ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(inactiveApplication.ApplicationId, inactiveUser.UserId, 1);
             ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(inactiveApplication.ApplicationId, 1);
             ret.InactiveRoles = await _securityTestUtilities.Role.CreateInactiveTestRecords(inactiveApplication.ApplicationId, 1);
 
@@ -579,17 +637,117 @@ public class SecurityTestBase
         return ret;
     }
 
+    protected async Task<SecurityTestData> ArrangeUserTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        ret.ActiveApplications = await _securityTestUtilities.Application.CreateActiveTestRecords(1);
+        ret.InactiveApplications = await _securityTestUtilities.Application.CreateInactiveTestRecords(1);
+        ret.ActiveUsers = await _securityTestUtilities.User.CreateActiveTestRecords(1);
+        ret.InactiveUsers = await _securityTestUtilities.User.CreateInactiveTestRecords(1);
+
+        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(ret.ActiveApplications.FirstOrDefault().ApplicationId, ret.ActiveUsers.FirstOrDefault().UserId, 1);
+        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(ret.InactiveApplications.FirstOrDefault().ApplicationId, ret.InactiveUsers.FirstOrDefault().UserId, 1);
+
+        return ret;
+    }
+
+    protected async Task<SecurityTestData> ArrangeUserTestDataWithRelatedData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        
+        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+        ret.ActiveApplications.Add(application);
+
+        var activeUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+        ret.ActiveUsers.Add(activeUser);
+
+        var inactiveUser = await _securityTestUtilities.User.CreateSingleUserTestRecord(false);
+        ret.InactiveUsers.Add(inactiveUser);
+
+        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, activeUser.UserId, 1);
+        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, inactiveUser.UserId, 1);
+
+        ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1);
+        ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId, 1);
+
+        ret.ActiveRoles = await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1);
+        ret.InactiveRoles = await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId, 1);
+
+        //create role and user permissions with active permissions
+        foreach (var activePermission in ret.ActivePermissions)
+        {
+            foreach (var role in ret.ActiveRoles)
+            {
+                ret.ActiveRolePermissions.Add(await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, role.RoleId, activePermission.PermissionId));
+            }
+
+            ret.ActiveApplicationUserPermissions.Add(await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, ret.ActiveApplicationUsers.FirstOrDefault().ApplicationUserId, activePermission.PermissionId));
+        }
+
+        //create role and user permissions with inactive permissions
+        foreach (var inactivePermission in ret.InactivePermissions)
+        {
+            foreach (var role in ret.InactiveRoles)
+            {
+                ret.InactiveRolePermissions.Add(await _securityTestUtilities.RolePermission.CreateSingleRolePermissionTestRecord(application.ApplicationId, role.RoleId, inactivePermission.PermissionId, false));
+            }
+
+            ret.InactiveApplicationUserPermissions.Add(await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(application.ApplicationId, ret.InactiveApplicationUsers.FirstOrDefault().ApplicationUserId, inactivePermission.PermissionId, false));
+        }
+
+        //attach active role(s) to active user(s)
+        foreach (var activeRole in ret.ActiveRoles)
+        {
+            ret.ActiveApplicationUserRoles.Add(await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(application.ApplicationId, ret.ActiveApplicationUsers.FirstOrDefault().ApplicationUserId, activeRole.RoleId));
+        }
+
+        //attach inactive role(s) to inactive user(s)
+        foreach (var inactiveRole in ret.InactiveRoles)
+        {
+            ret.InactiveApplicationUserRoles.Add(await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(application.ApplicationId, ret.InactiveApplicationUsers.FirstOrDefault().ApplicationUserId, inactiveRole.RoleId, false));
+        }
+
+        return ret;
+    }
+
+    protected async Task<SecurityTestData> ArrangeReadOnlyUserTestData()
+    {
+        // Arrange
+        var ret = new SecurityTestData();
+        await ClearAllSecurityTestTableData();
+        ret.ActiveUsers = await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1);
+        ret.InactiveUsers = await _securityTestUtilities.User.CreateInactiveReadOnlyTestRecords(1);
+
+        return ret;
+    }
+
+    protected async Task<ErrorValidationResult> ArrangeUserPasswordChangeHistoryTestData(int userId)
+    {
+        var passwordChangeResponse = await _userLogic.ChangePassword(new Dto.Security.User.ChangePasswordRequest { UserId = userId, NewPassword = TestConstants.DefaultTestUserPassword + "1", CurrentUser = TestConstants.CurrentUser });
+        return passwordChangeResponse;
+    }
+
     protected async Task<SecurityTestData> ArrangeApplicationUserTestData()
     {
         // Arrange
         var ret = new SecurityTestData();
         await ClearAllSecurityTestTableData();
+        
         var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-
         ret.ActiveApplications.Add(application);
 
-        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1);
-        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, 1);
+        var activeUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+        ret.ActiveUsers.Add(activeUser);
+
+        var inactiveUser = await _securityTestUtilities.User.CreateSingleUserTestRecord(false);
+        ret.InactiveUsers.Add(inactiveUser);
+
+        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, activeUser.UserId, 1);
+        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, inactiveUser.UserId, 1);
 
         return ret;
     }
@@ -603,16 +761,16 @@ public class SecurityTestBase
         var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
         ret.ActiveApplications.Add(application);
 
-        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
-        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
+        var activeReadOnlyApplication = (await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1)).First();
+        var activeReadOnlyUser = (await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1)).First();
+
+        var inactiveReadOnlyApplication = (await _securityTestUtilities.Application.CreateInactiveReadOnlyTestRecords(1)).First();
+        var inactiveReadOnlyUser = (await _securityTestUtilities.User.CreateInactiveReadOnlyTestRecords(1)).First();
+
+        ret.ActiveApplicationUsers.Add(await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecord(activeReadOnlyApplication.ApplicationId, activeReadOnlyUser.UserId));
+        ret.InactiveApplicationUsers.Add(await _securityTestUtilities.ApplicationUser.CreateInactiveReadOnlyTestRecord(inactiveReadOnlyApplication.ApplicationId, inactiveReadOnlyUser.UserId));
 
         return ret;
-    }
-
-    protected async Task<ErrorValidationResult> ArrangeApplicationUserPasswordChangeHistoryTestData(int applicationUserId)
-    {
-        var passwordChangeResponse = await _applicationUserLogic.ChangePassword(new ChangePasswordRequest { ApplicationUserId = applicationUserId, NewPassword = TestConstants.DefaultTestUserPassword + "1", CurrentUser = TestConstants.CurrentUser });
-        return passwordChangeResponse;
     }
 
     protected async Task<SecurityTestData> ArrangeApplicationUserTestDataWithRelatedData()
@@ -620,12 +778,18 @@ public class SecurityTestBase
         // Arrange
         var ret = new SecurityTestData();
         await ClearAllSecurityTestTableData();
-        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
         
+        var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
         ret.ActiveApplications.Add(application);
 
-        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, 1);
-        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, 1);
+        var activeUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+        ret.ActiveUsers.Add(activeUser);
+
+        var inactiveUser = await _securityTestUtilities.User.CreateSingleUserTestRecord(false);
+        ret.InactiveUsers.Add(inactiveUser);
+
+        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(application.ApplicationId, activeUser.UserId, 1);
+        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(application.ApplicationId, inactiveUser.UserId, 1);
 
         ret.ActivePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1);
         ret.InactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId, 1);
@@ -785,7 +949,10 @@ public class SecurityTestBase
         var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
         ret.ActiveApplications.Add(application);
         
-        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+        var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+        ret.ActiveUsers.Add(user);
+
+        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
         var activePermissions = await _securityTestUtilities.Permission.CreateActiveTestRecords(application.ApplicationId, 1);
         var inactivePermissions = await _securityTestUtilities.Permission.CreateInactiveTestRecords(application.ApplicationId, 1);
 
@@ -822,7 +989,10 @@ public class SecurityTestBase
         var application = (await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1)).First();
         ret.ActiveApplications.Add(application);
         
-        var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId)).First();
+        var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+        ret.ActiveUsers.Add(user);
+
+        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecord(application.ApplicationId, user.UserId);
         var activePermissions = await _securityTestUtilities.Permission.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
         var inactivePermissions = await _securityTestUtilities.Permission.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
 
@@ -859,7 +1029,10 @@ public class SecurityTestBase
         var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
         ret.ActiveApplications.Add(application);
         
-        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+        var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+        ret.ActiveUsers.Add(user);
+
+        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
         var activeRoles = await _securityTestUtilities.Role.CreateActiveTestRecords(application.ApplicationId, 1);
         var inactiveRoles = await _securityTestUtilities.Role.CreateInactiveTestRecords(application.ApplicationId, 1);
 
@@ -896,7 +1069,10 @@ public class SecurityTestBase
         var application = (await _securityTestUtilities.Application.CreateActiveReadOnlyTestRecords(1)).First();
         ret.ActiveApplications.Add(application);
         
-        var applicationUser = (await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecords(application.ApplicationId)).First();
+        var user = (await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1)).First();
+        ret.ActiveUsers.Add(user);
+
+        var applicationUser = await _securityTestUtilities.ApplicationUser.CreateActiveReadOnlyTestRecord(application.ApplicationId, user.UserId);
         var activeRoles = await _securityTestUtilities.Role.CreateActiveReadOnlyTestRecords(application.ApplicationId, 1);
         var inactiveRoles = await _securityTestUtilities.Role.CreateInactiveReadOnlyTestRecords(application.ApplicationId, 1);
 
@@ -1002,8 +1178,8 @@ public class SecurityTestBase
         var activeApplications = await _securityTestUtilities.Application.CreateActiveTestRecords();
         var inactiveApplications = await _securityTestUtilities.Application.CreateInactiveTestRecords();
         
-        var activeApplicationUsers = new List<ApplicationUserDto>();
-        var inactiveApplicationUsers = new List<ApplicationUserDto>();
+        var activeUsers = new List<UserDto>();
+        var inactiveUsers = new List<UserDto>();
 
         var activePermissions = new List<PermissionDto>();
         var inactivePermissions = new List<PermissionDto>();
@@ -1023,12 +1199,12 @@ public class SecurityTestBase
         foreach (var activeApplication in activeApplications)
         {
             //create test active application users
-            var activeApplicationUserRes = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(activeApplication.ApplicationId);
-            activeApplicationUserRes.ForEach(r => activeApplicationUsers.Add(r));
+            var activeUserRes = await _securityTestUtilities.User.CreateActiveTestRecords();
+            activeUserRes.ForEach(r => activeUsers.Add(r));
 
             //create test inactive application users
-            var inactiveApplicationUserRes = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(activeApplication.ApplicationId);
-            inactiveApplicationUserRes.ForEach(r => inactiveApplicationUsers.Add(r));
+            var inactiveUserRes = await _securityTestUtilities.User.CreateInactiveTestRecords();
+            inactiveUserRes.ForEach(r => inactiveUsers.Add(r));
 
             //create test active permissions
             var activePermissionRes = await _securityTestUtilities.Permission.CreateActiveTestRecords(activeApplication.ApplicationId);
@@ -1049,36 +1225,36 @@ public class SecurityTestBase
             //create test active application user permissions
             foreach (var activePermission in activePermissionRes)
             {
-                foreach (var activeApplicationUser in activeApplicationUserRes)
+                foreach (var activeUser in activeUserRes)
                 {
-                    activeApplicationUserPermissions.AddRange(await _securityTestUtilities.ApplicationUserPermission.CreateActiveTestRecords(activeApplication.ApplicationId, activeApplicationUser.ApplicationUserId, activePermission.PermissionId, 1));
+                    activeApplicationUserPermissions.AddRange(await _securityTestUtilities.ApplicationUserPermission.CreateActiveTestRecords(activeApplication.ApplicationId, activeUser.UserId, activePermission.PermissionId, 1));
                 }
             }
 
             //create test inactive application user permissions
             foreach (var inactivePermission in inactivePermissionRes)
             {
-                foreach (var inactiveApplicationUser in inactiveApplicationUserRes)
+                foreach (var inactiveUser in inactiveUserRes)
                 {
-                    inactiveApplicationUserPermissions.AddRange(await _securityTestUtilities.ApplicationUserPermission.CreateInactiveTestRecords(activeApplication.ApplicationId, inactiveApplicationUser.ApplicationUserId, inactivePermission.PermissionId, 1));
+                    inactiveApplicationUserPermissions.AddRange(await _securityTestUtilities.ApplicationUserPermission.CreateInactiveTestRecords(activeApplication.ApplicationId, inactiveUser.UserId, inactivePermission.PermissionId, 1));
                 }
             }
 
             //create test active application user roles
             foreach (var activeRole in activeRoleRes)
             {
-                foreach (var activeApplicationUser in activeApplicationUserRes)
+                foreach (var activeUser in activeUserRes)
                 {
-                    activeApplicationUserRoles.AddRange(await _securityTestUtilities.ApplicationUserRole.CreateActiveTestRecords(activeApplication.ApplicationId, activeApplicationUser.ApplicationUserId, activeRole.RoleId, 1));
+                    activeApplicationUserRoles.AddRange(await _securityTestUtilities.ApplicationUserRole.CreateActiveTestRecords(activeApplication.ApplicationId, activeUser.UserId, activeRole.RoleId, 1));
                 }
             }
 
             //create test inactive application user roles
             foreach (var inactiveRole in inactiveRoleRes)
             {
-                foreach (var inactiveApplicationUser in inactiveApplicationUserRes)
+                foreach (var inactiveUser in inactiveUserRes)
                 {
-                    inactiveApplicationUserRoles.AddRange(await _securityTestUtilities.ApplicationUserRole.CreateInactiveTestRecords(activeApplication.ApplicationId, inactiveApplicationUser.ApplicationUserId, inactiveRole.RoleId, 1));
+                    inactiveApplicationUserRoles.AddRange(await _securityTestUtilities.ApplicationUserRole.CreateInactiveTestRecords(activeApplication.ApplicationId, inactiveUser.UserId, inactiveRole.RoleId, 1));
                 }
             }
 
@@ -1104,8 +1280,8 @@ public class SecurityTestBase
         foreach (var inactiveApplication in inactiveApplications)
         {
             //create test inactive application users
-            var inactiveApplicationUserRes = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(inactiveApplication.ApplicationId);
-            inactiveApplicationUserRes.ForEach(r => inactiveApplicationUsers.Add(r));
+            var inactiveUserRes = await _securityTestUtilities.User.CreateInactiveTestRecords();
+            inactiveUserRes.ForEach(r => inactiveUsers.Add(r));
 
             //create test inactive permissions
             var inactivePermissionRes = await _securityTestUtilities.Permission.CreateInactiveTestRecords(inactiveApplication.ApplicationId);
@@ -1118,18 +1294,19 @@ public class SecurityTestBase
             //create test inactive application user permissions
             foreach (var inactivePermission in inactivePermissionRes)
             {
-                foreach (var inactiveApplicationUser in inactiveApplicationUserRes)
+                foreach (var inactiveUser in inactiveUserRes)
                 {
-                    inactiveApplicationUserPermissions.AddRange(await _securityTestUtilities.ApplicationUserPermission.CreateInactiveTestRecords(inactiveApplication.ApplicationId, inactiveApplicationUser.ApplicationUserId, inactivePermission.PermissionId, 1));
+                    inactiveApplicationUserPermissions.AddRange(await _securityTestUtilities.ApplicationUserPermission.CreateInactiveTestRecords(inactiveApplication.ApplicationId, inactiveUser.UserId, inactivePermission.PermissionId, 1));
                 }
             }
 
             //create test inactive application user roles
             foreach (var inactiveRole in inactiveRoleRes)
             {
-                foreach (var inactiveApplicationUser in inactiveApplicationUserRes)
+                foreach (var inactiveUser in inactiveUserRes)
                 {
-                    inactiveApplicationUserRoles.AddRange(await _securityTestUtilities.ApplicationUserRole.CreateInactiveTestRecords(inactiveApplication.ApplicationId, inactiveApplicationUser.ApplicationUserId, inactiveRole.RoleId, 1));
+                    inactiveApplicationUserRoles.AddRange(await _securityTestUtilities.ApplicationUserRole.CreateInactiveTestRecords(inactiveApplication.ApplicationId, inactiveUser.UserId, inactiveRole.RoleId, 1));
+
                 }
             }
 
@@ -1145,8 +1322,8 @@ public class SecurityTestBase
         
         securityTestDataRet.ActiveApplications = activeApplications;
         securityTestDataRet.InactiveApplications = inactiveApplications;
-        securityTestDataRet.ActiveApplicationUsers = activeApplicationUsers;
-        securityTestDataRet.InactiveApplicationUsers = inactiveApplicationUsers;
+        securityTestDataRet.ActiveUsers = activeUsers;
+        securityTestDataRet.InactiveUsers = inactiveUsers;
         securityTestDataRet.ActivePermissions = activePermissions;
         securityTestDataRet.InactivePermissions = inactivePermissions;
         securityTestDataRet.ActiveRoles = activeRoles;
@@ -1185,6 +1362,7 @@ public class SecurityTestBase
         services.AddTransient<ISecurityTestUtilitiesManager, SecurityTestUtilitiesManager>();
         services.AddTransient<IAuthenticationUtilities, AuthenticationUtilities>();
         services.AddTransient<IApplicationUtilities, ApplicationUtilities>();
+        services.AddTransient<IUserUtilities, UserUtilities>();
         services.AddTransient<IApplicationUserUtilities, ApplicationUserUtilities>();
         services.AddTransient<IRoleUtilities, RoleUtilities>();
         services.AddTransient<IPermissionUtilities, PermissionUtilities>();
@@ -1218,6 +1396,18 @@ public class SecurityTestBase
 
         #endregion
 
+        #region User
+
+        services.AddTransient<IUserService, UserService>();
+        services.AddTransient<IUserLogic, UserLogic>();
+
+        //Configure Fluent Validation Validators
+        services.AddTransient<IValidator<FilterUserLogicRequest>, FilterUserLogicRequestValidator>();
+        services.AddTransient<IValidator<InsertUpdateUserRequest>, InsertUpdateUserRequestValidator>();
+        services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
+
+        #endregion
+
         #region ApplicationUser
 
         services.AddTransient<IApplicationUserService, ApplicationUserService>();
@@ -1226,8 +1416,7 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
-        services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
-
+        
         #endregion
 
         #region ApplicationUserPermission
@@ -1307,6 +1496,8 @@ public class SecurityTestBase
     {
         public bool ApplicationAdmin { get; set; } = false;
         public bool ApplicationReadOnly { get; set; } = false;
+        public bool UserAdmin { get; set; } = false;
+        public bool UserReadOnly { get; set; } = false;
         public bool ApplicationUserAdmin { get; set; } = false;
         public bool ApplicationUserReadOnly { get; set; } = false;
         public bool ApplicationUserPermissionAdmin { get; set; } = false;

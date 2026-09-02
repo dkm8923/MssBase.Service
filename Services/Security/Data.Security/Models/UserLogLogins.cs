@@ -2,11 +2,11 @@ using Shared.Models.Contracts;
 
 namespace Data.Security.Models;
 
-public partial class ApplicationUserLogLogin : ICreateable
+public partial class UserLogLogin : ICreateable
 {
     public int LogId { get; set; }
 
-    public int ApplicationUserId { get; set; }
+    public int UserId { get; set; }
     public int ApplicationId { get; set; }
     public string AuthToken { get; set; }
     public string RefreshToken { get; set; }
@@ -14,5 +14,5 @@ public partial class ApplicationUserLogLogin : ICreateable
     public string CreatedBy { get; set; }
 
     public virtual Application Application { get; set; } = null!;
-    public virtual ApplicationUser ApplicationUser { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 }

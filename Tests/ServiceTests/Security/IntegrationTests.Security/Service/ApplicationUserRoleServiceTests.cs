@@ -254,7 +254,8 @@ namespace IntegrationTests.Security.Service
             await _cacheTestUtilities.DeleteAllKeyData();
             
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
             var testRecord = await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
 
@@ -289,7 +290,8 @@ namespace IntegrationTests.Security.Service
             // Arrange
             var securityTestData = await ArrangeApplicationUserRoleTestData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
             var permission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
             await _cacheTestUtilities.DeleteAllKeyData();
@@ -305,8 +307,10 @@ namespace IntegrationTests.Security.Service
 
            var applicationUserRoleRes = await _applicationUserRoleLogic.Insert(insertReq, _applicationLogic, _applicationUserLogic, _roleLogic);
 
+           var newRole = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
            insertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
-
+           insertReq.RoleId = newRole.RoleId;
+           
            await _applicationUserRoleLogic.Update(applicationUserRoleRes.Response.ApplicationUserRoleId, insertReq, _applicationLogic, _applicationUserLogic, _roleLogic);
 
            await _cacheTestUtilities.DeleteAllKeyData();
@@ -318,7 +322,7 @@ namespace IntegrationTests.Security.Service
            var postReqApplicationUserRoleIds = new FilterApplicationUserRoleServiceRequest { ApplicationUserRoleIds = new List<int> { applicationUserRoleRes.Response.ApplicationUserRoleId } };
            var postReqApplicationId = new FilterApplicationUserRoleServiceRequest { ApplicationId = application.ApplicationId };
            var postReqApplicationUserId = new FilterApplicationUserRoleServiceRequest { ApplicationUserId = applicationUser.ApplicationUserId };
-           var postReqRoleId = new FilterApplicationUserRoleServiceRequest { RoleId = role.RoleId };
+           var postReqRoleId = new FilterApplicationUserRoleServiceRequest { RoleId = newRole.RoleId };
            var postReqIncludeInactive = new FilterApplicationUserRoleServiceRequest { IncludeInactive = true };
            var postReqIncludeRelated = new FilterApplicationUserRoleServiceRequest { IncludeRelated = true };
            var postReqIncludeReadOnly = new FilterApplicationUserRoleServiceRequest { IncludeReadOnly = true };
@@ -395,7 +399,8 @@ namespace IntegrationTests.Security.Service
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
             await _cacheTestUtilities.DeleteAllKeyData();
             await CreateApplicationUserRoleCacheKeys();
@@ -428,7 +433,8 @@ namespace IntegrationTests.Security.Service
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
             var applicationUserRole = await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
             await _cacheTestUtilities.DeleteAllKeyData();
@@ -462,7 +468,8 @@ namespace IntegrationTests.Security.Service
             // Arrange
             await ClearAllSecurityTestTableData();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var role = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
             var applicationUserRole = await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(application.ApplicationId, applicationUser.ApplicationUserId, role.RoleId);
             await _cacheTestUtilities.DeleteAllKeyData();

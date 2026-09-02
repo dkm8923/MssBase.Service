@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MssBase.Service.Controllers.Shared;
 using MssBase.Service.Shared.Authorization;
-using Shared.Logic.Common;
 using Shared.Models;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
+using Shared.Logic.Common;
 
 namespace MssBase.Service.Controllers.Security
 {
@@ -67,30 +67,15 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
-        [HttpGet("PasswordChangeHistory/{applicationUserId}")]
-        [RequiredPermission(UserApiPermissions.ApplicationUserPasswordChangeHistoryRead)]
-        public async Task<IActionResult> GetPasswordChangeHistory(int applicationUserId, [FromQuery] bool deleteCache = false, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var records = await _applicationUserSvc.GetPasswordChangeHistoryByApplicationUserId(applicationUserId, deleteCache, cancellationToken);
-                return Ok(records);
-            }
-            catch (Exception ex)
-            {
-                return HandleControllerException(HttpContext, ex);
-            }
-        }
+        // GET: api/Security/ApplicationUser/{applicationUserPermissionId}/AuditLogs
 
-        // GET: api/Security/ApplicationUser/{applicationUserId}/AuditLogs
-
-        [HttpGet("{applicationUserId}/AuditLogs", Name = "GetApplicationUserAuditLogsById")]
+        [HttpGet("{applicationUserPermissionId}/AuditLogs", Name = "GetApplicationUserAuditLogsById")]
         [RequiredPermission(UserApiPermissions.ApplicationUserRead)]
-        public async Task<IActionResult> GetApplicationUserAuditLogsById(int applicationUserId, [FromQuery] bool deleteCache = false, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetApplicationUserAuditLogsById(int applicationUserPermissionId, [FromQuery] bool deleteCache = false, CancellationToken cancellationToken = default)
         {
             try
             {
-                var record = await _applicationUserSvc.GetAuditLogsByApplicationUserId(applicationUserId, new BaseServiceGet { DeleteCache = deleteCache }, cancellationToken);
+                var record = await _applicationUserSvc.GetAuditLogsByApplicationUserId(applicationUserPermissionId, new BaseServiceGet { DeleteCache = deleteCache }, cancellationToken);
 
                 if (record.Response == null)
                 {
@@ -154,7 +139,7 @@ namespace MssBase.Service.Controllers.Security
         #region Update
 
         [HttpPut("{applicationUserId}")]
-        [RequiredPermission(UserApiPermissions.ApplicationUserUpdate)]
+        [RequiredPermission(UserApiPermissions.ApplicationUserUpdate)]    
         public async Task<IActionResult> UpdateApplicationUser(int applicationUserId, InsertUpdateApplicationUserRequest req)
         {
             try
@@ -193,45 +178,5 @@ namespace MssBase.Service.Controllers.Security
         }
 
         #endregion
-
-        [HttpPost("ResetPassword/{applicationUserId}")]
-        [RequiredPermission(UserApiPermissions.ApplicationUserResetPassword)]
-        public async Task<IActionResult> ResetPassword(int applicationUserId)
-        {
-            try
-            {
-                var result = await _applicationUserSvc.ResetPassword(applicationUserId);
-                if (result.Errors.Count > 0)                
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return HandleControllerException(HttpContext, ex);
-            }
-        }
-
-        [HttpPost("ChangePassword")]
-        [RequiredPermission(UserApiPermissions.ApplicationUserChangePassword)]
-        public async Task<IActionResult> ChangePassword(ChangePasswordRequest req)
-        {
-            try
-            {
-                var result = await _applicationUserSvc.ChangePassword(req);
-                if (result.Errors.Count > 0)                
-                {
-                    return BadRequest(result);
-                }
-                
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return HandleControllerException(HttpContext, ex);
-            }
-        }
     }
 }

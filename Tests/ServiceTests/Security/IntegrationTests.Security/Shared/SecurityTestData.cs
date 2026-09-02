@@ -6,6 +6,7 @@ using Dto.Security.ApplicationUserRole;
 using Dto.Security.Permission;
 using Dto.Security.Role;
 using Dto.Security.RolePermission;
+using Dto.Security.User;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -15,6 +16,8 @@ public class SecurityTestData
     {
         ActiveApplications = new List<ApplicationDto>();
         InactiveApplications = new List<ApplicationDto>();
+        ActiveUsers = new List<UserDto>();
+        InactiveUsers = new List<UserDto>();
         ActiveApplicationUsers = new List<ApplicationUserDto>();
         InactiveApplicationUsers = new List<ApplicationUserDto>();
         ActiveApplicationUserRoles = new List<ApplicationUserRoleDto>();
@@ -31,6 +34,8 @@ public class SecurityTestData
 
     public List<ApplicationDto> ActiveApplications { get; set; }
     public List<ApplicationDto> InactiveApplications { get; set; }
+    public List<UserDto> ActiveUsers { get; set; }
+    public List<UserDto> InactiveUsers { get; set; }
     public List<ApplicationUserDto> ActiveApplicationUsers { get; set; }
     public List<ApplicationUserDto> InactiveApplicationUsers { get; set; }
     public List<ApplicationUserRoleDto> ActiveApplicationUserRoles { get; set; }

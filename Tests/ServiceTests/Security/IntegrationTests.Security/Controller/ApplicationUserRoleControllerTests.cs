@@ -578,7 +578,8 @@ namespace IntegrationTests.Security.Controller
             var testRecord = arrangeTestDataResponse.ActiveApplicationUserRoles[0];
 
             var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
-            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId);
+            var newUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId, newUser.UserId);
             var newRole = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(newApplication.ApplicationId);
 
             var updateReq = new InsertUpdateApplicationUserRoleRequest
@@ -999,8 +1000,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var application = arrangeTestDataResponse.ActiveApplications[0];
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(application);
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var activeRole = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
             
             var insertReq = new InsertUpdateApplicationUserRoleRequest
@@ -1098,8 +1100,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserRoleTestData();
             var application = arrangeTestDataResponse.ActiveApplications[0];
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(application);
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var activeRole = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId);
             var inactiveRole = await _securityTestUtilities.Role.CreateSingleRoleTestRecord(application.ApplicationId, false);
 

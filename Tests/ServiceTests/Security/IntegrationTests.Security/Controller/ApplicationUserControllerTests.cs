@@ -209,107 +209,6 @@ namespace IntegrationTests.Security.Controller
         }
 
         [Fact]
-        public async Task PasswordChangeHistory_GetAllByApplicationUserId_Should_Return_Record()
-        {
-            // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
-            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers[0];
-            var pswdChangeHistoryResponse = await ArrangeApplicationUserPasswordChangeHistoryTestData(testRecord.ApplicationUserId);
-            
-            // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>(new HttpGetRequestParms { 
-                Client = _client, 
-                ApiEndPoint = _defaultApplicationUserApiEndPoint + "/PasswordChangeHistory",
-                RecordId = testRecord.ApplicationUserId,
-                Token = token,
-                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
-            });
-
-            // Assert
-            result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(1);
-            
-            foreach (var record in result.Response)
-            {
-                record.ApplicationUserId.Should().Be(testRecord.ApplicationUserId);
-                record.OldPassword.Should().NotBeNullOrEmpty();
-                record.CreatedBy.Should().NotBeNullOrEmpty();
-                record.CreatedOn.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(5));
-            }
-        }
-
-        [Fact]
-        public async Task PasswordChangeHistory_GetAllByApplicationUserId_Should_Not_Return_Record_Invalid_Id()
-        {
-            // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
-            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers[0];
-            var pswdChangeHistoryResponse = await ArrangeApplicationUserPasswordChangeHistoryTestData(testRecord.ApplicationUserId);
-            var invalidApplicationUserId = "asdfasfdasdfasfdas";
-            using var getRequest = new HttpRequestMessage(HttpMethod.Get, _defaultApplicationUserApiEndPoint + "/PasswordChangeHistory/" + invalidApplicationUserId);
-            ControllerTestUtilities.AddAuthorizationHeaderIfApplicable(getRequest, token);
-
-            // Act
-            var getResponse = await _client.SendAsync(getRequest);
-            
-            // Assert
-            getResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        }
-
-        [Fact]
-        public async Task PasswordChangeHistory_GetAllByApplicationUserId_Should_Not_Return_Record_Unauthorized()
-        {
-            // Arrange
-            await ClearAllSecurityTestTableData();
-            var invalidToken = "someInvalidToken";
-
-            // Act
-            var getAllResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationUserApiEndPoint + "/PasswordChangeHistory/1", invalidToken);
-
-            //Assert
-            getAllResult.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-        }
-
-        [Fact]
-        public async Task PasswordChangeHistory_GetAllByApplicationUserId_Should_Not_Return_Record_Forbidden()
-        {
-            // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationTestData();
-            var token = await CreateAuthenticatedTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0], new AssignRoleRequest());
-            
-            // Act
-            var getAllResult = await ControllerTestUtilities.GetAllRecords(_client, _defaultApplicationUserApiEndPoint + "/PasswordChangeHistory/1", token);
-
-            //Assert
-            getAllResult.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        }
-
-        [Fact]
-        public async Task PasswordChangeHistory_GetAllByApplicationUserId_Should_Not_Return_Record_NotFound()
-        {
-            // Arrange
-            var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
-            var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
-            var testRecord = arrangeTestDataResponse.ActiveApplicationUsers[0];
-            var pswdChangeHistoryResponse = await ArrangeApplicationUserPasswordChangeHistoryTestData(testRecord.ApplicationUserId);
-            var invalidApplicationUserId = -1;
-            
-            // Act
-            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<IEnumerable<ApplicationUserLogChangePasswordDto>>(new HttpGetRequestParms { 
-                Client = _client, 
-                ApiEndPoint = _defaultApplicationUserApiEndPoint + "/PasswordChangeHistory",
-                RecordId = invalidApplicationUserId,
-                Token = token
-            });
-
-            // Assert
-            result.Errors.Should().HaveCount(0);
-            result.Response.Should().HaveCount(0);
-        }
-
-        [Fact]
         public async Task Default_GetAll_Should_Return_Active_ReadOnly_Data()
         {
             // Arrange
@@ -672,13 +571,13 @@ namespace IntegrationTests.Security.Controller
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var testRecord = arrangeTestDataResponse.ActiveApplicationUsers[0];
 
+            var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var newUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+
             var updateReq = new InsertUpdateApplicationUserRequest
             {
-                FirstName = "Updated First Name",
-                LastName = "Updated Last Name",
-                Email = "updatedemail@example.com",
-                DateOfBirth = new DateTime(1990, 1, 1),
-                ApplicationId = testRecord.ApplicationId,
+                ApplicationId = newApplication.ApplicationId,
+                UserId = newUser.UserId,
                 Active = false,
                 CurrentUser = TestConstants.CurrentUser
             };
@@ -841,11 +740,8 @@ namespace IntegrationTests.Security.Controller
             var postReqInvalidUpdatedBy = new FilterApplicationUserServiceRequest { UpdatedBy = "TestUpdatedBy", DeleteCache = true };
             var postReqInvalidUpdatedOnDate = new FilterApplicationUserServiceRequest { UpdatedOnDate = DateOnly.Parse("1/1/2000"), DeleteCache = true };
             var postReqInvalidApplicationUserIds = new FilterApplicationUserServiceRequest { ApplicationUserIds = new List<int> { 9999 }, DeleteCache = true };
-            var postReqInvalidEmail = new FilterApplicationUserServiceRequest { Email = "invalidemail@test.com", DeleteCache = true };
-            var postReqInvalidFirstName = new FilterApplicationUserServiceRequest { FirstName = "InvalidFirstName", DeleteCache = true };
-            var postReqInvalidLastName = new FilterApplicationUserServiceRequest { LastName = "InvalidLastName", DeleteCache = true };
-            var postReqInvalidDateOfBirth = new FilterApplicationUserServiceRequest { DateOfBirth = LogicTestUtilities.GetRandomDateTime(1999), DeleteCache = true };
             var postReqInvalidApplicationId = new FilterApplicationUserServiceRequest { ApplicationId = 9999, DeleteCache = true };
+            var postReqInvalidUserId = new FilterApplicationUserServiceRequest { UserId = 9999, DeleteCache = true };
 
             // Act
             var invalidCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedBy });
@@ -853,11 +749,8 @@ namespace IntegrationTests.Security.Controller
             var invalidUpdatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserApiEndPoint,Token = token, RequestObject = postReqInvalidUpdatedBy });
             var invalidUpdatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserApiEndPoint,Token = token, RequestObject = postReqInvalidUpdatedOnDate });
             var invalidApplicationUserIdsResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserApiEndPoint,Token = token, RequestObject = postReqInvalidApplicationUserIds });
-            var invalidEmailResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserApiEndPoint,Token = token, RequestObject = postReqInvalidEmail });
-            var invalidFirstNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserApiEndPoint,Token = token, RequestObject = postReqInvalidFirstName });
-            var invalidLastNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserApiEndPoint,Token = token, RequestObject = postReqInvalidLastName });
-            var invalidDateOfBirthResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserApiEndPoint,Token = token, RequestObject = postReqInvalidDateOfBirth });
             var invalidApplicationIdResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserApiEndPoint,Token = token, RequestObject = postReqInvalidApplicationId });
+            var invalidUserIdResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserApiEndPoint,Token = token, RequestObject = postReqInvalidUserId });
 
             //Assert
             invalidCreatedByResult.Response.Should().HaveCount(0);
@@ -865,11 +758,8 @@ namespace IntegrationTests.Security.Controller
             invalidUpdatedByResult.Response.Should().HaveCount(0);
             invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
             invalidApplicationUserIdsResult.Response.Should().HaveCount(0);
-            invalidEmailResult.Response.Should().HaveCount(0);
-            invalidFirstNameResult.Response.Should().HaveCount(0);
-            invalidLastNameResult.Response.Should().HaveCount(0);
-            invalidDateOfBirthResult.Response.Should().HaveCount(0);
             invalidApplicationIdResult.Response.Should().HaveCount(0);
+            invalidUserIdResult.Response.Should().HaveCount(0);
         }
         
         [Fact]
@@ -1079,7 +969,7 @@ namespace IntegrationTests.Security.Controller
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.First();
 
-            var postReqInvalidFirstName = new FilterApplicationUserServiceRequest { FirstName = testRecord.FirstName, DeleteCache = true };
+            var postReqInvalidFirstName = new FilterApplicationUserServiceRequest { ApplicationId = testRecord.ApplicationId, DeleteCache = true };
             
             // Act
             var invalidFirstNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<ApplicationUserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultApplicationUserApiEndPoint, Token = token, RequestObject = postReqInvalidFirstName });
@@ -1098,9 +988,16 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
             var application = arrangeTestDataResponse.ActiveApplications[0];
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
 
-            var insertReq = _securityTestUtilities.ApplicationUser.CreateInsertUpdateRequestWithRandomValues(application.ApplicationId);
+            var insertReq = new InsertUpdateApplicationUserRequest
+            {
+                ApplicationId = application.ApplicationId,
+                UserId = user.UserId,
+                CurrentUser = TestConstants.CurrentUser,
+                Active = true
+            };
 
             // Act
             var insertResult = await ControllerTestUtilities.CreateRecordWithValidationResult<ApplicationUserDto>(new HttpPostRequestParms { 
@@ -1190,14 +1087,15 @@ namespace IntegrationTests.Security.Controller
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(arrangeTestDataResponse.ActiveApplications[0]);
             var insertedRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
 
+            var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var newUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
+
             var updateReq = new InsertUpdateApplicationUserRequest
             {
-                Email = "updated@test.com",
-                FirstName = "Updated",
-                LastName = "User",
                 Active = false,
-                ApplicationId = insertedRecord.ApplicationId,
-                CurrentUser = TestConstants.CurrentUser
+                ApplicationId = newApplication.ApplicationId,
+                UserId = newUser.UserId,
+                CurrentUser = TestConstants.CurrentUser,
             };
 
             // Act
@@ -1211,11 +1109,9 @@ namespace IntegrationTests.Security.Controller
            
             // Assert
             updateResult.Response.ApplicationUserId.Should().Be(insertedRecord.ApplicationUserId);
-            updateResult.Response.Email.Should().Be(updateReq.Email);
-            updateResult.Response.FirstName.Should().Be(updateReq.FirstName);
-            updateResult.Response.LastName.Should().Be(updateReq.LastName);
             updateResult.Response.Active.Should().Be(updateReq.Active);
             updateResult.Response.ApplicationId.Should().Be(updateReq.ApplicationId);
+            updateResult.Response.UserId.Should().Be(updateReq.UserId);
         }
 
         [Fact]
@@ -1286,10 +1182,8 @@ namespace IntegrationTests.Security.Controller
 
             var updateReq = new InsertUpdateApplicationUserRequest
             {
-                FirstName = "first name update",
-                LastName = "last name update",
-                Email = "emailupdate@test.com",
                 Active = false,
+                UserId = testRecord.UserId,
                 ApplicationId = testRecord.ApplicationId,
                 CurrentUser = TestConstants.CurrentUser
             };

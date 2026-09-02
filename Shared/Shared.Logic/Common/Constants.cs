@@ -10,6 +10,8 @@
         
         public static class EntityFieldNames
         {
+            public const string User = "User";
+            public const string UserId = "UserId";
             public const string Application = "Application";
             public const string ApplicationId = "ApplicationId";
             public const string ApplicationName = "ApplicationName";
@@ -36,7 +38,9 @@
             public const string Password = "Password";
             public const string NewPassword = "NewPassword";
             public const string Token = "Token";
+            public const string ChangePassword = "ChangePassword";
             public const string RefreshToken = "RefreshToken";
+            public const string Authentication = "Authentication";
             public const string CurrentUser = "CurrentUser";
         }
 

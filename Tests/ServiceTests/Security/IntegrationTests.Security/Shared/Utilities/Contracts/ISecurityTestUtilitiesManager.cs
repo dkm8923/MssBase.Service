@@ -4,6 +4,7 @@ public interface ISecurityTestUtilitiesManager
 {
     public IAuthenticationUtilities Authentication { get; }
     public IApplicationUtilities Application { get; }
+    public IUserUtilities User { get; }
     public IApplicationUserUtilities ApplicationUser { get; }
     public IApplicationUserPermissionUtilities ApplicationUserPermission { get; }
     public IApplicationUserRoleUtilities ApplicationUserRole { get; }

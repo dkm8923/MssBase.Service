@@ -10,10 +10,7 @@ namespace Dto.Security.ApplicationUser.Logic
         public string? UpdatedBy { get; set; }
         public DateOnly? UpdatedOnDate { get; set; }
         public List<int>? ApplicationUserIds { get; set; }
-        public string? Email { get; set; }
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public DateTime? DateOfBirth { get; set; }
+        public int? UserId { get; set; }
         public int? ApplicationId { get; set; }
     }
 }

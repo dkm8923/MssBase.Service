@@ -62,6 +62,10 @@ using MssBase.Service.Shared.Authorization;
 using Contract.Common.CommonRelationalData;
 using Service.Common.Service;
 using Logic.Common.Logic;
+using Contract.Security.User;
+using Dto.Security.User.Logic;
+using Dto.Security.User;
+using Logic.Security.Validators.User;
 
 namespace MssBase.Service
 {
@@ -200,7 +204,6 @@ namespace MssBase.Service
                 services.AddSingleton<ILoggerService, LoggerService>();
             }
         }
-
         public static void ConfigureCommonService(this IServiceCollection services, WebApplicationBuilder builder)
         {
             services.Configure<CommonConnectionStrings>(builder.Configuration.GetSection("CommonConnectionStrings"));
@@ -234,6 +237,18 @@ namespace MssBase.Service
 
             #endregion
 
+            #region User
+
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IUserLogic, UserLogic>();
+
+            //Configure Fluent Validation Validators
+            services.AddTransient<IValidator<FilterUserLogicRequest>, FilterUserLogicRequestValidator>();
+            services.AddTransient<IValidator<InsertUpdateUserRequest>, InsertUpdateUserRequestValidator>();
+            services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
+
+            #endregion
+
             #region ApplicationUser
 
             services.AddScoped<IApplicationUserService, ApplicationUserService>();
@@ -242,8 +257,7 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterApplicationUserLogicRequest>, FilterApplicationUserLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateApplicationUserRequest>, InsertUpdateApplicationUserRequestValidator>();
-            services.AddTransient<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
-
+            
             #endregion
 
             #region ApplicationUserPermission

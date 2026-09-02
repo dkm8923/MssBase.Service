@@ -578,8 +578,9 @@ namespace IntegrationTests.Security.Controller
             var testRecord = arrangeTestDataResponse.ActiveApplicationUserPermissions[0];
 
             var newApplication = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
+            var newUser = await _securityTestUtilities.User.CreateSingleUserTestRecord();
             var newPermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(newApplication.ApplicationId);
-            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId);
+            var newApplicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(newApplication.ApplicationId, newUser.UserId);
 
             var updateReq = new InsertUpdateApplicationUserPermissionRequest
             {
@@ -1002,8 +1003,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
             var application = arrangeTestDataResponse.ActiveApplications[0];
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(application);
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var activePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
             
             var insertReq = new InsertUpdateApplicationUserPermissionRequest
@@ -1101,8 +1103,9 @@ namespace IntegrationTests.Security.Controller
             // Arrange
             var arrangeTestDataResponse = await ArrangeApplicationUserPermissionTestData();
             var application = arrangeTestDataResponse.ActiveApplications[0];
+            var user = await _securityTestUtilities.User.CreateSingleUserTestRecord();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken(application);
-            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId);
+            var applicationUser = await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(application.ApplicationId, user.UserId);
             var activePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId);
             var inactivePermission = await _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(application.ApplicationId, false);
 

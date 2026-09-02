@@ -3,8 +3,9 @@ using FluentValidation;
 using Microsoft.Extensions.Options;
 using Shared.Logic.Common;
 using Shared.Logic.Validators;
+using Dto.Security.User;
 
-namespace Logic.Security.Validators.ApplicationUser;
+namespace Logic.Security.Validators.User;
 
 public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRequest>
 {
@@ -17,7 +18,7 @@ public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRe
         // Set cascade mode per rule (stops after first failure within each RuleFor)
         RuleLevelCascadeMode = CascadeMode.Stop;
 
-        RuleFor(v => v.ApplicationUserId).ValidateApplicationUserIdIsRequired();
+        RuleFor(v => v.UserId).ValidateUserIdIsRequired();
 
         RuleFor(v => v.NewPassword)
             .NotEmpty().WithMessage(ValidatorUtilities.CreateRequiredFieldErrorMessage(Constants.EntityFieldNames.NewPassword))

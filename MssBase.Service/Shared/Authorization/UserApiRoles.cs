@@ -9,6 +9,13 @@ public static class UserApiRoles
     
     #endregion
 
+    #region User Roles
+
+    public const string UserAdmin = "UserAdmin";
+    public const string UserReadOnly = "UserReadOnly";
+
+    #endregion
+
     #region ApplicationUser Roles
 
     public const string ApplicationUserAdmin = "ApplicationUserAdmin";

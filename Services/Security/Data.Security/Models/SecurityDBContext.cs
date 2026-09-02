@@ -15,15 +15,17 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext
     }
 
     public virtual DbSet<Application> Applications { get; set; }
+    public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<UserLogin> UserLogins { get; set; }
+    public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
     public virtual DbSet<ApplicationUser> ApplicationUsers { get; set; }
-    public virtual DbSet<ApplicationUserLogin> ApplicationUserLogins { get; set; }
     public virtual DbSet<Permission> Permissions { get; set; }
     public virtual DbSet<Role> Roles { get; set; }
     public virtual DbSet<RolePermission> RolePermissions { get; set; }
     public virtual DbSet<ApplicationUserPermission> ApplicationUserPermissions { get; set; }
     public virtual DbSet<ApplicationUserRole> ApplicationUserRoles { get; set; }
-    public virtual DbSet<ApplicationUserLogChangePassword> ApplicationUserLogChangePasswords { get; set; }
-    public virtual DbSet<ApplicationUserLogLogin> ApplicationUserLogLogins { get; set; }
+    public virtual DbSet<UserLogChangePassword> UserLogChangePasswords { get; set; }
+    public virtual DbSet<UserLogLogin> UserLogLogins { get; set; }
 
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
@@ -48,15 +50,17 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new ApplicationConfiguration());
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new UserLoginConfiguration());
+        modelBuilder.ApplyConfiguration(new UserRefreshTokenConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserConfiguration());
-        modelBuilder.ApplyConfiguration(new ApplicationUserLoginConfiguration());
         modelBuilder.ApplyConfiguration(new PermissionConfiguration());
         modelBuilder.ApplyConfiguration(new RoleConfiguration());
         modelBuilder.ApplyConfiguration(new RolePermissionConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserRoleConfiguration());
-        modelBuilder.ApplyConfiguration(new ApplicationUserLogChangePasswordConfiguration());
-        modelBuilder.ApplyConfiguration(new ApplicationUserLogLoginConfiguration());
+        modelBuilder.ApplyConfiguration(new UserLogChangePasswordConfiguration());
+        modelBuilder.ApplyConfiguration(new UserLogLoginConfiguration());
         modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
     }
 }

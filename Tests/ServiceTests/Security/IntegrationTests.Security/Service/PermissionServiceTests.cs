@@ -266,6 +266,7 @@ namespace IntegrationTests.Security.Service
            var permissionRes = await _permissionLogic.Insert(permissionInsertReq, _applicationLogic);
 
            permissionInsertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
+           permissionInsertReq.Name = "Test Name Updated";
 
            await _permissionLogic.Update(permissionRes.Response.PermissionId, permissionInsertReq, _applicationLogic);
 
@@ -276,7 +277,7 @@ namespace IntegrationTests.Security.Service
            var postReqUpdatedBy = new FilterPermissionServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
            var postReqUpdatedOnDate = new FilterPermissionServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
            var postReqPermissionIds = new FilterPermissionServiceRequest { PermissionIds = new List<int> { permissionRes.Response.PermissionId } };
-           var postReqName = new FilterPermissionServiceRequest { Name = "Test Name" };
+           var postReqName = new FilterPermissionServiceRequest { Name = "Test Name Updated" };
            var postReqApplicationId = new FilterPermissionServiceRequest { ApplicationId = application.ApplicationId };
            var postReqIncludeInactive = new FilterPermissionServiceRequest { IncludeInactive = true };
            var postReqIncludeReadOnly = new FilterPermissionServiceRequest { IncludeReadOnly = true };

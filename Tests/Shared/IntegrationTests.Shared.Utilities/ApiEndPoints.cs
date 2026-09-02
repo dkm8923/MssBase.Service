@@ -26,6 +26,11 @@
                 public const string Base = "/api/Security/Application";
             }
 
+            public class User
+            {
+                public const string Base = "/api/Security/User";
+            }
+
             public class ApplicationUser
             {
                 public const string Base = "/api/Security/ApplicationUser";

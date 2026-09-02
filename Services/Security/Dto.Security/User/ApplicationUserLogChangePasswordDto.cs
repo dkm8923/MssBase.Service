@@ -1,9 +1,9 @@
-namespace Dto.Security.ApplicationUser
+namespace Dto.Security.User
 {
-    public record ApplicationUserLogChangePasswordDto
+    public record UserLogChangePasswordDto
     {
         public int LogId { get; set; }
-        public int ApplicationUserId { get; set; }
+        public int UserId { get; set; }
         public int ApplicationId { get; set; }
         public string OldPassword { get; set; }
         public DateTime CreatedOn { get; set; }
