@@ -177,10 +177,18 @@ public class SecurityTestBase
                 await _userLogic.ChangePassword(new Dto.Security.User.ChangePasswordRequest { UserId = testUser.Response.UserId, NewPassword = TestConstants.DefaultTestUserPassword, CurrentUser = TestConstants.CurrentUser });
             }
 
-            var userId = testUser.Response.UserId;
+            //create application user
+            var applicationUser = await _applicationUserLogic.Insert(new InsertUpdateApplicationUserRequest {
+                Active = true,
+                ApplicationId = applicationId,
+                UserId = testUser.Response.UserId,
+                CurrentUser = TestConstants.CurrentUser
+            }, _applicationLogic, _applicationUserLogic, _userLogic);
+
+            var applicationUserId = applicationUser.Response.ApplicationUserId;
 
             //Create default application user permissions for user
-            await CreateDefaultApplicationUserPermissionsForTestUser(applicationId, userId);
+            await CreateDefaultApplicationUserPermissionsForTestUser(applicationId, applicationUserId);
 
             if (req.ApplicationAdmin || req.ApplicationReadOnly)
             {
@@ -188,7 +196,7 @@ public class SecurityTestBase
                 var roleId = req.ApplicationAdmin ? applicationRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationAdmin).FirstOrDefault().RoleId 
                     : applicationRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationReadOnly).FirstOrDefault().RoleId;
 
-                await AssignRoleToUser(applicationId, userId, roleId);
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
             }
 
             if (req.UserAdmin || req.UserReadOnly)
@@ -197,7 +205,7 @@ public class SecurityTestBase
                 var roleId = req.UserAdmin ? userRolesWithPermissions.Where(x => x.Name == UserApiRoles.UserAdmin).FirstOrDefault().RoleId 
                     : userRolesWithPermissions.Where(x => x.Name == UserApiRoles.UserReadOnly).FirstOrDefault().RoleId;
 
-                await AssignRoleToUser(applicationId, userId, roleId);
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
             }
 
             if (req.ApplicationUserAdmin || req.ApplicationUserReadOnly)
@@ -206,7 +214,7 @@ public class SecurityTestBase
                 var roleId = req.ApplicationUserAdmin ? applicationUserRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserAdmin).FirstOrDefault().RoleId 
                     : applicationUserRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserReadOnly).FirstOrDefault().RoleId;
 
-                await AssignRoleToUser(applicationId, userId, roleId);
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
             }
 
             if (req.ApplicationUserPermissionAdmin || req.ApplicationUserPermissionReadOnly)
@@ -215,7 +223,7 @@ public class SecurityTestBase
                 var roleId = req.ApplicationUserPermissionAdmin ? applicationUserPermissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserPermissionAdmin).FirstOrDefault().RoleId 
                     : applicationUserPermissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserPermissionReadOnly).FirstOrDefault().RoleId;
 
-                await AssignRoleToUser(applicationId, userId, roleId);
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
             }
 
             if (req.ApplicationUserRoleAdmin || req.ApplicationUserRoleReadOnly)
@@ -224,7 +232,7 @@ public class SecurityTestBase
                 var roleId = req.ApplicationUserRoleAdmin ? applicationUserRoleRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserRoleAdmin).FirstOrDefault().RoleId 
                     : applicationUserRoleRolesWithPermissions.Where(x => x.Name == UserApiRoles.ApplicationUserRoleReadOnly).FirstOrDefault().RoleId;
 
-                await AssignRoleToUser(applicationId, userId, roleId);
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
             }
 
             if (req.PermissionAdmin || req.PermissionReadOnly)
@@ -233,7 +241,7 @@ public class SecurityTestBase
                 var roleId = req.PermissionAdmin ? permissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.PermissionAdmin).FirstOrDefault().RoleId 
                     : permissionRolesWithPermissions.Where(x => x.Name == UserApiRoles.PermissionReadOnly).FirstOrDefault().RoleId;
 
-                await AssignRoleToUser(applicationId, userId, roleId);
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
             }
 
             if (req.RoleAdmin || req.RoleReadOnly)
@@ -242,7 +250,7 @@ public class SecurityTestBase
                 var roleId = req.RoleAdmin ? roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RoleAdmin).FirstOrDefault().RoleId 
                     : roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RoleReadOnly).FirstOrDefault().RoleId;
 
-                await AssignRoleToUser(applicationId, userId, roleId);
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
             }
 
             if (req.RolePermissionAdmin || req.RolePermissionReadOnly)
@@ -251,7 +259,7 @@ public class SecurityTestBase
                 var roleId = req.RolePermissionAdmin ? roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RolePermissionAdmin).FirstOrDefault().RoleId 
                     : roleRolesWithPermissions.Where(x => x.Name == UserApiRoles.RolePermissionReadOnly).FirstOrDefault().RoleId;
 
-                await AssignRoleToUser(applicationId, userId, roleId);
+                await AssignRoleToUser(applicationId, applicationUserId, roleId);
             }
 
             var ret = await _userLogic.GetById(userId, new BaseLogicGet { IncludeRelated = true });
