@@ -1,0 +1,43 @@
+info:
+  name: Update User
+  type: http
+  seq: 1
+
+http:
+  method: PUT
+  url: "{{BaseUrl}}/Security/User/:UserId"
+  params:
+    - name: UserId
+      value: ""
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "active": {{Active}},
+        "firstName": "{{FirstName}}",
+        "lastName": "{{LastName}}",
+        "email": "{{Email}}",
+        "dateOfBirth": "{{DateOfBirth}}",
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: Active
+      value: "true"
+    - name: FirstName
+      value: Test First Name Update
+    - name: LastName
+      value: Test Last Name Update
+    - name: Email
+      value: TestEmailUpdate@Test.com
+    - name: DateOfBirth
+      value: 07/01/1989
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
