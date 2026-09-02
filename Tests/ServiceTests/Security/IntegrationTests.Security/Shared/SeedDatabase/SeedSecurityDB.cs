@@ -66,6 +66,7 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
         
         var sudoUser = await CreateTestUserWithPermissions(insertedApplication.Response.ApplicationId, new AssignRoleRequest
         {
+                UserAdmin = true,
                 ApplicationAdmin = true,
                 ApplicationUserAdmin = true,
                 ApplicationUserPermissionAdmin = true, 
