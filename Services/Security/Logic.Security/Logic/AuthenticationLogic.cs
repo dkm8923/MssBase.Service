@@ -498,16 +498,25 @@ public class AuthenticationLogic : IAuthenticationLogic
         {
             foreach (var applicationUser in user.ApplicationUsers)
             {
-                foreach (var applicationUserPermission in applicationUser.ApplicationUserPermissions)
+                if (applicationUser.ApplicationUserPermissions != null)
                 {
-                    permissions.Add(applicationUserPermission.Permission.Name);
+                    foreach (var applicationUserPermission in applicationUser.ApplicationUserPermissions)
+                    {
+                        permissions.Add(applicationUserPermission.Permission.Name);
+                    }
                 }
 
-                foreach (var applicationUserRole in applicationUser.ApplicationUserRoles)
+                if (applicationUser.ApplicationUserRoles != null)
                 {
-                    foreach (var rolePermission in applicationUserRole.Role.RolePermissions)
+                    foreach (var applicationUserRole in applicationUser.ApplicationUserRoles)
                     {
-                        permissions.Add(rolePermission.Permission.Name);
+                        if (applicationUserRole.Role.RolePermissions != null)
+                        {
+                            foreach (var rolePermission in applicationUserRole.Role.RolePermissions)
+                            {
+                                permissions.Add(rolePermission.Permission.Name);
+                            }
+                        }
                     }
                 }
             }

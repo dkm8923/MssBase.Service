@@ -1183,6 +1183,7 @@ namespace IntegrationTests.Security.Controller
             var updateReq = new InsertUpdateApplicationUserRequest
             {
                 Active = false,
+                UserId = testRecord.UserId,
                 ApplicationId = testRecord.ApplicationId,
                 CurrentUser = TestConstants.CurrentUser
             };

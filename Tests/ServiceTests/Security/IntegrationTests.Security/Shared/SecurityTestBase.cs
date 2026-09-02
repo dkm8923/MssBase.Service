@@ -262,7 +262,7 @@ public class SecurityTestBase
                 await AssignRoleToUser(applicationId, applicationUserId, roleId);
             }
 
-            var ret = await _userLogic.GetById(userId, new BaseLogicGet { IncludeRelated = true });
+            var ret = await _userLogic.GetById(testUser.Response.UserId, new BaseLogicGet { IncludeRelated = true });
 
             return ret.Response;
         }
