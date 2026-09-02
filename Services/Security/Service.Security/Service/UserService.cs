@@ -58,10 +58,15 @@ namespace Service.Security.Service
             var updatedOnKey = CacheUtilities.CreateKeyFromDateOnly(req.UpdatedOnDate);
             var applicationUserIdsKey = (req.UserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString();
             var emailKey = CacheUtilities.CreateKeyFromString(req.Email);
+            var titleKey = CacheUtilities.CreateKeyFromString(req.Title);
             var firstNameKey = CacheUtilities.CreateKeyFromString(req.FirstName);
+            var middleNameKey = CacheUtilities.CreateKeyFromString(req.MiddleName);
             var lastNameKey = CacheUtilities.CreateKeyFromString(req.LastName);
+            var preferredNameKey = CacheUtilities.CreateKeyFromString(req.PreferredName);
+            var suffixKey = CacheUtilities.CreateKeyFromString(req.Suffix);
             //var dateOfBirthKey = CacheUtilities.CreateKeyFromString(req.DateOfBirth.ToString());
             var dateOfBirthKey = "0"; //TODO: Make this work, should be DateOnly
+            var timeZoneKey = CacheUtilities.CreateKeyFromString(req.TimeZone);
             var applicationIdKey = (req.ApplicationId ?? 0).ToString();
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
             var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
@@ -74,9 +79,14 @@ namespace Service.Security.Service
                 ,updatedOnKey
                 ,applicationUserIdsKey
                 ,emailKey
+                ,titleKey
                 ,firstNameKey
+                ,middleNameKey
                 ,lastNameKey
+                ,preferredNameKey
+                ,suffixKey
                 ,dateOfBirthKey
+                ,timeZoneKey
                 ,applicationIdKey
                 ,includeInactiveKey
                 ,includeRelatedKey

@@ -30,9 +30,14 @@ public class UserUtilities : IUserUtilities
         return new InsertUpdateUserRequest
         {
             Email = req.Email,
+            Title = req.Title,
             FirstName = req.FirstName,
+            MiddleName = req.MiddleName,
             LastName = req.LastName,
+            PreferredName = req.PreferredName,
+            Suffix = req.Suffix,
             DateOfBirth = req.DateOfBirth,
+            TimeZone = req.TimeZone,
             Active = req.Active,
             CurrentUser = TestConstants.CurrentUser
         };
@@ -43,8 +48,13 @@ public class UserUtilities : IUserUtilities
         return new InsertUpdateUserRequest
         { 
             Email = LogicTestUtilities.GenerateRandomString(120) + "@test.com",
+            Title = LogicTestUtilities.GenerateRandomString(9),
             FirstName = LogicTestUtilities.GenerateRandomString(65),
+            MiddleName = LogicTestUtilities.GenerateRandomString(65),
             LastName = LogicTestUtilities.GenerateRandomString(65),
+            PreferredName = LogicTestUtilities.GenerateRandomString(65),
+            Suffix = LogicTestUtilities.GenerateRandomString(9),
+            TimeZone = LogicTestUtilities.GenerateRandomString(65),
             Active = true,
             CurrentUser = LogicTestUtilities.GenerateRandomString(65)
         };
@@ -55,8 +65,13 @@ public class UserUtilities : IUserUtilities
         return new InsertUpdateUserRequest
         {
             Email = LogicTestUtilities.GenerateRandomString(64) + "@test.com",
+            Title = LogicTestUtilities.GenerateRandomString(8),
             FirstName = LogicTestUtilities.GenerateRandomString(32),
+            MiddleName = LogicTestUtilities.GenerateRandomString(32),
             LastName = LogicTestUtilities.GenerateRandomString(32),
+            PreferredName = LogicTestUtilities.GenerateRandomString(32),
+            Suffix = LogicTestUtilities.GenerateRandomString(8),
+            TimeZone = LogicTestUtilities.GenerateRandomString(32),
             DateOfBirth = LogicTestUtilities.GetRandomDateTime(2000),
             Active = active,
             CurrentUser = TestConstants.CurrentUser
@@ -148,8 +163,13 @@ public class UserUtilities : IUserUtilities
         return new Dictionary<string, List<string>>
         {
             { "Email", new List<string> { "Email cannot exceed 128 characters!" } },
+            { "Title", new List<string> { "Title cannot exceed 8 characters!" } },
             { "FirstName", new List<string> { "FirstName cannot exceed 64 characters!" } },
+            { "MiddleName", new List<string> { "MiddleName cannot exceed 64 characters!" } },
             { "LastName", new List<string> { "LastName cannot exceed 64 characters!" } },
+            { "PreferredName", new List<string> { "PreferredName cannot exceed 64 characters!" } },
+            { "Suffix", new List<string> { "Suffix cannot exceed 8 characters!" } },
+            { "TimeZone", new List<string> { "TimeZone cannot exceed 64 characters!" } },
             { "CurrentUser", new List<string> { "CurrentUser cannot exceed 64 characters!" } }
         };
     }
@@ -280,8 +300,13 @@ public class UserUtilities : IUserUtilities
     {
         recordA.UserId.Should().Be(recordB.UserId);
         recordA.Email.Should().Be(recordB.Email);
+        recordA.Title.Should().Be(recordB.Title);
         recordA.FirstName.Should().Be(recordB.FirstName);
+        recordA.MiddleName.Should().Be(recordB.MiddleName);
         recordA.LastName.Should().Be(recordB.LastName);
+        recordA.PreferredName.Should().Be(recordB.PreferredName);
+        recordA.Suffix.Should().Be(recordB.Suffix);
+        recordA.TimeZone.Should().Be(recordB.TimeZone);
         recordA.Active.Should().Be(recordB.Active);
         recordA.ReadOnly.Should().Be(recordB.ReadOnly);
         recordA.CreatedBy.Should().Be(recordB.CreatedBy);

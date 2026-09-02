@@ -16,6 +16,7 @@
             public const string ApplicationId = "ApplicationId";
             public const string ApplicationName = "ApplicationName";
             public const string ApplicationUser = "ApplicationUser";
+            public const string ApplicationUsers = "ApplicationUsers";
             public const string ApplicationUserId = "ApplicationUserId";
             public const string ApplicationUserPermission = "ApplicationUserPermission";
             public const string ApplicationUserPermissionId = "ApplicationUserPermissionId";
@@ -29,8 +30,13 @@
             public const string RoleId = "RoleId";
             public const string Permission = "Permission";
             public const string PermissionId = "PermissionId";
+            public const string Title = "Title";
             public const string FirstName = "FirstName";
+            public const string MiddleName = "MiddleName";
             public const string LastName = "LastName";
+            public const string PreferredName = "PreferredName";
+            public const string Suffix = "Suffix";
+            public const string TimeZone = "TimeZone";
             public const string Name = "Name";
             public const string Email = "Email";
             public const string Description = "Description";

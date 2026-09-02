@@ -8,7 +8,6 @@ using IntegrationTests.Shared;
 using IntegrationTests.Shared.Utilities.Contracts.Logic;
 using IntegrationTests.Shared.Utilities;
 using Shared.Logic.Common;
-using Data.Security.Models;
 using System.Text.Json;
 
 namespace IntegrationTests.Security.Logic
@@ -891,8 +890,13 @@ namespace IntegrationTests.Security.Logic
             var updateReq = new InsertUpdateUserRequest
             {
                 Email = "updated@test.com",
+                Title = "Title",
                 FirstName = "Updated",
+                MiddleName = "MiddleName Updated",
                 LastName = "User",
+                PreferredName = "Preferred Name Updated",
+                Suffix = "Jr.",
+                TimeZone = "PST",
                 Active = false,
                 CurrentUser = "IntegrationTest"
             };

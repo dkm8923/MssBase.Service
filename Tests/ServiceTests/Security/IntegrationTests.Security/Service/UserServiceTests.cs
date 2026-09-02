@@ -14,10 +14,10 @@ namespace IntegrationTests.Security.Service
     [Collection("SecurityIntegrationTests")]
     public class UserServiceTests : SecurityTestBase,
                                                IDefaultServiceTestsGetAll,
-                                               //IDefaultServiceTestsGetAllIncludeRelated,
+                                               IDefaultServiceTestsGetAllIncludeRelated,
                                                IDefaultServiceTestsGetAllReadOnly,
                                                IDefaultServiceTestsGetById,
-                                               //IDefaultServiceTestsGetByIdIncludeRelated,
+                                               IDefaultServiceTestsGetByIdIncludeRelated,
                                                IDefaultServiceTestsGetByIdReadOnly,
                                                IDefaultServiceTestsGetAuditLogsById,
                                                //IDefaultServiceTestsFilter,
@@ -108,23 +108,23 @@ namespace IntegrationTests.Security.Service
             result.Response.Should().HaveCountGreaterThan(0);
         }
 
-        // [Fact]
-        // public async Task Default_GetAll_IncludeRelated_Should_Cache()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     await _cacheTestUtilities.DeleteAllKeyData();
+        [Fact]
+        public async Task Default_GetAll_IncludeRelated_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            await _cacheTestUtilities.DeleteAllKeyData();
 
-        //     var expectedCacheKey = "UserService_GetAll_0_1_0";
+            var expectedCacheKey = "UserService_GetAll_0_1_0";
 
-        //     // Act
-        //     var result = await _userService.GetAll(new BaseServiceGet { IncludeRelated = true });
-        //     var availableCacheKeys = _cacheTestUtilities.GetKeys();
+            // Act
+            var result = await _userService.GetAll(new BaseServiceGet { IncludeRelated = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
-        //     // Assert
-        //     availableCacheKeys.Should().Contain(expectedCacheKey);
-        //     result.Response.Should().HaveCount(1);
-        // }
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().HaveCount(1);
+        }
 
         [Fact]
         public async Task Default_GetAll_Should_Not_Cache_And_Return_Zero_Records()
@@ -186,24 +186,24 @@ namespace IntegrationTests.Security.Service
             result.Response.Should().NotBeNull();
         }
 
-        // [Fact]
-        // public async Task Default_GetById_IncludeRelated_Should_Cache()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     var applicationUser = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
-        //     await _cacheTestUtilities.DeleteAllKeyData();
+        [Fact]
+        public async Task Default_GetById_IncludeRelated_Should_Cache()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var applicationUser = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
+            await _cacheTestUtilities.DeleteAllKeyData();
 
-        //     var expectedCacheKey = $"UserService_GetById_{applicationUser.UserId}_0_1_0";
+            var expectedCacheKey = $"UserService_GetById_{applicationUser.UserId}_0_1_0";
 
-        //     // Act
-        //     var result = await _userService.GetById(applicationUser.UserId, new BaseServiceGet { IncludeRelated = true });
-        //     var availableCacheKeys = _cacheTestUtilities.GetKeys();
+            // Act
+            var result = await _userService.GetById(applicationUser.UserId, new BaseServiceGet { IncludeRelated = true });
+            var availableCacheKeys = _cacheTestUtilities.GetKeys();
 
-        //     // Assert
-        //     availableCacheKeys.Should().Contain(expectedCacheKey);
-        //     result.Response.Should().NotBeNull();
-        // }
+            // Assert
+            availableCacheKeys.Should().Contain(expectedCacheKey);
+            result.Response.Should().NotBeNull();
+        }
 
         [Fact]
         public async Task Default_GetById_IncludeReadOnly_Should_Cache()
@@ -301,118 +301,128 @@ namespace IntegrationTests.Security.Service
 
         #region Filter
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Cache()
-        // {
-        //     // Arrange
-        //    await ClearAllSecurityTestTableData();
-        //    await _securityTestUtilities.User.CreateActiveTestRecords();
-        //    await _securityTestUtilities.User.CreateInactiveTestRecords();
-        //    await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1);
-        //    await _cacheTestUtilities.DeleteAllKeyData();
+        [Fact]
+        public async Task Default_Filter_Should_Cache()
+        {
+            // Arrange
+           await ClearAllSecurityTestTableData();
+           await _securityTestUtilities.User.CreateActiveTestRecords();
+           await _securityTestUtilities.User.CreateInactiveTestRecords();
+           await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1);
+           await _cacheTestUtilities.DeleteAllKeyData();
 
-        //    var userInsertReq = new InsertUpdateUserRequest
-        //    {
-        //        DateOfBirth = DateTime.Parse("01/01/2000"),
-        //        Email = "test@test.com",
-        //        FirstName = "Test First Name",
-        //        LastName = "Test Last Name",
-        //        Active = true,
-        //        CurrentUser = TestConstants.SpecificCurrentUserForInsert
-        //    };
+           var userInsertReq = new InsertUpdateUserRequest
+           {
+               DateOfBirth = DateTime.Parse("01/01/2000"),
+               Email = "test@test.com",
+               Title = "Title",
+               FirstName = "Test First Name",
+               MiddleName = "Test Middle Name",
+               LastName = "Test Last Name",
+               PreferredName = "Test Preferred Name",
+               Suffix = "Jr.",
+               TimeZone = "PST",
+               Active = true,
+               CurrentUser = TestConstants.SpecificCurrentUserForInsert
+           };
 
-        //    var userRes = await _userLogic.Insert(userInsertReq);
+           var userRes = await _userLogic.Insert(userInsertReq);
 
-        //    userInsertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
+           userInsertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
 
-        //    await _userLogic.Update(userRes.Response.UserId, userInsertReq);
+           await _userLogic.Update(userRes.Response.UserId, userInsertReq);
 
-        //    await _cacheTestUtilities.DeleteAllKeyData();
+           await _cacheTestUtilities.DeleteAllKeyData();
 
-        //    var postReqCreatedBy = new FilterUserServiceRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
-        //    var postReqCreatedOnDate = new FilterUserServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-        //    var postReqUpdatedBy = new FilterUserServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
-        //    var postReqUpdatedOnDate = new FilterUserServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-        //    var postReqUserIds = new FilterUserServiceRequest { UserIds = new List<int> { userRes.Response.UserId } };
-        //    var postReqEmail = new FilterUserServiceRequest { Email = "test@test.com" };
-        //    var postReqFirstName = new FilterUserServiceRequest { FirstName = "Test First Name" };
-        //    var postReqLastName = new FilterUserServiceRequest { LastName = "Test Last Name" };
-        //    var postReqDateOfBirth = new FilterUserServiceRequest { DateOfBirth = DateTime.Parse("01/01/2000") };
+           var postReqCreatedBy = new FilterUserServiceRequest { CreatedBy = TestConstants.SpecificCurrentUserForInsert };
+           var postReqCreatedOnDate = new FilterUserServiceRequest { CreatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
+           var postReqUpdatedBy = new FilterUserServiceRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
+           var postReqUpdatedOnDate = new FilterUserServiceRequest { UpdatedOnDate = DateOnly.FromDateTime(DateTime.UtcNow) };
+           var postReqUserIds = new FilterUserServiceRequest { UserIds = new List<int> { userRes.Response.UserId } };
+           var postReqEmail = new FilterUserServiceRequest { Email = "test@test.com" };
+           var postReqTitle = new FilterUserServiceRequest { Title = "Title" };
+           var postReqFirstName = new FilterUserServiceRequest { FirstName = "Test First Name" };
+           var postReqMiddleName = new FilterUserServiceRequest { MiddleName = "Test Middle Name" };
+           var postReqLastName = new FilterUserServiceRequest { LastName = "Test Last Name" };
+           var postReqPreferredName = new FilterUserServiceRequest { PreferredName = "Test Preferred Name" };
+           var postReqSuffix = new FilterUserServiceRequest { Suffix = "Jr." };
+           var postReqDateOfBirth = new FilterUserServiceRequest { DateOfBirth = DateTime.Parse("01/01/2000") };
+           var postReqTimeZone = new FilterUserServiceRequest { TimeZone = "PST" };
+
+           var postReqIncludeInactive = new FilterUserServiceRequest { IncludeInactive = true };
+           var postReqIncludeRelated = new FilterUserServiceRequest { IncludeRelated = true };
+           var postReqIncludeReadOnly = new FilterUserServiceRequest { IncludeReadOnly = true };
            
-        //    var postReqIncludeInactive = new FilterUserServiceRequest { IncludeInactive = true };
-        //    var postReqIncludeRelated = new FilterUserServiceRequest { IncludeRelated = true };
-        //    var postReqIncludeReadOnly = new FilterUserServiceRequest { IncludeReadOnly = true };
+           var expectedCacheKeyCreatedBy = $"UserService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyCreatedOnDate = $"UserService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedBy = $"UserService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedOnDate = $"UserService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUserIdsKey = $"UserService_Filter_0_0_0_0_{(postReqUserIds.UserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyEmail = $"UserService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqEmail.Email)}_0_0_0_0_0_0_0";
+           var expectedCacheKeyFirstName = $"UserService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqFirstName.FirstName)}_0_0_0_0_0_0";
+           var expectedCacheKeyLastName = $"UserService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqLastName.LastName)}_0_0_0_0_0";
+           var expectedCacheKeyDateofBirth = $"UserService_Filter_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqDateOfBirth.DateOfBirth.ToString())}_0_0_0_0";
+           //var expectedCacheKeyApplicationId = $"UserService_Filter_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0";
+           var expectedCacheKeyIncludeInactive = $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_1_0_0";
+           var expectedCacheKeyIncludeRelated = $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_1_0";
+           var expectedCacheKeyIncludeReadOnly = $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_1";
+
+           // Act
+           var filterCreatedByResult = await _userService.Filter(postReqCreatedBy);
+           var filterCreatedOnDateResult = await _userService.Filter(postReqCreatedOnDate);
+           var filterUpdatedByResult = await _userService.Filter(postReqUpdatedBy);
+           var filterUpdatedOnDateResult = await _userService.Filter(postReqUpdatedOnDate);
+           var filterUserIdsResult = await _userService.Filter(postReqUserIds);
+           var filterEmailResult = await _userService.Filter(postReqEmail);
+           var filterFirstNameResult = await _userService.Filter(postReqFirstName);
+           var filterLastNameResult = await _userService.Filter(postReqLastName);
+           //var filterApplicationIdResult = await _userService.Filter(postReqApplicationId);
+           var filterIncludeInactiveResult = await _userService.Filter(postReqIncludeInactive);
+           var filterIncludeRelatedResult = await _userService.Filter(postReqIncludeRelated);
+           var filterIncludeReadOnlyResult = await _userService.Filter(postReqIncludeReadOnly);
+           var availableCacheKeys = _cacheTestUtilities.GetKeys();
+
+           // Assert
+           availableCacheKeys.Should().Contain(expectedCacheKeyCreatedBy);
+           filterCreatedByResult.Response.Should().HaveCount(1);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyCreatedOnDate);
+           filterCreatedOnDateResult.Response.Should().HaveCountGreaterThan(0);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyUpdatedBy);
+           filterUpdatedByResult.Response.Should().HaveCount(1);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyUpdatedOnDate);
+           filterUpdatedOnDateResult.Response.Should().HaveCountGreaterThan(0);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyUserIdsKey);
+           filterUserIdsResult.Response.Should().HaveCount(1);
+
+           availableCacheKeys.Should().Contain(expectedCacheKeyEmail);
+           filterEmailResult.Response.Should().HaveCount(1);   
            
-        //    var expectedCacheKeyCreatedBy = $"UserService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0_0_0";
-        //    var expectedCacheKeyCreatedOnDate = $"UserService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0_0_0";
-        //    var expectedCacheKeyUpdatedBy = $"UserService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0_0_0_0";
-        //    var expectedCacheKeyUpdatedOnDate = $"UserService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0";
-        //    var expectedCacheKeyUserIdsKey = $"UserService_Filter_0_0_0_0_{(postReqUserIds.UserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0_0_0_0";
-        //    var expectedCacheKeyEmail = $"UserService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqEmail.Email)}_0_0_0_0_0_0_0";
-        //    var expectedCacheKeyFirstName = $"UserService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqFirstName.FirstName)}_0_0_0_0_0_0";
-        //    var expectedCacheKeyLastName = $"UserService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqLastName.LastName)}_0_0_0_0_0";
-        //    var expectedCacheKeyDateofBirth = $"UserService_Filter_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqDateOfBirth.DateOfBirth.ToString())}_0_0_0_0";
-        //    var expectedCacheKeyApplicationId = $"UserService_Filter_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqApplicationId.ApplicationId.ToString())}_0_0_0";
-        //    var expectedCacheKeyIncludeInactive = $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_1_0_0";
-        //    var expectedCacheKeyIncludeRelated = $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_1_0";
-        //    var expectedCacheKeyIncludeReadOnly = $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_1";
-
-        //    // Act
-        //    var filterCreatedByResult = await _userService.Filter(postReqCreatedBy);
-        //    var filterCreatedOnDateResult = await _userService.Filter(postReqCreatedOnDate);
-        //    var filterUpdatedByResult = await _userService.Filter(postReqUpdatedBy);
-        //    var filterUpdatedOnDateResult = await _userService.Filter(postReqUpdatedOnDate);
-        //    var filterUserIdsResult = await _userService.Filter(postReqUserIds);
-        //    var filterEmailResult = await _userService.Filter(postReqEmail);
-        //    var filterFirstNameResult = await _userService.Filter(postReqFirstName);
-        //    var filterLastNameResult = await _userService.Filter(postReqLastName);
-        //    var filterApplicationIdResult = await _userService.Filter(postReqApplicationId);
-        //    var filterIncludeInactiveResult = await _userService.Filter(postReqIncludeInactive);
-        //    var filterIncludeRelatedResult = await _userService.Filter(postReqIncludeRelated);
-        //    var filterIncludeReadOnlyResult = await _userService.Filter(postReqIncludeReadOnly);
-        //    var availableCacheKeys = _cacheTestUtilities.GetKeys();
-
-        //    // Assert
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyCreatedBy);
-        //    filterCreatedByResult.Response.Should().HaveCount(1);
-
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyCreatedOnDate);
-        //    filterCreatedOnDateResult.Response.Should().HaveCountGreaterThan(0);
-
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyUpdatedBy);
-        //    filterUpdatedByResult.Response.Should().HaveCount(1);
-
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyUpdatedOnDate);
-        //    filterUpdatedOnDateResult.Response.Should().HaveCountGreaterThan(0);
-
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyUserIdsKey);
-        //    filterUserIdsResult.Response.Should().HaveCount(1);
-
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyEmail);
-        //    filterEmailResult.Response.Should().HaveCount(1);   
+           availableCacheKeys.Should().Contain(expectedCacheKeyFirstName);
+           filterFirstNameResult.Response.Should().HaveCount(1);   
            
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyFirstName);
-        //    filterFirstNameResult.Response.Should().HaveCount(1);   
+           availableCacheKeys.Should().Contain(expectedCacheKeyLastName);
+           filterLastNameResult.Response.Should().HaveCount(1);   
            
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyLastName);
-        //    filterLastNameResult.Response.Should().HaveCount(1);   
-           
-        //    //TODO: Revisit this
-        // //    availableCacheKeys.Should().Contain(expectedCacheKeyDateofBirth);
-        // //    filterDateOfBirthResult.Response.Should().HaveCount(1);   
+           //TODO: Revisit this
+        //    availableCacheKeys.Should().Contain(expectedCacheKeyDateofBirth);
+        //    filterDateOfBirthResult.Response.Should().HaveCount(1);   
 
         //    availableCacheKeys.Should().Contain(expectedCacheKeyApplicationId);
         //    filterApplicationIdResult.Response.Should().HaveCount(6);
 
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyIncludeInactive);
-        //    filterIncludeInactiveResult.Response.Should().HaveCount(11);
+           availableCacheKeys.Should().Contain(expectedCacheKeyIncludeInactive);
+           filterIncludeInactiveResult.Response.Should().HaveCount(11);
 
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyIncludeRelated);
-        //    filterIncludeRelatedResult.Response.Should().HaveCount(6);
+           availableCacheKeys.Should().Contain(expectedCacheKeyIncludeRelated);
+           filterIncludeRelatedResult.Response.Should().HaveCount(6);
 
-        //    availableCacheKeys.Should().Contain(expectedCacheKeyIncludeReadOnly);
-        //    filterIncludeReadOnlyResult.Response.Should().HaveCountGreaterThan(0);
-        // }
+           availableCacheKeys.Should().Contain(expectedCacheKeyIncludeReadOnly);
+           filterIncludeReadOnlyResult.Response.Should().HaveCountGreaterThan(0);
+        }
 
         #endregion
 

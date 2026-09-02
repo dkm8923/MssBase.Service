@@ -141,9 +141,19 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.Email == req.Email);
                 }
 
+                if (req.Title != null)
+                {
+                    query = query.Where(x => x.Title == req.Title);
+                }
+
                 if (req.FirstName != null)
                 {
                     query = query.Where(x => x.FirstName == req.FirstName);
+                }
+
+                if (req.MiddleName != null)
+                {
+                    query = query.Where(x => x.MiddleName == req.MiddleName);
                 }
 
                 if (req.LastName != null)
@@ -151,9 +161,24 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.LastName == req.LastName);
                 }
 
+                if (req.PreferredName != null)
+                {
+                    query = query.Where(x => x.PreferredName == req.PreferredName);
+                }
+
+                if (req.Suffix != null)
+                {
+                    query = query.Where(x => x.Suffix == req.Suffix);
+                }
+
                 if (req.DateOfBirth != null)
                 {
                     query = query.Where(x => x.DateOfBirth == req.DateOfBirth);
+                }
+
+                if (req.TimeZone != null)
+                {
+                    query = query.Where(x => x.TimeZone == req.TimeZone);
                 }
 
                 return new ErrorValidationResult<IEnumerable<UserDto>> { Response = await query.ToDtosWithoutPassword(cancellationToken) };
@@ -461,31 +486,26 @@ namespace Logic.Security.Logic
 
         private async Task<ErrorValidationResult<UserDto>> _validateUserOnDelete(int userId)
         {
-            var applicationUserErrorValidationResult = await GetById(userId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true, IncludeReadOnly = true });
+            var userErrorValidationResult = await GetById(userId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true, IncludeReadOnly = true });
 
-            if (applicationUserErrorValidationResult.Response == null)
+            if (userErrorValidationResult.Response == null)
             {
                 //application user for given id does not exist
                 return _createUserNotFoundError<UserDto>();
             }
 
-            if (applicationUserErrorValidationResult.Response.ReadOnly)
+            if (userErrorValidationResult.Response.ReadOnly)
             {
                 return await _returnReadOnlyRecordErrorValidationResult();
             }
 
             //verify no dependencies exist on application user record
-            // if (applicationUserErrorValidationResult.Response.UserPermissions.NotNullAndHasRecords())
-            // {
-            //     applicationUserErrorValidationResult.Errors.Add(EntityFieldNames.ApplicationUserPermissions, new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage(EntityFieldNames.ApplicationUserPermissions) });
-            // }
+            if (userErrorValidationResult.Response.ApplicationUsers.NotNullAndHasRecords())
+            {
+                userErrorValidationResult.Errors.Add(EntityFieldNames.ApplicationUsers, new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage(EntityFieldNames.ApplicationUserId) });
+            }
 
-            // if (applicationUserErrorValidationResult.Response.ApplicationUserRoles.NotNullAndHasRecords())
-            // {
-            //     applicationUserErrorValidationResult.Errors.Add(EntityFieldNames.ApplicationUserRoles, new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage(EntityFieldNames.ApplicationUserRoles) });
-            // }
-
-            return applicationUserErrorValidationResult;
+            return userErrorValidationResult;
         }
 
         private ErrorValidationResult<T> _createUserNotFoundError<T>(T? response = default)
@@ -523,24 +543,48 @@ namespace Logic.Security.Logic
             // Only capture fields that actually changed, not the full entity graph
             var changeLog = new Dictionary<string, object?>();
 
-            if (oldRecord.FirstName != newRecord.FirstName)
-            {
-                changeLog[nameof(User.FirstName)] = newRecord.FirstName;
-            }
-
-            if (oldRecord.LastName != newRecord.LastName)
-            {
-                changeLog[nameof(User.LastName)] = newRecord.LastName;
-            }
-
             if (oldRecord.Email != newRecord.Email)
             {
                 changeLog[nameof(User.Email)] = newRecord.Email;
             }
 
+            if (oldRecord.Title != newRecord.Title)
+            {
+                changeLog[nameof(User.Title)] = newRecord.Title;
+            }
+            
+            if (oldRecord.FirstName != newRecord.FirstName)
+            {
+                changeLog[nameof(User.FirstName)] = newRecord.FirstName;
+            }
+
+            if (oldRecord.MiddleName != newRecord.MiddleName)
+            {
+                changeLog[nameof(User.MiddleName)] = newRecord.MiddleName;
+            }
+            
+            if (oldRecord.LastName != newRecord.LastName)
+            {
+                changeLog[nameof(User.LastName)] = newRecord.LastName;
+            }
+
+            if (oldRecord.PreferredName != newRecord.PreferredName)
+            {
+                changeLog[nameof(User.PreferredName)] = newRecord.PreferredName;
+            }
+            if (oldRecord.Suffix != newRecord.Suffix)
+            {
+                changeLog[nameof(User.Suffix)] = newRecord.Suffix;
+            }
+
             if (oldRecord.DateOfBirth != newRecord.DateOfBirth)
             {
                 changeLog[nameof(User.DateOfBirth)] = newRecord.DateOfBirth;
+            }
+
+            if (oldRecord.TimeZone != newRecord.TimeZone)
+            {
+                changeLog[nameof(User.TimeZone)] = newRecord.TimeZone;
             }
 
             if (oldRecord.Active != newRecord.Active)
@@ -582,10 +626,15 @@ namespace Logic.Security.Logic
         private string GetRecordStateBeforeChangeJson(User record)
         {
             var log = new Dictionary<string, object?>();
-            log[nameof(User.FirstName)] = record.FirstName;
-            log[nameof(User.LastName)] = record.LastName;
             log[nameof(User.Email)] = record.Email;
+            log[nameof(User.Title)] = record.Title;
+            log[nameof(User.FirstName)] = record.FirstName;
+            log[nameof(User.MiddleName)] = record.MiddleName;
+            log[nameof(User.LastName)] = record.LastName;
+            log[nameof(User.PreferredName)] = record.PreferredName;
+            log[nameof(User.Suffix)] = record.Suffix;
             log[nameof(User.DateOfBirth)] = record.DateOfBirth;
+            log[nameof(User.TimeZone)] = record.TimeZone;
             log[nameof(User.Active)] = record.Active;
             log[nameof(User.ReadOnly)] = record.ReadOnly;
             log[nameof(User.CreatedBy)] = record.CreatedBy;

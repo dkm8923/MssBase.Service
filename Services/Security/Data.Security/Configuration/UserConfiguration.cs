@@ -17,15 +17,18 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(t => t.UserId).IsRequired();
         builder.ConfigureAuditFields();
         builder.Property(t => t.Email).HasMaxLength(128).IsRequired().IsUnicode(false);
+        builder.Property(t => t.Title).HasMaxLength(8).IsUnicode(false);
         builder.Property(t => t.FirstName).HasMaxLength(64).IsUnicode(false);
+        builder.Property(t => t.MiddleName).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.LastName).HasMaxLength(64).IsUnicode(false);
+        builder.Property(t => t.PreferredName).HasMaxLength(64).IsUnicode(false);
+        builder.Property(t => t.Suffix).HasMaxLength(8).IsUnicode(false);
         builder.Property(t => t.DateOfBirth).HasPrecision(2);
-        //builder.Property(t => t.ApplicationId).IsRequired();
+        builder.Property(t => t.TimeZone).HasMaxLength(64).IsUnicode(false);
         
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);
         //CreateForeignKeys(builder);
-        //CreateTableData(builder);
     }
         
     public void SetTableName(EntityTypeBuilder<User> builder)
