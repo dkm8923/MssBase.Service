@@ -12,5 +12,6 @@ public partial class User : AuditableEntity
     public string? Password { get; set; }
     
     public virtual UserLogin UserLogin { get; set; } = null!;
+    public virtual ICollection<UserRefreshToken> UserRefreshTokens { get; set; } = new List<UserRefreshToken>();
     public virtual ICollection<ApplicationUser> ApplicationUsers { get; set; } = new List<ApplicationUser>();
 }

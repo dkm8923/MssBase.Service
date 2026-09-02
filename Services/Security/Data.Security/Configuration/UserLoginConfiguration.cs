@@ -23,9 +23,7 @@ public class UserLoginConfiguration : IEntityTypeConfiguration<UserLogin>
         builder.Property(t => t.LastPasswordChangeDate).HasPrecision(2);
         builder.Property(t => t.LastLockoutDate).HasPrecision(2);
         builder.Property(t => t.FailedPasswordAttemptCount).HasDefaultValue((short)0);
-        builder.Property(t => t.RefreshToken).HasMaxLength(2048).IsUnicode(false);
-        builder.Property(t => t.RefreshTokenExpiryTime).HasPrecision(2);
-
+        
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);
         CreateForeignKeys(builder);

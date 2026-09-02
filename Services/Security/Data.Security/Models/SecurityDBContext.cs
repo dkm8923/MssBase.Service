@@ -17,6 +17,7 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext
     public virtual DbSet<Application> Applications { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<UserLogin> UserLogins { get; set; }
+    public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
     public virtual DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public virtual DbSet<Permission> Permissions { get; set; }
     public virtual DbSet<Role> Roles { get; set; }
@@ -51,6 +52,7 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext
         modelBuilder.ApplyConfiguration(new ApplicationConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new UserLoginConfiguration());
+        modelBuilder.ApplyConfiguration(new UserRefreshTokenConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserConfiguration());
         modelBuilder.ApplyConfiguration(new PermissionConfiguration());
         modelBuilder.ApplyConfiguration(new RoleConfiguration());

@@ -420,10 +420,10 @@ namespace IntegrationTests.Security.Logic
             //manually update refresh token last updated date to be past expiry threshold
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.Users.Include(aul => aul.UserLogin).FirstOrDefaultAsync(ent => ent.UserId == testUser.UserId);
+                var entity = await dbContext.UserRefreshTokens.FirstOrDefaultAsync(ent => ent.UserId == testUser.UserId && ent.ApplicationId == arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
                 if (entity != null)
                 {
-                    entity.UserLogin.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(-(_refreshTokenExpiryInDays + 1));
+                    entity.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(-(_refreshTokenExpiryInDays + 1));
                     await dbContext.SaveChangesAsync();
                 }
             }
@@ -467,9 +467,8 @@ namespace IntegrationTests.Security.Logic
             //verify refresh token info is nulled out on user
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.Users.Include(aul => aul.UserLogin).FirstOrDefaultAsync(ent => ent.UserId == testUser.UserId);
-                entity.UserLogin.RefreshToken.Should().BeNull();
-                entity.UserLogin.RefreshTokenExpiryTime.Should().BeNull();
+                var refreshTokenEntities = await dbContext.UserRefreshTokens.Where(ent => ent.UserId == testUser.UserId).ToListAsync();
+                refreshTokenEntities.Should().BeEmpty();
             }
         }
 

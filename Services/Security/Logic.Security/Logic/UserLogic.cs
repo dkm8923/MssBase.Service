@@ -156,11 +156,6 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.DateOfBirth == req.DateOfBirth);
                 }
 
-                // if (req.ApplicationId != null)
-                // {
-                //     query = query.Where(x => x.ApplicationId == req.ApplicationId);
-                // }
-
                 return new ErrorValidationResult<IEnumerable<UserDto>> { Response = await query.ToDtosWithoutPassword(cancellationToken) };
             }
         }
@@ -269,6 +264,7 @@ namespace Logic.Security.Logic
                 {
                     dbContext.UserLogChangePasswords.RemoveRange(dbContext.UserLogChangePasswords.Where(log => log.UserId == userId));
                     dbContext.UserLogLogins.RemoveRange(dbContext.UserLogLogins.Where(log => log.UserId == userId));
+                    dbContext.UserRefreshTokens.RemoveRange(dbContext.UserRefreshTokens.Where(token => token.UserId == userId));
                     dbContext.UserLogins.RemoveRange(dbContext.UserLogins.Where(login => login.UserId == userId));
 
                     await LogDelete(dbContext, entity, currentUser);
@@ -324,10 +320,10 @@ namespace Logic.Security.Logic
                     entity.UserLogin.PasswordResetRequired = true;
                     entity.UserLogin.LastPasswordChangeDate = utcNow;
 
-                    //clear any existing refresh tokens when password is changed
-                    entity.UserLogin.RefreshToken = null;
-                    entity.UserLogin.RefreshTokenExpiryTime = null;    
-                    
+                    //delete any existing refresh tokens when password is changed
+                    var userRefreshTokenEntities = await dbContext.UserRefreshTokens.Where(ent => ent.UserId == userId).ToListAsync();
+                    dbContext.UserRefreshTokens.RemoveRange(userRefreshTokenEntities);
+
                     //log password change
                     await dbContext.UserLogChangePasswords.AddAsync(new UserLogChangePassword
                     {
@@ -406,9 +402,9 @@ namespace Logic.Security.Logic
                 userEntity.UserLogin.PasswordResetRequired = false;
                 userEntity.UserLogin.LastPasswordChangeDate = utcNow;
                 
-                //clear any existing refresh tokens when password is changed
-                userEntity.UserLogin.RefreshToken = null;
-                userEntity.UserLogin.RefreshTokenExpiryTime = null;    
+                //delete any existing refresh tokens when password is changed
+                var userRefreshTokenEntities = await dbContext.UserRefreshTokens.Where(ent => ent.UserId == userEntity.UserId).ToListAsync();
+                dbContext.UserRefreshTokens.RemoveRange(userRefreshTokenEntities);
 
                 await dbContext.SaveChangesAsync();
 

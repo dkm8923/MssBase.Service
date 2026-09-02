@@ -72,7 +72,7 @@ public class AuthenticationLogic : IAuthenticationLogic
             return errorValidationResult;
         }
 
-        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(req.Email);
+        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(req.Email, applicationRes.ApplicationId);
 
         if (userInfoRes is null)
         {
@@ -151,7 +151,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         var applicationClaim = principal.Claims.FirstOrDefault(c => c.Type == Constants.ApplicationsClaim);
 
         var applicationRes = await _retrieveApplicationInfoForAuthentication(new AuthenticationRequest { ApplicationName = applicationClaim?.Value, Email = email }, applicationLogic);
-        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(email);
+        var userInfoRes = await _retrieveRequiredUserInfoForAuthentication(email, applicationRes.ApplicationId);
 
         if (userInfoRes is null)
         {
@@ -177,7 +177,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         var refreshToken = _generateRefreshToken();
     
         //successful auth occurred, update user accordingly 
-        await _updateUserOnSuccessfulTokenRefresh(userWithRelatedData.Response.UserId, refreshToken);
+        await _updateUserOnSuccessfulTokenRefresh(userWithRelatedData.Response.UserId, applicationRes.ApplicationId, refreshToken);
 
         return new ErrorValidationResult<AuthenticationResponse> { Response = new AuthenticationResponse { Token = jwtToken, RefreshToken = refreshToken } };
     }
@@ -194,7 +194,6 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
 
         //TODO: Do we care about this logic actually checking integrity of anything?
-
         await _revokeUserAuthToken(req.Email);
 
         return new ErrorValidationResult();
@@ -325,7 +324,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// </summary>
     /// <param name="req"></param>
     /// <returns></returns>
-    private async Task<RequiredUserInfoForAuthenticationResponse> _retrieveRequiredUserInfoForAuthentication(string email)
+    private async Task<RequiredUserInfoForAuthenticationResponse> _retrieveRequiredUserInfoForAuthentication(string email, int applicationId)
     {
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
@@ -337,26 +336,26 @@ public class AuthenticationLogic : IAuthenticationLogic
                                     au.UserLogin.Password,
                                     au.UserLogin.PasswordResetRequired, 
                                     au.UserLogin.LastLockoutDate, 
-                                    au.UserLogin.LastPasswordChangeDate,
-                                    au.UserLogin.RefreshToken,
-                                    au.UserLogin.RefreshTokenExpiryTime
+                                    au.UserLogin.LastPasswordChangeDate
                                   })
                                   .FirstOrDefaultAsync();
 
-             if (user == null)
-             {
-                 return null;
-             }
+            if (user == null)
+            {
+                return null;
+            }
 
-             return new RequiredUserInfoForAuthenticationResponse { 
+            var userRefreshToken = dbContext.UserRefreshTokens.AsQueryable().AsNoTracking().FirstOrDefault(ent => ent.User.Email == email && ent.ApplicationId == applicationId);
+
+            return new RequiredUserInfoForAuthenticationResponse { 
                 UserId = user.UserId, 
                 Email = user.Email, 
                 PasswordHash = user.Password, 
                 PasswordResetRequired = user.PasswordResetRequired, 
                 LastLockoutDate = user.LastLockoutDate, 
                 LastPasswordChangeDate = user.LastPasswordChangeDate,
-                RefreshToken = user.RefreshToken,
-                RefreshTokenExpiryTime = user.RefreshTokenExpiryTime
+                RefreshToken = userRefreshToken?.RefreshToken,
+                RefreshTokenExpiryTime = userRefreshToken?.RefreshTokenExpiryTime
             };
         }
     }
@@ -423,15 +422,32 @@ public class AuthenticationLogic : IAuthenticationLogic
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.UserLogins.FirstOrDefaultAsync(ent => ent.UserId == UserId);
+            var userLoginEntity = await dbContext.UserLogins.FirstOrDefaultAsync(ent => ent.UserId == UserId);
+            var userRefreshTokenEntity = await dbContext.UserRefreshTokens.FirstOrDefaultAsync(ent => ent.UserId == UserId && ent.ApplicationId == applicationId);
 
-            if (entity != null)
+            if (userLoginEntity != null)
             {
-                entity.LastLoginDate = CommonUtilities.GetDateTimeUtcNow();
-                entity.FailedPasswordAttemptCount = 0; //reset failed password attempt count on successful login
-                entity.RefreshToken = refreshToken;
-                entity.RefreshTokenExpiryTime = DateTime.Now.AddDays(jwtConfig.RefreshTokenExpiryInDays);
-                
+                userLoginEntity.LastLoginDate = CommonUtilities.GetDateTimeUtcNow();
+                userLoginEntity.FailedPasswordAttemptCount = 0; //reset failed password attempt count on successful login
+
+                if (userRefreshTokenEntity != null)
+                {
+                    userRefreshTokenEntity.RefreshToken = refreshToken;
+                    userRefreshTokenEntity.RefreshTokenExpiryTime = DateTime.Now.AddDays(jwtConfig.RefreshTokenExpiryInDays);
+                }
+                else
+                {
+                    // If no existing refresh token entity exists for this user and application, create a new one
+                    var newRefreshTokenEntity = new UserRefreshToken
+                    {
+                        UserId = UserId,
+                        ApplicationId = applicationId,
+                        RefreshToken = refreshToken,
+                        RefreshTokenExpiryTime = DateTime.Now.AddDays(jwtConfig.RefreshTokenExpiryInDays)
+                    };
+                    dbContext.UserRefreshTokens.Add(newRefreshTokenEntity);
+                }
+
                 await dbContext.SaveChangesAsync();
             }
         }
@@ -453,13 +469,13 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
     }
 
-    private async Task _updateUserOnSuccessfulTokenRefresh(int UserId, string refreshToken)
+    private async Task _updateUserOnSuccessfulTokenRefresh(int userId, int applicationId, string refreshToken)
     {
         var jwtConfig = _jwtConfigMonitor.CurrentValue;
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.UserLogins.FirstOrDefaultAsync(ent => ent.UserId == UserId);
+            var entity = await dbContext.UserRefreshTokens.FirstOrDefaultAsync(ent => ent.UserId == userId && ent.ApplicationId == applicationId);
 
             if (entity != null)
             {
@@ -477,15 +493,8 @@ public class AuthenticationLogic : IAuthenticationLogic
         
         using (var dbContext = _dbContextFactory.CreateContextReadWrite())
         {
-            var entity = await dbContext.UserLogins.FirstOrDefaultAsync(ent => ent.User.Email == email);
-
-            if (entity != null)
-            {
-                entity.RefreshToken = null;
-                entity.RefreshTokenExpiryTime = null;
-
-                await dbContext.SaveChangesAsync();
-            }
+            dbContext.UserRefreshTokens.RemoveRange(dbContext.UserRefreshTokens.Where(ent => ent.User.Email == email));
+            await dbContext.SaveChangesAsync();
         }
     }
     
