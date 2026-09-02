@@ -56,6 +56,14 @@ public class AuthenticationUtilities : IAuthenticationUtilities
         };
     }
 
+    public Dictionary<string, List<string>> GetExpectedApplicationNotAssignedErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Authentication", new List<string> { "User is not assigned to Application in Context!" } }
+        };
+    }
+
     public Dictionary<string, List<string>> GetExpectedRefreshTokenRequiredFieldErrors()
     {
         return new Dictionary<string, List<string>>

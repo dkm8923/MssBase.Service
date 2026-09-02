@@ -368,7 +368,7 @@ namespace Logic.Security.Logic
 
                 if (passwordsMatch)
                 {
-                    return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { "ChangePassword", new List<string> { $"New password must be different from the old password!" } } } };
+                    return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.ChangePassword, new List<string> { $"New password must be different from the old password!" } } } };
                 }
 
                 //verify new password is not the same as last 5 passwords
@@ -382,7 +382,7 @@ namespace Logic.Security.Logic
 
                     if (oldPasswords.Any(oldPassword => SecurityLogicUtilities.VerifyPasswordMatchesHash(oldPassword, req.NewPassword)))
                     {
-                        return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { "ChangePassword", new List<string> { $"New password must be different from the last {_passwordValidationConfig.Value.RequirePasswordHistoryCheckOldPasswordCount} passwords!" } } } };
+                        return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.ChangePassword, new List<string> { $"New password must be different from the last {_passwordValidationConfig.Value.RequirePasswordHistoryCheckOldPasswordCount} passwords!" } } } };
                     }
                 }
                 

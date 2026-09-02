@@ -8,6 +8,7 @@ public interface IAuthenticationUtilities
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors();
     public Dictionary<string, List<string>> GetExpectedRequiredFieldErrors();
     public Dictionary<string, List<string>> GetExpectedInvalidApplicationIdFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedApplicationNotAssignedErrors();
     public Dictionary<string, List<string>> GetExpectedRefreshTokenRequiredFieldErrors();
     public Dictionary<string, List<string>> GetExpectedRefreshTokenMaxLengthFieldErrors();
     public Dictionary<string, List<string>> GetExpectedRefreshTokenUserNotFoundErrors();

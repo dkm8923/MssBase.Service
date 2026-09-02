@@ -643,8 +643,12 @@ public class SecurityTestBase
         var ret = new SecurityTestData();
         await ClearAllSecurityTestTableData();
         ret.ActiveApplications = await _securityTestUtilities.Application.CreateActiveTestRecords(1);
+        ret.InactiveApplications = await _securityTestUtilities.Application.CreateInactiveTestRecords(1);
         ret.ActiveUsers = await _securityTestUtilities.User.CreateActiveTestRecords(1);
         ret.InactiveUsers = await _securityTestUtilities.User.CreateInactiveTestRecords(1);
+
+        ret.ActiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateActiveTestRecords(ret.ActiveApplications.FirstOrDefault().ApplicationId, ret.ActiveUsers.FirstOrDefault().UserId, 1);
+        ret.InactiveApplicationUsers = await _securityTestUtilities.ApplicationUser.CreateInactiveTestRecords(ret.InactiveApplications.FirstOrDefault().ApplicationId, ret.InactiveUsers.FirstOrDefault().UserId, 1);
 
         return ret;
     }

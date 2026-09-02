@@ -1310,7 +1310,10 @@ namespace IntegrationTests.Security.Controller
             var arrangeTestDataResponse = await ArrangeUserTestData();
             var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
             var testRecord = arrangeTestDataResponse.ActiveUsers[0];
-
+            
+            //delete the application user after successful auth so that the user can be deleted
+            await _applicationUserLogic.Delete(arrangeTestDataResponse.ActiveApplicationUsers[0].ApplicationUserId, TestConstants.CurrentUser); 
+            
             // Act
             var deleteResult = await ControllerTestUtilities.DeleteRecord(_client, _defaultUserApiEndPoint,testRecord.UserId, token);
             var getByIdResult = await ControllerTestUtilities.GetRecordById(_client, _defaultUserApiEndPoint,testRecord.UserId, token);

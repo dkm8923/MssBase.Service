@@ -6,6 +6,7 @@ using IntegrationTests.Shared.Utilities;
 using Dto.Security.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Dto.Security.User;
+using Dto.Security.ApplicationUser.Logic;
 
 namespace IntegrationTests.Security.Logic
 {
@@ -23,21 +24,20 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
-            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
             var newPassword = TestConstants.DefaultTestUserPassword;
             
             //change password after initial user creation
             await _userLogic.ChangePassword(new ChangePasswordRequest {
-                UserId = testUser.Response.UserId,
+                UserId = testUser.UserId,
                 NewPassword = newPassword,
                 CurrentUser = TestConstants.CurrentUser
             });
 
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, newPassword);
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, newPassword);
 
-            var testUserAfterSuccessfulAuthentication = await _userLogic.GetById(testUser.Response.UserId, new BaseLogicGet());
+            var testUserAfterSuccessfulAuthentication = await _userLogic.GetById(testUser.UserId, new BaseLogicGet());
 
             // Assert
             result.Errors.Should().BeNullOrEmpty();
@@ -74,11 +74,10 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
-            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
             
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, "InvalidPassword");
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, "InvalidPassword");
 
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedInvalidCredentialsErrors();
 
@@ -108,17 +107,35 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task Authenticate_Should_Not_Authenticate_User_Password_Reset_Required()
+        public async Task Authenticate_Should_Not_Authenticate_User_ApplicationId_NotAssigned()
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
             var testUser = await _userLogic.Insert(recordToCreate);
+            
+            // Act
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, testUser.Response.Password);
+
+            var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedApplicationNotAssignedErrors();
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task Authenticate_Should_Not_Authenticate_User_Password_Reset_Required()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestData();
+            var testUser = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
 
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedPasswordChangeRequiredErrors();
 
             // Act
-            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, testUser.Response.Password);
+            var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -131,8 +148,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
-            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
 
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRequiredFieldErrors();
 
@@ -150,9 +166,6 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
-            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
-            var testUser = await _userLogic.Insert(recordToCreate);
-
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedMaxLengthFieldErrors();
 
             // Act
@@ -169,7 +182,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
-            var testUser = await _setupTestUserForAuthentication();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
             
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedAccountLockedErrors();
 
@@ -198,7 +211,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
-            var testUser = await _setupTestUserForAuthentication();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
             
             //manually update last password change date to be past expiry threshold
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
@@ -231,7 +244,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
-            var testUser = await _setupTestUserForAuthentication();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
             
             var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
 
@@ -294,7 +307,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRefreshTokenInvalidAuthTokenErrors();
 
             var arrangeTestDataResponse = await ArrangeUserTestData();
-            var testUser = await _setupTestUserForAuthentication();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
             
             var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
 
@@ -320,7 +333,7 @@ namespace IntegrationTests.Security.Logic
 
             var arrangeTestDataResponse = await ArrangeUserTestData();
             
-            var testUser = await _setupTestUserForAuthentication();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
 
             var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
 
@@ -358,11 +371,17 @@ namespace IntegrationTests.Security.Logic
 
             var arrangeTestDataResponse = await ArrangeUserTestData();
             
-            var testUser = await _setupTestUserForAuthentication();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
 
             var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
 
             //delete user after successful authentication to set up scenario where token is valid but user is deleted
+            var applicationUser = (await _applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { 
+                UserId = testUser.UserId, 
+                ApplicationId = arrangeTestDataResponse.ActiveApplications[0].ApplicationId 
+            })).Response.FirstOrDefault();
+
+            await _applicationUserLogic.Delete(applicationUser.ApplicationUserId, TestConstants.CurrentUser);
             await _userLogic.Delete(testUser.UserId, TestConstants.CurrentUser);
 
             // Act
@@ -387,7 +406,7 @@ namespace IntegrationTests.Security.Logic
 
             var arrangeTestDataResponse = await ArrangeUserTestData();
             
-            var testUser = await _setupTestUserForAuthentication();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
 
             var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
 
@@ -413,7 +432,7 @@ namespace IntegrationTests.Security.Logic
 
             var arrangeTestDataResponse = await ArrangeUserTestData();
             
-            var testUser = await _setupTestUserForAuthentication();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
 
             var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
 
@@ -451,7 +470,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
-            var testUser = await _setupTestUserForAuthentication();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
             
             var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
 
@@ -496,7 +515,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
-            var testUser = await _setupTestUserForAuthentication();
+            var testUser = await _setupTestUserForAuthentication(arrangeTestDataResponse.ActiveApplications[0].ApplicationId);
             
             var authenticationResult = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Email, testUser.Password);
 
@@ -538,11 +557,13 @@ namespace IntegrationTests.Security.Logic
 
         #region Private
 
-        private async Task<UserDto> _setupTestUserForAuthentication()
+        private async Task<UserDto> _setupTestUserForAuthentication(int applicationId)
         {
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
             var testUser = await _userLogic.Insert(recordToCreate);
             
+            await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(applicationId, testUser.Response.UserId);
+
             //change password after initial user creation
             await _userLogic.ChangePassword(new ChangePasswordRequest {
                 UserId = testUser.Response.UserId,
@@ -561,7 +582,7 @@ namespace IntegrationTests.Security.Logic
                 ApplicationName = applicationName, 
                 Email = email, 
                 Password = password
-            }, _userLogic, _applicationLogic);
+            }, _userLogic, _applicationLogic, _applicationUserLogic);
         }
 
         #endregion

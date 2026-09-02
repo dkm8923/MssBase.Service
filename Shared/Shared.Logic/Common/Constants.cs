@@ -38,7 +38,9 @@
             public const string Password = "Password";
             public const string NewPassword = "NewPassword";
             public const string Token = "Token";
+            public const string ChangePassword = "ChangePassword";
             public const string RefreshToken = "RefreshToken";
+            public const string Authentication = "Authentication";
             public const string CurrentUser = "CurrentUser";
         }
 

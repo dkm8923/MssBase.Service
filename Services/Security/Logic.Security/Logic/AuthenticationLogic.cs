@@ -23,6 +23,8 @@ using Dto.Security.Application;
 using System.Security.Cryptography;
 using Data.Security.Models;
 using static Shared.Logic.Common.Constants;
+using Contract.Security.ApplicationUser;
+using Dto.Security.ApplicationUser.Logic;
 
 namespace Logic.Security.Logic;
 
@@ -62,7 +64,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         _forgotPasswordRequestValidator = forgotPasswordRequestValidator;
     }
 
-    public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req, IUserLogic userLogic, IApplicationLogic applicationLogic)
+    public async Task<ErrorValidationResult<AuthenticationResponse>> Authenticate(AuthenticationRequest req, IUserLogic userLogic, IApplicationLogic applicationLogic, IApplicationUserLogic applicationUserLogic)
     {
         var applicationRes = await _retrieveApplicationInfoForAuthentication(req, applicationLogic);
 
@@ -78,6 +80,14 @@ public class AuthenticationLogic : IAuthenticationLogic
         {
             //user not found with that email address
             return _createInvalidCredentialsError();
+        }
+
+        //verify user is assigned to application being authenticated against
+        var isUserAssignedToApplication = await _isUserAssignedToApplication(userInfoRes.UserId, applicationRes.ApplicationId, applicationUserLogic);
+        if (!isUserAssignedToApplication)
+        {
+            //user is not assigned to the application being authenticated against
+            return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.Authentication, new List<string> { "User is not assigned to Application in Context!" } } } };
         }
 
         //check if user is currently locked out due to too many failed password attempts. If so, return lockout message instead of invalid credentials message
@@ -244,7 +254,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createInvalidCredentialsError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "Authentication", new List<string> { "Invalid email address or password!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.Authentication, new List<string> { "Invalid email address or password!" } } } };
     }
 
     /// <summary>
@@ -253,7 +263,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createAccountLockedError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "Authentication", new List<string> { $"Account is locked due to too many failed login attempts. Please try again after {_lockoutDurationInMinutes} minutes!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.Authentication, new List<string> { $"Account is locked due to too many failed login attempts. Please try again after {_lockoutDurationInMinutes} minutes!" } } } };
     }
 
     /// <summary>
@@ -262,7 +272,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createPasswordChangeRequiredError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "Authentication", new List<string> { "Password change is required. Please update your password!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.Authentication, new List<string> { "Password change is required. Please update your password!" } } } };
     }
 
     /// <summary>
@@ -271,7 +281,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createUserNotFoundError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "User Not Found!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.RefreshToken, new List<string> { "User Not Found!" } } } };
     }
 
     /// <summary>
@@ -280,7 +290,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createInvalidAuthTokenError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "Invalid Token!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.RefreshToken, new List<string> { "Invalid Token!" } } } };
     }
 
     /// <summary>
@@ -289,7 +299,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createInvalidRefreshTokenError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "Invalid Refresh Token!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.RefreshToken, new List<string> { "Invalid Refresh Token!" } } } };
     }
 
     /// <summary>
@@ -298,7 +308,7 @@ public class AuthenticationLogic : IAuthenticationLogic
     /// <returns></returns>
     private ErrorValidationResult<AuthenticationResponse> _createExpiredRefreshTokenError()
     {
-        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { "RefreshToken", new List<string> { "Refresh Token Expired!" } } } };
+        return new ErrorValidationResult<AuthenticationResponse> { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.RefreshToken, new List<string> { "Refresh Token Expired!" } } } };
     }
 
     /// <summary>
@@ -358,6 +368,12 @@ public class AuthenticationLogic : IAuthenticationLogic
                 RefreshTokenExpiryTime = userRefreshToken?.RefreshTokenExpiryTime
             };
         }
+    }
+
+    private async Task<bool> _isUserAssignedToApplication(int userId, int applicationId, IApplicationUserLogic applicationUserLogic) 
+    {
+        var applicationUserFilterRes = await applicationUserLogic.Filter(new FilterApplicationUserLogicRequest { ApplicationId = applicationId, UserId = userId });
+        return applicationUserFilterRes.Errors.Count == 0 && applicationUserFilterRes.Response.Count() == 1;
     }
 
     /// <summary>
