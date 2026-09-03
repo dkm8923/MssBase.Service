@@ -38,15 +38,18 @@ namespace Service.Common.Service
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
 
             // Normalize ReferenceTypes for consistent cache key generation. This includes trimming whitespace, converting to lower case, removing duplicates, sorting, and URL-encoding.
-            var normalizedReferenceTypes = req.ReferenceTypes
+            var normalizedReferenceTypes = req.ReferenceTypes?
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => x.Trim().ToLowerInvariant())
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(x => x, StringComparer.Ordinal)
                 .Select(Uri.EscapeDataString)
-                .ToList();
+                .ToList()
+                ?? new List<string>();
 
-            var referenceTypesKey = normalizedReferenceTypes.Count == 0 ? "0" : string.Join("|", normalizedReferenceTypes);
+            var referenceTypesKey = normalizedReferenceTypes.Count == 0
+                ? "0"
+                : string.Join("|", normalizedReferenceTypes);
 
             var cacheKeyName = CacheUtilities.CreateFilterCacheKey(cacheKeySectionName, new List<string> {
                  createdByKey
