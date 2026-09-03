@@ -14,11 +14,16 @@ http:
     type: json
     data: |-
       {
-        "active": {{Active}},
-        "firstName": "{{FirstName}}",
-        "lastName": "{{LastName}}",
         "email": "{{Email}}",
+        "title": "{{Title}}",
+        "firstName": "{{FirstName}}",
+        "middleName": "{{MiddleName}}",
+        "lastName": "{{LastName}}",
+        "preferredName": "{{PreferredName}}",
+        "suffix": "{{Suffix}}",
         "dateOfBirth": "{{DateOfBirth}}",
+        "timeZone": "{{TimeZone}}",
+        "active": {{Active}},
         "currentUser": "{{DefaultCurrentUser}}"
       }
   auth: inherit
@@ -35,6 +40,16 @@ runtime:
       value: TestEmailUpdate@Test.com
     - name: DateOfBirth
       value: 07/01/1989
+    - name: Title
+      value: Test Title Update
+    - name: MiddleName
+      value: Test Middle Name
+    - name: PreferredName
+      value: Test Preferred Name
+    - name: Suffix
+      value: Jr.
+    - name: TimeZone
+      value: EST
 
 settings:
   encodeUrl: true
