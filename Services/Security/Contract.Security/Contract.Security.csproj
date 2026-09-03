@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../../Shared/Shared.Contracts/Shared.Contracts.csproj" />
+    <ProjectReference Include="../../Common/Dto.Common/Dto.Common.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Models\Shared.Models.csproj" />
     <ProjectReference Include="..\Dto.Security\Dto.Security.csproj" />
   </ItemGroup>

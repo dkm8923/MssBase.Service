@@ -19,6 +19,7 @@ using static Shared.Logic.Common.Constants;
 using System.Text.Json;
 using Shared.Data.Models;
 using Contract.Security.User;
+using Dto.Common.CommonRelationalData;
 
 namespace Logic.Security.Logic
 {
@@ -192,9 +193,9 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Inserts a new application user into the data store.
         /// </summary>
-        public async Task<ErrorValidationResult<UserDto>> Insert(InsertUpdateUserRequest req)
+        public async Task<ErrorValidationResult<UserDto>> Insert(InsertUpdateUserRequest req, FilterCommonRelationalDataDto commonRelationalData)
         {
-            var errorValidationResult = await _validateUserOnInsertUpdate(req, null);
+            var errorValidationResult = await _validateUserOnInsertUpdate(req, commonRelationalData, null);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
@@ -230,9 +231,9 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Updates the details of an existing User.
         /// </summary>
-        public async Task<ErrorValidationResult<UserDto>> Update(int userId, InsertUpdateUserRequest req)
+        public async Task<ErrorValidationResult<UserDto>> Update(int userId, InsertUpdateUserRequest req, FilterCommonRelationalDataDto commonRelationalData)
         {
-            var errorValidationResult = await _validateUserOnInsertUpdate(req, userId);
+            var errorValidationResult = await _validateUserOnInsertUpdate(req, commonRelationalData, userId);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
@@ -462,13 +463,31 @@ namespace Logic.Security.Logic
             return errorValidationResult;
         }
 
-        private async Task<ErrorValidationResult<UserDto>> _validateUserOnInsertUpdate(InsertUpdateUserRequest req, int? userId = null)
+        private async Task<ErrorValidationResult<UserDto>> _validateUserOnInsertUpdate(InsertUpdateUserRequest req, FilterCommonRelationalDataDto commonRelationalData, int? userId = null)
         {
             ValidationResult result = await _insertUpdateUserRequestValidator.ValidateAsync(req);
             var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<UserDto>(result);
 
             if (errorValidationResult.Errors.Count == 0)
             {
+                //verify Title is valid
+                if (!string.IsNullOrWhiteSpace(req.Title) && (commonRelationalData.PersonTitle == null || !commonRelationalData.PersonTitle.Any(title => title.Name == req.Title)))
+                {
+                    errorValidationResult.Errors.Add(EntityFieldNames.Title, new List<string> { ValidatorUtilities.CreateInvalidCommonRelationalDataValueValidationErrorMessage(EntityFieldNames.Title, "PersonTitle") });
+                }
+
+                //verify Suffix is valid
+                if (!string.IsNullOrWhiteSpace(req.Suffix) && (commonRelationalData.PersonSuffix == null || !commonRelationalData.PersonSuffix.Any(suffix => suffix.Name == req.Suffix)))
+                {
+                    errorValidationResult.Errors.Add(EntityFieldNames.Suffix, new List<string> { ValidatorUtilities.CreateInvalidCommonRelationalDataValueValidationErrorMessage(EntityFieldNames.Suffix, "PersonSuffix") });
+                }
+
+                //verify TimeZone is valid
+                if (!string.IsNullOrWhiteSpace(req.TimeZone) && (commonRelationalData.UsaTimeZone == null || !commonRelationalData.UsaTimeZone.Any(timeZone => timeZone.Name == req.TimeZone)))
+                {
+                    errorValidationResult.Errors.Add(EntityFieldNames.TimeZone, new List<string> { ValidatorUtilities.CreateInvalidCommonRelationalDataValueValidationErrorMessage(EntityFieldNames.TimeZone, "UsaTimeZone") });
+                }
+
                 // Validate user email is unique
                 var emailCheck = await this.Filter(new FilterUserLogicRequest { Email = req.Email, IncludeReadOnly = true });
 

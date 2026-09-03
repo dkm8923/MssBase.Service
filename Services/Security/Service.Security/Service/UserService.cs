@@ -7,6 +7,9 @@ using Shared.Contracts;
 using Shared.Models;
 using Shared.Models.Dtos;
 using Shared.Service.Cache;
+using Contract.Common.CommonRelationalData;
+using Dto.Common.CommonRelationalData.Service;
+using Dto.Common.CommonRelationalData;
 
 namespace Service.Security.Service
 {
@@ -14,13 +17,19 @@ namespace Service.Security.Service
     {
         private readonly string cacheKeySectionName = ICacheService.UserService;
         private readonly IApplicationLogic _applicationLogic;
+        private readonly ICommonRelationalDataService _commonRelationalDataService;
         private readonly IUserLogic _userLogic;
         private readonly ICacheService _cacheService;
 
-        public UserService(IApplicationLogic applicationLogic, IUserLogic applicationUserLogic, ICacheService cacheService)
+        public UserService(IApplicationLogic applicationLogic, 
+                           IUserLogic applicationUserLogic, 
+                           ICommonRelationalDataService commonRelationalDataService, 
+                           ICacheService cacheService
+                          )
         {
             _applicationLogic = applicationLogic;
             _userLogic = applicationUserLogic;
+            _commonRelationalDataService = commonRelationalDataService;
             _cacheService = cacheService;
         }
 
@@ -103,8 +112,8 @@ namespace Service.Security.Service
         public async Task<ErrorValidationResult<UserDto>> Insert(InsertUpdateUserRequest req)
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
-
-            return await _userLogic.Insert(req);
+            var commonData = await _getCommonRelationalDataForInsertUpdateValidation();
+            return await _userLogic.Insert(req, commonData); 
         }
 
         #endregion
@@ -114,8 +123,8 @@ namespace Service.Security.Service
         public async Task<ErrorValidationResult<UserDto>> Update(int userId, InsertUpdateUserRequest req)
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
-
-            return await _userLogic.Update(userId, req);
+            var commonData = await _getCommonRelationalDataForInsertUpdateValidation();
+            return await _userLogic.Update(userId, req, commonData);
         }
 
         #endregion
@@ -140,5 +149,28 @@ namespace Service.Security.Service
         {
             return await _userLogic.ChangePassword(req);
         }
+
+        #region Private
+
+        private async Task<FilterCommonRelationalDataDto> _getCommonRelationalDataForInsertUpdateValidation()
+        {
+            var commonDataRes = await _commonRelationalDataService.Filter(new FilterCommonRelationalDataServiceRequest
+            {
+                ReferenceTypes = new List<string>
+                {
+                    "PersonTitle"//,
+                    // "PersonSex",
+                    // "PersonEthnicity",
+                    // "PersonGender",
+                    // "PersonMaritalStatus",
+                    // "PersonReligion",
+                    // "PersonSexuality"
+                }
+            });
+
+            return commonDataRes.Response;
+        }
+
+        #endregion
     }
 }
