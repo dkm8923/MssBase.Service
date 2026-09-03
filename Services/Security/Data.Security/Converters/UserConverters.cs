@@ -58,7 +58,7 @@ namespace Data.Security.Converters
                 return null;
             }
 
-            source.Password = null;
+            source.UserLogin.Password = null;
             return source.ToDto();
         }
 

@@ -1000,7 +1000,9 @@ namespace IntegrationTests.Security.Logic
             // Arrange
             var arrangeTestDataResponse = await ArrangeUserTestData();
             var testRecord = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
-
+            var applicationUser = arrangeTestDataResponse.ActiveApplicationUsers.Where(au => au.UserId == testRecord.UserId).FirstOrDefault();
+            await _applicationUserLogic.Delete(applicationUser.ApplicationUserId, TestConstants.CurrentUser);
+            
             // Act
             var result = await _userLogic.Delete(testRecord.UserId, TestConstants.CurrentUser);
             var getResult = await _userLogic.GetById(testRecord.UserId, new BaseLogicGet { IncludeInactive = true });
@@ -1027,6 +1029,7 @@ namespace IntegrationTests.Security.Logic
             LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
         }
 
+        //TODO: Revisit this, probably only need one check for application user?
         // [Fact]
         // public async Task ApplicationUser_Delete_Should_Not_Delete_Record_ApplicationUserPermission_Foreign_Key_Dependency_Exists()
         // {

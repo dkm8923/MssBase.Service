@@ -14,7 +14,6 @@ public partial class User : AuditableEntity
     public string? Suffix { get; set; }
     public DateTime? DateOfBirth { get; set; }
     public string? TimeZone { get; set; }
-    public string? Password { get; set; }
     
     public virtual UserLogin UserLogin { get; set; } = null!;
     public virtual ICollection<UserRefreshToken> UserRefreshTokens { get; set; } = new List<UserRefreshToken>();

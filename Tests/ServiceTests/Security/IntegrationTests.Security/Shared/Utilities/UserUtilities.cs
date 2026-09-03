@@ -9,6 +9,8 @@ using Contract.Security;
 using Data.Security;
 using Data.Security.Converters;
 using Microsoft.EntityFrameworkCore;
+using Data.Security.Models;
+using Shared.Logic;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
@@ -378,6 +380,12 @@ public class UserUtilities : IUserUtilities
             var insertReq = CreateInsertUpdateRequestWithRandomValues(active);
             var ent = insertReq.ToEntityOnInsert();
             ent.ReadOnly = true;
+
+            ent.UserLogin = new UserLogin
+            {
+                Password = LogicUtilities.HashPassword(LogicTestUtilities.GenerateRandomString(16)),
+                PasswordResetRequired = false
+            };
 
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {

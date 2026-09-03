@@ -56,7 +56,7 @@ namespace Service.Security.Service
             var createdOnKey = CacheUtilities.CreateKeyFromDateOnly(req.CreatedOnDate);
             var updatedByKey = CacheUtilities.CreateKeyFromString(req.UpdatedBy);
             var updatedOnKey = CacheUtilities.CreateKeyFromDateOnly(req.UpdatedOnDate);
-            var applicationUserIdsKey = (req.UserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString();
+            var userIdsKey = (req.UserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString();
             var emailKey = CacheUtilities.CreateKeyFromString(req.Email);
             var titleKey = CacheUtilities.CreateKeyFromString(req.Title);
             var firstNameKey = CacheUtilities.CreateKeyFromString(req.FirstName);
@@ -77,7 +77,7 @@ namespace Service.Security.Service
                 ,createdOnKey
                 ,updatedByKey
                 ,updatedOnKey
-                ,applicationUserIdsKey
+                ,userIdsKey
                 ,emailKey
                 ,titleKey
                 ,firstNameKey
