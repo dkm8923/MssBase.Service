@@ -1161,46 +1161,22 @@ namespace IntegrationTests.Security.Logic
             LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
         }
 
-        //TODO: Revisit this, probably only need one check for application user?
-        // [Fact]
-        // public async Task ApplicationUser_Delete_Should_Not_Delete_Record_ApplicationUserPermission_Foreign_Key_Dependency_Exists()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
-        //     var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
-        //     var permission = _securityTestUtilities.Permission.CreateSinglePermissionTestRecord(testRecord.ApplicationId).Result;
-        //     await _securityTestUtilities.ApplicationUserPermission.CreateSingleApplicationUserPermissionTestRecord(testRecord.ApplicationId, testRecord.UserId, permission.PermissionId);
+        [Fact]
+        public async Task User_Delete_Should_Not_Delete_Record_ApplicationUser_Foreign_Key_Dependency_Exists()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var testRecord = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedApplicationUserForeignKeyErrors();
 
-        //     var expectedFieldErrors = _securityTestUtilities.User.GetExpectedApplicationUserPermissionForeignKeyErrors();
-
-        //     // Act
-        //     var result = await _userLogic.Delete(testRecord.UserId, TestConstants.CurrentUser);
+            // Act
+            var result = await _userLogic.Delete(testRecord.UserId, TestConstants.CurrentUser);
             
-        //     // Assert
-        //     result.Errors.Count.Should().Be(expectedFieldErrors.Count);
+            // Assert
+            result.Errors.Count.Should().Be(expectedFieldErrors.Count);
 
-        //     LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);    
-        // }
-
-        // [Fact]
-        // public async Task ApplicationUser_Delete_Should_Not_Delete_Record_ApplicationUserRole_Foreign_Key_Dependency_Exists()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeApplicationUserTestData();
-        //     var testRecord = arrangeTestDataResponse.ActiveApplicationUsers.FirstOrDefault();
-        //     var role = _securityTestUtilities.Role.CreateSingleRoleTestRecord(testRecord.ApplicationId).Result;
-        //     await _securityTestUtilities.ApplicationUserRole.CreateSingleApplicationUserRoleTestRecord(testRecord.ApplicationId, testRecord.UserId, role.RoleId);
-
-        //     var expectedFieldErrors = _securityTestUtilities.User.GetExpectedApplicationUserRoleForeignKeyErrors();
-
-        //     // Act
-        //     var result = await _userLogic.Delete(testRecord.UserId, TestConstants.CurrentUser);
-            
-        //     // Assert
-        //     result.Errors.Count.Should().Be(expectedFieldErrors.Count);
-
-        //     LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);    
-        // }
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);    
+        }
 
         [Fact]
         public async Task Default_Delete_Should_Not_Delete_Record_ReadOnly_Error()

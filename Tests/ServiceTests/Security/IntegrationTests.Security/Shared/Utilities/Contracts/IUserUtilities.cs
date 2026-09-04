@@ -20,8 +20,7 @@ public interface IUserUtilities
     public Dictionary<string, List<string>> GetExpectedRecordDoesNotExistErrors();
     public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors();
     public Dictionary<string, List<string>> GetExpectedReadOnlyErrors();
-    public Dictionary<string, List<string>> GetExpectedApplicationUserPermissionForeignKeyErrors();
-    public Dictionary<string, List<string>> GetExpectedApplicationUserRoleForeignKeyErrors();
+    public Dictionary<string, List<string>> GetExpectedApplicationUserForeignKeyErrors();
     public Dictionary<string, List<string>> GetExpectedRequiredFieldErrors();
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors();
     public Dictionary<string, List<string>> GetExpectedInvalidEmailFieldErrors();

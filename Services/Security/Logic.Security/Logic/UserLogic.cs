@@ -508,7 +508,7 @@ namespace Logic.Security.Logic
             //verify no dependencies exist on application user record
             if (userErrorValidationResult.Response.ApplicationUsers.NotNullAndHasRecords())
             {
-                userErrorValidationResult.Errors.Add(EntityFieldNames.ApplicationUsers, new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage(EntityFieldNames.ApplicationUserId) });
+                userErrorValidationResult.Errors.Add(EntityFieldNames.ApplicationUsers, new List<string> { ValidatorUtilities.CreateDependencyExistsValidationErrorMessage(EntityFieldNames.ApplicationUsers) });
             }
 
             return userErrorValidationResult;

@@ -254,19 +254,11 @@ public class UserUtilities : IUserUtilities
         };
     }
 
-    public Dictionary<string, List<string>> GetExpectedApplicationUserPermissionForeignKeyErrors()
+    public Dictionary<string, List<string>> GetExpectedApplicationUserForeignKeyErrors()
     {
         return new Dictionary<string, List<string>>
         {
-            { "ApplicationUserPermissions", new List<string> { "Record still contains child dependencies! IE: ApplicationUserPermissions" } }
-        };
-    }
-
-    public Dictionary<string, List<string>> GetExpectedApplicationUserRoleForeignKeyErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "ApplicationUserRoles", new List<string> { "Record still contains child dependencies! IE: ApplicationUserRoles" } }
+            { "ApplicationUsers", new List<string> { "Record still contains child dependencies! IE: ApplicationUsers" } }
         };
     }
 
