@@ -11,6 +11,10 @@ using Data.Security.Converters;
 using Microsoft.EntityFrameworkCore;
 using Data.Security.Models;
 using Shared.Logic;
+using Dto.Common.CommonRelationalData;
+using Dto.Common.CommonRelationalData.Logic;
+using static Shared.Logic.Common.Constants;
+using Contract.Common.CommonRelationalData;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
@@ -19,12 +23,15 @@ public class UserUtilities : IUserUtilities
     private readonly ISecurityConnectionStrings _connectionStrings;
     private readonly SecurityDBContextFactory _dbContextFactory;
     protected readonly IUserLogic _userLogic;
+    protected readonly ICommonRelationalDataLogic _commonRelationalDataLogic;
     
-    public UserUtilities(ISecurityConnectionStrings connectionStrings, IUserLogic userLogic) 
+    
+    public UserUtilities(ISecurityConnectionStrings connectionStrings, IUserLogic userLogic, ICommonRelationalDataLogic commonRelationalDataLogic) 
     {
         _connectionStrings = connectionStrings;
         _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
         _userLogic = userLogic;
+        _commonRelationalDataLogic = commonRelationalDataLogic;
     }
 
     public InsertUpdateUserRequest ConvertUserDtoToInsertUpdateRequest(UserDto req)
@@ -67,13 +74,13 @@ public class UserUtilities : IUserUtilities
         return new InsertUpdateUserRequest
         {
             Email = LogicTestUtilities.GenerateRandomString(64) + "@test.com",
-            Title = LogicTestUtilities.GenerateRandomString(8),
+            Title = "Mr.",
             FirstName = LogicTestUtilities.GenerateRandomString(32),
             MiddleName = LogicTestUtilities.GenerateRandomString(32),
             LastName = LogicTestUtilities.GenerateRandomString(32),
             PreferredName = LogicTestUtilities.GenerateRandomString(32),
-            Suffix = LogicTestUtilities.GenerateRandomString(8),
-            TimeZone = LogicTestUtilities.GenerateRandomString(32),
+            Suffix = "Jr.",
+            TimeZone = "EST",
             DateOfBirth = LogicTestUtilities.GetRandomDateTime(2000),
             Active = active,
             CurrentUser = TestConstants.CurrentUser
@@ -88,7 +95,9 @@ public class UserUtilities : IUserUtilities
         //create test record
         var insertReq = CreateInsertUpdateRequestWithRandomValues(active);
 
-        var ret = await _userLogic.Insert(insertReq);
+        var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+
+        var ret = await _userLogic.Insert(insertReq, commonData);
 
         ret.Errors.Should().BeNullOrEmpty("Insert of user test record failed when it should have succeeded.");
 
@@ -360,6 +369,21 @@ public class UserUtilities : IUserUtilities
                 }
             }
         }
+    }
+
+    public async Task<FilterCommonRelationalDataDto> GetCommonRelationalDataForUserInsertUpdateValidation()
+    {
+        var commonDataRes = await _commonRelationalDataLogic.Filter(new FilterCommonRelationalDataLogicRequest
+        {
+            ReferenceTypes = new List<string>
+            {
+                CommonRelationalDataReferenceTypes.PersonTitle,
+                CommonRelationalDataReferenceTypes.PersonSuffix,
+                CommonRelationalDataReferenceTypes.UsaTimeZone
+            }
+        });
+
+        return commonDataRes.Response;
     }
 
     #region Private

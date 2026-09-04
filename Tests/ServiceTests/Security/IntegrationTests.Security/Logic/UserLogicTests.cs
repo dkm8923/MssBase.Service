@@ -372,7 +372,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var testRecord = (await _securityTestUtilities.User.CreateActiveTestRecords(1)).First();
             
             var updateReq = _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(testRecord);
@@ -441,7 +441,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var testRecord = (await _securityTestUtilities.User.CreateActiveTestRecords(1)).First();
 
             var updateReq = _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(testRecord);
@@ -452,7 +452,7 @@ namespace IntegrationTests.Security.Logic
 
             // Act
             var updateResult = await _userLogic.Update(testRecord.UserId, updateReq, commonData);
-            await _userLogic.Delete(testRecord.UserId, TestConstants.CurrentUser, commonData);
+            await _userLogic.Delete(testRecord.UserId, TestConstants.CurrentUser);
             var auditLogResult = await _userLogic.GetAuditLogsByUserId(testRecord.UserId);
 
             // Assert
@@ -565,7 +565,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var users = await _securityTestUtilities.User.CreateActiveTestRecords();
 
             //create test roles for filtering tests
@@ -794,7 +794,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var insertReq = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
 
             // Act
@@ -811,7 +811,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var testRecord = await _securityTestUtilities.User.CreateSingleUserTestRecord();
 
             var recordToCreate = _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(testRecord);
@@ -831,7 +831,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var recordToCreate = new InsertUpdateUserRequest();
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedRequiredFieldErrors();
@@ -850,7 +850,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithMaxLengthErrors();
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedMaxLengthFieldErrors();
@@ -869,7 +869,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
             recordToCreate.Email = "invalidEmail";
 
@@ -893,13 +893,13 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var testRecord = await _securityTestUtilities.User.CreateSingleUserTestRecord();
 
             var updateReq = new InsertUpdateUserRequest
             {
                 Email = "updated@test.com",
-                Title = "Title",
+                Title = "Mrs.",
                 FirstName = "Updated",
                 MiddleName = "MiddleName Updated",
                 LastName = "User",
@@ -923,7 +923,7 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Update_Should_Not_Update_Record_Unique_Error()
         {
             // Arrange
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var arrangeTestDataResponse = await ArrangeUserTestData();
             var recordToUpdate = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
             var existingRecord = (await _securityTestUtilities.User.CreateActiveTestRecords()).FirstOrDefault();
@@ -945,13 +945,14 @@ namespace IntegrationTests.Security.Logic
         public async Task Default_Update_Should_Not_Update_Record_Required_Field_Errors()
         {
             // Arrange
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var arrangeTestDataResponse = await ArrangeUserTestData();
             var recordToUpdate = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedRequiredFieldErrors();
 
             // Act
-            var result = await _userLogic.Update(recordToUpdate.UserId, new InsertUpdateUserRequest());
+            var result = await _userLogic.Update(recordToUpdate.UserId, new InsertUpdateUserRequest(), commonData);
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -963,6 +964,7 @@ namespace IntegrationTests.Security.Logic
         public async Task User_Update_Should_Not_Create_Record_Invalid_Email_Error()
         {
             // Arrange
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var arrangeTestDataResponse = await ArrangeUserTestData();
             var recordToUpdate = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
             recordToUpdate.Email = "invalidEmail";
@@ -970,7 +972,7 @@ namespace IntegrationTests.Security.Logic
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidEmailFieldErrors();
 
             // Act
-            var result = await _userLogic.Update(recordToUpdate.UserId, _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(recordToUpdate));
+            var result = await _userLogic.Update(recordToUpdate.UserId, _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(recordToUpdate), commonData);
 
             // Assert
             result.Errors.Should().HaveCount(expectedFieldErrors.Count);
@@ -983,14 +985,14 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var arrangeTestDataResponse = await ArrangeReadOnlyUserTestData();
             var recordToUpdate = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
 
             var updateReq = _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(recordToUpdate);
             
             // Act
-            var updateResult = await _userLogic.Update(recordToUpdate.UserId, updateReq);
+            var updateResult = await _userLogic.Update(recordToUpdate.UserId, updateReq, commonData);
 
             //Assert
             var expectedReadOnlyError = _securityTestUtilities.User.GetExpectedReadOnlyErrors();
@@ -1107,8 +1109,9 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
 
             //change password to ensure PasswordResetRequired is false before reset password test
             await _userLogic.ChangePassword(new ChangePasswordRequest { 
@@ -1148,8 +1151,9 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedRecordDoesNotExistErrors();
 
@@ -1171,8 +1175,9 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
 
             // Act
             var changePasswordResult = await _userLogic.ChangePassword(new ChangePasswordRequest { 
@@ -1201,8 +1206,9 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordRequiredFieldErrors();
 
@@ -1220,9 +1226,10 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedRecordDoesNotExistErrors();
 
@@ -1244,9 +1251,10 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
             var acceptablePassword = "!0TestPassword10!";
             
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordInvalidPasswordErrors();
@@ -1275,9 +1283,10 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordMinMaxLengthErrors();
 
@@ -1299,9 +1308,10 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordMinMaxLengthErrors();
 
@@ -1323,9 +1333,10 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordUpperCaseRequiredErrors();
 
@@ -1354,9 +1365,10 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordLowerCaseRequiredErrors();
 
@@ -1385,9 +1397,10 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedChangePasswordSpecialCharacterRequiredErrors();
 
@@ -1417,7 +1430,7 @@ namespace IntegrationTests.Security.Logic
         {
             // Arrange
             await ClearAllSecurityTestTableData();
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var application = await _securityTestUtilities.Application.CreateSingleApplicationTestRecord();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues(true);
             var testUser = await _userLogic.Insert(recordToCreate, commonData);

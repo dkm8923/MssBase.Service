@@ -55,6 +55,9 @@ using Contract.Common.CommonRelationalData;
 using Dto.Common.CommonRelationalData;
 using Dto.Common.CommonRelationalData.Logic;
 using static Shared.Logic.Common.Constants;
+using Service.Common.Service;
+using Logic.Common.Logic;
+using Contract.Common;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -166,27 +169,12 @@ public class SecurityTestBase
         }
     }
 
-    protected async Task<FilterCommonRelationalDataDto> GetCommonRelationalDataForUserInsertUpdateValidation()
-    {
-        var commonDataRes = await _commonRelationalDataLogic.Filter(new FilterCommonRelationalDataLogicRequest
-        {
-            ReferenceTypes = new List<string>
-            {
-                CommonRelationalDataReferenceTypes.PersonTitle,
-                CommonRelationalDataReferenceTypes.PersonSuffix,
-                CommonRelationalDataReferenceTypes.UsaTimeZone
-            }
-        });
-
-        return commonDataRes.Response;
-    }
-
     protected async Task<UserDto> CreateTestUserWithPermissions(int applicationId, AssignRoleRequest req)
     {
         try
         {
-            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
-
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            
             var testUser = await _userLogic.Insert(new InsertUpdateUserRequest { 
                 Active = true, 
                 Email = TestConstants.DefaultTestUserEmail, 
@@ -1367,6 +1355,7 @@ public class SecurityTestBase
 
         services = ConfigureBaseDependencies(services);
         services = ConfigureSecurityService(services);
+        services = ConfigureCommonService(services);
 
         return services.BuildServiceProvider();
     }
@@ -1507,6 +1496,23 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterRolePermissionLogicRequest>, FilterRolePermissionLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateRolePermissionRequest>, InsertUpdateRolePermissionRequestValidator>();
+
+        #endregion
+
+        return services;
+    }
+
+    private ServiceCollection ConfigureCommonService(ServiceCollection services)
+    {
+        services.Configure<CommonConnectionStrings>(_configHelper.Configuration.GetSection("CommonConnectionStrings"));
+
+        services.AddSingleton<ICommonConnectionStrings>(sp =>
+            sp.GetRequiredService<IOptionsMonitor<CommonConnectionStrings>>().CurrentValue);
+
+        #region CommonRelationalData
+
+        services.AddTransient<ICommonRelationalDataService, CommonRelationalDataService>();
+        services.AddTransient<ICommonRelationalDataLogic, CommonRelationalDataLogic>();
 
         #endregion
 

@@ -272,6 +272,7 @@ namespace IntegrationTests.Security.Service
             // Arrange
             await ClearAllSecurityTestTableData();
             await _cacheTestUtilities.DeleteAllKeyData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             
             var testRecord = await _securityTestUtilities.User.CreateSingleUserTestRecord();
 
@@ -286,7 +287,7 @@ namespace IntegrationTests.Security.Service
             };
 
             // Act
-            var updateResult = await _userLogic.Update(testRecord.UserId, updateReq);
+            var updateResult = await _userLogic.Update(testRecord.UserId, updateReq, commonData);
             var expectedCacheKey = $"UserService_GetAuditLogById_{testRecord.UserId}";
 
             var result = await _userService.GetAuditLogsByUserId(testRecord.UserId, new BaseServiceGet());
@@ -311,11 +312,13 @@ namespace IntegrationTests.Security.Service
            await _securityTestUtilities.User.CreateActiveReadOnlyTestRecords(1);
            await _cacheTestUtilities.DeleteAllKeyData();
 
+           var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+
            var userInsertReq = new InsertUpdateUserRequest
            {
                DateOfBirth = DateTime.Parse("01/01/2000"),
                Email = "test@test.com",
-               Title = "Title",
+               Title = "Ms.",
                FirstName = "Test First Name",
                MiddleName = "Test Middle Name",
                LastName = "Test Last Name",
@@ -326,12 +329,12 @@ namespace IntegrationTests.Security.Service
                CurrentUser = TestConstants.SpecificCurrentUserForInsert
            };
 
-           var userRes = await _userLogic.Insert(userInsertReq);
+           var userRes = await _userLogic.Insert(userInsertReq, commonData);
 
            userInsertReq.CurrentUser = TestConstants.SpecificCurrentUserForUpdate;
            userInsertReq.FirstName = "Updated First Name";
 
-           await _userLogic.Update(userRes.Response.UserId, userInsertReq);
+           await _userLogic.Update(userRes.Response.UserId, userInsertReq, commonData);
 
            await _cacheTestUtilities.DeleteAllKeyData();
 
@@ -436,7 +439,7 @@ namespace IntegrationTests.Security.Service
 
         [Fact]
         public async Task Default_Insert_Should_Delete_Cache()
-        {
+         {
             // Arrange
             await ClearAllSecurityTestTableData();
             await _cacheTestUtilities.DeleteAllKeyData();

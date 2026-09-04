@@ -54,9 +54,10 @@ namespace IntegrationTests.Security.Logic
         public async Task Authenticate_Should_Not_Authenticate_User_Invalid_Email()
         {
             // Arrange
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var arrangeTestDataResponse = await ArrangeUserTestData();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
             
             // Act
             var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, "InvalidEmail@example.com", testUser.Response.Password);
@@ -91,9 +92,10 @@ namespace IntegrationTests.Security.Logic
         public async Task Authenticate_Should_Not_Authenticate_User_Invalid_ApplicationId()
         {
             // Arrange
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var arrangeTestDataResponse = await ArrangeUserTestData();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
             
             // Act
             var result = await _authenticate("InvalidApplicationName", testUser.Response.Email, testUser.Response.Password);
@@ -110,9 +112,10 @@ namespace IntegrationTests.Security.Logic
         public async Task Authenticate_Should_Not_Authenticate_User_ApplicationId_NotAssigned()
         {
             // Arrange
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var arrangeTestDataResponse = await ArrangeUserTestData();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
             
             // Act
             var result = await _authenticate(arrangeTestDataResponse.ActiveApplications[0].Name, testUser.Response.Email, testUser.Response.Password);
@@ -329,6 +332,7 @@ namespace IntegrationTests.Security.Logic
         public async Task RefreshToken_Should_Not_Refresh_User_Inactive()
         {
             // Arrange
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var expectedFieldErrors = _securityTestUtilities.Authentication.GetExpectedRefreshTokenUserNotFoundErrors();
 
             var arrangeTestDataResponse = await ArrangeUserTestData();
@@ -345,7 +349,7 @@ namespace IntegrationTests.Security.Logic
                 LastName = testUser.LastName,
                 DateOfBirth = testUser.DateOfBirth,
                 CurrentUser = TestConstants.CurrentUser
-            });
+            }, commonData);
 
             // Act
             var refreshTokenResult = await _authenticationLogic.RefreshToken(new RefreshTokenRequest { 
@@ -559,8 +563,9 @@ namespace IntegrationTests.Security.Logic
 
         private async Task<UserDto> _setupTestUserForAuthentication(int applicationId)
         {
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
             var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
-            var testUser = await _userLogic.Insert(recordToCreate);
+            var testUser = await _userLogic.Insert(recordToCreate, commonData);
             
             await _securityTestUtilities.ApplicationUser.CreateSingleApplicationUserTestRecord(applicationId, testUser.Response.UserId);
 
