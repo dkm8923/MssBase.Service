@@ -1,8 +1,9 @@
 using Shared.Data.Models;
+using Shared.Models.Contracts;
 
 namespace Data.Security.Models;
 
-public partial class User : AuditableEntity
+public partial class User : AuditableEntity, IPerson
 {
     public int UserId { get; set; }
     public string Email { get; set; } = null!;
