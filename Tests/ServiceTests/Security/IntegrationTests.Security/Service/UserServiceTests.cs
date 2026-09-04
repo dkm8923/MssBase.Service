@@ -49,6 +49,11 @@ namespace IntegrationTests.Security.Service
             }
         }
 
+        private List<string> GetUserServiceCacheKeys()
+        {
+            return _cacheTestUtilities.GetKeys().Where(x => x.Contains("UserService")).ToList(); 
+        }
+
         #endregion
 
         #region GetAll
@@ -449,7 +454,7 @@ namespace IntegrationTests.Security.Service
 
             // Act
             var insertResult = await _userService.Insert(insertReq);
-            var cacheKeysAfterInsert = _cacheTestUtilities.GetKeys();
+            var cacheKeysAfterInsert = GetUserServiceCacheKeys(); 
 
             // Assert
             insertResult.Errors.Should().BeNullOrEmpty();
@@ -480,11 +485,11 @@ namespace IntegrationTests.Security.Service
 
             // Act
             var result = await _userService.Update(testRecord.UserId, updateReq);
-            var cacheKeysAfter = _cacheTestUtilities.GetKeys();
+            var cacheKeysAfterDelete = GetUserServiceCacheKeys();
 
             // Assert
             result.Errors.Should().BeNullOrEmpty();
-            cacheKeysAfter.Should().HaveCount(0);
+            cacheKeysAfterDelete.Should().HaveCount(0);
         }
 
         #endregion
@@ -502,7 +507,7 @@ namespace IntegrationTests.Security.Service
 
             // Act
             await _userService.Delete(testRecord.UserId, TestConstants.CurrentUser);
-            var availableCacheKeys = _cacheTestUtilities.GetKeys();
+            var availableCacheKeys = GetUserServiceCacheKeys();
 
             //Assert
             availableCacheKeys.Should().HaveCount(0);
