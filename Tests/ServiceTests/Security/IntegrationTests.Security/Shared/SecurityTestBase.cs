@@ -51,6 +51,10 @@ using Contract.Security.User;
 using Dto.Security.User.Logic;
 using Dto.Security.User;
 using Logic.Security.Validators.User;
+using Contract.Common.CommonRelationalData;
+using Dto.Common.CommonRelationalData;
+using Dto.Common.CommonRelationalData.Logic;
+using static Shared.Logic.Common.Constants;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -71,11 +75,12 @@ public class SecurityTestBase
     protected readonly IPermissionLogic _permissionLogic;
     protected readonly IRoleLogic _roleLogic;
     protected readonly IRolePermissionLogic _rolePermissionLogic;
+    protected readonly ICommonRelationalDataLogic _commonRelationalDataLogic;
     protected readonly ISecurityTestUtilitiesManager _securityTestUtilities;
     protected readonly IOptionsMonitor<AuthenticationSettingsConfig> _authenticationSettingsConfigMonitor;
     protected readonly IOptionsMonitor<JwtAuthenticationConfig> _jwtAuthenticationConfigMonitor;
     protected readonly IOptionsMonitor<PasswordValidationConfig> _passwordValidationConfigMonitor;
-
+    
     public SecurityTestBase()
     {
         //set environment variable to key off of in program.cs
@@ -102,6 +107,7 @@ public class SecurityTestBase
         _permissionLogic = _serviceProvider.GetService<IPermissionLogic>();
         _roleLogic = _serviceProvider.GetService<IRoleLogic>();
         _rolePermissionLogic = _serviceProvider.GetService<IRolePermissionLogic>();
+        _commonRelationalDataLogic = _serviceProvider.GetService<ICommonRelationalDataLogic>();
         _securityTestUtilities = _serviceProvider.GetService<ISecurityTestUtilitiesManager>();
     }
 
@@ -160,10 +166,27 @@ public class SecurityTestBase
         }
     }
 
+    protected async Task<FilterCommonRelationalDataDto> GetCommonRelationalDataForUserInsertUpdateValidation()
+    {
+        var commonDataRes = await _commonRelationalDataLogic.Filter(new FilterCommonRelationalDataLogicRequest
+        {
+            ReferenceTypes = new List<string>
+            {
+                CommonRelationalDataReferenceTypes.PersonTitle,
+                CommonRelationalDataReferenceTypes.PersonSuffix,
+                CommonRelationalDataReferenceTypes.UsaTimeZone
+            }
+        });
+
+        return commonDataRes.Response;
+    }
+
     protected async Task<UserDto> CreateTestUserWithPermissions(int applicationId, AssignRoleRequest req)
     {
         try
         {
+            var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+
             var testUser = await _userLogic.Insert(new InsertUpdateUserRequest { 
                 Active = true, 
                 Email = TestConstants.DefaultTestUserEmail, 
@@ -171,7 +194,7 @@ public class SecurityTestBase
                 LastName = "Smith", 
                 DateOfBirth = new DateTime(1987, 2, 12),
                 CurrentUser = TestConstants.CurrentUser 
-            });
+            }, commonData);
 
             if (testUser.Response != null)
             {

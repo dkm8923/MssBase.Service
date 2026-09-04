@@ -4,6 +4,8 @@ using Dto.Common.CommonRelationalData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shared.Data;
+using Shared.Logic.Common;
+using static Shared.Logic.Common.Constants;
 
 namespace Data.Common.Configuration;
 
@@ -84,7 +86,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonTitle", Description = "Title for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonTitle, Description = "Title for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -101,7 +103,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonSuffix", Description = "Suffix for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonSuffix, Description = "Suffix for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -115,7 +117,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonSex", Description = "Sex for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonSex, Description = "Sex for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -132,7 +134,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonEthnicity", Description = "Ethnicity for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonEthnicity, Description = "Ethnicity for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -158,7 +160,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonGender", Description = "Gender for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonGender, Description = "Gender for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -175,7 +177,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonMaritalStatus", Description = "Marital status for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonMaritalStatus, Description = "Marital status for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -205,7 +207,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonReligion", Description = "Religion / Faith for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonReligion, Description = "Religion / Faith for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -246,7 +248,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonSexuality", Description = "Sexuality for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonSexuality, Description = "Sexuality for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -276,7 +278,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonLanguage", Description = "Language for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonLanguage, Description = "Language for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -295,7 +297,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "AddressType", Description = "Address type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.AddressType, Description = "Address type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -318,7 +320,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PhoneNumberType", Description = "Phone number type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PhoneNumberType, Description = "Phone number type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -388,7 +390,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "UsaState", Description = "List of all Usa States and Territories", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.UsaState, Description = "List of all Usa States and Territories", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -644,7 +646,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "Country", Description = "List of all Countries and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.Country, Description = "List of all Countries and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
 
         return ret;
     }
@@ -665,7 +667,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "UsaTimeZone", Description = "List of all USA Time Zones and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.UsaTimeZone, Description = "List of all USA Time Zones and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
 
         return ret;
     }

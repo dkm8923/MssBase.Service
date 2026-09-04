@@ -55,5 +55,23 @@
             public const string Update = "Update";
             public const string Delete = "Delete";
         }
+
+        public static class CommonRelationalDataReferenceTypes
+        {
+            public const string PersonTitle = "PersonTitle";
+            public const string PersonSuffix = "PersonSuffix";
+            public const string PersonSex = "PersonSex";
+            public const string PersonEthnicity = "PersonEthnicity";
+            public const string PersonGender = "PersonGender";
+            public const string PersonMaritalStatus = "PersonMaritalStatus";
+            public const string PersonReligion = "PersonReligion";
+            public const string PersonSexuality = "PersonSexuality";
+            public const string PersonLanguage = "PersonLanguage";
+            public const string AddressType = "AddressType";
+            public const string PhoneNumberType = "PhoneNumberType";
+            public const string UsaState = "UsaState";
+            public const string UsaTimeZone = "UsaTimeZone";
+            public const string Country = "Country";
+        }
     }
 }

@@ -463,6 +463,16 @@ namespace Logic.Security.Logic
             return errorValidationResult;
         }
 
+        private ErrorValidationResult<T> _validateCommonRelationalDataNameIsValid<T>(List<CommonRelationalDataDto>? commonRelationalData, string fieldValue, string fieldName, string referenceType, ErrorValidationResult<T> errorValidationResult)
+        {
+            if (!string.IsNullOrWhiteSpace(fieldValue) && (commonRelationalData == null || !commonRelationalData.Any(record => record.Name == fieldValue)))
+            {
+                errorValidationResult.Errors.Add(fieldName, new List<string> { ValidatorUtilities.CreateInvalidCommonRelationalDataValueValidationErrorMessage(fieldName, referenceType) });
+            }
+
+            return errorValidationResult;
+        }
+
         private async Task<ErrorValidationResult<UserDto>> _validateUserOnInsertUpdate(InsertUpdateUserRequest req, FilterCommonRelationalDataDto commonRelationalData, int? userId = null)
         {
             ValidationResult result = await _insertUpdateUserRequestValidator.ValidateAsync(req);
@@ -470,23 +480,27 @@ namespace Logic.Security.Logic
 
             if (errorValidationResult.Errors.Count == 0)
             {
+                errorValidationResult = _validateCommonRelationalDataNameIsValid(commonRelationalData.PersonTitle, req.Title, EntityFieldNames.Title, CommonRelationalDataReferenceTypes.PersonTitle, errorValidationResult);
+                errorValidationResult = _validateCommonRelationalDataNameIsValid(commonRelationalData.PersonSuffix, req.Suffix, EntityFieldNames.Suffix, CommonRelationalDataReferenceTypes.PersonSuffix, errorValidationResult);
+                errorValidationResult = _validateCommonRelationalDataNameIsValid(commonRelationalData.UsaTimeZone, req.TimeZone, EntityFieldNames.TimeZone, CommonRelationalDataReferenceTypes.UsaTimeZone, errorValidationResult);
+                
                 //verify Title is valid
-                if (!string.IsNullOrWhiteSpace(req.Title) && (commonRelationalData.PersonTitle == null || !commonRelationalData.PersonTitle.Any(title => title.Name == req.Title)))
-                {
-                    errorValidationResult.Errors.Add(EntityFieldNames.Title, new List<string> { ValidatorUtilities.CreateInvalidCommonRelationalDataValueValidationErrorMessage(EntityFieldNames.Title, "PersonTitle") });
-                }
-
+                // if (!string.IsNullOrWhiteSpace(req.Title) && (commonRelationalData.PersonTitle == null || !commonRelationalData.PersonTitle.Any(title => title.Name == req.Title)))
+                // {
+                //     errorValidationResult.Errors.Add(EntityFieldNames.Title, new List<string> { ValidatorUtilities.CreateInvalidCommonRelationalDataValueValidationErrorMessage(EntityFieldNames.Title, CommonRelationalDataReferenceTypes.PersonTitle) });
+                // }
+                
                 //verify Suffix is valid
-                if (!string.IsNullOrWhiteSpace(req.Suffix) && (commonRelationalData.PersonSuffix == null || !commonRelationalData.PersonSuffix.Any(suffix => suffix.Name == req.Suffix)))
-                {
-                    errorValidationResult.Errors.Add(EntityFieldNames.Suffix, new List<string> { ValidatorUtilities.CreateInvalidCommonRelationalDataValueValidationErrorMessage(EntityFieldNames.Suffix, "PersonSuffix") });
-                }
+                // if (!string.IsNullOrWhiteSpace(req.Suffix) && (commonRelationalData.PersonSuffix == null || !commonRelationalData.PersonSuffix.Any(suffix => suffix.Name == req.Suffix)))
+                // {
+                //     errorValidationResult.Errors.Add(EntityFieldNames.Suffix, new List<string> { ValidatorUtilities.CreateInvalidCommonRelationalDataValueValidationErrorMessage(EntityFieldNames.Suffix, CommonRelationalDataReferenceTypes.PersonSuffix) });
+                // }
 
                 //verify TimeZone is valid
-                if (!string.IsNullOrWhiteSpace(req.TimeZone) && (commonRelationalData.UsaTimeZone == null || !commonRelationalData.UsaTimeZone.Any(timeZone => timeZone.Name == req.TimeZone)))
-                {
-                    errorValidationResult.Errors.Add(EntityFieldNames.TimeZone, new List<string> { ValidatorUtilities.CreateInvalidCommonRelationalDataValueValidationErrorMessage(EntityFieldNames.TimeZone, "UsaTimeZone") });
-                }
+                // if (!string.IsNullOrWhiteSpace(req.TimeZone) && (commonRelationalData.UsaTimeZone == null || !commonRelationalData.UsaTimeZone.Any(timeZone => timeZone.Name == req.TimeZone)))
+                // {
+                //     errorValidationResult.Errors.Add(EntityFieldNames.TimeZone, new List<string> { ValidatorUtilities.CreateInvalidCommonRelationalDataValueValidationErrorMessage(EntityFieldNames.TimeZone, CommonRelationalDataReferenceTypes.UsaTimeZone) });
+                // }
 
                 // Validate user email is unique
                 var emailCheck = await this.Filter(new FilterUserLogicRequest { Email = req.Email, IncludeReadOnly = true });
@@ -495,7 +509,7 @@ namespace Logic.Security.Logic
                 {
                     if ((userId == null || userId == 0) || (emailCheck.Response.FirstOrDefault().UserId != userId))
                     {
-                        errorValidationResult.Errors.Add("Email", new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage("Email") });
+                        errorValidationResult.Errors.Add(EntityFieldNames.Email, new List<string> { ValidatorUtilities.CreateUniqueValidationErrorMessage(EntityFieldNames.Email) });
                     }
                 }
             }

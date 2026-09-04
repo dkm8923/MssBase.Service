@@ -10,6 +10,7 @@ using Shared.Service.Cache;
 using Contract.Common.CommonRelationalData;
 using Dto.Common.CommonRelationalData.Service;
 using Dto.Common.CommonRelationalData;
+using static Shared.Logic.Common.Constants;
 
 namespace Service.Security.Service
 {
@@ -158,13 +159,9 @@ namespace Service.Security.Service
             {
                 ReferenceTypes = new List<string>
                 {
-                    "PersonTitle"//,
-                    // "PersonSex",
-                    // "PersonEthnicity",
-                    // "PersonGender",
-                    // "PersonMaritalStatus",
-                    // "PersonReligion",
-                    // "PersonSexuality"
+                    CommonRelationalDataReferenceTypes.PersonTitle,
+                    CommonRelationalDataReferenceTypes.PersonSuffix,
+                    CommonRelationalDataReferenceTypes.UsaTimeZone
                 }
             });
 
