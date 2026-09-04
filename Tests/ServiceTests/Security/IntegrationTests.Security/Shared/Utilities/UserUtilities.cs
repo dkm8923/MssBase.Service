@@ -210,6 +210,30 @@ public class UserUtilities : IUserUtilities
         };
     }
 
+    public Dictionary<string, List<string>> GetExpectedInvalidTitleFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Title", new List<string> { "Title value is invalid! Value must come from CommonRelationalData.PersonTitle List!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedInvalidSuffixFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Suffix", new List<string> { "Suffix value is invalid! Value must come from CommonRelationalData.PersonSuffix List!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedInvalidTimeZoneFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "TimeZone", new List<string> { "TimeZone value is invalid! Value must come from CommonRelationalData.UsaTimeZone List!" } }
+        };
+    }
+
     public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors()
     {
         return new Dictionary<string, List<string>>

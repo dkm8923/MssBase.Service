@@ -865,6 +865,66 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
+        public async Task User_Insert_Should_Not_Create_Record_Invalid_Title_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
+            recordToCreate.Title = "Mr..";
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidTitleFieldErrors();
+
+            // Act
+            var result = await _userLogic.Insert(recordToCreate, commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task User_Insert_Should_Not_Create_Record_Invalid_Suffix_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
+            recordToCreate.Suffix = "Jr..";
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidSuffixFieldErrors();
+
+            // Act
+            var result = await _userLogic.Insert(recordToCreate, commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task User_Insert_Should_Not_Create_Record_Invalid_TimeZone_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
+            recordToCreate.TimeZone = "ABC";
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidTimeZoneFieldErrors();
+
+            // Act
+            var result = await _userLogic.Insert(recordToCreate, commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
         public async Task User_Insert_Should_Not_Create_Record_Invalid_Email_Error()
         {
             // Arrange
@@ -961,7 +1021,67 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
-        public async Task User_Update_Should_Not_Create_Record_Invalid_Email_Error()
+        public async Task User_Update_Should_Not_Update_Record_Invalid_Title_Error()
+        {
+            // Arrange
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var arrangeTestDataResponse = await ArrangeUserTestData();
+            var recordToUpdate = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
+            recordToUpdate.Title = "Mr..";
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidTitleFieldErrors();
+
+            // Act
+            var result = await _userLogic.Update(recordToUpdate.UserId, _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(recordToUpdate), commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task User_Update_Should_Not_Update_Record_Invalid_Suffix_Error()
+        {
+            // Arrange
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var arrangeTestDataResponse = await ArrangeUserTestData();
+            var recordToUpdate = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
+            recordToUpdate.Suffix = "Jr..";
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidSuffixFieldErrors();
+
+            // Act
+            var result = await _userLogic.Update(recordToUpdate.UserId, _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(recordToUpdate), commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task User_Update_Should_Not_Update_Record_Invalid_TimeZone_Error()
+        {
+            // Arrange
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var arrangeTestDataResponse = await ArrangeUserTestData();
+            var recordToUpdate = arrangeTestDataResponse.ActiveUsers.FirstOrDefault();
+            recordToUpdate.TimeZone = "ABC";
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidTimeZoneFieldErrors();
+
+            // Act
+            var result = await _userLogic.Update(recordToUpdate.UserId, _securityTestUtilities.User.ConvertUserDtoToInsertUpdateRequest(recordToUpdate), commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task User_Update_Should_Not_Update_Record_Invalid_Email_Error()
         {
             // Arrange
             var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
