@@ -51,6 +51,13 @@ using Contract.Security.User;
 using Dto.Security.User.Logic;
 using Dto.Security.User;
 using Logic.Security.Validators.User;
+using Contract.Common.CommonRelationalData;
+using Dto.Common.CommonRelationalData;
+using Dto.Common.CommonRelationalData.Logic;
+using static Shared.Logic.Common.Constants;
+using Service.Common.Service;
+using Logic.Common.Logic;
+using Contract.Common;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -71,11 +78,12 @@ public class SecurityTestBase
     protected readonly IPermissionLogic _permissionLogic;
     protected readonly IRoleLogic _roleLogic;
     protected readonly IRolePermissionLogic _rolePermissionLogic;
+    protected readonly ICommonRelationalDataLogic _commonRelationalDataLogic;
     protected readonly ISecurityTestUtilitiesManager _securityTestUtilities;
     protected readonly IOptionsMonitor<AuthenticationSettingsConfig> _authenticationSettingsConfigMonitor;
     protected readonly IOptionsMonitor<JwtAuthenticationConfig> _jwtAuthenticationConfigMonitor;
     protected readonly IOptionsMonitor<PasswordValidationConfig> _passwordValidationConfigMonitor;
-
+    
     public SecurityTestBase()
     {
         //set environment variable to key off of in program.cs
@@ -102,6 +110,7 @@ public class SecurityTestBase
         _permissionLogic = _serviceProvider.GetService<IPermissionLogic>();
         _roleLogic = _serviceProvider.GetService<IRoleLogic>();
         _rolePermissionLogic = _serviceProvider.GetService<IRolePermissionLogic>();
+        _commonRelationalDataLogic = _serviceProvider.GetService<ICommonRelationalDataLogic>();
         _securityTestUtilities = _serviceProvider.GetService<ISecurityTestUtilitiesManager>();
     }
 
@@ -164,6 +173,8 @@ public class SecurityTestBase
     {
         try
         {
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            
             var testUser = await _userLogic.Insert(new InsertUpdateUserRequest { 
                 Active = true, 
                 Email = TestConstants.DefaultTestUserEmail, 
@@ -171,7 +182,7 @@ public class SecurityTestBase
                 LastName = "Smith", 
                 DateOfBirth = new DateTime(1987, 2, 12),
                 CurrentUser = TestConstants.CurrentUser 
-            });
+            }, commonData);
 
             if (testUser.Response != null)
             {
@@ -1344,6 +1355,7 @@ public class SecurityTestBase
 
         services = ConfigureBaseDependencies(services);
         services = ConfigureSecurityService(services);
+        services = ConfigureCommonService(services);
 
         return services.BuildServiceProvider();
     }
@@ -1484,6 +1496,23 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterRolePermissionLogicRequest>, FilterRolePermissionLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateRolePermissionRequest>, InsertUpdateRolePermissionRequestValidator>();
+
+        #endregion
+
+        return services;
+    }
+
+    private ServiceCollection ConfigureCommonService(ServiceCollection services)
+    {
+        services.Configure<CommonConnectionStrings>(_configHelper.Configuration.GetSection("CommonConnectionStrings"));
+
+        services.AddSingleton<ICommonConnectionStrings>(sp =>
+            sp.GetRequiredService<IOptionsMonitor<CommonConnectionStrings>>().CurrentValue);
+
+        #region CommonRelationalData
+
+        services.AddTransient<ICommonRelationalDataService, CommonRelationalDataService>();
+        services.AddTransient<ICommonRelationalDataLogic, CommonRelationalDataLogic>();
 
         #endregion
 

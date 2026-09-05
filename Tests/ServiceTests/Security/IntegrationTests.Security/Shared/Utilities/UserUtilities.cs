@@ -9,6 +9,12 @@ using Contract.Security;
 using Data.Security;
 using Data.Security.Converters;
 using Microsoft.EntityFrameworkCore;
+using Data.Security.Models;
+using Shared.Logic;
+using Dto.Common.CommonRelationalData;
+using Dto.Common.CommonRelationalData.Logic;
+using static Shared.Logic.Common.Constants;
+using Contract.Common.CommonRelationalData;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
@@ -17,12 +23,15 @@ public class UserUtilities : IUserUtilities
     private readonly ISecurityConnectionStrings _connectionStrings;
     private readonly SecurityDBContextFactory _dbContextFactory;
     protected readonly IUserLogic _userLogic;
+    protected readonly ICommonRelationalDataLogic _commonRelationalDataLogic;
     
-    public UserUtilities(ISecurityConnectionStrings connectionStrings, IUserLogic userLogic) 
+    
+    public UserUtilities(ISecurityConnectionStrings connectionStrings, IUserLogic userLogic, ICommonRelationalDataLogic commonRelationalDataLogic) 
     {
         _connectionStrings = connectionStrings;
         _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
         _userLogic = userLogic;
+        _commonRelationalDataLogic = commonRelationalDataLogic;
     }
 
     public InsertUpdateUserRequest ConvertUserDtoToInsertUpdateRequest(UserDto req)
@@ -30,9 +39,14 @@ public class UserUtilities : IUserUtilities
         return new InsertUpdateUserRequest
         {
             Email = req.Email,
+            Title = req.Title,
             FirstName = req.FirstName,
+            MiddleName = req.MiddleName,
             LastName = req.LastName,
+            PreferredName = req.PreferredName,
+            Suffix = req.Suffix,
             DateOfBirth = req.DateOfBirth,
+            TimeZone = req.TimeZone,
             Active = req.Active,
             CurrentUser = TestConstants.CurrentUser
         };
@@ -43,8 +57,13 @@ public class UserUtilities : IUserUtilities
         return new InsertUpdateUserRequest
         { 
             Email = LogicTestUtilities.GenerateRandomString(120) + "@test.com",
+            Title = LogicTestUtilities.GenerateRandomString(9),
             FirstName = LogicTestUtilities.GenerateRandomString(65),
+            MiddleName = LogicTestUtilities.GenerateRandomString(65),
             LastName = LogicTestUtilities.GenerateRandomString(65),
+            PreferredName = LogicTestUtilities.GenerateRandomString(65),
+            Suffix = LogicTestUtilities.GenerateRandomString(9),
+            TimeZone = LogicTestUtilities.GenerateRandomString(65),
             Active = true,
             CurrentUser = LogicTestUtilities.GenerateRandomString(65)
         };
@@ -55,8 +74,13 @@ public class UserUtilities : IUserUtilities
         return new InsertUpdateUserRequest
         {
             Email = LogicTestUtilities.GenerateRandomString(64) + "@test.com",
+            Title = "Mr.",
             FirstName = LogicTestUtilities.GenerateRandomString(32),
+            MiddleName = LogicTestUtilities.GenerateRandomString(32),
             LastName = LogicTestUtilities.GenerateRandomString(32),
+            PreferredName = LogicTestUtilities.GenerateRandomString(32),
+            Suffix = "Jr.",
+            TimeZone = "EST",
             DateOfBirth = LogicTestUtilities.GetRandomDateTime(2000),
             Active = active,
             CurrentUser = TestConstants.CurrentUser
@@ -71,7 +95,9 @@ public class UserUtilities : IUserUtilities
         //create test record
         var insertReq = CreateInsertUpdateRequestWithRandomValues(active);
 
-        var ret = await _userLogic.Insert(insertReq);
+        var commonData = await GetCommonRelationalDataForUserInsertUpdateValidation();
+
+        var ret = await _userLogic.Insert(insertReq, commonData);
 
         ret.Errors.Should().BeNullOrEmpty("Insert of user test record failed when it should have succeeded.");
 
@@ -148,8 +174,13 @@ public class UserUtilities : IUserUtilities
         return new Dictionary<string, List<string>>
         {
             { "Email", new List<string> { "Email cannot exceed 128 characters!" } },
+            { "Title", new List<string> { "Title cannot exceed 8 characters!" } },
             { "FirstName", new List<string> { "FirstName cannot exceed 64 characters!" } },
+            { "MiddleName", new List<string> { "MiddleName cannot exceed 64 characters!" } },
             { "LastName", new List<string> { "LastName cannot exceed 64 characters!" } },
+            { "PreferredName", new List<string> { "PreferredName cannot exceed 64 characters!" } },
+            { "Suffix", new List<string> { "Suffix cannot exceed 8 characters!" } },
+            { "TimeZone", new List<string> { "TimeZone cannot exceed 64 characters!" } },
             { "CurrentUser", new List<string> { "CurrentUser cannot exceed 64 characters!" } }
         };
     }
@@ -179,6 +210,30 @@ public class UserUtilities : IUserUtilities
         };
     }
 
+    public Dictionary<string, List<string>> GetExpectedInvalidTitleFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Title", new List<string> { "Title value is invalid! Value must come from CommonRelationalData.PersonTitle List!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedInvalidSuffixFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Suffix", new List<string> { "Suffix value is invalid! Value must come from CommonRelationalData.PersonSuffix List!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedInvalidTimeZoneFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "TimeZone", new List<string> { "TimeZone value is invalid! Value must come from CommonRelationalData.UsaTimeZone List!" } }
+        };
+    }
+
     public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors()
     {
         return new Dictionary<string, List<string>>
@@ -199,19 +254,11 @@ public class UserUtilities : IUserUtilities
         };
     }
 
-    public Dictionary<string, List<string>> GetExpectedApplicationUserPermissionForeignKeyErrors()
+    public Dictionary<string, List<string>> GetExpectedApplicationUserForeignKeyErrors()
     {
         return new Dictionary<string, List<string>>
         {
-            { "ApplicationUserPermissions", new List<string> { "Record still contains child dependencies! IE: ApplicationUserPermissions" } }
-        };
-    }
-
-    public Dictionary<string, List<string>> GetExpectedApplicationUserRoleForeignKeyErrors()
-    {
-        return new Dictionary<string, List<string>>
-        {
-            { "ApplicationUserRoles", new List<string> { "Record still contains child dependencies! IE: ApplicationUserRoles" } }
+            { "ApplicationUsers", new List<string> { "Record still contains child dependencies! IE: ApplicationUsers" } }
         };
     }
 
@@ -280,8 +327,13 @@ public class UserUtilities : IUserUtilities
     {
         recordA.UserId.Should().Be(recordB.UserId);
         recordA.Email.Should().Be(recordB.Email);
+        recordA.Title.Should().Be(recordB.Title);
         recordA.FirstName.Should().Be(recordB.FirstName);
+        recordA.MiddleName.Should().Be(recordB.MiddleName);
         recordA.LastName.Should().Be(recordB.LastName);
+        recordA.PreferredName.Should().Be(recordB.PreferredName);
+        recordA.Suffix.Should().Be(recordB.Suffix);
+        recordA.TimeZone.Should().Be(recordB.TimeZone);
         recordA.Active.Should().Be(recordB.Active);
         recordA.ReadOnly.Should().Be(recordB.ReadOnly);
         recordA.CreatedBy.Should().Be(recordB.CreatedBy);
@@ -335,6 +387,21 @@ public class UserUtilities : IUserUtilities
         }
     }
 
+    public async Task<FilterCommonRelationalDataDto> GetCommonRelationalDataForUserInsertUpdateValidation()
+    {
+        var commonDataRes = await _commonRelationalDataLogic.Filter(new FilterCommonRelationalDataLogicRequest
+        {
+            ReferenceTypes = new List<string>
+            {
+                CommonRelationalDataReferenceTypes.PersonTitle,
+                CommonRelationalDataReferenceTypes.PersonSuffix,
+                CommonRelationalDataReferenceTypes.UsaTimeZone
+            }
+        });
+
+        return commonDataRes.Response;
+    }
+
     #region Private
 
     /// <summary>
@@ -353,6 +420,12 @@ public class UserUtilities : IUserUtilities
             var insertReq = CreateInsertUpdateRequestWithRandomValues(active);
             var ent = insertReq.ToEntityOnInsert();
             ent.ReadOnly = true;
+
+            ent.UserLogin = new UserLogin
+            {
+                Password = LogicUtilities.HashPassword(LogicTestUtilities.GenerateRandomString(16)),
+                PasswordResetRequired = false
+            };
 
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {

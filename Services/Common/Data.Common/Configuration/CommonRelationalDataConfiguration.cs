@@ -4,6 +4,8 @@ using Dto.Common.CommonRelationalData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Shared.Data;
+using Shared.Logic.Common;
+using static Shared.Logic.Common.Constants;
 
 namespace Data.Common.Configuration;
 
@@ -42,13 +44,15 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
     {
         var records = new List<CommonRelationalData>();
         records.Add(_configurePersonTitle(builder));
+        records.Add(_configurePersonSuffix(builder));
         records.Add(_configurePersonSex(builder));
         records.Add(_configurePersonEthnicity(builder));
         records.Add(_configurePersonGender(builder));
         records.Add(_configurePersonMaritalStatus(builder));
         records.Add(_configurePersonReligion(builder));
         records.Add(_configurePersonSexuality(builder));
-
+        records.Add(_configurePersonLanguage(builder));
+        
         records.Add(_configureAddressType(builder));
         records.Add(_configurePhoneNumberType(builder));
         records.Add(_configureUsaState(builder));
@@ -82,7 +86,24 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonTitle", Description = "Title for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonTitle, Description = "Title for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        return ret;
+    }
+
+    private CommonRelationalData _configurePersonSuffix(EntityTypeBuilder<CommonRelationalData> builder)
+    {
+        var relationalRecords = new List<CommonRelationalDataDto>();
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Jr.", Description = "Junior" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Sr.", Description = "Senior" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "II", Description = "The second" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "III", Description = "The third" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "IV", Description = "The fourth" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "V", Description = "The fifth" });
+        
+        DataUtilities.SetActiveFieldToTrue(relationalRecords);
+        DataUtilities.SetAuditFields(relationalRecords);
+
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonSuffix, Description = "Suffix for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -96,7 +117,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonSex", Description = "Sex for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonSex, Description = "Sex for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -113,7 +134,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonEthnicity", Description = "Ethnicity for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonEthnicity, Description = "Ethnicity for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -139,7 +160,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonGender", Description = "Gender for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonGender, Description = "Gender for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -156,7 +177,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonMaritalStatus", Description = "Marital status for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonMaritalStatus, Description = "Marital status for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -186,7 +207,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonReligion", Description = "Religion / Faith for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonReligion, Description = "Religion / Faith for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -227,7 +248,37 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PersonSexuality", Description = "Sexuality for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonSexuality, Description = "Sexuality for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        return ret;
+    }
+
+    private CommonRelationalData _configurePersonLanguage(EntityTypeBuilder<CommonRelationalData> builder)
+    {
+        var relationalRecords = new List<CommonRelationalDataDto>();
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Afrikaans", Description = "A West Germanic language spoken mainly in South Africa and Namibia." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Arabic", Description = "A Semitic language with many dialects, widely spoken across the Middle East and North Africa." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Bengali", Description = "An Indo-Aryan language spoken primarily in Bangladesh and eastern India." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Chinese (Mandarin)", Description = "The most spoken language in the world, official in China and Taiwan." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Dutch", Description = "A West Germanic language spoken mainly in the Netherlands and Belgium." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "English", Description = "A global lingua franca, native to the UK, USA, and many other countries." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "French", Description = "A Romance language spoken in France, Canada, Africa, and other regions." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "German", Description = "A West Germanic language spoken in Germany, Austria, and Switzerland." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Hindi", Description = "An Indo-Aryan language widely spoken in India and parts of Nepal." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Italian", Description = "A Romance language spoken mainly in Italy and parts of Switzerland." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Japanese", Description = "An East Asian language spoken primarily in Japan." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Korean", Description = "An East Asian language spoken in both South and North Korea." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Portuguese", Description = "A Romance language spoken in Portugal, Brazil, and parts of Africa." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Russian", Description = "An East Slavic language spoken in Russia and many former Soviet states." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Spanish", Description = "A Romance language spoken in Spain, Latin America, and parts of the USA." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Swedish", Description = "A North Germanic language spoken mainly in Sweden and Finland." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Thai", Description = "The official language of Thailand, part of the Tai-Kadai family." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Turkish", Description = "A Turkic language spoken mainly in Turkey and Cyprus." });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Vietnamese", Description = "The official language of Vietnam, part of the Austroasiatic family." });
+        
+        DataUtilities.SetActiveFieldToTrue(relationalRecords);
+        DataUtilities.SetAuditFields(relationalRecords);
+
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonLanguage, Description = "Language for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -246,7 +297,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "AddressType", Description = "Address type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.AddressType, Description = "Address type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -269,7 +320,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "PhoneNumberType", Description = "Phone number type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PhoneNumberType, Description = "Phone number type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -339,7 +390,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "UsaState", Description = "List of all Usa States and Territories", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.UsaState, Description = "List of all Usa States and Territories", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 
@@ -595,7 +646,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "Country", Description = "List of all Countries and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.Country, Description = "List of all Countries and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
 
         return ret;
     }
@@ -604,7 +655,6 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
     {
         var relationalRecords = new List<CommonRelationalDataDto>();
         relationalRecords.Add(new CommonRelationalDataDto { Name = "Eastern Standard Time (EST):", Value = "EST", Description = "Covers the East Coast and parts of the Midwest" });
-
         relationalRecords.Add(new CommonRelationalDataDto { Name = "Central Standard Time (CST):", Value = "CST", Description = "Spans the central US and Gulf Coast" });
         relationalRecords.Add(new CommonRelationalDataDto { Name = "Mountain Standard Time (MST):", Value = "MST", Description = "Extends across the Mountain West" });
         relationalRecords.Add(new CommonRelationalDataDto { Name = "Pacific Standard Time (PST):", Value = "PST", Description = "Covers the West Coast, including California, and Nevada" });
@@ -617,7 +667,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = "UsaTimeZone", Description = "List of all USA Time Zones and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.UsaTimeZone, Description = "List of all USA Time Zones and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
 
         return ret;
     }

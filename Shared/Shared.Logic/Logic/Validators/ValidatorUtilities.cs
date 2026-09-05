@@ -81,6 +81,11 @@ namespace Shared.Logic.Validators
             return $"Invalid email address!";
         }
 
+        public static string CreateInvalidCommonRelationalDataValueValidationErrorMessage(string fieldName, string dataTypeName)
+        {
+            return $"{fieldName} value is invalid! Value must come from CommonRelationalData.{dataTypeName} List!";
+        }
+
         /// <summary>
         /// Validate CurrentUser Max Length and NotEmpty. Default Values: FieldName = "CurrentUser", MaxLength = 64
         /// </summary>

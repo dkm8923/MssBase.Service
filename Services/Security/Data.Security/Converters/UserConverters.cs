@@ -27,9 +27,14 @@ namespace Data.Security.Converters
                 UpdatedBy = source.UpdatedBy,
                 UpdatedOn = source.UpdatedOn,
                 Email = source.Email,
+                Title = source.Title,
                 FirstName = source.FirstName,
+                MiddleName = source.MiddleName,
                 LastName = source.LastName,
+                PreferredName = source.PreferredName,
+                Suffix = source.Suffix,
                 DateOfBirth = source.DateOfBirth,
+                TimeZone = source.TimeZone,
                 Password = applicationUserLogin.Password,
                 PasswordResetRequired = applicationUserLogin.PasswordResetRequired,
                 LastLoginDate = applicationUserLogin.LastLoginDate,
@@ -53,7 +58,7 @@ namespace Data.Security.Converters
                 return null;
             }
 
-            source.Password = null;
+            source.UserLogin.Password = null;
             return source.ToDto();
         }
 

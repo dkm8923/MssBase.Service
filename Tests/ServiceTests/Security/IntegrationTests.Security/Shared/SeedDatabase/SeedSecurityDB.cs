@@ -315,8 +315,9 @@ public class SeedSecurityDB : SecurityTestBase, IClassFixture<WebApplicationFact
 
     private async Task<UserDto> CreateUserWithPasswordReset(InsertUpdateUserRequest req)
     {
+        var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
         req.CurrentUser = TestConstants.CurrentUser;
-        var insertedUser = await _userLogic.Insert(req);
+        var insertedUser = await _userLogic.Insert(req, commonData);
         
         if (insertedUser.Response != null)
         {

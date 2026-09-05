@@ -1,3 +1,4 @@
+using Dto.Common.CommonRelationalData;
 using Dto.Security.User;
 
 namespace IntegrationTests.Security.Shared.Utilities.Contracts;
@@ -15,14 +16,17 @@ public interface IUserUtilities
     public InsertUpdateUserRequest ConvertUserDtoToInsertUpdateRequest(UserDto req);
     public void VerifyTestRecordValuesMatch(UserDto recordA, UserDto recordB);
     public void VerifyIncludeRelatedDataOnUser(UserDto user, bool includeInactive = false);
+    public Task<FilterCommonRelationalDataDto> GetCommonRelationalDataForUserInsertUpdateValidation();
     public Dictionary<string, List<string>> GetExpectedRecordDoesNotExistErrors();
     public Dictionary<string, List<string>> GetExpectedUniqueFieldErrors();
     public Dictionary<string, List<string>> GetExpectedReadOnlyErrors();
-    public Dictionary<string, List<string>> GetExpectedApplicationUserPermissionForeignKeyErrors();
-    public Dictionary<string, List<string>> GetExpectedApplicationUserRoleForeignKeyErrors();
+    public Dictionary<string, List<string>> GetExpectedApplicationUserForeignKeyErrors();
     public Dictionary<string, List<string>> GetExpectedRequiredFieldErrors();
     public Dictionary<string, List<string>> GetExpectedMaxLengthFieldErrors();
     public Dictionary<string, List<string>> GetExpectedInvalidEmailFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedInvalidTitleFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedInvalidSuffixFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedInvalidTimeZoneFieldErrors();
     public Dictionary<string, List<string>> GetExpectedChangePasswordRequiredFieldErrors();
     public Dictionary<string, List<string>> GetExpectedChangePasswordMinMaxLengthErrors();
     public Dictionary<string, List<string>> GetExpectedChangePasswordInvalidPasswordErrors();

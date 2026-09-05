@@ -7,6 +7,10 @@ using Shared.Contracts;
 using Shared.Models;
 using Shared.Models.Dtos;
 using Shared.Service.Cache;
+using Contract.Common.CommonRelationalData;
+using Dto.Common.CommonRelationalData.Service;
+using Dto.Common.CommonRelationalData;
+using static Shared.Logic.Common.Constants;
 
 namespace Service.Security.Service
 {
@@ -14,13 +18,19 @@ namespace Service.Security.Service
     {
         private readonly string cacheKeySectionName = ICacheService.UserService;
         private readonly IApplicationLogic _applicationLogic;
+        private readonly ICommonRelationalDataService _commonRelationalDataService;
         private readonly IUserLogic _userLogic;
         private readonly ICacheService _cacheService;
 
-        public UserService(IApplicationLogic applicationLogic, IUserLogic applicationUserLogic, ICacheService cacheService)
+        public UserService(IApplicationLogic applicationLogic, 
+                           IUserLogic applicationUserLogic, 
+                           ICommonRelationalDataService commonRelationalDataService, 
+                           ICacheService cacheService
+                          )
         {
             _applicationLogic = applicationLogic;
             _userLogic = applicationUserLogic;
+            _commonRelationalDataService = commonRelationalDataService;
             _cacheService = cacheService;
         }
 
@@ -56,12 +66,17 @@ namespace Service.Security.Service
             var createdOnKey = CacheUtilities.CreateKeyFromDateOnly(req.CreatedOnDate);
             var updatedByKey = CacheUtilities.CreateKeyFromString(req.UpdatedBy);
             var updatedOnKey = CacheUtilities.CreateKeyFromDateOnly(req.UpdatedOnDate);
-            var applicationUserIdsKey = (req.UserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString();
+            var userIdsKey = (req.UserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString();
             var emailKey = CacheUtilities.CreateKeyFromString(req.Email);
+            var titleKey = CacheUtilities.CreateKeyFromString(req.Title);
             var firstNameKey = CacheUtilities.CreateKeyFromString(req.FirstName);
+            var middleNameKey = CacheUtilities.CreateKeyFromString(req.MiddleName);
             var lastNameKey = CacheUtilities.CreateKeyFromString(req.LastName);
+            var preferredNameKey = CacheUtilities.CreateKeyFromString(req.PreferredName);
+            var suffixKey = CacheUtilities.CreateKeyFromString(req.Suffix);
             //var dateOfBirthKey = CacheUtilities.CreateKeyFromString(req.DateOfBirth.ToString());
             var dateOfBirthKey = "0"; //TODO: Make this work, should be DateOnly
+            var timeZoneKey = CacheUtilities.CreateKeyFromString(req.TimeZone);
             var applicationIdKey = (req.ApplicationId ?? 0).ToString();
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
             var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
@@ -72,11 +87,16 @@ namespace Service.Security.Service
                 ,createdOnKey
                 ,updatedByKey
                 ,updatedOnKey
-                ,applicationUserIdsKey
+                ,userIdsKey
                 ,emailKey
+                ,titleKey
                 ,firstNameKey
+                ,middleNameKey
                 ,lastNameKey
+                ,preferredNameKey
+                ,suffixKey
                 ,dateOfBirthKey
+                ,timeZoneKey
                 ,applicationIdKey
                 ,includeInactiveKey
                 ,includeRelatedKey
@@ -93,8 +113,8 @@ namespace Service.Security.Service
         public async Task<ErrorValidationResult<UserDto>> Insert(InsertUpdateUserRequest req)
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
-
-            return await _userLogic.Insert(req);
+            var commonData = await _getCommonRelationalDataForInsertUpdateValidation();
+            return await _userLogic.Insert(req, commonData); 
         }
 
         #endregion
@@ -104,8 +124,8 @@ namespace Service.Security.Service
         public async Task<ErrorValidationResult<UserDto>> Update(int userId, InsertUpdateUserRequest req)
         {
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
-
-            return await _userLogic.Update(userId, req);
+            var commonData = await _getCommonRelationalDataForInsertUpdateValidation();
+            return await _userLogic.Update(userId, req, commonData);
         }
 
         #endregion
@@ -130,5 +150,24 @@ namespace Service.Security.Service
         {
             return await _userLogic.ChangePassword(req);
         }
+
+        #region Private
+
+        private async Task<FilterCommonRelationalDataDto> _getCommonRelationalDataForInsertUpdateValidation()
+        {
+            var commonDataRes = await _commonRelationalDataService.Filter(new FilterCommonRelationalDataServiceRequest
+            {
+                ReferenceTypes = new List<string>
+                {
+                    CommonRelationalDataReferenceTypes.PersonTitle,
+                    CommonRelationalDataReferenceTypes.PersonSuffix,
+                    CommonRelationalDataReferenceTypes.UsaTimeZone
+                }
+            });
+
+            return commonDataRes.Response;
+        }
+
+        #endregion
     }
 }

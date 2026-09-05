@@ -6,6 +6,9 @@ namespace Dto.Common.CommonRelationalData
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<CommonRelationalDataDto>? PersonTitle { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<CommonRelationalDataDto>? PersonSuffix { get; set; }
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<CommonRelationalDataDto>? PersonSex { get; set; }
@@ -24,6 +27,9 @@ namespace Dto.Common.CommonRelationalData
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<CommonRelationalDataDto>? PersonSexuality { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<CommonRelationalDataDto>? PersonLanguage { get; set; }
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<CommonRelationalDataDto>? AddressType { get; set; }
