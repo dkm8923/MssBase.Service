@@ -138,5 +138,29 @@ namespace IntegrationTests.Shared
             // 5. Return the resulting random DateTime
             return startOfYear.AddSeconds(randomSecondsOffset);
         }
+
+        /// <summary>
+        /// Generates a random DateOnly value for a specific year including random month and day components.
+        /// The generated date will be valid for the specified year, taking into account leap years.
+        /// </summary>
+        /// <param name="year">The target year (e.g., 2026).</param>
+        /// <returns>A random DateOnly within the specified year.</returns>
+        public static DateOnly GetRandomDateOnly(int year)
+        {
+            // 1. Define the exact start of the year
+            DateTime startOfYear = new DateTime(year, 1, 1);
+            
+            // 2. Determine if it is a leap year to get the correct total days (365 or 366)
+            int totalDaysInYear = DateTime.IsLeapYear(year) ? 366 : 365;
+            
+            // 3. Convert the maximum range into seconds to allow for random time components
+            int totalSecondsInYear = totalDaysInYear * 24 * 60 * 60;
+            
+            // 4. Generate a random second offset (upper bound is exclusive)
+            int randomSecondsOffset = Random.Shared.Next(0, totalSecondsInYear);
+            
+            // 5. Return the resulting random DateOnly
+            return DateOnly.FromDateTime(startOfYear.AddSeconds(randomSecondsOffset));
+        }
     }
 }

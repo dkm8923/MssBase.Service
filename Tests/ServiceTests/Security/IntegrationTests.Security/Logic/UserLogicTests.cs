@@ -379,7 +379,7 @@ namespace IntegrationTests.Security.Logic
             updateReq.Email = "UpdatedEmail@Test.com";
             updateReq.FirstName = "Updated FirstName";
             updateReq.LastName = "Updated LastName";
-            updateReq.DateOfBirth = new DateTime(2000, 1, 1);
+            updateReq.DateOfBirth = new DateOnly(2000, 1, 1);
 
             // Act
             var updateResult = await _userLogic.Update(testRecord.UserId, updateReq, commonData);
@@ -448,7 +448,7 @@ namespace IntegrationTests.Security.Logic
             updateReq.Email = "UpdatedEmail@Test.com";
             updateReq.FirstName = "Updated FirstName";
             updateReq.LastName = "Updated LastName";
-            updateReq.DateOfBirth = new DateTime(2000, 1, 1);
+            updateReq.DateOfBirth = new DateOnly(2000, 1, 1);
 
             // Act
             var updateResult = await _userLogic.Update(testRecord.UserId, updateReq, commonData);
@@ -474,7 +474,7 @@ namespace IntegrationTests.Security.Logic
             public string? Email { get; set; }
             public string? FirstName { get; set; }
             public string? LastName { get; set; }
-            public DateTime? DateOfBirth { get; set; }
+            public DateOnly? DateOfBirth { get; set; }
             public bool? Active { get; set; }
             public string? UpdatedBy { get; set; }
             public DateTime? UpdatedOn { get; set; }
@@ -537,7 +537,7 @@ namespace IntegrationTests.Security.Logic
             var postReqInvalidEmail = new FilterUserLogicRequest { Email = "invalid@test.com" };
             var postReqInvalidFirstName = new FilterUserLogicRequest { FirstName = "InvalidFirstName" };
             var postReqInvalidLastName = new FilterUserLogicRequest { LastName = "InvalidLastName" };
-            var postReqInvalidDateOfBirth = new FilterUserLogicRequest { DateOfBirth = new DateTime(1900, 1, 1) };
+            var postReqInvalidDateOfBirth = new FilterUserLogicRequest { DateOfBirth = new DateOnly(1900, 1, 1) };
             
             // Act
             var invalidCreatedByResult = await _userLogic.Filter(postReqInvalidCreatedBy);
@@ -572,9 +572,14 @@ namespace IntegrationTests.Security.Logic
             var testUser1 = await _userLogic.Insert(new InsertUpdateUserRequest
             {
                 Email = "testEmail1@test.com",
+                Title = "Mr.",
                 FirstName = "TestFirstName1",
+                MiddleName = "TestMiddleName1",
                 LastName = "TestLastName1",
-                DateOfBirth = new DateTime(1990, 1, 1),
+                PreferredName = "TestPreferredName1",
+                Suffix = "Sr.",
+                DateOfBirth = new DateOnly(1990, 1, 1),
+                TimeZone = "PST",
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, commonData);
@@ -582,9 +587,14 @@ namespace IntegrationTests.Security.Logic
             var testUser2 = await _userLogic.Insert(new InsertUpdateUserRequest
             {
                 Email = "testEmail2@test.com",
+                Title = "Ms.",
                 FirstName = "TestFirstName2",
+                MiddleName = "TestMiddleName2",
                 LastName = "TestLastName2",
-                DateOfBirth = new DateTime(1991, 2, 2),
+                PreferredName = "TestPreferredName2",
+                Suffix = "Sr.",
+                DateOfBirth = new DateOnly(1991, 2, 2),
+                TimeZone = "EST",
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, commonData);
@@ -592,9 +602,14 @@ namespace IntegrationTests.Security.Logic
             await _userLogic.Update(testUser2.Response.UserId, new InsertUpdateUserRequest
             {
                 Email = "testEmail2@test.com",
+                Title = "Mrs.",
                 FirstName = "TestFirstName2",
+                MiddleName = "TestMiddleName2",
                 LastName = "TestLastName2",
-                DateOfBirth = new DateTime(1991, 3, 2),
+                PreferredName = "TestPreferredName2",
+                Suffix = "Jr.",
+                DateOfBirth = new DateOnly(1991, 3, 2),
+                TimeZone = "CST",
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForUpdate
             }, commonData);
@@ -606,10 +621,15 @@ namespace IntegrationTests.Security.Logic
             var postReqFilterUpdatedBy = new FilterUserLogicRequest { UpdatedBy = TestConstants.SpecificCurrentUserForUpdate };
             var postReqFilterUpdatedOnDate = new FilterUserLogicRequest { UpdatedOnDate = todaysUtcDate };
             var postReqFilterUserIds = new FilterUserLogicRequest { UserIds = new List<int> { testUser1.Response.UserId } };
+            var postReqFilterTitle = new FilterUserLogicRequest { Title = "Mrs." };
             var postReqFilterEmail = new FilterUserLogicRequest { Email = testUser1.Response.Email };
             var postReqFilterFirstName = new FilterUserLogicRequest { FirstName = testUser1.Response.FirstName };
+            var postReqFilterMiddleName = new FilterUserLogicRequest { MiddleName = testUser1.Response.MiddleName };
             var postReqFilterLastName = new FilterUserLogicRequest { LastName = testUser1.Response.LastName };
+            var postReqFilterPreferredName = new FilterUserLogicRequest { PreferredName = testUser1.Response.PreferredName };
+            var postReqFilterSuffix = new FilterUserLogicRequest { Suffix = testUser1.Response.Suffix };
             var postReqFilterDateOfBirth = new FilterUserLogicRequest { DateOfBirth = testUser1.Response.DateOfBirth };
+            var postReqFilterTimeZone = new FilterUserLogicRequest { TimeZone = testUser1.Response.TimeZone };
             
             // Act
             var filterCreatedByResult = await _userLogic.Filter(postReqFilterCreatedBy);
@@ -618,9 +638,14 @@ namespace IntegrationTests.Security.Logic
             var filterUpdatedOnDateResult = await _userLogic.Filter(postReqFilterUpdatedOnDate);
             var filterUserIdsResult = await _userLogic.Filter(postReqFilterUserIds);
             var filterEmailResult = await _userLogic.Filter(postReqFilterEmail);
+            var filterTitleResult = await _userLogic.Filter(postReqFilterTitle);
             var filterFirstNameResult = await _userLogic.Filter(postReqFilterFirstName);
+            var filterMiddleNameResult = await _userLogic.Filter(postReqFilterMiddleName);
             var filterLastNameResult = await _userLogic.Filter(postReqFilterLastName);
+            var filterPreferredNameResult = await _userLogic.Filter(postReqFilterPreferredName);
+            var filterSuffixResult = await _userLogic.Filter(postReqFilterSuffix);
             var filterDateOfBirthResult = await _userLogic.Filter(postReqFilterDateOfBirth);
+            var filterTimeZoneResult = await _userLogic.Filter(postReqFilterTimeZone);
             
             // Assert
             filterCreatedByResult.Response.Should().HaveCount(2);
@@ -629,9 +654,14 @@ namespace IntegrationTests.Security.Logic
             filterUpdatedOnDateResult.Response.Should().HaveCountGreaterThan(0);
             filterUserIdsResult.Response.Should().HaveCount(1);
             filterEmailResult.Response.Should().HaveCount(1);
+            filterTitleResult.Response.Should().HaveCount(1);
             filterFirstNameResult.Response.Should().HaveCount(1);
+            filterMiddleNameResult.Response.Should().HaveCount(1);
             filterLastNameResult.Response.Should().HaveCount(1);
+            filterPreferredNameResult.Response.Should().HaveCount(1);
+            filterSuffixResult.Response.Should().HaveCount(1);
             filterDateOfBirthResult.Response.Should().HaveCount(1);
+            filterTimeZoneResult.Response.Should().HaveCount(1);
         }
 
         [Fact]
@@ -760,9 +790,14 @@ namespace IntegrationTests.Security.Logic
             var postReqInvalidUpdatedBy = new FilterUserLogicRequest { UpdatedBy = testRecord.UpdatedBy };
             var postReqInvalidUpdatedOnDate = new FilterUserLogicRequest { UpdatedOnDate = DateOnly.FromDateTime((DateTime)testRecord.UpdatedOn) };
             var postReqInvalidEmail = new FilterUserLogicRequest { Email = testRecord.Email };
+            var postReqInvalidTitle = new FilterUserLogicRequest { Title = testRecord.Title };
             var postReqInvalidFirstName = new FilterUserLogicRequest { FirstName = testRecord.FirstName };
+            var postReqInvalidMiddleName = new FilterUserLogicRequest { MiddleName = testRecord.MiddleName };
             var postReqInvalidLastName = new FilterUserLogicRequest { LastName = testRecord.LastName };
+            var postReqInvalidPreferredName = new FilterUserLogicRequest { PreferredName = testRecord.PreferredName };
+            var postReqInvalidSuffix = new FilterUserLogicRequest { Suffix = testRecord.Suffix };
             var postReqInvalidDateofBirth = new FilterUserLogicRequest { DateOfBirth = testRecord.DateOfBirth };
+            var postReqInvalidTimeZone = new FilterUserLogicRequest { TimeZone = testRecord.TimeZone };
 
             // Act
             var invalidCreatedByResult = await _userLogic.Filter(postReqInvalidCreatedBy);
@@ -770,9 +805,14 @@ namespace IntegrationTests.Security.Logic
             var invalidUpdatedByResult = await _userLogic.Filter(postReqInvalidUpdatedBy);
             var invalidUpdatedOnDateResult = await _userLogic.Filter(postReqInvalidUpdatedOnDate);
             var invalidEmailResult = await _userLogic.Filter(postReqInvalidEmail);
+            var invalidTitleResult = await _userLogic.Filter(postReqInvalidTitle);
             var invalidFirstNameResult = await _userLogic.Filter(postReqInvalidFirstName);
+            var invalidMiddleNameResult = await _userLogic.Filter(postReqInvalidMiddleName);
             var invalidLastNameResult = await _userLogic.Filter(postReqInvalidLastName);
+            var invalidPreferredNameResult = await _userLogic.Filter(postReqInvalidPreferredName);
+            var invalidSuffixResult = await _userLogic.Filter(postReqInvalidSuffix);
             var invalidDateofBirthResult = await _userLogic.Filter(postReqInvalidDateofBirth);
+            var invalidTimeZoneResult = await _userLogic.Filter(postReqInvalidTimeZone);
             
             // Assert
             invalidCreatedByResult.Response.Should().HaveCount(0);
@@ -780,9 +820,14 @@ namespace IntegrationTests.Security.Logic
             invalidUpdatedByResult.Response.Should().HaveCount(0);
             invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
             invalidEmailResult.Response.Should().HaveCount(0);
+            invalidTitleResult.Response.Should().HaveCount(0);
             invalidFirstNameResult.Response.Should().HaveCount(0);
+            invalidMiddleNameResult.Response.Should().HaveCount(0);
             invalidLastNameResult.Response.Should().HaveCount(0);
+            invalidPreferredNameResult.Response.Should().HaveCount(0);
+            invalidSuffixResult.Response.Should().HaveCount(0);
             invalidDateofBirthResult.Response.Should().HaveCount(0);
+            invalidTimeZoneResult.Response.Should().HaveCount(0);
         }
 
         #endregion

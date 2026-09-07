@@ -81,7 +81,7 @@ public class UserUtilities : IUserUtilities
             PreferredName = LogicTestUtilities.GenerateRandomString(32),
             Suffix = "Jr.",
             TimeZone = "EST",
-            DateOfBirth = LogicTestUtilities.GetRandomDateTime(2000),
+            DateOfBirth = LogicTestUtilities.GetRandomDateOnly(2000),
             Active = active,
             CurrentUser = TestConstants.CurrentUser
         };

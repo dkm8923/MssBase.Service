@@ -9,6 +9,6 @@ public interface IPerson
     public string? LastName { get; set; }
     public string? PreferredName { get; set; }
     public string? Suffix { get; set; }
-    public DateTime? DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
     public string? TimeZone { get; set; }
 }

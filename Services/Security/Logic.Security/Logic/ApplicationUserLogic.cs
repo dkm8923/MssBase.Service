@@ -283,7 +283,7 @@ namespace Logic.Security.Logic
                 }
 
                 // Validate User exists
-                var userResponse = await userLogic.Filter(new FilterUserLogicRequest { UserIds = new List<int> { req.UserId }, ApplicationId = req.ApplicationId, IncludeInactive = true, IncludeReadOnly = true });
+                var userResponse = await userLogic.Filter(new FilterUserLogicRequest { UserIds = new List<int> { req.UserId }, IncludeInactive = true, IncludeReadOnly = true });
 
                 if (userResponse.Response == null || userResponse.Response.Count() == 0)
                 {

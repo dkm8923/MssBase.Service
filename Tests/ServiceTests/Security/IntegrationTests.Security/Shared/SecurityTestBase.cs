@@ -180,7 +180,7 @@ public class SecurityTestBase
                 Email = TestConstants.DefaultTestUserEmail, 
                 FirstName = "Bob", 
                 LastName = "Smith", 
-                DateOfBirth = new DateTime(1987, 2, 12),
+                DateOfBirth = new DateOnly(1987, 2, 12),
                 CurrentUser = TestConstants.CurrentUser 
             }, commonData);
 

@@ -678,7 +678,7 @@ namespace IntegrationTests.Security.Controller
                 FirstName = "Updated First Name",
                 LastName = "Updated Last Name",
                 Email = "updatedemail@example.com",
-                DateOfBirth = new DateTime(1990, 1, 1),
+                DateOfBirth = new DateOnly(2000, 1, 1),
                 Active = false,
                 CurrentUser = TestConstants.CurrentUser
             };

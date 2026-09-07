@@ -13,7 +13,7 @@ public partial class User : AuditableEntity, IPerson
     public string? LastName { get; set; }
     public string? PreferredName { get; set; }
     public string? Suffix { get; set; }
-    public DateTime? DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
     public string? TimeZone { get; set; }
     
     public virtual UserLogin UserLogin { get; set; } = null!;

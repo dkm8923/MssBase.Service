@@ -97,9 +97,14 @@ namespace Data.Security.Converters
             {
                 Active = source.Active,
                 Email = source.Email,
+                Title = source.Title,
                 FirstName = source.FirstName,
+                MiddleName = source.MiddleName,
                 LastName = source.LastName,
+                PreferredName = source.PreferredName,
+                Suffix = source.Suffix,
                 DateOfBirth = source.DateOfBirth,
+                TimeZone = source.TimeZone,
                 CurrentUser = source.CurrentUser
             };
 
@@ -115,9 +120,14 @@ namespace Data.Security.Converters
 
             entity.Active = source.Active;
             entity.Email = source.Email;
+            entity.Title = source.Title;
             entity.FirstName = source.FirstName;
+            entity.MiddleName = source.MiddleName;
             entity.LastName = source.LastName;
+            entity.PreferredName = source.PreferredName;
+            entity.Suffix = source.Suffix;
             entity.DateOfBirth = source.DateOfBirth;
+            entity.TimeZone = source.TimeZone;
             entity.CurrentUser = source.CurrentUser;
 
             return entity;

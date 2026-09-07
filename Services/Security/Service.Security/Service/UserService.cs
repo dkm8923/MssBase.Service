@@ -74,10 +74,8 @@ namespace Service.Security.Service
             var lastNameKey = CacheUtilities.CreateKeyFromString(req.LastName);
             var preferredNameKey = CacheUtilities.CreateKeyFromString(req.PreferredName);
             var suffixKey = CacheUtilities.CreateKeyFromString(req.Suffix);
-            //var dateOfBirthKey = CacheUtilities.CreateKeyFromString(req.DateOfBirth.ToString());
-            var dateOfBirthKey = "0"; //TODO: Make this work, should be DateOnly
+            var dateOfBirthKey = CacheUtilities.CreateKeyFromDateOnly(req.DateOfBirth);
             var timeZoneKey = CacheUtilities.CreateKeyFromString(req.TimeZone);
-            var applicationIdKey = (req.ApplicationId ?? 0).ToString();
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
             var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
             var includeReadOnlyKey = CacheUtilities.CreateKeyFromBool(req.IncludeReadOnly);
@@ -97,7 +95,6 @@ namespace Service.Security.Service
                 ,suffixKey
                 ,dateOfBirthKey
                 ,timeZoneKey
-                ,applicationIdKey
                 ,includeInactiveKey
                 ,includeRelatedKey
                 ,includeReadOnlyKey
