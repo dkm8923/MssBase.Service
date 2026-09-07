@@ -19,9 +19,9 @@ public class UserLoginConfiguration : IEntityTypeConfiguration<UserLogin>
         
         builder.Property(t => t.Password).HasMaxLength(256).IsUnicode(true);
         builder.Property(t => t.PasswordResetRequired).IsRequired();
-        builder.Property(t => t.LastLoginDate).HasPrecision(2);
-        builder.Property(t => t.LastPasswordChangeDate).HasPrecision(2);
-        builder.Property(t => t.LastLockoutDate).HasPrecision(2);
+        builder.Property(t => t.LastLoginDateTime).HasPrecision(2);
+        builder.Property(t => t.LastPasswordChangeDateTime).HasPrecision(2);
+        builder.Property(t => t.LastLockoutDateTime).HasPrecision(2);
         builder.Property(t => t.FailedPasswordAttemptCount).HasDefaultValue((short)0);
         
         CreatePrimaryKey(builder);

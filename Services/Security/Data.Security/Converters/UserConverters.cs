@@ -37,9 +37,9 @@ namespace Data.Security.Converters
                 TimeZone = source.TimeZone,
                 Password = applicationUserLogin.Password,
                 PasswordResetRequired = applicationUserLogin.PasswordResetRequired,
-                LastLoginDate = applicationUserLogin.LastLoginDate,
-                LastPasswordChangeDate = applicationUserLogin.LastPasswordChangeDate,
-                LastLockoutDate = applicationUserLogin.LastLockoutDate,
+                LastLoginDateTime = applicationUserLogin.LastLoginDateTime,
+                LastPasswordChangeDateTime = applicationUserLogin.LastPasswordChangeDateTime,
+                LastLockoutDateTime = applicationUserLogin.LastLockoutDateTime,
                 FailedPasswordAttemptCount = applicationUserLogin.FailedPasswordAttemptCount,
             };
 

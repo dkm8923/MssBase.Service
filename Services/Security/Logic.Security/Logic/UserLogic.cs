@@ -344,7 +344,7 @@ namespace Logic.Security.Logic
                     var newHashedPassword = LogicUtilities.HashPassword(newPassword);
                     entity.UserLogin.Password = newHashedPassword;
                     entity.UserLogin.PasswordResetRequired = true;
-                    entity.UserLogin.LastPasswordChangeDate = utcNow;
+                    entity.UserLogin.LastPasswordChangeDateTime = utcNow;
 
                     //delete any existing refresh tokens when password is changed
                     var userRefreshTokenEntities = await dbContext.UserRefreshTokens.Where(ent => ent.UserId == userId).ToListAsync();
@@ -426,7 +426,7 @@ namespace Logic.Security.Logic
                 //change password
                 userEntity.UserLogin.Password = LogicUtilities.HashPassword(req.NewPassword);
                 userEntity.UserLogin.PasswordResetRequired = false;
-                userEntity.UserLogin.LastPasswordChangeDate = utcNow;
+                userEntity.UserLogin.LastPasswordChangeDateTime = utcNow;
                 
                 //delete any existing refresh tokens when password is changed
                 var userRefreshTokenEntities = await dbContext.UserRefreshTokens.Where(ent => ent.UserId == userEntity.UserId).ToListAsync();

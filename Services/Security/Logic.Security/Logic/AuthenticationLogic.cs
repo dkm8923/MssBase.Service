@@ -91,7 +91,7 @@ public class AuthenticationLogic : IAuthenticationLogic
         }
 
         //check if user is currently locked out due to too many failed password attempts. If so, return lockout message instead of invalid credentials message
-        if (userInfoRes.LastLockoutDate.HasValue && userInfoRes.LastLockoutDate.Value.AddMinutes(_lockoutDurationInMinutes) > CommonUtilities.GetDateTimeUtcNow())
+        if (userInfoRes.LastLockoutDateTime.HasValue && userInfoRes.LastLockoutDateTime.Value.AddMinutes(_lockoutDurationInMinutes) > CommonUtilities.GetDateTimeUtcNow())
         {
             //user is currently locked out
             return _createAccountLockedError();
@@ -112,7 +112,7 @@ public class AuthenticationLogic : IAuthenticationLogic
             return _createInvalidCredentialsError();
         }
 
-        var pswdChangeRequired = userInfoRes.PasswordResetRequired == true || userInfoRes.LastPasswordChangeDate.Value.AddDays(_passwordExpiryInDays) < CommonUtilities.GetDateTimeUtcNow();
+        var pswdChangeRequired = userInfoRes.PasswordResetRequired == true || userInfoRes.LastPasswordChangeDateTime.Value.AddDays(_passwordExpiryInDays) < CommonUtilities.GetDateTimeUtcNow();
         
         if (pswdChangeRequired)
         {
@@ -345,8 +345,8 @@ public class AuthenticationLogic : IAuthenticationLogic
                                     au.Email, 
                                     au.UserLogin.Password,
                                     au.UserLogin.PasswordResetRequired, 
-                                    au.UserLogin.LastLockoutDate, 
-                                    au.UserLogin.LastPasswordChangeDate
+                                    au.UserLogin.LastLockoutDateTime, 
+                                    au.UserLogin.LastPasswordChangeDateTime
                                   })
                                   .FirstOrDefaultAsync();
 
@@ -362,8 +362,8 @@ public class AuthenticationLogic : IAuthenticationLogic
                 Email = user.Email, 
                 PasswordHash = user.Password, 
                 PasswordResetRequired = user.PasswordResetRequired, 
-                LastLockoutDate = user.LastLockoutDate, 
-                LastPasswordChangeDate = user.LastPasswordChangeDate,
+                LastLockoutDateTime = user.LastLockoutDateTime, 
+                LastPasswordChangeDateTime = user.LastPasswordChangeDateTime,
                 RefreshToken = userRefreshToken?.RefreshToken,
                 RefreshTokenExpiryTime = userRefreshToken?.RefreshTokenExpiryTime
             };
@@ -416,7 +416,7 @@ public class AuthenticationLogic : IAuthenticationLogic
 
                 if (entity.FailedPasswordAttemptCount >= _maxFailedPasswordAttemptCount)
                 {
-                    entity.LastLockoutDate = CommonUtilities.GetDateTimeUtcNow();
+                    entity.LastLockoutDateTime = CommonUtilities.GetDateTimeUtcNow();
                 }
 
                 await dbContext.SaveChangesAsync();
@@ -443,7 +443,7 @@ public class AuthenticationLogic : IAuthenticationLogic
 
             if (userLoginEntity != null)
             {
-                userLoginEntity.LastLoginDate = CommonUtilities.GetDateTimeUtcNow();
+                userLoginEntity.LastLoginDateTime = CommonUtilities.GetDateTimeUtcNow();
                 userLoginEntity.FailedPasswordAttemptCount = 0; //reset failed password attempt count on successful login
 
                 if (userRefreshTokenEntity != null)
@@ -651,8 +651,8 @@ public class AuthenticationLogic : IAuthenticationLogic
         public int UserId { get; set; }
         public string Email { get; set; }
         public string PasswordHash { get; set; }
-        public DateTime? LastLockoutDate { get; set; }
-        public DateTime? LastPasswordChangeDate { get; set; }
+        public DateTime? LastLockoutDateTime { get; set; }
+        public DateTime? LastPasswordChangeDateTime { get; set; }
         public bool PasswordResetRequired { get; set; }
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }

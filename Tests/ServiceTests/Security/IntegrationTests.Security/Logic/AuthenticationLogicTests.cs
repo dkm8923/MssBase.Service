@@ -43,9 +43,9 @@ namespace IntegrationTests.Security.Logic
             result.Errors.Should().BeNullOrEmpty();
             result.Response.Token.Should().NotBeNullOrEmpty();
             testUserAfterSuccessfulAuthentication.Response.FailedPasswordAttemptCount.Should().Be(0);
-            testUserAfterSuccessfulAuthentication.Response.LastPasswordChangeDate.Should().NotBeNull();
-            testUserAfterSuccessfulAuthentication.Response.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
-            testUserAfterSuccessfulAuthentication.Response.LastLoginDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+            testUserAfterSuccessfulAuthentication.Response.LastPasswordChangeDateTime.Should().NotBeNull();
+            testUserAfterSuccessfulAuthentication.Response.LastPasswordChangeDateTime.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+            testUserAfterSuccessfulAuthentication.Response.LastLoginDateTime.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 
             //TODO: Decrypt token and verify claims once we have a way to do that in our tests
         }
@@ -206,7 +206,7 @@ namespace IntegrationTests.Security.Logic
             LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
 
             testUserAfterFailedAuthenticationAttempt.Response.FailedPasswordAttemptCount.Should().Be((short)_maxFailedPasswordAttemptCount);
-            testUserAfterFailedAuthenticationAttempt.Response.LastLockoutDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+            testUserAfterFailedAuthenticationAttempt.Response.LastLockoutDateTime.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
         }
 
         [Fact]
@@ -222,7 +222,7 @@ namespace IntegrationTests.Security.Logic
                 var entity = await dbContext.Users.Include(ul => ul.UserLogin).FirstOrDefaultAsync(ent => ent.UserId == testUser.UserId);
                 if (entity != null)
                 {
-                    entity.UserLogin.LastPasswordChangeDate = DateTime.UtcNow.AddDays(-(_passwordExpiryInDays + 1));
+                    entity.UserLogin.LastPasswordChangeDateTime = DateTime.UtcNow.AddDays(-(_passwordExpiryInDays + 1));
                     await dbContext.SaveChangesAsync();
                 }
             }
@@ -538,7 +538,7 @@ namespace IntegrationTests.Security.Logic
                 var entity = await dbContext.Users.Include(aul => aul.UserLogin).FirstOrDefaultAsync(ent => ent.UserId == testUser.UserId);
                 //entity.Password.Should().NotBe(testUser.Password); //TODO: Decrypt password and verify it was changed once we have a way to do that in our tests
                 entity.UserLogin.PasswordResetRequired.Should().BeTrue();
-                entity.UserLogin.LastPasswordChangeDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+                entity.UserLogin.LastPasswordChangeDateTime.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
             }
         }
 
