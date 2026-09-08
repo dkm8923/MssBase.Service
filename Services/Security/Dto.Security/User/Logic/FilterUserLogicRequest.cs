@@ -19,6 +19,9 @@ namespace Dto.Security.User.Logic
         public string? Suffix { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public string? TimeZone { get; set; }
-        
+        public string? MaritalStatus { get; set; }
+        public string? Religion { get; set; }
+        public string? Sexuality { get; set; }
+        public string? Gender { get; set; }
     }
 }

@@ -158,7 +158,15 @@ namespace Service.Security.Service
                 {
                     CommonRelationalDataReferenceTypes.PersonTitle,
                     CommonRelationalDataReferenceTypes.PersonSuffix,
-                    CommonRelationalDataReferenceTypes.UsaTimeZone
+                    CommonRelationalDataReferenceTypes.UsaTimeZone,
+                    CommonRelationalDataReferenceTypes.PersonMaritalStatus,
+                    CommonRelationalDataReferenceTypes.PersonReligion,
+                    CommonRelationalDataReferenceTypes.PersonSexuality,
+                    CommonRelationalDataReferenceTypes.PersonGender,
+                    CommonRelationalDataReferenceTypes.PersonLanguage,
+                    CommonRelationalDataReferenceTypes.PhoneNumberType,
+                    CommonRelationalDataReferenceTypes.SocialMediaProfileType,
+                    CommonRelationalDataReferenceTypes.EmailType
                 }
             });
 

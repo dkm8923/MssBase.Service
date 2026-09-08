@@ -970,6 +970,86 @@ namespace IntegrationTests.Security.Logic
         }
 
         [Fact]
+        public async Task User_Insert_Should_Not_Create_Record_Invalid_MaritalStatus_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
+            recordToCreate.MaritalStatus = "ABC";
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidMaritalStatusFieldErrors();
+
+            // Act
+            var result = await _userLogic.Insert(recordToCreate, commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task User_Insert_Should_Not_Create_Record_Invalid_Religion_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
+            recordToCreate.Religion = "ABC";
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidReligionFieldErrors();
+
+            // Act
+            var result = await _userLogic.Insert(recordToCreate, commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task User_Insert_Should_Not_Create_Record_Invalid_Sexuality_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
+            recordToCreate.Sexuality = "ABC";
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidSexualityFieldErrors();
+
+            // Act
+            var result = await _userLogic.Insert(recordToCreate, commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task User_Insert_Should_Not_Create_Record_Invalid_Gender_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
+            recordToCreate.Gender = "ABC";
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidGenderFieldErrors();
+
+            // Act
+            var result = await _userLogic.Insert(recordToCreate, commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
         public async Task User_Insert_Should_Not_Create_Record_Invalid_Email_Error()
         {
             // Arrange

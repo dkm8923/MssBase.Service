@@ -38,6 +38,11 @@ namespace Dto.Common.CommonRelationalData
         public List<CommonRelationalDataDto>? PhoneNumberType { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<CommonRelationalDataDto>? EmailType { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<CommonRelationalDataDto>? SocialMediaProfileType { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<CommonRelationalDataDto>? UsaState { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
