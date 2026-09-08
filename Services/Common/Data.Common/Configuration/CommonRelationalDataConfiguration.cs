@@ -55,6 +55,8 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         
         records.Add(_configureAddressType(builder));
         records.Add(_configurePhoneNumberType(builder));
+        records.Add(_configureEmailType(builder));
+        records.Add(_configureSocialMediaProfileType(builder));
         records.Add(_configureUsaState(builder));
         records.Add(_configureCountry(builder));
         records.Add(_configureTimeZone(builder));
@@ -73,6 +75,8 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
 
     #region Person
 
+    #region PersonTitle
+
     private CommonRelationalData _configurePersonTitle(EntityTypeBuilder<CommonRelationalData> builder)
     {
         var relationalRecords = new List<CommonRelationalDataDto>();
@@ -89,6 +93,10 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonTitle, Description = "Title for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
+
+    #endregion
+
+    #region PersonSuffix
 
     private CommonRelationalData _configurePersonSuffix(EntityTypeBuilder<CommonRelationalData> builder)
     {
@@ -107,6 +115,10 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         return ret;
     }
 
+    #endregion
+
+    #region PersonSex
+
     private CommonRelationalData _configurePersonSex(EntityTypeBuilder<CommonRelationalData> builder)
     {
         var relationalRecords = new List<CommonRelationalDataDto>();
@@ -120,6 +132,10 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonSex, Description = "Sex for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
+
+    #endregion
+
+    #region PersonEthnicity
 
     private CommonRelationalData _configurePersonEthnicity(EntityTypeBuilder<CommonRelationalData> builder)
     {
@@ -137,6 +153,10 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonEthnicity, Description = "Ethnicity for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
+
+    #endregion
+
+    #region PersonGender
 
     private CommonRelationalData _configurePersonGender(EntityTypeBuilder<CommonRelationalData> builder)
     {
@@ -164,6 +184,10 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         return ret;
     }
 
+    #endregion
+
+    #region PersonMaritalStatus
+
     private CommonRelationalData _configurePersonMaritalStatus(EntityTypeBuilder<CommonRelationalData> builder)
     {
         var relationalRecords = new List<CommonRelationalDataDto>();
@@ -180,6 +204,10 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonMaritalStatus, Description = "Marital status for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
+
+    #endregion
+
+    #region PersonReligion
 
     private CommonRelationalData _configurePersonReligion(EntityTypeBuilder<CommonRelationalData> builder)
     {
@@ -210,6 +238,10 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonReligion, Description = "Religion / Faith for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
+
+    #endregion
+
+    #region PersonSexuality
 
     private CommonRelationalData _configurePersonSexuality(EntityTypeBuilder<CommonRelationalData> builder)
     {
@@ -252,6 +284,10 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         return ret;
     }
 
+    #endregion
+
+    #region PersonLanguage
+
     private CommonRelationalData _configurePersonLanguage(EntityTypeBuilder<CommonRelationalData> builder)
     {
         var relationalRecords = new List<CommonRelationalDataDto>();
@@ -284,7 +320,11 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
 
     #endregion
 
+    #endregion
+
     #region Address / Location
+
+    #region AddressType
 
     private CommonRelationalData _configureAddressType(EntityTypeBuilder<CommonRelationalData> builder)
     {
@@ -300,6 +340,10 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.AddressType, Description = "Address type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
+
+    #endregion
+
+    #region PhoneNumberType
 
     private CommonRelationalData _configurePhoneNumberType(EntityTypeBuilder<CommonRelationalData> builder)
     {
@@ -323,6 +367,74 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PhoneNumberType, Description = "Phone number type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
+
+    #endregion
+
+    #region EmailType
+
+    private CommonRelationalData _configureEmailType(EntityTypeBuilder<CommonRelationalData> builder)
+    {
+        var relationalRecords = new List<CommonRelationalDataDto>();
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Home" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Work" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "School" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "iCloud" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Other" });
+
+        DataUtilities.SetActiveFieldToTrue(relationalRecords);
+        DataUtilities.SetAuditFields(relationalRecords);
+
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.EmailType, Description = "Email type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        return ret;
+    }
+
+    #endregion
+
+    #region SocialMediaProfileType
+
+    private CommonRelationalData _configureSocialMediaProfileType(EntityTypeBuilder<CommonRelationalData> builder)
+    {
+        var relationalRecords = new List<CommonRelationalDataDto>();
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Meet" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "LinkedIn" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Teams" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Outlook" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Pinterest" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "GitHub" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Gmail" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Youtube" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Airbnb" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Spotify" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Twitter" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Facebook" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Flickr" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "MySpace" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Sina Weibo" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Instagram" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "TikTok" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Snapchat" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Skype" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "MSN" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Google Talk" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Facebook" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "AIM" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Yahoo" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "ICQ" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Jabber" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "QQ" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Gadu-Gadu" });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Other" });
+
+        DataUtilities.SetActiveFieldToTrue(relationalRecords);
+        DataUtilities.SetAuditFields(relationalRecords);
+
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.SocialMediaProfileType, Description = "Social media profile type for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        return ret;
+    }
+
+    #endregion
+
+    #region UsaState
 
     private CommonRelationalData _configureUsaState(EntityTypeBuilder<CommonRelationalData> builder)
     {
@@ -393,6 +505,10 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.UsaState, Description = "List of all Usa States and Territories", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
+
+    #endregion
+
+    #region Country
 
     private CommonRelationalData _configureCountry(EntityTypeBuilder<CommonRelationalData> builder)
     {
@@ -651,6 +767,10 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         return ret;
     }
 
+    #endregion
+
+    #region TimeZone
+
     private CommonRelationalData _configureTimeZone(EntityTypeBuilder<CommonRelationalData> builder)
     {
         var relationalRecords = new List<CommonRelationalDataDto>();
@@ -671,6 +791,8 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
 
         return ret;
     }
+
+    #endregion
 
     #endregion
     
