@@ -58,6 +58,7 @@ using static Shared.Logic.Common.Constants;
 using Service.Common.Service;
 using Logic.Common.Logic;
 using Contract.Common;
+using Shared.Models.Dtos;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -177,10 +178,35 @@ public class SecurityTestBase
             
             var testUser = await _userLogic.Insert(new InsertUpdateUserRequest { 
                 Active = true, 
-                Email = TestConstants.DefaultTestUserEmail, 
-                FirstName = "Bob", 
-                LastName = "Smith", 
+                Email = TestConstants.DefaultTestUserEmail,
+                Title = "Mr.",
+                FirstName = "Bob",
+                MiddleName = "Adam",
+                LastName = "Smith",
+                PreferredName = "Poopies",
+                Suffix = "Jr.",
                 DateOfBirth = new DateOnly(1987, 2, 12),
+                TimeZone = "EST",
+                MaritalStatus = "Married (And Not Separated)",
+                Religion = "Christian",
+                Sexuality = "Heterosexual",
+                Gender = "Male",
+                SpokenLanguages = new List<string> { "English", "Japanese", "German"},
+                PhoneNumbers = new List<TypedValueDto> { 
+                    new TypedValueDto { Type = "Mobile", Value = "123-456-7890" },
+                    new TypedValueDto { Type = "Home", Value = "098-765-4321" },
+                    new TypedValueDto { Type = "Work", Value = "440-321-9876" }
+                },
+                SocialMediaProfiles = new List<SocialMediaProfileDto>
+                {
+                    new SocialMediaProfileDto { Platform = "Twitter", UserName = "@bobsmith" },
+                    new SocialMediaProfileDto { Platform = "LinkedIn", Url = "www.linkedin.com/bob-smith" }
+                },
+                AlternateEmails = new List<TypedValueDto> { 
+                    new TypedValueDto { Type = "Home", Value = "testHomeEmail@test.com" },
+                    new TypedValueDto { Type = "School", Value = "testSchoolEmail@test.com" },
+                    new TypedValueDto { Type = "Work", Value = "testWorkEmail@test.com" }
+                },
                 CurrentUser = TestConstants.CurrentUser 
             }, commonData);
 
