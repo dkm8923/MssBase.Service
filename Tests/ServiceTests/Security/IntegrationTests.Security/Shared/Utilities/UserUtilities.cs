@@ -15,6 +15,7 @@ using Dto.Common.CommonRelationalData;
 using Dto.Common.CommonRelationalData.Logic;
 using static Shared.Logic.Common.Constants;
 using Contract.Common.CommonRelationalData;
+using Shared.Models.Dtos;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
@@ -386,6 +387,46 @@ public class UserUtilities : IUserUtilities
         recordA.ReadOnly.Should().Be(recordB.ReadOnly);
         recordA.CreatedBy.Should().Be(recordB.CreatedBy);
         recordA.UpdatedBy.Should().Be(recordB.UpdatedBy);
+
+        var aSpokenLanguages = recordA.SpokenLanguages ?? new List<string>();
+        var bSpokenLanguages = recordB.SpokenLanguages ?? new List<string>();
+
+        aSpokenLanguages.Count.Should().Be(bSpokenLanguages.Count);
+
+        for (int i = 0; i < aSpokenLanguages.Count; i++)
+        {
+            aSpokenLanguages[i].Should().Be(bSpokenLanguages[i]);
+        }
+
+        var aPhoneNumbers = recordA.PhoneNumbers ?? new List<TypedValueDto>();
+        var bPhoneNumbers = recordB.PhoneNumbers ?? new List<TypedValueDto>();
+
+        aPhoneNumbers.Count.Should().Be(bPhoneNumbers.Count);
+
+        for (int i = 0; i < aPhoneNumbers.Count; i++)
+        {
+            aPhoneNumbers[i].Should().Be(bPhoneNumbers[i]);
+        }
+
+        var aSocialMediaProfiles = recordA.SocialMediaProfiles ?? new List<SocialMediaProfileDto>();
+        var bSocialMediaProfiles = recordB.SocialMediaProfiles ?? new List<SocialMediaProfileDto>();
+
+        aSocialMediaProfiles.Count.Should().Be(bSocialMediaProfiles.Count);
+
+        for (int i = 0; i < aSocialMediaProfiles.Count; i++)
+        {
+            aSocialMediaProfiles[i].Should().Be(bSocialMediaProfiles[i]);
+        }
+
+        var aAlternateEmails = recordA.AlternateEmails ?? new List<TypedValueDto>();
+        var bAlternateEmails = recordB.AlternateEmails ?? new List<TypedValueDto>();
+
+        aAlternateEmails.Count.Should().Be(bAlternateEmails.Count);
+
+        for (int i = 0; i < aAlternateEmails.Count; i++)
+        {
+            aAlternateEmails[i].Should().Be(bAlternateEmails[i]);
+        }
     }
 
     /// <summary>

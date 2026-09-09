@@ -535,9 +535,18 @@ namespace IntegrationTests.Security.Logic
             var postReqInvalidUpdatedBy = new FilterUserLogicRequest { UpdatedBy = "InvalidUpdatedBy" };
             var postReqInvalidUpdatedOnDate = new FilterUserLogicRequest { UpdatedOnDate = DateOnly.FromDateTime(new DateTime(1900, 1, 1)) };
             var postReqInvalidEmail = new FilterUserLogicRequest { Email = "invalid@test.com" };
+            var postReqInvalidTitle = new FilterUserLogicRequest { Title = "abc" };
             var postReqInvalidFirstName = new FilterUserLogicRequest { FirstName = "InvalidFirstName" };
+            var postReqInvalidMiddleName = new FilterUserLogicRequest { MiddleName = "InvalidMiddleName" };
             var postReqInvalidLastName = new FilterUserLogicRequest { LastName = "InvalidLastName" };
+            var postReqInvalidPreferredName = new FilterUserLogicRequest { PreferredName = "InvalidPreferredName" };
+            var postReqInvalidSuffix = new FilterUserLogicRequest { Suffix = "InvalidSuffix" };
             var postReqInvalidDateOfBirth = new FilterUserLogicRequest { DateOfBirth = new DateOnly(1900, 1, 1) };
+            var postReqInvalidTimeZone = new FilterUserLogicRequest { TimeZone = "InvalidTimeZone" };
+            var postReqInvalidMaritalStatus = new FilterUserLogicRequest { MaritalStatus = "InvalidMaritalStatus" };
+            var postReqInvalidReligion = new FilterUserLogicRequest { Religion = "InvalidReligion" };
+            var postReqInvalidSexuality = new FilterUserLogicRequest { Sexuality = "InvalidSexuality" };
+            var postReqInvalidGender = new FilterUserLogicRequest { Gender = "InvalidGender" };
             
             // Act
             var invalidCreatedByResult = await _userLogic.Filter(postReqInvalidCreatedBy);
@@ -545,9 +554,18 @@ namespace IntegrationTests.Security.Logic
             var invalidUpdatedByResult = await _userLogic.Filter(postReqInvalidUpdatedBy);
             var invalidUpdatedOnDateResult = await _userLogic.Filter(postReqInvalidUpdatedOnDate);
             var invalidEmailResult = await _userLogic.Filter(postReqInvalidEmail);
+            var invalidTitleResult = await _userLogic.Filter(postReqInvalidTitle);
             var invalidFirstNameResult = await _userLogic.Filter(postReqInvalidFirstName);
+            var invalidMiddleNameResult = await _userLogic.Filter(postReqInvalidMiddleName);
             var invalidLastNameResult = await _userLogic.Filter(postReqInvalidLastName);
+            var invalidPreferredNameResult = await _userLogic.Filter(postReqInvalidPreferredName);
+            var invalidSuffixResult = await _userLogic.Filter(postReqInvalidSuffix);
             var invalidDateOfBirthResult = await _userLogic.Filter(postReqInvalidDateOfBirth);
+            var invalidTimeZoneResult = await _userLogic.Filter(postReqInvalidTimeZone);
+            var invalidMaritalStatusResult = await _userLogic.Filter(postReqInvalidMaritalStatus);
+            var invalidReligionResult = await _userLogic.Filter(postReqInvalidReligion);
+            var invalidSexualityResult = await _userLogic.Filter(postReqInvalidSexuality);
+            var invalidGenderResult = await _userLogic.Filter(postReqInvalidGender);
             
             // Assert
             invalidCreatedByResult.Response.Should().HaveCount(0);
@@ -555,9 +573,18 @@ namespace IntegrationTests.Security.Logic
             invalidUpdatedByResult.Response.Should().HaveCount(0);
             invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
             invalidEmailResult.Response.Should().HaveCount(0);
+            invalidTitleResult.Response.Should().HaveCount(0);
             invalidFirstNameResult.Response.Should().HaveCount(0);
+            invalidMiddleNameResult.Response.Should().HaveCount(0);
             invalidLastNameResult.Response.Should().HaveCount(0);
+            invalidPreferredNameResult.Response.Should().HaveCount(0);
+            invalidSuffixResult.Response.Should().HaveCount(0);
             invalidDateOfBirthResult.Response.Should().HaveCount(0);
+            invalidTimeZoneResult.Response.Should().HaveCount(0);
+            invalidMaritalStatusResult.Response.Should().HaveCount(0);
+            invalidReligionResult.Response.Should().HaveCount(0);
+            invalidSexualityResult.Response.Should().HaveCount(0);
+            invalidGenderResult.Response.Should().HaveCount(0);
         }
 
         [Fact]
@@ -580,6 +607,10 @@ namespace IntegrationTests.Security.Logic
                 Suffix = "Sr.",
                 DateOfBirth = new DateOnly(1990, 1, 1),
                 TimeZone = "PST",
+                MaritalStatus = "Divorced (Including Living Common Law)",
+                Religion = "Muslim",
+                Sexuality = "Asexual",
+                Gender = "Bigender",
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForInsert
             }, commonData);
@@ -630,6 +661,10 @@ namespace IntegrationTests.Security.Logic
             var postReqFilterSuffix = new FilterUserLogicRequest { Suffix = testUser1.Response.Suffix };
             var postReqFilterDateOfBirth = new FilterUserLogicRequest { DateOfBirth = testUser1.Response.DateOfBirth };
             var postReqFilterTimeZone = new FilterUserLogicRequest { TimeZone = testUser1.Response.TimeZone };
+            var postReqFilterMaritalStatus = new FilterUserLogicRequest { MaritalStatus = testUser1.Response.MaritalStatus };
+            var postReqFilterReligion = new FilterUserLogicRequest { Religion = testUser1.Response.Religion };
+            var postReqFilterSexuality = new FilterUserLogicRequest { Sexuality = testUser1.Response.Sexuality };
+            var postReqFilterGender = new FilterUserLogicRequest { Gender = testUser1.Response.Gender };
             
             // Act
             var filterCreatedByResult = await _userLogic.Filter(postReqFilterCreatedBy);
@@ -646,6 +681,10 @@ namespace IntegrationTests.Security.Logic
             var filterSuffixResult = await _userLogic.Filter(postReqFilterSuffix);
             var filterDateOfBirthResult = await _userLogic.Filter(postReqFilterDateOfBirth);
             var filterTimeZoneResult = await _userLogic.Filter(postReqFilterTimeZone);
+            var filterMaritalStatusResult = await _userLogic.Filter(postReqFilterMaritalStatus);
+            var filterReligionResult = await _userLogic.Filter(postReqFilterReligion);
+            var filterSexualityResult = await _userLogic.Filter(postReqFilterSexuality);
+            var filterGenderResult = await _userLogic.Filter(postReqFilterGender);
             
             // Assert
             filterCreatedByResult.Response.Should().HaveCount(2);
@@ -662,6 +701,10 @@ namespace IntegrationTests.Security.Logic
             filterSuffixResult.Response.Should().HaveCount(1);
             filterDateOfBirthResult.Response.Should().HaveCount(1);
             filterTimeZoneResult.Response.Should().HaveCount(1);
+            filterMaritalStatusResult.Response.Should().HaveCount(1);
+            filterReligionResult.Response.Should().HaveCount(1);
+            filterSexualityResult.Response.Should().HaveCount(1);
+            filterGenderResult.Response.Should().HaveCount(1);
         }
 
         [Fact]
@@ -798,7 +841,11 @@ namespace IntegrationTests.Security.Logic
             var postReqInvalidSuffix = new FilterUserLogicRequest { Suffix = testRecord.Suffix };
             var postReqInvalidDateofBirth = new FilterUserLogicRequest { DateOfBirth = testRecord.DateOfBirth };
             var postReqInvalidTimeZone = new FilterUserLogicRequest { TimeZone = testRecord.TimeZone };
-
+            var postReqInvalidMaritalStatus = new FilterUserLogicRequest { MaritalStatus = testRecord.MaritalStatus };
+            var postReqInvalidReligion = new FilterUserLogicRequest { Religion = testRecord.Religion };
+            var postReqInvalidSexuality = new FilterUserLogicRequest { Sexuality = testRecord.Sexuality };
+            var postReqInvalidGender = new FilterUserLogicRequest { Gender = testRecord.Gender };
+            
             // Act
             var invalidCreatedByResult = await _userLogic.Filter(postReqInvalidCreatedBy);
             var invalidCreatedOnDateResult = await _userLogic.Filter(postReqInvalidCreatedOnDate);
@@ -813,6 +860,10 @@ namespace IntegrationTests.Security.Logic
             var invalidSuffixResult = await _userLogic.Filter(postReqInvalidSuffix);
             var invalidDateofBirthResult = await _userLogic.Filter(postReqInvalidDateofBirth);
             var invalidTimeZoneResult = await _userLogic.Filter(postReqInvalidTimeZone);
+            var invalidMaritalStatusResult = await _userLogic.Filter(postReqInvalidMaritalStatus);
+            var invalidReligionResult = await _userLogic.Filter(postReqInvalidReligion);
+            var invalidSexualityResult = await _userLogic.Filter(postReqInvalidSexuality);
+            var invalidGenderResult = await _userLogic.Filter(postReqInvalidGender);
             
             // Assert
             invalidCreatedByResult.Response.Should().HaveCount(0);
@@ -828,6 +879,10 @@ namespace IntegrationTests.Security.Logic
             invalidSuffixResult.Response.Should().HaveCount(0);
             invalidDateofBirthResult.Response.Should().HaveCount(0);
             invalidTimeZoneResult.Response.Should().HaveCount(0);
+            invalidMaritalStatusResult.Response.Should().HaveCount(0);
+            invalidReligionResult.Response.Should().HaveCount(0);
+            invalidSexualityResult.Response.Should().HaveCount(0);
+            invalidGenderResult.Response.Should().HaveCount(0);
         }
 
         #endregion
