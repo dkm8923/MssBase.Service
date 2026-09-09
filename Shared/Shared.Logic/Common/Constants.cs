@@ -82,6 +82,7 @@
             public const string UsaState = "UsaState";
             public const string UsaTimeZone = "UsaTimeZone";
             public const string Country = "Country";
+            public const string DaysOfWeek = "DaysOfWeek";
         }
     }
 }

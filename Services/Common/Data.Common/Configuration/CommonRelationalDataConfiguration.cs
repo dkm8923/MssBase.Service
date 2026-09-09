@@ -60,6 +60,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         records.Add(_configureUsaState(builder));
         records.Add(_configureCountry(builder));
         records.Add(_configureTimeZone(builder));
+        records.Add(_configureDaysOfWeek(builder));
 
         var idx = 1;
 
@@ -789,6 +790,29 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         return ret;
     }
 
+    #endregion
+
+    #region Days Of Week
+
+    private CommonRelationalData _configureDaysOfWeek(EntityTypeBuilder<CommonRelationalData> builder)
+    {
+        var relationalRecords = new List<CommonRelationalDataDto>();
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Monday", Value = "MON", SortOrder = 1 });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Tuesday", Value = "TUES", SortOrder = 2 });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Wednesday", Value = "WED", SortOrder = 3 });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Thursday", Value = "THURS", SortOrder = 4 });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Friday", Value = "FRI", SortOrder = 5 });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Saturday", Value = "SAT", SortOrder = 6 });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Sunday", Value = "SUN", SortOrder = 7 });
+        
+        DataUtilities.SetActiveFieldToTrue(relationalRecords);
+        DataUtilities.SetAuditFields(relationalRecords);
+
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.DaysOfWeek, Description = "List of all Days of the Week and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
+
+        return ret;
+    }
+    
     #endregion
 
     #endregion
