@@ -19,14 +19,14 @@ namespace IntegrationTests.Security.Controller
     public class UserControllerTests : SecurityTestBase, 
                                                   IClassFixture<WebApplicationFactory<Program>>,
                                                   IDefaultControllerTestsGetAll,
-                                                  //IDefaultControllerTestsGetAllIncludeRelated,
+                                                  IDefaultControllerTestsGetAllIncludeRelated,
                                                   IDefaultLogicTestsGetAllReadOnly,
                                                   IDefaultControllerTestsGetById,
-                                                  //IDefaultControllerTestsGetByIdIncludeRelated,
+                                                  IDefaultControllerTestsGetByIdIncludeRelated,
                                                   IDefaultLogicTestsGetByIdReadOnly,
                                                   IDefaultControllerTestsGetAuditLogsById,
-                                                  //IDefaultControllerTestsFilter,
-                                                  //IDefaultControllerTestsFilterIncludeRelated,
+                                                  IDefaultControllerTestsFilter,
+                                                  IDefaultControllerTestsFilterIncludeRelated,
                                                   IDefaultLogicTestsFilterReadOnly,  
                                                   IDefaultControllerTestsInsert,
                                                   IDefaultControllerTestsUpdate,
@@ -83,81 +83,80 @@ namespace IntegrationTests.Security.Controller
             result.Response.Should().HaveCountGreaterThan(0);
         }
 
-        // [Fact]
-        // public async Task Default_GetAll_Should_Return_Related_Active_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
             
-        //     // Act
-        //     var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<UserDto>>(new HttpGetRequestParms {
-        //         Client = _client,
-        //         ApiEndPoint = _defaultUserApiEndPoint,
-        //         Token = token,
-        //         QueryStringParms = new BaseServiceGet { IncludeRelated = true, DeleteCache = true }
-        //     });
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<UserDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultUserApiEndPoint,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, DeleteCache = true }
+            });
 
-        //     // Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCountGreaterThan(0);
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCountGreaterThan(0);
 
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         _securityTestUtilities.User.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: false);
-        //     }
-        // }
+            foreach (var user in result.Response)
+            {
+                _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(user, includeInactive: false);
+            }
+        }
 
-        // [Fact]
-        // public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
+        [Fact]
+        public async Task Default_GetAll_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
             
-        //     // Act
-        //     var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<UserDto>>(new HttpGetRequestParms {
-        //         Client = _client,
-        //         ApiEndPoint = _defaultUserApiEndPoint,
-        //         Token = token,
-        //         QueryStringParms = new BaseServiceGet { IncludeRelated = true, IncludeInactive = true, DeleteCache = true }
-        //     });
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<UserDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultUserApiEndPoint,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, IncludeInactive = true, DeleteCache = true }
+            });
 
-        //     // Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCount(3);
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(3);
 
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         _securityTestUtilities.User.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: true);
-        //     }
-        // }
+            foreach (var user in result.Response)
+            {
+                _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(user, includeInactive: true);
+            }
+        }
 
-        // [Fact]
-        // public async Task Default_GetAll_Should_Not_Return_Related_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
+        [Fact]
+        public async Task Default_GetAll_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
             
-        //     // Act
-        //     var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<UserDto>>(new HttpGetRequestParms {
-        //         Client = _client,
-        //         ApiEndPoint = _defaultUserApiEndPoint,
-        //         Token = token,
-        //         QueryStringParms = new BaseServiceGet { DeleteCache = true } 
-        //     });
+            // Act
+            var result = await ControllerTestUtilities.GetAllRecordsWithValidationResult<List<UserDto>>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultUserApiEndPoint,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { DeleteCache = true } 
+            });
 
-        //     // Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCount(2);
+            // Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(2);
 
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         applicationUser.ApplicationUserPermissions.Should().BeNull();
-        //         applicationUser.ApplicationUserRoles.Should().BeNull();
-        //     }
-        // }
+            foreach (var user in result.Response)
+            {
+                user.ApplicationUsers.Should().BeNull();
+            }
+        }
 
         [Fact]
         public async Task Default_GetAll_Should_Return_Zero_Records()
@@ -451,75 +450,74 @@ namespace IntegrationTests.Security.Controller
             _securityTestUtilities.User.VerifyTestRecordValuesMatch(result.Response, testRecord);
         }
 
-        // [Fact]
-        // public async Task Default_GetById_Should_Return_Related_Active_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
-        //     var testRecord = arrangeTestDataResponse.ActiveUsers.First();
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
+            var testRecord = arrangeTestDataResponse.ActiveUsers.First();
 
-        //     // Act
-        //     var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<UserDto>(new HttpGetRequestParms {
-        //         Client = _client,
-        //         ApiEndPoint = _defaultUserApiEndPoint,
-        //         RecordId = testRecord.UserId,
-        //         Token = token,
-        //         QueryStringParms = new BaseServiceGet { IncludeRelated = true, DeleteCache = true }
-        //     });
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<UserDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultUserApiEndPoint,
+                RecordId = testRecord.UserId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, DeleteCache = true }
+            });
 
-        //     // Assert
-        //     result.Response.Should().NotBeNull();
-        //     result.Response.Active.Should().BeTrue();
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeTrue();
 
-        //     _securityTestUtilities.User.VerifyIncludeRelatedDataOnApplicationUser(result.Response, includeInactive: false);
-        // }
+            _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(result.Response, includeInactive: false);
+        }
 
-        // [Fact]
-        // public async Task Default_GetById_Should_Return_Related_Inactive_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
-        //     var testRecord = arrangeTestDataResponse.InactiveUsers.First();
+        [Fact]
+        public async Task Default_GetById_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
+            var testRecord = arrangeTestDataResponse.InactiveUsers.First();
 
-        //     // Act
-        //     var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<UserDto>(new HttpGetRequestParms {
-        //         Client = _client,
-        //         ApiEndPoint = _defaultUserApiEndPoint,
-        //         RecordId = testRecord.UserId,
-        //         Token = token,
-        //         QueryStringParms = new BaseServiceGet { IncludeRelated = true, IncludeInactive = true, DeleteCache = true }
-        //     });
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<UserDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultUserApiEndPoint,
+                RecordId = testRecord.UserId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = true, IncludeInactive = true, DeleteCache = true }
+            });
 
-        //     // Assert
-        //     result.Response.Should().NotBeNull();
-        //     result.Response.Active.Should().BeFalse();
-        //     _securityTestUtilities.User.VerifyIncludeRelatedDataOnApplicationUser(result.Response, includeInactive: true);
-        // }
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.Active.Should().BeFalse();
+            _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(result.Response, includeInactive: true);
+        }
 
-        // [Fact]
-        // public async Task Default_GetById_Should_Not_Return_Related_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
-        //     var testRecord = arrangeTestDataResponse.ActiveUsers.First();
+        [Fact]
+        public async Task Default_GetById_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
+            var testRecord = arrangeTestDataResponse.ActiveUsers.First();
 
-        //     // Act
-        //     var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<UserDto>(new HttpGetRequestParms {
-        //         Client = _client,
-        //         ApiEndPoint = _defaultUserApiEndPoint,
-        //         RecordId = testRecord.UserId,
-        //         Token = token,
-        //         QueryStringParms = new BaseServiceGet { IncludeRelated = false, DeleteCache = true }
-        //     });
+            // Act
+            var result = await ControllerTestUtilities.GetRecordByIdWithValidationResult<UserDto>(new HttpGetRequestParms {
+                Client = _client,
+                ApiEndPoint = _defaultUserApiEndPoint,
+                RecordId = testRecord.UserId,
+                Token = token,
+                QueryStringParms = new BaseServiceGet { IncludeRelated = false, DeleteCache = true }
+            });
 
-        //     // Assert
-        //     result.Response.Should().NotBeNull();
-        //     result.Response.ApplicationUserPermissions.Should().BeNull();
-        //     result.Response.ApplicationUserRoles.Should().BeNull();
-        // }
+            // Assert
+            result.Response.Should().NotBeNull();
+            result.Response.ApplicationUsers.Should().BeNull();
+        }
 
         [Fact]
         public async Task Default_GetById_Should_Return_NotFound()
@@ -829,136 +827,157 @@ namespace IntegrationTests.Security.Controller
             result.Response.Should().HaveSameCount(arrangeTestDataResponse.ActiveUsers);
         }
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Return_Zero_Records()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
+        [Fact]
+        public async Task Default_Filter_Should_Return_Zero_Records()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
             
-        //     var postReqInvalidCreatedBy = new FilterUserServiceRequest { CreatedBy = "TestCreatedBy", DeleteCache = true };
-        //     var postReqInvalidCreatedOnDate = new FilterUserServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000"), DeleteCache = true };
-        //     var postReqInvalidUpdatedBy = new FilterUserServiceRequest { UpdatedBy = "TestUpdatedBy", DeleteCache = true };
-        //     var postReqInvalidUpdatedOnDate = new FilterUserServiceRequest { UpdatedOnDate = DateOnly.Parse("1/1/2000"), DeleteCache = true };
-        //     var postReqInvalidUserIds = new FilterUserServiceRequest { UserIds = new List<int> { 9999 }, DeleteCache = true };
-        //     var postReqInvalidEmail = new FilterUserServiceRequest { Email = "invalidemail@test.com", DeleteCache = true };
-        //     var postReqInvalidFirstName = new FilterUserServiceRequest { FirstName = "InvalidFirstName", DeleteCache = true };
-        //     var postReqInvalidLastName = new FilterUserServiceRequest { LastName = "InvalidLastName", DeleteCache = true };
-        //     var postReqInvalidDateOfBirth = new FilterUserServiceRequest { DateOfBirth = LogicTestUtilities.GetRandomDateTime(1999), DeleteCache = true };
-        //     var postReqInvalidApplicationId = new FilterUserServiceRequest { ApplicationId = 9999, DeleteCache = true };
-
-        //     // Act
-        //     var invalidCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedBy });
-        //     var invalidCreatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedOnDate });
-        //     var invalidUpdatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidUpdatedBy });
-        //     var invalidUpdatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidUpdatedOnDate });
-        //     var invalidUserIdsResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidUserIds });
-        //     var invalidEmailResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidEmail });
-        //     var invalidFirstNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidFirstName });
-        //     var invalidLastNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidLastName });
-        //     var invalidDateOfBirthResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidDateOfBirth });
-        //     var invalidApplicationIdResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidApplicationId });
-
-        //     //Assert
-        //     invalidCreatedByResult.Response.Should().HaveCount(0);
-        //     invalidCreatedOnDateResult.Response.Should().HaveCount(0);
-        //     invalidUpdatedByResult.Response.Should().HaveCount(0);
-        //     invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
-        //     invalidUserIdsResult.Response.Should().HaveCount(0);
-        //     invalidEmailResult.Response.Should().HaveCount(0);
-        //     invalidFirstNameResult.Response.Should().HaveCount(0);
-        //     invalidLastNameResult.Response.Should().HaveCount(0);
-        //     invalidDateOfBirthResult.Response.Should().HaveCount(0);
-        //     invalidApplicationIdResult.Response.Should().HaveCount(0);
-        // }
+            var postReqInvalidCreatedBy = new FilterUserServiceRequest { CreatedBy = "TestCreatedBy", DeleteCache = true };
+            var postReqInvalidCreatedOnDate = new FilterUserServiceRequest { CreatedOnDate = DateOnly.Parse("1/1/2000"), DeleteCache = true };
+            var postReqInvalidUpdatedBy = new FilterUserServiceRequest { UpdatedBy = "TestUpdatedBy", DeleteCache = true };
+            var postReqInvalidUpdatedOnDate = new FilterUserServiceRequest { UpdatedOnDate = DateOnly.Parse("1/1/2000"), DeleteCache = true };
+            var postReqInvalidUserIds = new FilterUserServiceRequest { UserIds = new List<int> { 9999 }, DeleteCache = true };
+            var postReqInvalidEmail = new FilterUserServiceRequest { Email = "invalidemail@test.com", DeleteCache = true };
+            var postReqInvalidTitle = new FilterUserServiceRequest { Title = "InvalidTitle", DeleteCache = true };
+            var postReqInvalidFirstName = new FilterUserServiceRequest { FirstName = "InvalidFirstName", DeleteCache = true };
+            var postReqInvalidMiddleName = new FilterUserServiceRequest { MiddleName = "InvalidMiddleName", DeleteCache = true };
+            var postReqInvalidLastName = new FilterUserServiceRequest { LastName = "InvalidLastName", DeleteCache = true };
+            var postReqInvalidPreferredName = new FilterUserServiceRequest { PreferredName = "InvalidPreferredName", DeleteCache = true };
+            var postReqInvalidSuffix = new FilterUserServiceRequest { Suffix = "InvalidSuffix", DeleteCache = true };
+            var postReqInvalidDateOfBirth = new FilterUserServiceRequest { DateOfBirth = LogicTestUtilities.GetRandomDateOnly(1999), DeleteCache = true };
+            var postReqInvalidTimeZone = new FilterUserServiceRequest { TimeZone = "InvalidTimeZone", DeleteCache = true };
+            var postReqInvalidMaritalStatus = new FilterUserServiceRequest { MaritalStatus = "InvalidMaritalStatus", DeleteCache = true };
+            var postReqInvalidReligion = new FilterUserServiceRequest { Religion = "InvalidReligion", DeleteCache = true };
+            var postReqInvalidSexuality = new FilterUserServiceRequest { Sexuality = "InvalidSexuality", DeleteCache = true };
+            var postReqInvalidGender = new FilterUserServiceRequest { Gender = "InvalidGender", DeleteCache = true };
+            
+            // Act
+            var invalidCreatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedBy });
+            var invalidCreatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidCreatedOnDate });
+            var invalidUpdatedByResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidUpdatedBy });
+            var invalidUpdatedOnDateResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidUpdatedOnDate });
+            var invalidUserIdsResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidUserIds });
+            var invalidEmailResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidEmail });
+            var invalidTitleResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidTitle });
+            var invalidFirstNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidFirstName });
+            var invalidMiddleNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidMiddleName });
+            var invalidLastNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidLastName });
+            var invalidPreferredNameResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidPreferredName });
+            var invalidDateOfBirthResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidDateOfBirth });
+            var invalidTimeZoneResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidTimeZone });
+            var invalidMaritalStatusResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidMaritalStatus });
+            var invalidReligionResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidReligion });
+            var invalidSexualityResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidSexuality });
+            var invalidGenderResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidGender });
+            
+            //Assert
+            invalidCreatedByResult.Response.Should().HaveCount(0);
+            invalidCreatedOnDateResult.Response.Should().HaveCount(0);
+            invalidUpdatedByResult.Response.Should().HaveCount(0);
+            invalidUpdatedOnDateResult.Response.Should().HaveCount(0);
+            invalidUserIdsResult.Response.Should().HaveCount(0);
+            invalidEmailResult.Response.Should().HaveCount(0);
+            invalidTitleResult.Response.Should().HaveCount(0);
+            invalidFirstNameResult.Response.Should().HaveCount(0);
+            invalidMiddleNameResult.Response.Should().HaveCount(0);
+            invalidLastNameResult.Response.Should().HaveCount(0);
+            invalidPreferredNameResult.Response.Should().HaveCount(0);
+            invalidDateOfBirthResult.Response.Should().HaveCount(0);
+            invalidTimeZoneResult.Response.Should().HaveCount(0);
+            invalidMaritalStatusResult.Response.Should().HaveCount(0);
+            invalidReligionResult.Response.Should().HaveCount(0);
+            invalidSexualityResult.Response.Should().HaveCount(0);
+            invalidGenderResult.Response.Should().HaveCount(0);
+        }
         
-        // [Fact]
-        // public async Task Default_Filter_Should_Return_Related_Active_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
-        //     var applicationUserId = arrangeTestDataResponse.ActiveUsers[0].ApplicationUserId;
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Active_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
+            var userId = arrangeTestDataResponse.ActiveUsers[0].UserId;
             
-        //     var postReq = new FilterUserServiceRequest { UserIds = new List<int> { applicationUserId }, IncludeRelated = true, DeleteCache = true };
+            var postReq = new FilterUserServiceRequest { UserIds = new List<int> { userId }, IncludeRelated = true, DeleteCache = true };
 
-        //     // Act
-        //     var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms
-        //     {
-        //         Client = _client,
-        //         ApiEndPoint = _defaultUserApiEndPoint,
-        //         Token = token,
-        //         RequestObject = postReq
-        //     });
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultUserApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
-        //     //Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCount(1);
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
 
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         _securityTestUtilities.User.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: false);
-        //     }
-        // }
+            foreach (var user in result.Response)
+            {
+                _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(user, includeInactive: false);
+            }
+        }
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Return_Related_Inactive_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
-        //     var applicationUserId = arrangeTestDataResponse.InactiveUsers[0].ApplicationUserId;
+        [Fact]
+        public async Task Default_Filter_Should_Return_Related_Inactive_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
+            var userId = arrangeTestDataResponse.InactiveUsers[0].UserId;
             
-        //     var postReq = new FilterUserServiceRequest { UserIds = new List<int> { applicationUserId }, IncludeRelated = true, IncludeInactive = true, DeleteCache = true };
+            var postReq = new FilterUserServiceRequest { UserIds = new List<int> { userId }, IncludeRelated = true, IncludeInactive = true, DeleteCache = true };
 
-        //     // Act
-        //     var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms
-        //     {
-        //         Client = _client,
-        //         ApiEndPoint = _defaultUserApiEndPoint,
-        //         Token = token,
-        //         RequestObject = postReq
-        //     });
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultUserApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
-        //     //Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCount(1);
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
 
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         _securityTestUtilities.User.VerifyIncludeRelatedDataOnApplicationUser(applicationUser, includeInactive: true);
-        //     }
-        // }
+            foreach (var user in result.Response)
+            {
+                _securityTestUtilities.User.VerifyIncludeRelatedDataOnUser(user, includeInactive: true);
+            }
+        }
 
-        // [Fact]
-        // public async Task Default_Filter_Should_Not_Return_Related_Data()
-        // {
-        //     // Arrange
-        //     var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
-        //     var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
-        //     var applicationUserId = arrangeTestDataResponse.ActiveUsers[0].ApplicationUserId;
+        [Fact]
+        public async Task Default_Filter_Should_Not_Return_Related_Data()
+        {
+            // Arrange
+            var arrangeTestDataResponse = await ArrangeUserTestDataWithRelatedData();
+            var token = await CreateAuthenticatedAdminTestUserAndReturnToken();
+            var userId = arrangeTestDataResponse.ActiveUsers[0].UserId;
             
-        //     var postReq = new FilterUserServiceRequest { UserIds = new List<int> { applicationUserId }, DeleteCache = true };
+            var postReq = new FilterUserServiceRequest { UserIds = new List<int> { userId }, DeleteCache = true };
 
-        //     // Act
-        //     var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms
-        //     {
-        //         Client = _client,
-        //         ApiEndPoint = _defaultUserApiEndPoint,
-        //         Token = token,
-        //         RequestObject = postReq
-        //     });
+            // Act
+            var result = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms
+            {
+                Client = _client,
+                ApiEndPoint = _defaultUserApiEndPoint,
+                Token = token,
+                RequestObject = postReq
+            });
 
-        //     //Assert
-        //     result.Errors.Should().HaveCount(0);
-        //     result.Response.Should().HaveCount(1);
+            //Assert
+            result.Errors.Should().HaveCount(0);
+            result.Response.Should().HaveCount(1);
 
-        //     foreach (var applicationUser in result.Response)
-        //     {
-        //         applicationUser.ApplicationUserPermissions.Should().BeNull();
-        //         applicationUser.ApplicationUserRoles.Should().BeNull();
-        //     }
-        // }
+            foreach (var user in result.Response)
+            {
+                user.ApplicationUsers.Should().BeNull();
+            }
+        }
 
         [Fact]
         public async Task Default_Filter_Should_Return_Unsupported_Media_Type_Null_Request_Body()

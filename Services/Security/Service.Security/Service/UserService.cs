@@ -76,6 +76,10 @@ namespace Service.Security.Service
             var suffixKey = CacheUtilities.CreateKeyFromString(req.Suffix);
             var dateOfBirthKey = CacheUtilities.CreateKeyFromDateOnly(req.DateOfBirth);
             var timeZoneKey = CacheUtilities.CreateKeyFromString(req.TimeZone);
+            var maritalStatusKey = CacheUtilities.CreateKeyFromString(req.MaritalStatus);
+            var religionKey = CacheUtilities.CreateKeyFromString(req.Religion);
+            var sexualityKey = CacheUtilities.CreateKeyFromString(req.Sexuality);
+            var genderKey = CacheUtilities.CreateKeyFromString(req.Gender);
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
             var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
             var includeReadOnlyKey = CacheUtilities.CreateKeyFromBool(req.IncludeReadOnly);
@@ -95,6 +99,10 @@ namespace Service.Security.Service
                 ,suffixKey
                 ,dateOfBirthKey
                 ,timeZoneKey
+                ,maritalStatusKey
+                ,religionKey
+                ,sexualityKey
+                ,genderKey
                 ,includeInactiveKey
                 ,includeRelatedKey
                 ,includeReadOnlyKey

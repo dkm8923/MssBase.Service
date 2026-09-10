@@ -357,29 +357,37 @@ namespace IntegrationTests.Security.Service
            var postReqSuffix = new FilterUserServiceRequest { Suffix = userInsertReq.Suffix, DeleteCache = true };
            var postReqDateOfBirth = new FilterUserServiceRequest { DateOfBirth = new DateOnly(2000, 1, 1), DeleteCache = true };
            var postReqTimeZone = new FilterUserServiceRequest { TimeZone = userInsertReq.TimeZone, DeleteCache = true };
+           var postReqMaritalStatus = new FilterUserServiceRequest { MaritalStatus = userInsertReq.MaritalStatus, DeleteCache = true };
+           var postReqReligion = new FilterUserServiceRequest { Religion = userInsertReq.Religion, DeleteCache = true };
+           var postReqSexuality = new FilterUserServiceRequest { Sexuality = userInsertReq.Sexuality, DeleteCache = true };
+           var postReqGender = new FilterUserServiceRequest { Gender = userInsertReq.Gender, DeleteCache = true };
 
            var postReqIncludeInactive = new FilterUserServiceRequest { IncludeInactive = true, DeleteCache = true };
            var postReqIncludeRelated = new FilterUserServiceRequest { IncludeRelated = true, DeleteCache = true };
            var postReqIncludeReadOnly = new FilterUserServiceRequest { IncludeReadOnly = true, DeleteCache = true };
            
            //17 keys
-           var expectedCacheKeyCreatedBy =        $"UserService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0"; 
-           var expectedCacheKeyCreatedOnDate =    $"UserService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedBy =        $"UserService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyUpdatedOnDate =    $"UserService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyUserIdsKey =       $"UserService_Filter_0_0_0_0_{(postReqUserIds.UserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyEmail =            $"UserService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqEmail.Email)}_0_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyTitle =            $"UserService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqTitle.Title)}_0_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyFirstName =        $"UserService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqFirstName.FirstName)}_0_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyMiddleName =       $"UserService_Filter_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqMiddleName.MiddleName)}_0_0_0_0_0_0_0_0";
-           var expectedCacheKeyLastName =         $"UserService_Filter_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqLastName.LastName)}_0_0_0_0_0_0_0";
-           var expectedCacheKeyPreferredName =    $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqPreferredName.PreferredName)}_0_0_0_0_0_0";
-           var expectedCacheKeySuffix =           $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqSuffix.Suffix)}_0_0_0_0_0";
-           var expectedCacheKeyDateofBirth =      $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_{postReqDateOfBirth.DateOfBirth.Value.ToString("yyyy-MM-dd")}_0_0_0_0";
-           var expectedCacheKeyTimeZone =         $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqTimeZone.TimeZone)}_0_0_0";
-           var expectedCacheKeyIncludeInactive =  $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_0_1_0_0";
-           var expectedCacheKeyIncludeRelated =   $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_1_0";
-           var expectedCacheKeyIncludeReadOnly =  $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_1";
+           var expectedCacheKeyCreatedBy =        $"UserService_Filter_{postReqCreatedBy.CreatedBy}_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0"; 
+           var expectedCacheKeyCreatedOnDate =    $"UserService_Filter_0_{postReqCreatedOnDate.CreatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedBy =        $"UserService_Filter_0_0_{postReqUpdatedBy.UpdatedBy}_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUpdatedOnDate =    $"UserService_Filter_0_0_0_{postReqUpdatedOnDate.UpdatedOnDate.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyUserIdsKey =       $"UserService_Filter_0_0_0_0_{(postReqUserIds.UserIds?.ConvertAll(Convert.ToInt32).Sum() ?? 0).ToString()}_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyEmail =            $"UserService_Filter_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqEmail.Email)}_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyTitle =            $"UserService_Filter_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqTitle.Title)}_0_0_0_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyFirstName =        $"UserService_Filter_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqFirstName.FirstName)}_0_0_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyMiddleName =       $"UserService_Filter_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqMiddleName.MiddleName)}_0_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyLastName =         $"UserService_Filter_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqLastName.LastName)}_0_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyPreferredName =    $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqPreferredName.PreferredName)}_0_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeySuffix =           $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqSuffix.Suffix)}_0_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyDateofBirth =      $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_{postReqDateOfBirth.DateOfBirth.Value.ToString("yyyy-MM-dd")}_0_0_0_0_0_0_0_0";
+           var expectedCacheKeyTimeZone =         $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqTimeZone.TimeZone)}_0_0_0_0_0_0_0";
+           var expectedCacheKeyMaritalStatus =    $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqMaritalStatus.MaritalStatus)}_0_0_0_0_0_0";
+           var expectedCacheKeyReligion =         $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqReligion.Religion)}_0_0_0_0_0";
+           var expectedCacheKeySexuality =        $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqSexuality.Sexuality)}_0_0_0_0";
+           var expectedCacheKeyGender =           $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_{CommonUtilities.RemoveWhiteSpaceFromString(postReqGender.Gender)}_0_0_0";
+           var expectedCacheKeyIncludeInactive =  $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_1_0_0";
+           var expectedCacheKeyIncludeRelated =   $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_1_0";
+           var expectedCacheKeyIncludeReadOnly =  $"UserService_Filter_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_1";
 
            // Act
            var filterCreatedByResult = await _userService.Filter(postReqCreatedBy);
