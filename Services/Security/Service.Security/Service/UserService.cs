@@ -78,7 +78,6 @@ namespace Service.Security.Service
             var timeZoneKey = CacheUtilities.CreateKeyFromString(req.TimeZone);
             var maritalStatusKey = CacheUtilities.CreateKeyFromString(req.MaritalStatus);
             var religionKey = CacheUtilities.CreateKeyFromString(req.Religion);
-            var sexualityKey = CacheUtilities.CreateKeyFromString(req.Sexuality);
             var genderKey = CacheUtilities.CreateKeyFromString(req.Gender);
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
             var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
@@ -101,7 +100,6 @@ namespace Service.Security.Service
                 ,timeZoneKey
                 ,maritalStatusKey
                 ,religionKey
-                ,sexualityKey
                 ,genderKey
                 ,includeInactiveKey
                 ,includeRelatedKey
@@ -169,7 +167,6 @@ namespace Service.Security.Service
                     CommonRelationalDataReferenceTypes.UsaTimeZone,
                     CommonRelationalDataReferenceTypes.PersonMaritalStatus,
                     CommonRelationalDataReferenceTypes.PersonReligion,
-                    CommonRelationalDataReferenceTypes.PersonSexuality,
                     CommonRelationalDataReferenceTypes.PersonGender,
                     CommonRelationalDataReferenceTypes.PersonLanguage,
                     CommonRelationalDataReferenceTypes.PhoneNumberType,

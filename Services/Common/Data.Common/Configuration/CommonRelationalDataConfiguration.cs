@@ -50,7 +50,6 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         records.Add(_configurePersonGender(builder));
         records.Add(_configurePersonMaritalStatus(builder));
         records.Add(_configurePersonReligion(builder));
-        records.Add(_configurePersonSexuality(builder));
         records.Add(_configurePersonLanguage(builder));
         
         records.Add(_configureAddressType(builder));
@@ -235,50 +234,6 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetAuditFields(relationalRecords);
 
         var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonReligion, Description = "Religion / Faith for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
-        return ret;
-    }
-
-    #endregion
-
-    #region PersonSexuality
-
-    private CommonRelationalData _configurePersonSexuality(EntityTypeBuilder<CommonRelationalData> builder)
-    {
-        var relationalRecords = new List<CommonRelationalDataDto>();
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Abrosexual", Description = "Abrosexuality is described as an individual who experiences their sexuality change frequently. It can fluctuate between different sexualities often" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Androgynosexual", Description = "An androgynosexual describes a person who is sexually attracted to men and women, particularly those of androgynous appearance" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Androsexual", Description = "An androsexual is anyone who has sexual feelings towards masculinity. This term is usually used by Sexuality-queer individuals who do not fall within heterosexuality or homosexuality" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Aromantic", Description = "A person who is aromantic does not experience romantic attraction. This person does not have to identify as asexual & they still may experience sensual & aesthetic attraction" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Asexual", Description = "Asexual is the term used to describe a person who feels little to no sexual attraction to anyone" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Biromantic", Description = "A person who is romantically attracted to two sexes or Sexualitys. Biromantic asexuals seek romantic relationships for companionship, affection, and intimacy, but they are not sexually attracted to their romantic partners" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Bisexuality", Description = "Bisexuals are sexually attracted to two or more Sexualitys" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Ceterosexual", Description = "Someone who experiences sexual/romantic attraction only to non-binary people. This label is used as a non-problematic term for skoliosexuality only to be used by non-binary people" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Demisexual", Description = "Demisexual refers to a person who doesn’t experience sexual attraction unless they form an emotional connection" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Demiromantic", Description = "This term is a type of grey-romantic who only experiences romantic attraction after developing an emotional connection. They do not experience primary romantic attraction, but are capable of secondary romantic attraction" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Finsexual", Description = "The attraction to women, females and femininity " });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Gay", Description = "A person who identifies as homosexual" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Gynosexual", Description = "Anyone who has sexual feelings towards a woman or femininity. The term can be useful when describing the sexual orientation of an individual with a non-binary Sexuality identity" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Grey-Romantic", Description = "A grey-romantic is a person with a romantic orientation that is somewhere between aromantic & romantic" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Heterosexual", Description = "A person sexually attracted to people of the opposite sex" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Homosexuality", Description = "A person sexually attracted to people of ones own sex" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Heteroromantic", Description = "Romantically attracted to a member of the opposite sex or Sexuality. They may seek romantic intimacy but they’re not sexually attracted to partners" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Homoromantic", Description = "Romantically attracted to someone of the same sex or Sexuality. They may seek romantic intimacy but they’re not sexually attracted to partners" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Lesbian", Description = "A homosexual woman whose emotional, romantic and sexual feelings are towards women" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Omnisexual", Description = "Omnisexuals are attracted to all genders,=. Gender can still be a factor in their attraction, unlike pansexuals, who don’t care about gender" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Pansexuality", Description = "A person whose romantic and/or sexual attraction towards others is not limited by sex or gender" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Panromantic", Description = "Is a person that can be romantically attracted to all genders, but not sexually" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Pomosexuality", Description = "Refers to non-orientation in which people disregard sexuality labels altogether. Basically, labels are seen as superficial and insignificant to someone who identities as pomosexual" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Polysexual", Description = "Is the attract to some, but not all, genders. They may be attracted to any combination of  possible genders, including binary & non-binary" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Queer", Description = "An LGBTQ+ term the community is reclaiming. An identity label that is non-specific about a persons sexual orientation" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Questioning", Description = "To be unsure of or re-examining ones previous assumption of sexual orientation" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Straight", Description = "An heterosexual" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Skoliosexual", Description = "The attraction to non-binary individuals" });
-        relationalRecords.Add(new CommonRelationalDataDto { Name = "Sapiosexual", Description = "Sexually attracted to intelligence or the human mind" });
-
-        DataUtilities.SetActiveFieldToTrue(relationalRecords);
-        DataUtilities.SetAuditFields(relationalRecords);
-
-        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonSexuality, Description = "Sexuality for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 

@@ -27,7 +27,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(t => t.TimeZone).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.MaritalStatus).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.Religion).HasMaxLength(64).IsUnicode(false);
-        builder.Property(t => t.Sexuality).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.Gender).HasMaxLength(64).IsUnicode(false);
         builder.Property(t => t.SpokenLanguageJson).HasMaxLength(512).IsUnicode(false);
         builder.Property(t => t.PhoneNumberJson).HasMaxLength(1024).IsUnicode(false);

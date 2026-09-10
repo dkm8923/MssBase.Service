@@ -17,7 +17,6 @@ public partial class User : AuditableEntity, IPerson
     public string? TimeZone { get; set; }
     public string? MaritalStatus { get; set; }
     public string? Religion { get; set; }
-    public string? Sexuality { get; set; }
     public string? Gender { get; set; }
     public string? SpokenLanguageJson { get; set; }
     public string? PhoneNumberJson { get; set; }

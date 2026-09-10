@@ -189,7 +189,6 @@ public class SecurityTestBase
                 TimeZone = "EST",
                 MaritalStatus = "Married (And Not Separated)",
                 Religion = "Christian",
-                Sexuality = "Heterosexual",
                 Gender = "Male",
                 SpokenLanguages = new List<string> { "English", "Japanese", "German"},
                 PhoneNumbers = new List<TypedValueDto> { 

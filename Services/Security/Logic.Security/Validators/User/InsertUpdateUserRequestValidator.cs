@@ -41,9 +41,6 @@ public class InsertUpdateUserRequestValidator : AbstractValidator<InsertUpdateUs
         RuleFor(v => v.Religion)
             .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(Constants.EntityFieldNames.Religion, 64));
 
-        RuleFor(v => v.Sexuality)
-            .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(Constants.EntityFieldNames.Sexuality, 64));
-
         RuleFor(v => v.Gender)
             .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(Constants.EntityFieldNames.Gender, 64));
 

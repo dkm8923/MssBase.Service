@@ -850,7 +850,6 @@ namespace IntegrationTests.Security.Controller
             var postReqInvalidTimeZone = new FilterUserServiceRequest { TimeZone = "InvalidTimeZone", DeleteCache = true };
             var postReqInvalidMaritalStatus = new FilterUserServiceRequest { MaritalStatus = "InvalidMaritalStatus", DeleteCache = true };
             var postReqInvalidReligion = new FilterUserServiceRequest { Religion = "InvalidReligion", DeleteCache = true };
-            var postReqInvalidSexuality = new FilterUserServiceRequest { Sexuality = "InvalidSexuality", DeleteCache = true };
             var postReqInvalidGender = new FilterUserServiceRequest { Gender = "InvalidGender", DeleteCache = true };
             
             // Act
@@ -869,7 +868,6 @@ namespace IntegrationTests.Security.Controller
             var invalidTimeZoneResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidTimeZone });
             var invalidMaritalStatusResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidMaritalStatus });
             var invalidReligionResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidReligion });
-            var invalidSexualityResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidSexuality });
             var invalidGenderResult = await ControllerTestUtilities.GetFilteredRecordsWithValidationResult<List<UserDto>>(new HttpPostRequestParms { Client = _client, ApiEndPoint = _defaultUserApiEndPoint,Token = token, RequestObject = postReqInvalidGender });
             
             //Assert
@@ -888,7 +886,6 @@ namespace IntegrationTests.Security.Controller
             invalidTimeZoneResult.Response.Should().HaveCount(0);
             invalidMaritalStatusResult.Response.Should().HaveCount(0);
             invalidReligionResult.Response.Should().HaveCount(0);
-            invalidSexualityResult.Response.Should().HaveCount(0);
             invalidGenderResult.Response.Should().HaveCount(0);
         }
         

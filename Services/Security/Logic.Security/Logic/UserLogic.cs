@@ -192,11 +192,6 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.Religion == req.Religion);
                 }
 
-                if (req.Sexuality != null)
-                {
-                    query = query.Where(x => x.Sexuality == req.Sexuality);
-                }
-
                 if (req.Gender != null)
                 {
                     query = query.Where(x => x.Gender == req.Gender);
@@ -496,7 +491,6 @@ namespace Logic.Security.Logic
                 errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataValueIsValid(commonRelationalData.UsaTimeZone, req.TimeZone, EntityFieldNames.TimeZone, CommonRelationalDataReferenceTypes.UsaTimeZone, errorValidationResult);
                 errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonMaritalStatus, req.MaritalStatus, EntityFieldNames.MaritalStatus, CommonRelationalDataReferenceTypes.PersonMaritalStatus, errorValidationResult);
                 errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonReligion, req.Religion, EntityFieldNames.Religion, CommonRelationalDataReferenceTypes.PersonReligion, errorValidationResult);
-                errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonSexuality, req.Sexuality, EntityFieldNames.Sexuality, CommonRelationalDataReferenceTypes.PersonSexuality, errorValidationResult);
                 errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonGender, req.Gender, EntityFieldNames.Gender, CommonRelationalDataReferenceTypes.PersonGender, errorValidationResult);
                 
                 //validate Spoken Languages
@@ -702,11 +696,6 @@ namespace Logic.Security.Logic
                 changeLog[nameof(User.Religion)] = newRecord.Religion;
             }
 
-            if (oldRecord.Sexuality != newRecord.Sexuality)
-            {
-                changeLog[nameof(User.Sexuality)] = newRecord.Sexuality;
-            }
-
             if (oldRecord.Gender != newRecord.Gender)
             {
                 changeLog[nameof(User.Gender)] = newRecord.Gender;
@@ -782,7 +771,6 @@ namespace Logic.Security.Logic
             log[nameof(User.TimeZone)] = record.TimeZone;
             log[nameof(User.MaritalStatus)] = record.MaritalStatus;
             log[nameof(User.Religion)] = record.Religion;
-            log[nameof(User.Sexuality)] = record.Sexuality;
             log[nameof(User.Gender)] = record.Gender;
             log[nameof(User.SpokenLanguageJson)] = record.SpokenLanguageJson;
             log[nameof(User.PhoneNumberJson)] = record.PhoneNumberJson;

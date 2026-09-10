@@ -39,7 +39,6 @@
             public const string TimeZone = "TimeZone";
             public const string MaritalStatus = "MaritalStatus";
             public const string Religion = "Religion";
-            public const string Sexuality = "Sexuality";
             public const string Gender = "Gender";
             public const string Name = "Name";
             public const string Email = "Email";
@@ -73,7 +72,6 @@
             public const string PersonGender = "PersonGender";
             public const string PersonMaritalStatus = "PersonMaritalStatus";
             public const string PersonReligion = "PersonReligion";
-            public const string PersonSexuality = "PersonSexuality";
             public const string PersonLanguage = "PersonLanguage";
             public const string AddressType = "AddressType";
             public const string PhoneNumberType = "PhoneNumberType";

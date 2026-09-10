@@ -545,7 +545,6 @@ namespace IntegrationTests.Security.Logic
             var postReqInvalidTimeZone = new FilterUserLogicRequest { TimeZone = "InvalidTimeZone" };
             var postReqInvalidMaritalStatus = new FilterUserLogicRequest { MaritalStatus = "InvalidMaritalStatus" };
             var postReqInvalidReligion = new FilterUserLogicRequest { Religion = "InvalidReligion" };
-            var postReqInvalidSexuality = new FilterUserLogicRequest { Sexuality = "InvalidSexuality" };
             var postReqInvalidGender = new FilterUserLogicRequest { Gender = "InvalidGender" };
             
             // Act
@@ -564,7 +563,6 @@ namespace IntegrationTests.Security.Logic
             var invalidTimeZoneResult = await _userLogic.Filter(postReqInvalidTimeZone);
             var invalidMaritalStatusResult = await _userLogic.Filter(postReqInvalidMaritalStatus);
             var invalidReligionResult = await _userLogic.Filter(postReqInvalidReligion);
-            var invalidSexualityResult = await _userLogic.Filter(postReqInvalidSexuality);
             var invalidGenderResult = await _userLogic.Filter(postReqInvalidGender);
             
             // Assert
@@ -583,7 +581,6 @@ namespace IntegrationTests.Security.Logic
             invalidTimeZoneResult.Response.Should().HaveCount(0);
             invalidMaritalStatusResult.Response.Should().HaveCount(0);
             invalidReligionResult.Response.Should().HaveCount(0);
-            invalidSexualityResult.Response.Should().HaveCount(0);
             invalidGenderResult.Response.Should().HaveCount(0);
         }
 
@@ -609,7 +606,6 @@ namespace IntegrationTests.Security.Logic
                 TimeZone = "PST",
                 MaritalStatus = "Divorced (Including Living Common Law)",
                 Religion = "Muslim",
-                Sexuality = "Asexual",
                 Gender = "Bigender",
                 Active = true,
                 CurrentUser = TestConstants.SpecificCurrentUserForInsert
@@ -663,7 +659,6 @@ namespace IntegrationTests.Security.Logic
             var postReqFilterTimeZone = new FilterUserLogicRequest { TimeZone = testUser1.Response.TimeZone };
             var postReqFilterMaritalStatus = new FilterUserLogicRequest { MaritalStatus = testUser1.Response.MaritalStatus };
             var postReqFilterReligion = new FilterUserLogicRequest { Religion = testUser1.Response.Religion };
-            var postReqFilterSexuality = new FilterUserLogicRequest { Sexuality = testUser1.Response.Sexuality };
             var postReqFilterGender = new FilterUserLogicRequest { Gender = testUser1.Response.Gender };
             
             // Act
@@ -683,7 +678,6 @@ namespace IntegrationTests.Security.Logic
             var filterTimeZoneResult = await _userLogic.Filter(postReqFilterTimeZone);
             var filterMaritalStatusResult = await _userLogic.Filter(postReqFilterMaritalStatus);
             var filterReligionResult = await _userLogic.Filter(postReqFilterReligion);
-            var filterSexualityResult = await _userLogic.Filter(postReqFilterSexuality);
             var filterGenderResult = await _userLogic.Filter(postReqFilterGender);
             
             // Assert
@@ -703,7 +697,6 @@ namespace IntegrationTests.Security.Logic
             filterTimeZoneResult.Response.Should().HaveCount(1);
             filterMaritalStatusResult.Response.Should().HaveCount(1);
             filterReligionResult.Response.Should().HaveCount(1);
-            filterSexualityResult.Response.Should().HaveCount(1);
             filterGenderResult.Response.Should().HaveCount(1);
         }
 
@@ -843,7 +836,6 @@ namespace IntegrationTests.Security.Logic
             var postReqInvalidTimeZone = new FilterUserLogicRequest { TimeZone = testRecord.TimeZone };
             var postReqInvalidMaritalStatus = new FilterUserLogicRequest { MaritalStatus = testRecord.MaritalStatus };
             var postReqInvalidReligion = new FilterUserLogicRequest { Religion = testRecord.Religion };
-            var postReqInvalidSexuality = new FilterUserLogicRequest { Sexuality = testRecord.Sexuality };
             var postReqInvalidGender = new FilterUserLogicRequest { Gender = testRecord.Gender };
             
             // Act
@@ -862,7 +854,6 @@ namespace IntegrationTests.Security.Logic
             var invalidTimeZoneResult = await _userLogic.Filter(postReqInvalidTimeZone);
             var invalidMaritalStatusResult = await _userLogic.Filter(postReqInvalidMaritalStatus);
             var invalidReligionResult = await _userLogic.Filter(postReqInvalidReligion);
-            var invalidSexualityResult = await _userLogic.Filter(postReqInvalidSexuality);
             var invalidGenderResult = await _userLogic.Filter(postReqInvalidGender);
             
             // Assert
@@ -881,7 +872,6 @@ namespace IntegrationTests.Security.Logic
             invalidTimeZoneResult.Response.Should().HaveCount(0);
             invalidMaritalStatusResult.Response.Should().HaveCount(0);
             invalidReligionResult.Response.Should().HaveCount(0);
-            invalidSexualityResult.Response.Should().HaveCount(0);
             invalidGenderResult.Response.Should().HaveCount(0);
         }
 
@@ -1054,26 +1044,6 @@ namespace IntegrationTests.Security.Logic
             recordToCreate.Religion = "ABC";
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidReligionFieldErrors();
-
-            // Act
-            var result = await _userLogic.Insert(recordToCreate, commonData);
-
-            // Assert
-            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
-
-            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
-        }
-
-        [Fact]
-        public async Task User_Insert_Should_Not_Create_Record_Invalid_Sexuality_Error()
-        {
-            // Arrange
-            await ClearAllSecurityTestTableData();
-            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
-            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
-            recordToCreate.Sexuality = "ABC";
-
-            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidSexualityFieldErrors();
 
             // Act
             var result = await _userLogic.Insert(recordToCreate, commonData);

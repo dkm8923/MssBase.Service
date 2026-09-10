@@ -16,7 +16,6 @@ namespace Dto.Security.User
         public string? TimeZone { get; set; }
         public string? MaritalStatus { get; set; }
         public string? Religion { get; set; }
-        public string? Sexuality { get; set; }
         public string? Gender { get; set; }
         public List<string>? SpokenLanguages { get; set; }
         public List<TypedValueDto>? PhoneNumbers { get; set; }
