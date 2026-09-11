@@ -51,6 +51,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         records.Add(_configurePersonMaritalStatus(builder));
         records.Add(_configurePersonReligion(builder));
         records.Add(_configurePersonLanguage(builder));
+        records.Add(_configurePersonGenderPronounExamples(builder));
         
         records.Add(_configureAddressType(builder));
         records.Add(_configurePhoneNumberType(builder));
@@ -268,6 +269,24 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetAuditFields(relationalRecords);
 
         var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonLanguage, Description = "Language for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
+        return ret;
+    }
+
+    #endregion
+
+    #region PersonGenderPronouns
+
+    private CommonRelationalData _configurePersonGenderPronounExamples(EntityTypeBuilder<CommonRelationalData> builder)
+    {
+        var relationalRecords = new List<CommonRelationalDataDto>();
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Yesterday, 'Pronoun' went outside", Value = "she", SortOrder = 1 });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "I went with 'Pronoun'.", Value = "her", SortOrder = 2 });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "The idea was 'Pronoun'.", Value = "hers", SortOrder = 3 });
+
+        DataUtilities.SetActiveFieldToTrue(relationalRecords);
+        DataUtilities.SetAuditFields(relationalRecords);
+
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.PersonGenderPronounExamples, Description = "Gender pronoun examples for a person / contact / user", Json = JsonSerializer.Serialize(relationalRecords) };
         return ret;
     }
 

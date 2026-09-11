@@ -472,9 +472,23 @@ namespace IntegrationTests.Security.Logic
         class UserChangeLog
         {
             public string? Email { get; set; }
+            public string? Title { get; set; }
             public string? FirstName { get; set; }
+            public string? MiddleName { get; set; }
             public string? LastName { get; set; }
+            public string? PreferredName { get; set; }
+            public string? Suffix { get; set; }
             public DateOnly? DateOfBirth { get; set; }
+            public string? TimeZone { get; set; }
+            public string? MaritalStatus { get; set; }
+            public string? Religion { get; set; }
+            public string? Gender { get; set; }
+            public string? SpokenLanguages { get; set; }
+            public string? PhoneNumbers { get; set; }
+            public string? SocialMediaProfiles { get; set; }
+            public string? AlternateEmails { get; set; }
+            public string? GenderPronouns { get; set; }
+            public string? ImportantDates { get; set; }
             public bool? Active { get; set; }
             public string? UpdatedBy { get; set; }
             public DateTime? UpdatedOn { get; set; }

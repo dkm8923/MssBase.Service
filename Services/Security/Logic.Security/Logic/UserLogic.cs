@@ -721,6 +721,16 @@ namespace Logic.Security.Logic
                 changeLog[nameof(User.AlternateEmailJson)] = newRecord.AlternateEmailJson;
             }
 
+            if (oldRecord.GenderPronounJson != newRecord.GenderPronounJson)
+            {
+                changeLog[nameof(User.GenderPronounJson)] = newRecord.GenderPronounJson;
+            }
+
+            if (oldRecord.ImportantDateJson != newRecord.ImportantDateJson)
+            {
+                changeLog[nameof(User.ImportantDateJson)] = newRecord.ImportantDateJson;
+            }
+
             if (oldRecord.Active != newRecord.Active)
             {
                 changeLog[nameof(User.Active)] = newRecord.Active;
@@ -776,6 +786,8 @@ namespace Logic.Security.Logic
             log[nameof(User.PhoneNumberJson)] = record.PhoneNumberJson;
             log[nameof(User.SocialMediaProfileJson)] = record.SocialMediaProfileJson;
             log[nameof(User.AlternateEmailJson)] = record.AlternateEmailJson;
+            log[nameof(User.GenderPronounJson)] = record.GenderPronounJson;
+            log[nameof(User.ImportantDateJson)] = record.ImportantDateJson;
             log[nameof(User.Active)] = record.Active;
             log[nameof(User.ReadOnly)] = record.ReadOnly;
             log[nameof(User.CreatedBy)] = record.CreatedBy;

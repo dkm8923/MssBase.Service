@@ -32,6 +32,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(t => t.PhoneNumberJson).HasMaxLength(1024).IsUnicode(false);
         builder.Property(t => t.SocialMediaProfileJson).HasMaxLength(4096).IsUnicode(true);
         builder.Property(t => t.AlternateEmailJson).HasMaxLength(4096).IsUnicode(true);
+        builder.Property(t => t.GenderPronounJson).HasMaxLength(256).IsUnicode(true);
+        builder.Property(t => t.ImportantDateJson).HasMaxLength(512).IsUnicode(true);
         
         CreatePrimaryKey(builder);
         CreateUniqueKey(builder);

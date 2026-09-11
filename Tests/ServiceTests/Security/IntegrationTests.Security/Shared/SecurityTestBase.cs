@@ -206,6 +206,11 @@ public class SecurityTestBase
                     new TypedValueDto { Type = "School", Value = "testSchoolEmail@test.com" },
                     new TypedValueDto { Type = "Work", Value = "testWorkEmail@test.com" }
                 },
+                GenderPronouns = new List<string> { "She", "Her", "Hers"},
+                ImportantDates = new List<TypedValueDto> { 
+                    new TypedValueDto { Type = "Wedding Aniversary", Value = "7/14/18" },
+                    new TypedValueDto { Type = "Tatas Birthday", Value = "9/14/2018" } 
+                },
                 CurrentUser = TestConstants.CurrentUser 
             }, commonData);
 
