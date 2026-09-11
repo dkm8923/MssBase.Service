@@ -182,6 +182,21 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.TimeZone == req.TimeZone);
                 }
 
+                if (req.MaritalStatus != null)
+                {
+                    query = query.Where(x => x.MaritalStatus == req.MaritalStatus);
+                }
+
+                if (req.Religion != null)
+                {
+                    query = query.Where(x => x.Religion == req.Religion);
+                }
+
+                if (req.Gender != null)
+                {
+                    query = query.Where(x => x.Gender == req.Gender);
+                }
+
                 return new ErrorValidationResult<IEnumerable<UserDto>> { Response = await query.ToDtosWithoutPassword(cancellationToken) };
             }
         }
@@ -470,11 +485,89 @@ namespace Logic.Security.Logic
 
             if (errorValidationResult.Errors.Count == 0)
             {
-                //validate common relational data fields have valid values for Title / Suffix / TimeZone
+                //validate common relational data fields have valid values for Title / Suffix / TimeZone / etc.
                 errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonTitle, req.Title, EntityFieldNames.Title, CommonRelationalDataReferenceTypes.PersonTitle, errorValidationResult);
                 errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonSuffix, req.Suffix, EntityFieldNames.Suffix, CommonRelationalDataReferenceTypes.PersonSuffix, errorValidationResult);
                 errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataValueIsValid(commonRelationalData.UsaTimeZone, req.TimeZone, EntityFieldNames.TimeZone, CommonRelationalDataReferenceTypes.UsaTimeZone, errorValidationResult);
+                errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonMaritalStatus, req.MaritalStatus, EntityFieldNames.MaritalStatus, CommonRelationalDataReferenceTypes.PersonMaritalStatus, errorValidationResult);
+                errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonReligion, req.Religion, EntityFieldNames.Religion, CommonRelationalDataReferenceTypes.PersonReligion, errorValidationResult);
+                errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonGender, req.Gender, EntityFieldNames.Gender, CommonRelationalDataReferenceTypes.PersonGender, errorValidationResult);
                 
+                //validate Spoken Languages
+                if (req.SpokenLanguages != null && req.SpokenLanguages.Count > 0)
+                {
+                    foreach (var spokenLanguage in req.SpokenLanguages)
+                    {
+                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonLanguage, 
+                                                                                                         spokenLanguage, 
+                                                                                                         EntityFieldNames.SpokenLanguages, 
+                                                                                                         CommonRelationalDataReferenceTypes.PersonLanguage, 
+                                                                                                         errorValidationResult);
+
+                        if (spokenLanguage?.Length == 0)
+                        {
+                            errorValidationResult.Errors.Add(EntityFieldNames.SpokenLanguages, new List<string> { "Value is a required field! on SpokenLanguage!" });
+                        }
+                    }
+                }
+
+                //validate Phone Numbers
+                if (req.PhoneNumbers != null && req.PhoneNumbers.Count > 0)
+                {
+                    foreach (var phoneNumber in req.PhoneNumbers)
+                    {
+                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PhoneNumberType, 
+                                                                                                         phoneNumber.Type, 
+                                                                                                         EntityFieldNames.PhoneNumbers, 
+                                                                                                         CommonRelationalDataReferenceTypes.PhoneNumberType, 
+                                                                                                         errorValidationResult);
+
+                        if (phoneNumber.Value?.Length == 0)
+                        {
+                            errorValidationResult.Errors.Add(EntityFieldNames.PhoneNumbers, new List<string> { "Value is a required field on PhoneNumber!" });
+                        }
+                    }
+                }
+
+                //validate Social Media Profiles
+                if (req.SocialMediaProfiles != null && req.SocialMediaProfiles.Count > 0)
+                {
+                    foreach (var socialMediaProfile in req.SocialMediaProfiles)
+                    {
+                        
+                        
+                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.SocialMediaProfileType, 
+                                                                                                         socialMediaProfile.Platform,
+                                                                                                         "SocialMediaProfiles.Platform", 
+                                                                                                         //EntityFieldNames.SocialMediaProfiles, //Platform
+                                                                                                         CommonRelationalDataReferenceTypes.SocialMediaProfileType, 
+                                                                                                         errorValidationResult);
+
+                        if (socialMediaProfile.Url?.Length == 0 && socialMediaProfile.UserName?.Length == 0)
+                        {
+                            errorValidationResult.Errors.Add(EntityFieldNames.SocialMediaProfiles, new List<string> { "Url or UserName must be populated on SocialMediaProfile!" });
+                        }
+                    }
+                }
+
+                //validate Alternate Emails
+                if (req.AlternateEmails != null && req.AlternateEmails.Count > 0)
+                {
+                    foreach (var alternateEmail in req.AlternateEmails)
+                    {
+                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.EmailType, 
+                                                                                                         alternateEmail.Type, 
+                                                                                                         EntityFieldNames.AlternateEmails, 
+                                                                                                         CommonRelationalDataReferenceTypes.EmailType, 
+                                                                                                         errorValidationResult);
+
+                        if (alternateEmail.Value?.Length == 0)
+                        {
+                            errorValidationResult.Errors.Add(EntityFieldNames.AlternateEmails, new List<string> { "Value is a required field! on AlternateEmail!" });
+                        }
+                    }
+                }
+
                 // Validate user email is unique
                 var emailCheck = await this.Filter(new FilterUserLogicRequest { Email = req.Email, IncludeReadOnly = true });
 
@@ -593,6 +686,41 @@ namespace Logic.Security.Logic
                 changeLog[nameof(User.TimeZone)] = newRecord.TimeZone;
             }
 
+            if (oldRecord.MaritalStatus != newRecord.MaritalStatus)
+            {
+                changeLog[nameof(User.MaritalStatus)] = newRecord.MaritalStatus;
+            }
+
+            if (oldRecord.Religion != newRecord.Religion)
+            {
+                changeLog[nameof(User.Religion)] = newRecord.Religion;
+            }
+
+            if (oldRecord.Gender != newRecord.Gender)
+            {
+                changeLog[nameof(User.Gender)] = newRecord.Gender;
+            }
+
+            if (oldRecord.SpokenLanguageJson != newRecord.SpokenLanguageJson)
+            {
+                changeLog[nameof(User.SpokenLanguageJson)] = newRecord.SpokenLanguageJson;
+            }
+
+            if (oldRecord.PhoneNumberJson != newRecord.PhoneNumberJson)
+            {
+                changeLog[nameof(User.PhoneNumberJson)] = newRecord.PhoneNumberJson;
+            }
+
+            if (oldRecord.SocialMediaProfileJson != newRecord.SocialMediaProfileJson)
+            {
+                changeLog[nameof(User.SocialMediaProfileJson)] = newRecord.SocialMediaProfileJson;
+            }
+
+            if (oldRecord.AlternateEmailJson != newRecord.AlternateEmailJson)
+            {
+                changeLog[nameof(User.AlternateEmailJson)] = newRecord.AlternateEmailJson;
+            }
+
             if (oldRecord.Active != newRecord.Active)
             {
                 changeLog[nameof(User.Active)] = newRecord.Active;
@@ -641,6 +769,13 @@ namespace Logic.Security.Logic
             log[nameof(User.Suffix)] = record.Suffix;
             log[nameof(User.DateOfBirth)] = record.DateOfBirth;
             log[nameof(User.TimeZone)] = record.TimeZone;
+            log[nameof(User.MaritalStatus)] = record.MaritalStatus;
+            log[nameof(User.Religion)] = record.Religion;
+            log[nameof(User.Gender)] = record.Gender;
+            log[nameof(User.SpokenLanguageJson)] = record.SpokenLanguageJson;
+            log[nameof(User.PhoneNumberJson)] = record.PhoneNumberJson;
+            log[nameof(User.SocialMediaProfileJson)] = record.SocialMediaProfileJson;
+            log[nameof(User.AlternateEmailJson)] = record.AlternateEmailJson;
             log[nameof(User.Active)] = record.Active;
             log[nameof(User.ReadOnly)] = record.ReadOnly;
             log[nameof(User.CreatedBy)] = record.CreatedBy;

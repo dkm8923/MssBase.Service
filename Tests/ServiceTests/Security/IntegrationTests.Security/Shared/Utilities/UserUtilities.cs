@@ -15,6 +15,7 @@ using Dto.Common.CommonRelationalData;
 using Dto.Common.CommonRelationalData.Logic;
 using static Shared.Logic.Common.Constants;
 using Contract.Common.CommonRelationalData;
+using Shared.Models.Dtos;
 
 namespace IntegrationTests.Security.Shared.Utilities;
 
@@ -64,6 +65,9 @@ public class UserUtilities : IUserUtilities
             PreferredName = LogicTestUtilities.GenerateRandomString(65),
             Suffix = LogicTestUtilities.GenerateRandomString(9),
             TimeZone = LogicTestUtilities.GenerateRandomString(65),
+            MaritalStatus = LogicTestUtilities.GenerateRandomString(65),
+            Religion = LogicTestUtilities.GenerateRandomString(65),
+            Gender = LogicTestUtilities.GenerateRandomString(65),
             Active = true,
             CurrentUser = LogicTestUtilities.GenerateRandomString(65)
         };
@@ -81,6 +85,9 @@ public class UserUtilities : IUserUtilities
             PreferredName = LogicTestUtilities.GenerateRandomString(32),
             Suffix = "Jr.",
             TimeZone = "EST",
+            MaritalStatus = "Married (And Not Separated)",
+            Religion = "Christian",
+            Gender = "Male",
             DateOfBirth = LogicTestUtilities.GetRandomDateOnly(2000),
             Active = active,
             CurrentUser = TestConstants.CurrentUser
@@ -181,6 +188,9 @@ public class UserUtilities : IUserUtilities
             { "PreferredName", new List<string> { "PreferredName cannot exceed 64 characters!" } },
             { "Suffix", new List<string> { "Suffix cannot exceed 8 characters!" } },
             { "TimeZone", new List<string> { "TimeZone cannot exceed 64 characters!" } },
+            { "MaritalStatus", new List<string> { "MaritalStatus cannot exceed 64 characters!" } },
+            { "Religion", new List<string> { "Religion cannot exceed 64 characters!" } },
+            { "Gender", new List<string> { "Gender cannot exceed 64 characters!" } },
             { "CurrentUser", new List<string> { "CurrentUser cannot exceed 64 characters!" } }
         };
     }
@@ -231,6 +241,30 @@ public class UserUtilities : IUserUtilities
         return new Dictionary<string, List<string>>
         {
             { "TimeZone", new List<string> { "TimeZone value is invalid! Value must come from CommonRelationalData.UsaTimeZone List!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedInvalidMaritalStatusFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "MaritalStatus", new List<string> { "MaritalStatus value is invalid! Value must come from CommonRelationalData.PersonMaritalStatus List!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedInvalidReligionFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Religion", new List<string> { "Religion value is invalid! Value must come from CommonRelationalData.PersonReligion List!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedInvalidGenderFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "Gender", new List<string> { "Gender value is invalid! Value must come from CommonRelationalData.PersonGender List!" } }
         };
     }
 
@@ -334,10 +368,53 @@ public class UserUtilities : IUserUtilities
         recordA.PreferredName.Should().Be(recordB.PreferredName);
         recordA.Suffix.Should().Be(recordB.Suffix);
         recordA.TimeZone.Should().Be(recordB.TimeZone);
+        recordA.MaritalStatus.Should().Be(recordB.MaritalStatus);
+        recordA.Religion.Should().Be(recordB.Religion);
+        recordA.Gender.Should().Be(recordB.Gender);
         recordA.Active.Should().Be(recordB.Active);
         recordA.ReadOnly.Should().Be(recordB.ReadOnly);
         recordA.CreatedBy.Should().Be(recordB.CreatedBy);
         recordA.UpdatedBy.Should().Be(recordB.UpdatedBy);
+
+        var aSpokenLanguages = recordA.SpokenLanguages ?? new List<string>();
+        var bSpokenLanguages = recordB.SpokenLanguages ?? new List<string>();
+
+        aSpokenLanguages.Count.Should().Be(bSpokenLanguages.Count);
+
+        for (int i = 0; i < aSpokenLanguages.Count; i++)
+        {
+            aSpokenLanguages[i].Should().Be(bSpokenLanguages[i]);
+        }
+
+        var aPhoneNumbers = recordA.PhoneNumbers ?? new List<TypedValueDto>();
+        var bPhoneNumbers = recordB.PhoneNumbers ?? new List<TypedValueDto>();
+
+        aPhoneNumbers.Count.Should().Be(bPhoneNumbers.Count);
+
+        for (int i = 0; i < aPhoneNumbers.Count; i++)
+        {
+            aPhoneNumbers[i].Should().Be(bPhoneNumbers[i]);
+        }
+
+        var aSocialMediaProfiles = recordA.SocialMediaProfiles ?? new List<SocialMediaProfileDto>();
+        var bSocialMediaProfiles = recordB.SocialMediaProfiles ?? new List<SocialMediaProfileDto>();
+
+        aSocialMediaProfiles.Count.Should().Be(bSocialMediaProfiles.Count);
+
+        for (int i = 0; i < aSocialMediaProfiles.Count; i++)
+        {
+            aSocialMediaProfiles[i].Should().Be(bSocialMediaProfiles[i]);
+        }
+
+        var aAlternateEmails = recordA.AlternateEmails ?? new List<TypedValueDto>();
+        var bAlternateEmails = recordB.AlternateEmails ?? new List<TypedValueDto>();
+
+        aAlternateEmails.Count.Should().Be(bAlternateEmails.Count);
+
+        for (int i = 0; i < aAlternateEmails.Count; i++)
+        {
+            aAlternateEmails[i].Should().Be(bAlternateEmails[i]);
+        }
     }
 
     /// <summary>
@@ -395,7 +472,14 @@ public class UserUtilities : IUserUtilities
             {
                 CommonRelationalDataReferenceTypes.PersonTitle,
                 CommonRelationalDataReferenceTypes.PersonSuffix,
-                CommonRelationalDataReferenceTypes.UsaTimeZone
+                CommonRelationalDataReferenceTypes.UsaTimeZone,
+                CommonRelationalDataReferenceTypes.PersonMaritalStatus,
+                CommonRelationalDataReferenceTypes.PersonReligion,
+                CommonRelationalDataReferenceTypes.PersonGender,
+                CommonRelationalDataReferenceTypes.PersonLanguage,
+                CommonRelationalDataReferenceTypes.PhoneNumberType,
+                CommonRelationalDataReferenceTypes.SocialMediaProfileType,
+                CommonRelationalDataReferenceTypes.EmailType
             }
         });
 

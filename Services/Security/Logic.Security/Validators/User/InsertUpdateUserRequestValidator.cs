@@ -35,6 +35,15 @@ public class InsertUpdateUserRequestValidator : AbstractValidator<InsertUpdateUs
         RuleFor(v => v.TimeZone)
             .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(Constants.EntityFieldNames.TimeZone, 64));
 
+        RuleFor(v => v.MaritalStatus)
+            .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(Constants.EntityFieldNames.MaritalStatus, 64));
+
+        RuleFor(v => v.Religion)
+            .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(Constants.EntityFieldNames.Religion, 64));
+
+        RuleFor(v => v.Gender)
+            .Length(0, 64).WithMessage(ValidatorUtilities.CreateMaxLengthErrorMessage(Constants.EntityFieldNames.Gender, 64));
+
         RuleFor(v => v.CurrentUser).ValidateCurrentUser();
     }
 }

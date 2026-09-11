@@ -3,6 +3,8 @@ using Dto.Security.ApplicationUser;
 using Shared.Logic.Common;
 using Microsoft.EntityFrameworkCore;
 using Dto.Security.User;
+using System.Text.Json;
+using Shared.Models.Dtos;
 
 namespace Data.Security.Converters
 {
@@ -35,6 +37,13 @@ namespace Data.Security.Converters
                 Suffix = source.Suffix,
                 DateOfBirth = source.DateOfBirth,
                 TimeZone = source.TimeZone,
+                MaritalStatus = source.MaritalStatus,
+                Religion = source.Religion,
+                Gender = source.Gender,
+                SpokenLanguages = source.SpokenLanguageJson == null ? null : JsonSerializer.Deserialize<List<string>>(source.SpokenLanguageJson),
+                PhoneNumbers = source.PhoneNumberJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.PhoneNumberJson),
+                SocialMediaProfiles = source.SocialMediaProfileJson == null ? null : JsonSerializer.Deserialize<List<SocialMediaProfileDto>>(source.SocialMediaProfileJson),
+                AlternateEmails = source.AlternateEmailJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.AlternateEmailJson),
                 Password = applicationUserLogin.Password,
                 PasswordResetRequired = applicationUserLogin.PasswordResetRequired,
                 LastLoginDateTime = applicationUserLogin.LastLoginDateTime,
@@ -105,6 +114,13 @@ namespace Data.Security.Converters
                 Suffix = source.Suffix,
                 DateOfBirth = source.DateOfBirth,
                 TimeZone = source.TimeZone,
+                MaritalStatus = source.MaritalStatus,
+                Religion = source.Religion,
+                Gender = source.Gender,
+                SpokenLanguageJson = JsonSerializer.Serialize(source.SpokenLanguages),
+                PhoneNumberJson = JsonSerializer.Serialize(source.PhoneNumbers),
+                SocialMediaProfileJson = JsonSerializer.Serialize(source.SocialMediaProfiles),
+                AlternateEmailJson = JsonSerializer.Serialize(source.AlternateEmails),
                 CurrentUser = source.CurrentUser
             };
 

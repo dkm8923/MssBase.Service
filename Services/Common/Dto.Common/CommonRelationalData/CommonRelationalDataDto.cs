@@ -12,5 +12,8 @@ namespace Dto.Common.CommonRelationalData
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Description { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? SortOrder { get; set; }
     }
 }

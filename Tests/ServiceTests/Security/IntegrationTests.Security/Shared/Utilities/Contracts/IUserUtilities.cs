@@ -27,6 +27,9 @@ public interface IUserUtilities
     public Dictionary<string, List<string>> GetExpectedInvalidTitleFieldErrors();
     public Dictionary<string, List<string>> GetExpectedInvalidSuffixFieldErrors();
     public Dictionary<string, List<string>> GetExpectedInvalidTimeZoneFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedInvalidMaritalStatusFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedInvalidReligionFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedInvalidGenderFieldErrors();
     public Dictionary<string, List<string>> GetExpectedChangePasswordRequiredFieldErrors();
     public Dictionary<string, List<string>> GetExpectedChangePasswordMinMaxLengthErrors();
     public Dictionary<string, List<string>> GetExpectedChangePasswordInvalidPasswordErrors();

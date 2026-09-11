@@ -76,6 +76,9 @@ namespace Service.Security.Service
             var suffixKey = CacheUtilities.CreateKeyFromString(req.Suffix);
             var dateOfBirthKey = CacheUtilities.CreateKeyFromDateOnly(req.DateOfBirth);
             var timeZoneKey = CacheUtilities.CreateKeyFromString(req.TimeZone);
+            var maritalStatusKey = CacheUtilities.CreateKeyFromString(req.MaritalStatus);
+            var religionKey = CacheUtilities.CreateKeyFromString(req.Religion);
+            var genderKey = CacheUtilities.CreateKeyFromString(req.Gender);
             var includeInactiveKey = CacheUtilities.CreateKeyFromBool(req.IncludeInactive);
             var includeRelatedKey = CacheUtilities.CreateKeyFromBool(req.IncludeRelated);
             var includeReadOnlyKey = CacheUtilities.CreateKeyFromBool(req.IncludeReadOnly);
@@ -95,6 +98,9 @@ namespace Service.Security.Service
                 ,suffixKey
                 ,dateOfBirthKey
                 ,timeZoneKey
+                ,maritalStatusKey
+                ,religionKey
+                ,genderKey
                 ,includeInactiveKey
                 ,includeRelatedKey
                 ,includeReadOnlyKey
@@ -158,7 +164,14 @@ namespace Service.Security.Service
                 {
                     CommonRelationalDataReferenceTypes.PersonTitle,
                     CommonRelationalDataReferenceTypes.PersonSuffix,
-                    CommonRelationalDataReferenceTypes.UsaTimeZone
+                    CommonRelationalDataReferenceTypes.UsaTimeZone,
+                    CommonRelationalDataReferenceTypes.PersonMaritalStatus,
+                    CommonRelationalDataReferenceTypes.PersonReligion,
+                    CommonRelationalDataReferenceTypes.PersonGender,
+                    CommonRelationalDataReferenceTypes.PersonLanguage,
+                    CommonRelationalDataReferenceTypes.PhoneNumberType,
+                    CommonRelationalDataReferenceTypes.SocialMediaProfileType,
+                    CommonRelationalDataReferenceTypes.EmailType
                 }
             });
 

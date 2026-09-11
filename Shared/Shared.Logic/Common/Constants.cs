@@ -37,6 +37,9 @@
             public const string PreferredName = "PreferredName";
             public const string Suffix = "Suffix";
             public const string TimeZone = "TimeZone";
+            public const string MaritalStatus = "MaritalStatus";
+            public const string Religion = "Religion";
+            public const string Gender = "Gender";
             public const string Name = "Name";
             public const string Email = "Email";
             public const string Description = "Description";
@@ -47,6 +50,10 @@
             public const string ChangePassword = "ChangePassword";
             public const string RefreshToken = "RefreshToken";
             public const string Authentication = "Authentication";
+            public const string SpokenLanguages = "SpokenLanguages";
+            public const string PhoneNumbers = "PhoneNumbers";
+            public const string SocialMediaProfiles = "SocialMediaProfiles";
+            public const string AlternateEmails = "AlternateEmails";
             public const string CurrentUser = "CurrentUser";
         }
 
@@ -65,13 +72,15 @@
             public const string PersonGender = "PersonGender";
             public const string PersonMaritalStatus = "PersonMaritalStatus";
             public const string PersonReligion = "PersonReligion";
-            public const string PersonSexuality = "PersonSexuality";
             public const string PersonLanguage = "PersonLanguage";
             public const string AddressType = "AddressType";
             public const string PhoneNumberType = "PhoneNumberType";
+            public const string EmailType = "EmailType";
+            public const string SocialMediaProfileType = "SocialMediaProfileType";
             public const string UsaState = "UsaState";
             public const string UsaTimeZone = "UsaTimeZone";
             public const string Country = "Country";
+            public const string DaysOfWeek = "DaysOfWeek";
         }
     }
 }
