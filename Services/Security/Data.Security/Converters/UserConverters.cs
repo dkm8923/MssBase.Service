@@ -44,6 +44,7 @@ namespace Data.Security.Converters
                 PhoneNumbers = source.PhoneNumberJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.PhoneNumberJson),
                 SocialMediaProfiles = source.SocialMediaProfileJson == null ? null : JsonSerializer.Deserialize<List<SocialMediaProfileDto>>(source.SocialMediaProfileJson),
                 AlternateEmails = source.AlternateEmailJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.AlternateEmailJson),
+                CommonNotes = source.CommonNoteJson == null ? null : JsonSerializer.Deserialize<List<CommonNoteDto>>(source.CommonNoteJson),
                 Password = applicationUserLogin.Password,
                 PasswordResetRequired = applicationUserLogin.PasswordResetRequired,
                 LastLoginDateTime = applicationUserLogin.LastLoginDateTime,
@@ -121,6 +122,7 @@ namespace Data.Security.Converters
                 PhoneNumberJson = JsonSerializer.Serialize(source.PhoneNumbers),
                 SocialMediaProfileJson = JsonSerializer.Serialize(source.SocialMediaProfiles),
                 AlternateEmailJson = JsonSerializer.Serialize(source.AlternateEmails),
+                CommonNoteJson = JsonSerializer.Serialize(source.CommonNotes),
                 CurrentUser = source.CurrentUser
             };
 

@@ -22,6 +22,7 @@ public partial class User : AuditableEntity, IPerson
     public string? PhoneNumberJson { get; set; }
     public string? SocialMediaProfileJson { get; set; }
     public string? AlternateEmailJson { get; set; }
+    public string? CommonNoteJson { get; set; }
 
     public virtual UserLogin UserLogin { get; set; } = null!;
     public virtual ICollection<UserRefreshToken> UserRefreshTokens { get; set; } = new List<UserRefreshToken>();

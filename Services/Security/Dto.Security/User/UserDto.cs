@@ -25,6 +25,7 @@ namespace Dto.Security.User
         public List<TypedValueDto>? PhoneNumbers { get; set; }
         public List<SocialMediaProfileDto>? SocialMediaProfiles { get; set; }
         public List<TypedValueDto>? AlternateEmails { get; set; }
+        public List<CommonNoteDto>? CommonNotes { get; set; }
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Password { get; set; }
