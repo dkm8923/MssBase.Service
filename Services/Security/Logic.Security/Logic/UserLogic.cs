@@ -703,32 +703,32 @@ namespace Logic.Security.Logic
 
             if (oldRecord.SpokenLanguageJson != newRecord.SpokenLanguageJson)
             {
-                changeLog[nameof(User.SpokenLanguageJson)] = newRecord.SpokenLanguageJson;
+                changeLog[nameof(User.SpokenLanguageJson)] = LogicUtilities.ParseJsonOrNull(newRecord.SpokenLanguageJson);
             }
 
             if (oldRecord.PhoneNumberJson != newRecord.PhoneNumberJson)
             {
-                changeLog[nameof(User.PhoneNumberJson)] = newRecord.PhoneNumberJson;
+                changeLog[nameof(User.PhoneNumberJson)] = LogicUtilities.ParseJsonOrNull(newRecord.PhoneNumberJson);
             }
 
             if (oldRecord.SocialMediaProfileJson != newRecord.SocialMediaProfileJson)
             {
-                changeLog[nameof(User.SocialMediaProfileJson)] = newRecord.SocialMediaProfileJson;
+                changeLog[nameof(User.SocialMediaProfileJson)] = LogicUtilities.ParseJsonOrNull(newRecord.SocialMediaProfileJson);
             }
 
             if (oldRecord.AlternateEmailJson != newRecord.AlternateEmailJson)
             {
-                changeLog[nameof(User.AlternateEmailJson)] = newRecord.AlternateEmailJson;
+                changeLog[nameof(User.AlternateEmailJson)] = LogicUtilities.ParseJsonOrNull(newRecord.AlternateEmailJson);
             }
 
             if (oldRecord.GenderPronounJson != newRecord.GenderPronounJson)
             {
-                changeLog[nameof(User.GenderPronounJson)] = newRecord.GenderPronounJson;
+                changeLog[nameof(User.GenderPronounJson)] = LogicUtilities.ParseJsonOrNull(newRecord.GenderPronounJson);
             }
 
             if (oldRecord.ImportantDateJson != newRecord.ImportantDateJson)
             {
-                changeLog[nameof(User.ImportantDateJson)] = newRecord.ImportantDateJson;
+                changeLog[nameof(User.ImportantDateJson)] = LogicUtilities.ParseJsonOrNull(newRecord.ImportantDateJson);
             }
 
             if (oldRecord.Active != newRecord.Active)
@@ -782,12 +782,12 @@ namespace Logic.Security.Logic
             log[nameof(User.MaritalStatus)] = record.MaritalStatus;
             log[nameof(User.Religion)] = record.Religion;
             log[nameof(User.Gender)] = record.Gender;
-            log[nameof(User.SpokenLanguageJson)] = record.SpokenLanguageJson;
-            log[nameof(User.PhoneNumberJson)] = record.PhoneNumberJson;
-            log[nameof(User.SocialMediaProfileJson)] = record.SocialMediaProfileJson;
-            log[nameof(User.AlternateEmailJson)] = record.AlternateEmailJson;
-            log[nameof(User.GenderPronounJson)] = record.GenderPronounJson;
-            log[nameof(User.ImportantDateJson)] = record.ImportantDateJson;
+            log[nameof(User.SpokenLanguageJson)] = LogicUtilities.ParseJsonOrNull(record.SpokenLanguageJson);
+            log[nameof(User.PhoneNumberJson)] = LogicUtilities.ParseJsonOrNull(record.PhoneNumberJson);
+            log[nameof(User.SocialMediaProfileJson)] = LogicUtilities.ParseJsonOrNull(record.SocialMediaProfileJson);
+            log[nameof(User.AlternateEmailJson)] = LogicUtilities.ParseJsonOrNull(record.AlternateEmailJson);
+            log[nameof(User.GenderPronounJson)] = LogicUtilities.ParseJsonOrNull(record.GenderPronounJson);
+            log[nameof(User.ImportantDateJson)] = LogicUtilities.ParseJsonOrNull(record.ImportantDateJson);
             log[nameof(User.Active)] = record.Active;
             log[nameof(User.ReadOnly)] = record.ReadOnly;
             log[nameof(User.CreatedBy)] = record.CreatedBy;
