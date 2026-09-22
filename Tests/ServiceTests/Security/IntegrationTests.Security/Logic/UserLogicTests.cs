@@ -1,6 +1,5 @@
 using Dto.Security.User;
 using Dto.Security.User.Logic;
-using Dto.Security.User.Service;
 using FluentAssertions;
 using IntegrationTests.Security.Shared;
 using Shared.Models;
@@ -9,6 +8,8 @@ using IntegrationTests.Shared.Utilities.Contracts.Logic;
 using IntegrationTests.Shared.Utilities;
 using Shared.Logic.Common;
 using System.Text.Json;
+using Data.Security.Models;
+using Data.Security.Converters;
 
 namespace IntegrationTests.Security.Logic
 {
@@ -400,7 +401,7 @@ namespace IntegrationTests.Security.Logic
             changeLog.LastName.Should().Be(updateReq.LastName);
             changeLog.DateOfBirth.Should().Be(updateReq.DateOfBirth);
 
-            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<UserDto>();
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<User>().ToDto();
             recordStateBeforeChange.Should().NotBeNull();
             recordStateBeforeChange.UserId = res.ReferenceId;
 
@@ -429,7 +430,7 @@ namespace IntegrationTests.Security.Logic
             res.ReferenceType.Should().Be(TestConstants.ReferenceTypeUser);
             res.ReferenceId.Should().Be(testRecord.UserId);
 
-            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<UserDto>();
+            var recordStateBeforeChange = ((JsonElement)res.RecordStateBeforeChangeJson).Deserialize<User>().ToDto();
             recordStateBeforeChange.Should().NotBeNull();
             recordStateBeforeChange.UserId = res.ReferenceId;
 
