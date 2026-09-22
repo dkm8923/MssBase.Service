@@ -782,12 +782,15 @@ namespace Logic.Security.Logic
             log[nameof(User.MaritalStatus)] = record.MaritalStatus;
             log[nameof(User.Religion)] = record.Religion;
             log[nameof(User.Gender)] = record.Gender;
-            log[nameof(User.SpokenLanguageJson)] = LogicUtilities.ParseJsonOrNull(record.SpokenLanguageJson);
-            log[nameof(User.PhoneNumberJson)] = LogicUtilities.ParseJsonOrNull(record.PhoneNumberJson);
-            log[nameof(User.SocialMediaProfileJson)] = LogicUtilities.ParseJsonOrNull(record.SocialMediaProfileJson);
-            log[nameof(User.AlternateEmailJson)] = LogicUtilities.ParseJsonOrNull(record.AlternateEmailJson);
-            log[nameof(User.GenderPronounJson)] = LogicUtilities.ParseJsonOrNull(record.GenderPronounJson);
-            log[nameof(User.ImportantDateJson)] = LogicUtilities.ParseJsonOrNull(record.ImportantDateJson);
+            
+            // Keep these as raw strings (not parsed JSON) so RecordStateBeforeChangeJson deserializes back into User correctly.
+            log[nameof(User.SpokenLanguageJson)] = record.SpokenLanguageJson;
+            log[nameof(User.PhoneNumberJson)] = record.PhoneNumberJson;
+            log[nameof(User.SocialMediaProfileJson)] = record.SocialMediaProfileJson;
+            log[nameof(User.AlternateEmailJson)] = record.AlternateEmailJson;
+            log[nameof(User.GenderPronounJson)] = record.GenderPronounJson;
+            log[nameof(User.ImportantDateJson)] = record.ImportantDateJson;
+
             log[nameof(User.Active)] = record.Active;
             log[nameof(User.ReadOnly)] = record.ReadOnly;
             log[nameof(User.CreatedBy)] = record.CreatedBy;
