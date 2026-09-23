@@ -10,6 +10,7 @@ using Shared.Logic.Common;
 using System.Text.Json;
 using Data.Security.Models;
 using Data.Security.Converters;
+using Shared.Models.Dtos;
 
 namespace IntegrationTests.Security.Logic
 {
@@ -1099,6 +1100,83 @@ namespace IntegrationTests.Security.Logic
             recordToCreate.Email = "invalidEmail";
 
             var expectedFieldErrors = _securityTestUtilities.User.GetExpectedInvalidEmailFieldErrors();
+
+            // Act
+            var result = await _userLogic.Insert(recordToCreate, commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task User_Insert_Should_Not_Create_Record_SpokenLanguages_Max_Ct_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
+            recordToCreate.SpokenLanguages = new List<string>();
+            foreach (var language in commonData.PersonLanguage)
+            {
+                recordToCreate.SpokenLanguages.Add(language.Name);
+            }
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedSpokenLanguagesMaxCountFieldErrors();
+
+            // Act
+            var result = await _userLogic.Insert(recordToCreate, commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task User_Insert_Should_Not_Create_Record_PhoneNumbers_Max_Ct_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
+            recordToCreate.PhoneNumbers = new List<TypedValueDto>();
+
+            foreach (var phoneNumberType in commonData.PhoneNumberType)
+            {
+                recordToCreate.PhoneNumbers.Add(new TypedValueDto { Type = phoneNumberType.Name, Value = LogicTestUtilities.GenerateRandomPhoneNumberString() });
+            }
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedPhoneNumbersMaxCountFieldErrors();
+
+            // Act
+            var result = await _userLogic.Insert(recordToCreate, commonData);
+
+            // Assert
+            result.Errors.Should().HaveCount(expectedFieldErrors.Count);
+
+            LogicTestUtilities.VerifyLogicErrorResultsAreValid(expectedFieldErrors, result.Errors);
+        }
+
+        [Fact]
+        public async Task User_Insert_Should_Not_Create_Record_AlternateEmail_Max_Ct_Error()
+        {
+            // Arrange
+            await ClearAllSecurityTestTableData();
+            var commonData = await _securityTestUtilities.User.GetCommonRelationalDataForUserInsertUpdateValidation();
+            var recordToCreate = _securityTestUtilities.User.CreateInsertUpdateRequestWithRandomValues();
+            recordToCreate.AlternateEmails = new List<TypedValueDto>
+            {
+                new TypedValueDto { Type = "Home", Value = "homeEmail@test.com" },
+                new TypedValueDto { Type = "Work", Value = "workEmail@test.com" },
+                new TypedValueDto { Type = "School", Value = "schoolEmail@test.com" },
+                new TypedValueDto { Type = "iCloud", Value = "icloudEmail@test.com" },
+                new TypedValueDto { Type = "Other", Value = "other1Email@test.com" },
+                new TypedValueDto { Type = "Other", Value = "other2Email@test.com" }
+            };
+
+            var expectedFieldErrors = _securityTestUtilities.User.GetExpectedAlternateEmailsMaxCountFieldErrors();
 
             // Act
             var result = await _userLogic.Insert(recordToCreate, commonData);

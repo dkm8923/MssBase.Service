@@ -1,5 +1,4 @@
 using Data.Security.Models;
-using Dto.Security.ApplicationUser;
 using Shared.Logic.Common;
 using Microsoft.EntityFrameworkCore;
 using Dto.Security.User;

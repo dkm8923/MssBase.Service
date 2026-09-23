@@ -374,6 +374,30 @@ public class UserUtilities : IUserUtilities
         };
     }
 
+    public Dictionary<string, List<string>> GetExpectedSpokenLanguagesMaxCountFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "SpokenLanguages", new List<string> { "SpokenLanguages cannot have more than 15 entries!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedPhoneNumbersMaxCountFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "PhoneNumbers", new List<string> { "PhoneNumbers cannot have more than 15 entries!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedAlternateEmailsMaxCountFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "AlternateEmails", new List<string> { "AlternateEmails cannot have more than 5 entries!" } }
+        };
+    }
+
     /// <summary>
     /// Verifies that all relevant property values of two application user records are equal.
     /// </summary>

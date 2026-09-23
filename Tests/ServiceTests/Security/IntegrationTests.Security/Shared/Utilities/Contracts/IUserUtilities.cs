@@ -37,4 +37,7 @@ public interface IUserUtilities
     public Dictionary<string, List<string>> GetExpectedChangePasswordLowerCaseRequiredErrors();
     public Dictionary<string, List<string>> GetExpectedChangePasswordSpecialCharacterRequiredErrors();
     public Dictionary<string, List<string>> GetExpectedChangePasswordNumberRequiredErrors();
+    public Dictionary<string, List<string>> GetExpectedSpokenLanguagesMaxCountFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedPhoneNumbersMaxCountFieldErrors();
+    public Dictionary<string, List<string>> GetExpectedAlternateEmailsMaxCountFieldErrors();
 }
