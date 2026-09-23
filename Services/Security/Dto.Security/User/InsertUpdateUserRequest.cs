@@ -21,6 +21,8 @@ namespace Dto.Security.User
         public List<TypedValueDto>? PhoneNumbers { get; set; }
         public List<SocialMediaProfileDto>? SocialMediaProfiles { get; set; }
         public List<TypedValueDto>? AlternateEmails { get; set; }
+        public List<string>? GenderPronouns { get; set; }
+        public List<TypedValueDto>? ImportantDates { get; set; }
         public bool Active { get; set; }
         public string CurrentUser { get; set; } = null!;
     }

@@ -3,6 +3,7 @@ using Shared.Models;
 using Shared.Models.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Shared.Logic.Validators;
+using System.Text.Json;
 
 namespace Shared.Logic
 {
@@ -99,6 +100,14 @@ namespace Shared.Logic
         {
             errors.Add(keyName, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(idFieldName) });
             return errors;
+        }
+
+        /// <summary>
+        /// Parses a JSON string column into its actual structure so it nests correctly instead of being double-serialized as an escaped string.
+        /// </summary>
+        public static object? ParseJsonOrNull(string? json)
+        {
+            return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<object>(json);
         }
     }
 }

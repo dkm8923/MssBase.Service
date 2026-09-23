@@ -162,5 +162,14 @@ namespace IntegrationTests.Shared
             // 5. Return the resulting random DateOnly
             return DateOnly.FromDateTime(startOfYear.AddSeconds(randomSecondsOffset));
         }
+
+        /// <summary>
+        /// Generates a random phone number string in the format "123-456-XXXX", where "XXXX" is a random 4-digit number.
+        /// </summary>
+        /// <returns>A random phone number string in the format "123-456-XXXX".</returns>
+        public static string GenerateRandomPhoneNumberString()
+        {
+            return $"123-456-{Random.Shared.Next(1000, 9999):D4}";
+        }
     }
 }

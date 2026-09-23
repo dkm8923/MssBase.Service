@@ -26,7 +26,6 @@ public class UserUtilities : IUserUtilities
     protected readonly IUserLogic _userLogic;
     protected readonly ICommonRelationalDataLogic _commonRelationalDataLogic;
     
-    
     public UserUtilities(ISecurityConnectionStrings connectionStrings, IUserLogic userLogic, ICommonRelationalDataLogic commonRelationalDataLogic) 
     {
         _connectionStrings = connectionStrings;
@@ -88,6 +87,27 @@ public class UserUtilities : IUserUtilities
             MaritalStatus = "Married (And Not Separated)",
             Religion = "Christian",
             Gender = "Male",
+            SpokenLanguages = new List<string> { "English", "Japanese", "German"},
+            PhoneNumbers = new List<TypedValueDto> { 
+                new TypedValueDto { Type = "Mobile", Value = "123-456-7890" },
+                new TypedValueDto { Type = "Home", Value = "098-765-4321" },
+                new TypedValueDto { Type = "Work", Value = "440-321-9876" }
+            },
+            SocialMediaProfiles = new List<SocialMediaProfileDto>
+            {
+                new SocialMediaProfileDto { Platform = "Twitter", UserName = "@bobsmith" },
+                new SocialMediaProfileDto { Platform = "LinkedIn", Url = "www.linkedin.com/bob-smith" }
+            },
+            AlternateEmails = new List<TypedValueDto> { 
+                new TypedValueDto { Type = "Home", Value = "testHomeEmail@test.com" },
+                new TypedValueDto { Type = "School", Value = "testSchoolEmail@test.com" },
+                new TypedValueDto { Type = "Work", Value = "testWorkEmail@test.com" }
+            },
+            GenderPronouns = new List<string> { "She", "Her", "Hers"},
+            ImportantDates = new List<TypedValueDto> { 
+                new TypedValueDto { Type = "Wedding Aniversary", Value = "7/14/18" },
+                new TypedValueDto { Type = "Tatas Birthday", Value = "9/14/2018" } 
+            },
             DateOfBirth = LogicTestUtilities.GetRandomDateOnly(2000),
             Active = active,
             CurrentUser = TestConstants.CurrentUser
@@ -354,6 +374,30 @@ public class UserUtilities : IUserUtilities
         };
     }
 
+    public Dictionary<string, List<string>> GetExpectedSpokenLanguagesMaxCountFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "SpokenLanguages", new List<string> { "SpokenLanguages cannot have more than 15 entries!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedPhoneNumbersMaxCountFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "PhoneNumbers", new List<string> { "PhoneNumbers cannot have more than 15 entries!" } }
+        };
+    }
+
+    public Dictionary<string, List<string>> GetExpectedAlternateEmailsMaxCountFieldErrors()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            { "AlternateEmails", new List<string> { "AlternateEmails cannot have more than 5 entries!" } }
+        };
+    }
+
     /// <summary>
     /// Verifies that all relevant property values of two application user records are equal.
     /// </summary>
@@ -414,6 +458,26 @@ public class UserUtilities : IUserUtilities
         for (int i = 0; i < aAlternateEmails.Count; i++)
         {
             aAlternateEmails[i].Should().Be(bAlternateEmails[i]);
+        }
+
+        var aGenderPronouns = recordA.GenderPronouns ?? new List<string>();
+        var bGenderPronouns = recordB.GenderPronouns ?? new List<string>();
+
+        aGenderPronouns.Count.Should().Be(bGenderPronouns.Count);
+
+        for (int i = 0; i < aGenderPronouns.Count; i++)
+        {
+            aGenderPronouns[i].Should().Be(bGenderPronouns[i]);
+        }
+
+        var aImportantDates = recordA.ImportantDates ?? new List<TypedValueDto>();
+        var bImportantDates = recordB.ImportantDates ?? new List<TypedValueDto>();
+
+        aImportantDates.Count.Should().Be(bImportantDates.Count);
+
+        for (int i = 0; i < aImportantDates.Count; i++)
+        {
+            aImportantDates[i].Should().Be(bImportantDates[i]);
         }
     }
 

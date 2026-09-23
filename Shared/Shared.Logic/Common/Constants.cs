@@ -73,6 +73,7 @@
             public const string PersonMaritalStatus = "PersonMaritalStatus";
             public const string PersonReligion = "PersonReligion";
             public const string PersonLanguage = "PersonLanguage";
+            public const string PersonGenderPronounExamples = "PersonGenderPronounExamples";
             public const string AddressType = "AddressType";
             public const string PhoneNumberType = "PhoneNumberType";
             public const string EmailType = "EmailType";
