@@ -40,6 +40,43 @@ The solution uses:
 - Redis-backed caching through shared cache abstractions.
 - Layered class library projects to separate API concerns from business logic and persistence.
 
+## Logging
+
+The API uses Serilog as its logging provider and reads its main configuration from `MssBase.Service/appsettings.json`. Application code should use the standard `Microsoft.Extensions.Logging.ILogger<T>` abstraction; Serilog routes those events to the configured sinks.
+
+The logger starts with a bootstrap Console logger so startup failures can be recorded before application configuration is loaded. Once the host is built, `AddSerilog` loads the configured levels, sinks, and enrichers. The base configuration writes to Console, daily rolling compact JSON files under `MssBase.Service/logs/` (up to 100 MB per file, retaining 14 files), and Seq. Development configuration sets the default level to `Debug` and enables more detailed Entity Framework Core command logging.
+
+Configured enrichers add log context, machine name, process and thread IDs, and expanded exception details. Framework log levels are overridden in appsettings to reduce noise while keeping selected hosting and database events visible.
+
+`Program.cs` uses `UseSerilogRequestLogging()` to emit one summary event per HTTP request, including its method, path, status code, and elapsed time. It does not record request or response bodies. Controller exceptions passed to `ApiBaseController.HandleControllerException` are logged at `Error` level with the exception, method, path, and trace ID; the API returns a generic Problem Details response rather than exposing exception details. The controller exception path uses Serilog through `ILoggerFactory`, not the legacy Redis-backed `ILoggerService`. The separate `ILoggerService` registration remains available for other existing code.
+
+For application events, inject `ILogger<T>` and use message templates so properties remain searchable in Seq:
+
+```csharp
+public sealed class ApplicationLogic(ILogger<ApplicationLogic> logger)
+{
+  public void RecordCreated(int applicationId, string applicationName)
+  {
+    logger.LogInformation(
+      "Application {ApplicationId} ({ApplicationName}) created",
+      applicationId,
+      applicationName);
+  }
+}
+```
+
+Avoid logging passwords, tokens, connection strings, request bodies, or other sensitive values. Prefer logging identifiers and operationally useful context. Existing database audit records remain the source for durable business change history; Serilog is for operational diagnostics.
+
+### Browsing Seq locally
+
+Start the Docker stack, including Seq, from the repository root:
+
+```bash
+cd docker && docker compose --env-file .env.dev -p mssbase-dev up -d --build
+```
+
+Open `http://localhost:8081` to browse Seq when running on the same machine. In a remote VS Code/dev-container workspace, open or forward port `8081` from the **Ports** panel and use the forwarded URL. Seq accepts log events on port `5341`; the API container is configured to send to `http://seq:5341`, while an API running directly on the host uses `http://localhost:5341`. The Compose configuration disables Seq authentication for local development only; do not use that setting for a shared or production deployment.
+
 ## Building the Project
 
 From the solution root, build the API project with:

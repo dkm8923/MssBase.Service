@@ -20,7 +20,8 @@ namespace MssBase.Service.Controllers.Security
     {
         private readonly IPermissionService _permissionService;
 
-        public PermissionController(IPermissionService permissionService)
+        public PermissionController(IPermissionService permissionService, ILoggerFactory loggerFactory)
+            : base(loggerFactory)
         {
             _permissionService = permissionService;
         }

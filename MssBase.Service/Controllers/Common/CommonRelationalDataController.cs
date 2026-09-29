@@ -19,7 +19,8 @@ namespace MssBase.Service.Controllers.Common
         //TODO: Global exception handling?
         private readonly ICommonRelationalDataService _commonRelationalDataService;
 
-        public CommonRelationalDataController(ICommonRelationalDataService commonRelationalDataService)
+        public CommonRelationalDataController(ICommonRelationalDataService commonRelationalDataService, ILoggerFactory loggerFactory)
+            : base(loggerFactory)
         {
             _commonRelationalDataService = commonRelationalDataService;
         }
