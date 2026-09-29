@@ -10,6 +10,7 @@ http:
     type: json
     data: |-
       {
+        "applicationId": {{ApplicationId}},
         "active": {{Active}},
         "name": "{{Name}}",
         "description": "{{Description}}",
@@ -25,6 +26,8 @@ runtime:
       value: TestApplicationName
     - name: Description
       value: TestApplicationDescription
+    - name: ApplicationId
+      value: "1"
 
 settings:
   encodeUrl: true
