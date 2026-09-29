@@ -20,7 +20,8 @@ namespace MssBase.Service.Controllers.Security
     {
         private readonly IRoleService _roleService;
 
-        public RoleController(IRoleService roleService)
+        public RoleController(IRoleService roleService, ILoggerFactory loggerFactory)
+            : base(loggerFactory)
         {
             _roleService = roleService;
         }

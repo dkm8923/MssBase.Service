@@ -73,8 +73,10 @@ namespace MssBase.Service
     {
         public static void ConfigureLogging(this WebApplicationBuilder builder)
         {
-            builder.Host.UseSerilog((context, configuration) =>
-                configuration.ReadFrom.Configuration(context.Configuration));
+            builder.Services.AddSerilog((services, loggerConfiguration) =>
+                loggerConfiguration
+                    .ReadFrom.Configuration(builder.Configuration)
+                    .ReadFrom.Services(services));
         }
 
         private static void ConfigureRedis(this IServiceCollection services, WebApplicationBuilder builder)

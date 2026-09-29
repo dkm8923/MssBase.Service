@@ -20,7 +20,8 @@ namespace MssBase.Service.Controllers.Security
     {
         private readonly IApplicationUserRoleService _applicationUserSvc;
 
-        public ApplicationUserRoleController(IApplicationUserRoleService applicationUserSvc)
+        public ApplicationUserRoleController(IApplicationUserRoleService applicationUserSvc, ILoggerFactory loggerFactory)
+            : base(loggerFactory)
         {
             _applicationUserSvc = applicationUserSvc;
         }

@@ -22,7 +22,8 @@ namespace MssBase.Service.Controllers.Security
         //TODO: Global exception handling?
         private readonly IApplicationService _applicationSvc;
 
-        public ApplicationController(IApplicationService applicationSvc)
+        public ApplicationController(IApplicationService applicationSvc, ILoggerFactory loggerFactory)
+            : base(loggerFactory)
         {
             _applicationSvc = applicationSvc;
         }

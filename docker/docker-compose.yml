@@ -36,6 +36,19 @@ services:
       retries: 10
     restart: unless-stopped
 
+  seq:
+    image: datalust/seq:latest
+    container_name: mssbase-seq-${ENVIRONMENT:-dev}
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    ports:
+      - "${SEQ_INGESTION_PORT:-5341}:5341"
+      - "${SEQ_UI_PORT:-8081}:80"
+    volumes:
+      - mssbase-seq-data:/data
+    restart: unless-stopped
+
   api:
     build:
       context: ..
@@ -48,6 +61,7 @@ services:
       SecurityConnectionStrings__ReadWrite: "Server=sqlserver,1433;Database=${SECURITY_DB_NAME:-SecurityDB_DEV};User Id=sa;Password=${SA_PASSWORD:-Test12345};TrustServerCertificate=True;MultipleActiveResultSets=True;"
       SecurityConnectionStrings__ReadOnly: "Server=sqlserver,1433;Database=${SECURITY_DB_NAME:-SecurityDB_DEV};User Id=sa;Password=${SA_PASSWORD:-Test12345};TrustServerCertificate=True;MultipleActiveResultSets=True;"
       RedisConfiguration__ConnectionString: "redis:6379"
+      Serilog__WriteTo__2__Args__serverUrl: "http://seq:5341"
     ports:
       - "${API_PORT:-8080}:8080"
     depends_on:
@@ -55,8 +69,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      seq:
+        condition: service_started
     restart: unless-stopped
 
 volumes:
   mssbase-sqlserver-data:
   mssbase-redis-data:
+  mssbase-seq-data:

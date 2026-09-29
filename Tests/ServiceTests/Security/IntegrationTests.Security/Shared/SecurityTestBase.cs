@@ -1392,6 +1392,9 @@ public class SecurityTestBase
 
     private ServiceCollection ConfigureBaseDependencies(ServiceCollection services)
     {
+        // Registers ILogger<T> since this test host builds its own ServiceCollection instead of going through Program.cs
+        services.AddLogging();
+
         // ICacheService Setup
         new RedisTestUtilities().ConfigureCache(services);
         

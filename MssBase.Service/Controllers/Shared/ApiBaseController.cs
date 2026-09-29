@@ -1,26 +1,27 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Service.Logger.Contracts;
-using Service.Logger.Dto;
+using Microsoft.Extensions.Logging;
 
 namespace MssBase.Service.Controllers.Shared
 {
     public abstract class ApiBaseController : ControllerBase
     {
-        private ILoggerService _loggerSvc;
+        private readonly ILogger _logger;
 
-        protected ILoggerService loggerSvc => _loggerSvc ?? (HttpContext.RequestServices.GetService<ILoggerService>());
-
-        protected async Task LogControllerException(HttpContext context, Exception ex)
+        protected ApiBaseController(ILoggerFactory loggerFactory)
         {
-            var fullUrl = $"{context.Request.Scheme}://{context.Request.Host}{context.Request.Path}{context.Request.QueryString}";
-            var errorMsg = $"Action: {context.Request.Method}, URL: {fullUrl}, Exception: {ex.Message}";
-            loggerSvc.Log(new InsertLoggerRequest { ApplicationMessage = errorMsg });
+            _logger = loggerFactory.CreateLogger(GetType());
         }
 
         protected ObjectResult HandleControllerException(HttpContext context, Exception ex)
         {
-            LogControllerException(context, ex);
-            return StatusCode(500, ex.Message);
+            _logger.LogError(
+                ex,
+                "Unhandled exception processing {Method} {Path} (TraceId: {TraceId})",
+                context.Request.Method,
+                context.Request.Path,
+                context.TraceIdentifier);
+
+            return Problem(statusCode: 500, title: "An unexpected error occurred.");
         }
     }
 }

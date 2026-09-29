@@ -13,7 +13,8 @@ namespace MssBase.Service.Controllers.Security
     public class AuthenticationController : ApiBaseController
     {
         private readonly IAuthenticationService _authenticationService;
-        public AuthenticationController(IAuthenticationService authenticationService)
+        public AuthenticationController(IAuthenticationService authenticationService, ILoggerFactory loggerFactory)
+            : base(loggerFactory)
         {
             _authenticationService = authenticationService;
         }
