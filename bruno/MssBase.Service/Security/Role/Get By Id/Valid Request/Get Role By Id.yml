@@ -7,21 +7,25 @@ http:
   method: GET
   url: "{{BaseUrl}}/Security/Role/:RoleId"
   params:
-    - name: RoleId
-      value: ""
-      type: path
     - name: includeInactive
       value: "true"
       type: query
       disabled: true
-    - name: IncludeRelated
+    - name: includeRelated
       value: "true"
       type: query
       disabled: true
-    - name: IncludeReadOnly
+    - name: includeReadOnly
       value: "true"
       type: query
       disabled: true
+    - name: deleteCache
+      value: "true"
+      type: query
+      disabled: true
+    - name: RoleId
+      value: "1"
+      type: path
   auth: inherit
 
 settings:

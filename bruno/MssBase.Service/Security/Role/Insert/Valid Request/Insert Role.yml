@@ -13,6 +13,7 @@ http:
         "active": {{Active}},
         "name": "{{Name}}",
         "description": "{{Description}}",
+        "applicationId": {{ApplicationId}},
         "currentUser": "{{DefaultCurrentUser}}"
       }
   auth: inherit
@@ -22,9 +23,11 @@ runtime:
     - name: Active
       value: "true"
     - name: Name
-      value: TestApplicationName
+      value: TestRoleName
     - name: Description
-      value: TestApplicationDescription
+      value: TestRoleDescription
+    - name: ApplicationId
+      value: "1"
 
 settings:
   encodeUrl: true

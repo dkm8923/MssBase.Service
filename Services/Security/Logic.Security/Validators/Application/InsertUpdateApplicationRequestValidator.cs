@@ -6,8 +6,7 @@ namespace Logic.Security.Validators.Application;
 
 public class InsertUpdateApplicationRequestValidator : AbstractValidator<InsertUpdateApplicationRequest>
 {
-    public InsertUpdateApplicationRequestValidator()
-    {
+    public InsertUpdateApplicationRequestVal
         // Set cascade mode per rule (stops after first failure within each RuleFor)
         RuleLevelCascadeMode = CascadeMode.Stop;
 

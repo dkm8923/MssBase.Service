@@ -1,0 +1,19 @@
+info:
+  name: Delete Role
+  type: http
+  seq: 1
+
+http:
+  method: DELETE
+  url: "{{BaseUrl}}/Security/Role/:RoleId"
+  params:
+    - name: RoleId
+      value: ""
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

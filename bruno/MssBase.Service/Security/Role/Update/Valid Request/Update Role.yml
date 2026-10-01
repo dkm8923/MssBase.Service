@@ -8,7 +8,7 @@ http:
   url: "{{BaseUrl}}/Security/Role/:RoleId"
   params:
     - name: RoleId
-      value: ""
+      value: "1"
       type: path
   body:
     type: json
@@ -17,6 +17,7 @@ http:
         "active": {{Active}},
         "name": "{{Name}}",
         "description": "{{Description}}",
+        "applicationId": {{ApplicationId}},
         "currentUser": "{{DefaultCurrentUser}}"
       }
   auth: inherit
@@ -26,13 +27,14 @@ runtime:
     - name: Active
       value: "true"
     - name: Name
-      value: Test Application Name Update
+      value: Test Role Name Update
     - name: Description
       value: Test Description Update
+    - name: ApplicationId
+      value: "1"
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
-​
