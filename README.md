@@ -85,6 +85,18 @@ From the solution root, build the API project with:
 dotnet build MssBase.Service/MssBase.Service.csproj
 ```
 
+Build project without warnings:
+
+```bash
+dotnet build -p:WarningLevel=0
+```
+
+Build specific project without warnings:
+
+```bash
+dotnet build MssBase.Service/MssBase.Service.csproj -p:WarningLevel=0
+```
+
 ## Entity Framework Helpers
 
 These commands target the Security data project and use the API host as the startup project so configuration is loaded correctly.
