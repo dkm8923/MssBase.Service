@@ -1,15 +1,18 @@
 info:
-  name: Delete Permission
+  name: NULL Request Object
   type: http
-  seq: 1
+  seq: 2
 
 http:
-  method: DELETE
+  method: PUT
   url: "{{BaseUrl}}/Security/Permission/:PermissionId"
   params:
     - name: PermissionId
-      value: ""
+      value: "1"
       type: path
+  body:
+    type: json
+    data: "null"
   auth: inherit
 
 settings:

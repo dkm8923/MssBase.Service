@@ -10,10 +10,10 @@ http:
     type: json
     data: |-
       {
-        "applicationId": {{ApplicationId}},
         "active": {{Active}},
         "name": "{{Name}}",
         "description": "{{Description}}",
+        "applicationId": {{ApplicationId}},
         "currentUser": "{{DefaultCurrentUser}}"
       }
   auth: inherit
@@ -23,9 +23,9 @@ runtime:
     - name: Active
       value: "true"
     - name: Name
-      value: TestApplicationName
+      value: TestPermissionName
     - name: Description
-      value: TestApplicationDescription
+      value: TestPermissionDescription
     - name: ApplicationId
       value: "1"
 

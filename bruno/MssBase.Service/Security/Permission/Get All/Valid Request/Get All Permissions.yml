@@ -1,27 +1,24 @@
 info:
-  name: Get Permission By Id
+  name: Get All Permissions
   type: http
   seq: 1
 
 http:
   method: GET
-  url: "{{BaseUrl}}/Security/Application/:ApplicationId"
+  url: "{{BaseUrl}}/Security/Permission"
   params:
     - name: includeInactive
       value: "true"
       type: query
       disabled: true
-    - name: IncludeRelated
+    - name: includeReadOnly
       value: "true"
       type: query
       disabled: true
-    - name: IncludeReadOnly
+    - name: deleteCache
       value: "true"
       type: query
       disabled: true
-    - name: ApplicationId
-      value: "1"
-      type: path
   auth: inherit
 
 settings:

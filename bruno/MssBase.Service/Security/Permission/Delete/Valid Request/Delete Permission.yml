@@ -1,0 +1,19 @@
+info:
+  name: Delete Permission
+  type: http
+  seq: 1
+
+http:
+  method: DELETE
+  url: "{{BaseUrl}}/Security/Permission/:PermissionId"
+  params:
+    - name: PermissionId
+      value: ""
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
