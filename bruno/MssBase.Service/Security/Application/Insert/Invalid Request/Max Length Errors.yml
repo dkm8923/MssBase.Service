@@ -1,0 +1,33 @@
+info:
+  name: Max Length Errors
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/Application"
+  body:
+    type: json
+    data: |-
+      {
+        "active": {{Active}},
+        "name": "{{Name}}",
+        "description": "{{Description}}",
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: Active
+      value: "true"
+    - name: Name
+      value: asdfasdfdfsdfgsdfgsdfgsdffgnhfdhsadfasdfasdfasdfasdfasdfasdfasafa
+    - name: Description
+      value: asdfasdfdfsdfgsdfgsdfgsdffgnhfdhsadfasdfasdfasdfasdfasdfasdfasafaasdfasdfdfsdfgsdfgsdfgsdffgnhfdhsadfasdfasdfasdfasdfasdfasdfasafaasdfasdfdfsdfgsdfgsdfgsdffgnhfdhsadfasdfasdfasdfasdfasdfasdfasafaasdfasdfdfsdfgsdfgsdfgsdffgnhfdhsadfasdfasdfasdfasdfasdfasdfas
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

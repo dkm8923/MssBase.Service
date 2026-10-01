@@ -1,0 +1,22 @@
+info:
+  name: Invalid Refresh Token
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/Authentication/RefreshToken"
+  body:
+    type: json
+    data: |-
+      {
+        "token": "{{BearerToken}}",
+        "refreshToken": "invalid-refresh-token"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

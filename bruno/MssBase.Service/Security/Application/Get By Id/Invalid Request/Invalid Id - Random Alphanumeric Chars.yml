@@ -1,0 +1,35 @@
+info:
+  name: Invalid Id - Random Alphanumeric Chars
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{BaseUrl}}/Security/Application/:ApplicationId"
+  params:
+    - name: includeInactive
+      value: "true"
+      type: query
+      disabled: true
+    - name: IncludeRelated
+      value: "true"
+      type: query
+      disabled: true
+    - name: IncludeReadOnly
+      value: "true"
+      type: query
+      disabled: true
+    - name: DeleteCache
+      value: "true"
+      type: query
+      disabled: true
+    - name: ApplicationId
+      value: asdfashgfd1233423
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

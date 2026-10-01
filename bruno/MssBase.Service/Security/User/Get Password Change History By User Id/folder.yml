@@ -1,0 +1,7 @@
+info:
+  name: Get Password Change History By User Id
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit

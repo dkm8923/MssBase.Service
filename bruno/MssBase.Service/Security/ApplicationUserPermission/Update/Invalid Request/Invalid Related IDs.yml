@@ -1,0 +1,29 @@
+info:
+  name: Invalid Related IDs
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{BaseUrl}}/Security/ApplicationUserPermission/:ApplicationUserPermissionId"
+  params:
+    - name: ApplicationUserPermissionId
+      value: "1"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "active": true,
+        "applicationId": 0,
+        "applicationUserId": 0,
+        "permissionId": 0,
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

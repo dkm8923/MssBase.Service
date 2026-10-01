@@ -1,0 +1,23 @@
+info:
+  name: Get User Audit Logs By Id
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{BaseUrl}}/Security/User/:UserId/AuditLogs"
+  params:
+    - name: UserId
+      value: "1"
+      type: path
+    - name: deleteCache
+      value: "true"
+      type: query
+      disabled: true
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

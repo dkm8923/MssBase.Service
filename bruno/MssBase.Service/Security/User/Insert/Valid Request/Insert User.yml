@@ -1,0 +1,36 @@
+info:
+  name: Insert User
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/User"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "{{Email}}",
+        "title": "Dr.",
+        "firstName": "BrunoTestFirstName",
+        "middleName": "BrunoTestMiddleName",
+        "lastName": "BrunoTestLastName",
+        "preferredName": "BrunoTest",
+        "suffix": "Jr.",
+        "dateOfBirth": "1989-06-15",
+        "timeZone": "UTC",
+        "active": true,
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: Email
+      value: bruno.user@example.test
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

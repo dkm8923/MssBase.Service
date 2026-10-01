@@ -1,0 +1,19 @@
+info:
+  name: Invalid Id - Negative Number Id
+  type: http
+  seq: 2
+
+http:
+  method: DELETE
+  url: "{{BaseUrl}}/Security/Application/:ApplicationId"
+  params:
+    - name: ApplicationId
+      value: "-1"
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

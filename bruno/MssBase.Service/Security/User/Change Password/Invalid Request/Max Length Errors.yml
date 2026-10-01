@@ -1,0 +1,28 @@
+info:
+  name: Max Length Errors
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/User/ChangePassword"
+  body:
+    type: json
+    data: |-
+      {
+        "userId": 1,
+        "newPassword": "{{LongPassword}}",
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: LongPassword
+      value: A1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!aA1!a1
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

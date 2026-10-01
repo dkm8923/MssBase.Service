@@ -1,0 +1,25 @@
+info:
+  name: Insert ApplicationUserRole
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/ApplicationUserRole"
+  body:
+    type: json
+    data: |-
+      {
+        "active": true,
+        "applicationId": 1,
+        "applicationUserId": 1,
+        "roleId": 1,
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

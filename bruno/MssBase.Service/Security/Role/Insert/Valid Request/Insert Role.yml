@@ -1,0 +1,36 @@
+info:
+  name: Insert Role
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/Role"
+  body:
+    type: json
+    data: |-
+      {
+        "active": {{Active}},
+        "name": "{{Name}}",
+        "description": "{{Description}}",
+        "applicationId": {{ApplicationId}},
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: Active
+      value: "true"
+    - name: Name
+      value: TestRoleName
+    - name: Description
+      value: TestRoleDescription
+    - name: ApplicationId
+      value: "1"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,18 @@
+info:
+  name: Invalid Request Object
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/ApplicationUserPermission"
+  body:
+    type: json
+    data: asdfasdfasdfasdf
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

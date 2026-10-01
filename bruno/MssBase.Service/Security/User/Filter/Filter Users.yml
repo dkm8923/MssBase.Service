@@ -1,0 +1,42 @@
+info:
+  name: Filter Users
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/User/Filter"
+  body:
+    type: json
+    data: |-
+      {
+        "deleteCache": true,
+        "createdBy": null,
+        "createdOnDate": null,
+        "updatedBy": null,
+        "updatedOnDate": null,
+        "userIds": null,
+        "email": null,
+        "title": null,
+        "firstName": null,
+        "middleName": null,
+        "lastName": null,
+        "preferredName": null,
+        "suffix": null,
+        "dateOfBirth": null,
+        "timeZone": null,
+        "maritalStatus": null,
+        "religion": null,
+        "gender": null,
+        "includeInactive": false,
+        "includeRelated": false,
+        "includeReadOnly": false,
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
