@@ -17,12 +17,20 @@ http:
         "updatedOnDate": null,
         "userIds": null,
         "email": null,
+        "title": null,
         "firstName": null,
+        "middleName": null,
         "lastName": null,
+        "preferredName": null,
+        "suffix": null,
         "dateOfBirth": null,
-        "applicationId": null,
+        "timeZone": null,
+        "maritalStatus": null,
+        "religion": null,
+        "gender": null,
         "includeInactive": false,
         "includeRelated": false,
+        "includeReadOnly": false,
         "currentUser": "{{DefaultCurrentUser}}"
       }
   auth: inherit

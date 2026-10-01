@@ -1,5 +1,5 @@
 info:
-  name: Get User By Id
+  name: Invalid Id - Negative Number
   type: http
   seq: 1
 
@@ -8,17 +8,21 @@ http:
   url: "{{BaseUrl}}/Security/User/:UserId"
   params:
     - name: UserId
-      value: ""
+      value: "-1"
       type: path
+    - name: deleteCache
+      value: "true"
+      type: query
+      disabled: true
     - name: includeInactive
       value: "true"
       type: query
       disabled: true
-    - name: IncludeRelated
+    - name: includeRelated
       value: "true"
       type: query
       disabled: true
-    - name: IncludeReadOnly
+    - name: includeReadOnly
       value: "true"
       type: query
       disabled: true

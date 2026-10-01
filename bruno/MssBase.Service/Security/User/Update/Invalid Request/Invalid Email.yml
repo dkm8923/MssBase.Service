@@ -1,0 +1,29 @@
+info:
+  name: Invalid Email
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{BaseUrl}}/Security/User/:UserId"
+  params:
+    - name: UserId
+      value: "1"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "email": "not-an-email",
+        "firstName": "BrunoTestFirstName",
+        "lastName": "BrunoTestLastName",
+        "active": true,
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

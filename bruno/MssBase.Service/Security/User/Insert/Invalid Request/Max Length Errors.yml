@@ -1,0 +1,31 @@
+info:
+  name: Max Length Errors
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/User"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "bruno.maxlength@example.test",
+        "title": "TooLongTitle",
+        "firstName": "{{LongValue}}",
+        "lastName": "{{LongValue}}",
+        "suffix": "TooLongSuffix",
+        "currentUser": "{{DefaultCurrentUser}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: LongValue
+      value: ThisUserFieldValueIsIntentionallyLongerThanSixtyFourCharactersForValidation
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,14 +1,14 @@
 info:
-  name: Delete User
+  name: Invalid Id - Random Alphanumeric Characters
   type: http
-  seq: 1
+  seq: 2
 
 http:
-  method: DELETE
+  method: GET
   url: "{{BaseUrl}}/Security/User/:UserId"
   params:
     - name: UserId
-      value: ""
+      value: adsfa234sdfa4576sdfasdfasdf
       type: path
   auth: inherit
 

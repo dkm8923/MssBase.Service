@@ -1,0 +1,19 @@
+info:
+  name: Invalid Id - Random Alphanumeric Characters
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{BaseUrl}}/Security/User/PasswordChangeHistory/:UserId"
+  params:
+    - name: UserId
+      value: adsfa234sdfa4576sdfasdfasdf
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
