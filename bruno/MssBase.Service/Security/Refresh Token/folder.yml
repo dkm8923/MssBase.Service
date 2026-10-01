@@ -1,0 +1,7 @@
+info:
+  name: Refresh Token
+  type: folder
+  seq: 2
+
+request:
+  auth: inherit

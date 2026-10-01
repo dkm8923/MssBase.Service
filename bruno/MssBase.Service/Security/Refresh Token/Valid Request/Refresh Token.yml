@@ -1,0 +1,22 @@
+info:
+  name: Refresh Token
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/Authentication/RefreshToken"
+  body:
+    type: json
+    data: |-
+      {
+        "token": "{{BearerToken}}",
+        "refreshToken": "{{RefreshToken}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
