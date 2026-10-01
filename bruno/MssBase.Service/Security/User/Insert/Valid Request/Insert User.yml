@@ -11,14 +11,29 @@ http:
     data: |-
       {
         "email": "{{Email}}",
-        "title": "Dr.",
+        "title": "Mr.",
         "firstName": "BrunoTestFirstName",
         "middleName": "BrunoTestMiddleName",
         "lastName": "BrunoTestLastName",
         "preferredName": "BrunoTest",
         "suffix": "Jr.",
         "dateOfBirth": "1989-06-15",
-        "timeZone": "UTC",
+        "timeZone": "EST",
+        "maritalStatus": null,
+        "religion": null,
+        "gender": null,
+        "spokenLanguages": null,
+        "phoneNumbers": null,
+        "socialMediaProfiles": null,
+        "alternateEmails": null,
+        "genderPronouns": null,
+        "importantDates": null,
+        "commonNotes": [{
+          "noteType": "test1", 
+          "subject": "Test Note 1 Subject", 
+          "text": "Hello World Test Note 1",
+          "active": true
+        }],
         "active": true,
         "currentUser": "{{DefaultCurrentUser}}"
       }

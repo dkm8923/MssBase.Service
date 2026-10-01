@@ -45,6 +45,7 @@ namespace Data.Security.Converters
                 AlternateEmails = source.AlternateEmailJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.AlternateEmailJson),
                 GenderPronouns = source.GenderPronounJson == null ? null : JsonSerializer.Deserialize<List<string>>(source.GenderPronounJson),
                 ImportantDates = source.ImportantDateJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.ImportantDateJson),
+                CommonNotes = source.CommonNoteJson == null ? null : JsonSerializer.Deserialize<List<CommonNoteDto>>(source.CommonNoteJson),
                 Password = applicationUserLogin.Password,
                 PasswordResetRequired = applicationUserLogin.PasswordResetRequired,
                 LastLoginDateTime = applicationUserLogin.LastLoginDateTime,
@@ -124,6 +125,7 @@ namespace Data.Security.Converters
                 AlternateEmailJson = JsonSerializer.Serialize(source.AlternateEmails),
                 GenderPronounJson = JsonSerializer.Serialize(source.GenderPronouns),
                 ImportantDateJson = JsonSerializer.Serialize(source.ImportantDates),
+                CommonNoteJson = JsonSerializer.Serialize(source.CommonNotes),
                 CurrentUser = source.CurrentUser
             };
 

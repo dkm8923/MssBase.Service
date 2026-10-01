@@ -27,6 +27,7 @@ namespace Dto.Security.User
         public List<TypedValueDto>? AlternateEmails { get; set; }
         public List<string>? GenderPronouns { get; set; }
         public List<TypedValueDto>? ImportantDates { get; set; }
+        public List<CommonNoteDto>? CommonNotes { get; set; }
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Password { get; set; }
