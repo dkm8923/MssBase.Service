@@ -3,6 +3,7 @@ using Dto.Security.ApplicationUser;
 using Shared.Models;
 using Shared.Models.Contracts;
 using Shared.Models.Dtos;
+using Shared.Models.Dtos.CommonNote;
 
 namespace Dto.Security.User
 {

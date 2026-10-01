@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Dto.Security.User;
 using System.Text.Json;
 using Shared.Models.Dtos;
+using Shared.Models.Dtos.CommonNote;
 
 namespace Data.Security.Converters
 {
@@ -104,6 +105,30 @@ namespace Data.Security.Converters
                 return null;
             }
 
+            //format common note(s) on insert
+            var commonNoteJson = null;
+            
+            if (req.CommonNotes != null)
+            {
+                var commonNotes = new List<CommonNoteDto>();
+                var idx = 1;
+                foreach (var commonNote in req.CommonNotes)
+                {
+                    commonNotes.Add(new CommonNoteDto {
+                        CommonNoteId = idx,
+                        NoteType = commonNote.NoteType,
+                        Subject = commonNote.Subject,
+                        Text = commonNote.Text,
+                        commonNote.CreatedBy = req.CurrentUser,
+                        commonNote.CreatedOn = DateTime.UtcNow
+                    });
+                    
+                    idx++;
+                }
+
+                commonNoteJson = commonNotes.Count() > 0 ? JsonSerializer.Serialize(commonNotes) : null;
+            }
+
             var target = new User
             {
                 Active = source.Active,
@@ -125,7 +150,7 @@ namespace Data.Security.Converters
                 AlternateEmailJson = JsonSerializer.Serialize(source.AlternateEmails),
                 GenderPronounJson = JsonSerializer.Serialize(source.GenderPronouns),
                 ImportantDateJson = JsonSerializer.Serialize(source.ImportantDates),
-                CommonNoteJson = JsonSerializer.Serialize(source.CommonNotes),
+                CommonNoteJson = commonNoteJson,
                 CurrentUser = source.CurrentUser
             };
 

@@ -28,10 +28,17 @@ http:
         "alternateEmails": null,
         "genderPronouns": null,
         "importantDates": null,
-        "commonNotes": [{
+        "commonNotes": [
+        {
           "noteType": "test1", 
           "subject": "Test Note 1 Subject", 
           "text": "Hello World Test Note 1",
+          "active": true
+        }
+        ,{
+          "noteType": "test2", 
+          "subject": "Test Note 2 Subject", 
+          "text": "Hello World Test Note 2",
           "active": true
         }],
         "active": true,

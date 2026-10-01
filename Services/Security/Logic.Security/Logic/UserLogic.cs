@@ -218,18 +218,18 @@ namespace Logic.Security.Logic
 
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                //format common note(s) on insert
-                if (req.CommonNotes != null)
-                {
-                    var idx = 1;
-                    foreach (var commonNote in req.CommonNotes)
-                    {
-                        commonNote.CommonNoteId = idx;
-                        commonNote.CreatedBy = req.CurrentUser;
-                        commonNote.CreatedOn = DateTime.UtcNow;
-                        idx++;
-                    }
-                }
+                // //format common note(s) on insert
+                // if (req.CommonNotes != null)
+                // {
+                //     var idx = 1;
+                //     foreach (var commonNote in req.CommonNotes)
+                //     {
+                //         commonNote.CommonNoteId = idx;
+                //         commonNote.CreatedBy = req.CurrentUser;
+                //         commonNote.CreatedOn = DateTime.UtcNow;
+                //         idx++;
+                //     }
+                // }
 
                 var entity = req.ToEntityOnInsert();
 

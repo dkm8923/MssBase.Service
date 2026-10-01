@@ -1,5 +1,6 @@
 using Shared.Models.Contracts;
 using Shared.Models.Dtos;
+using Shared.Models.Dtos.CommonNote;
 
 namespace Dto.Security.User
 {
@@ -23,7 +24,7 @@ namespace Dto.Security.User
         public List<TypedValueDto>? AlternateEmails { get; set; }
         public List<string>? GenderPronouns { get; set; }
         public List<TypedValueDto>? ImportantDates { get; set; }
-        public List<CommonNoteDto>? CommonNotes { get; set; }
+        public List<InsertUpdateCommonNoteRequest>? CommonNotes { get; set; }
         public bool Active { get; set; }
         public string CurrentUser { get; set; } = null!;
     }
