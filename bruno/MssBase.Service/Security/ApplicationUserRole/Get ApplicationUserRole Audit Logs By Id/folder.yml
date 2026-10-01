@@ -1,0 +1,7 @@
+info:
+  name: Get ApplicationUserRole Audit Logs By Id
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit

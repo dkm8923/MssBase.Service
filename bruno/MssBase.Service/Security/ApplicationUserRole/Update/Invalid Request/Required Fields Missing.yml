@@ -1,0 +1,22 @@
+info:
+  name: Required Fields Missing
+  type: http
+  seq: 1
+
+http:
+  method: PUT
+  url: "{{BaseUrl}}/Security/ApplicationUserRole/:ApplicationUserRoleId"
+  params:
+    - name: ApplicationUserRoleId
+      value: "1"
+      type: path
+  body:
+    type: json
+    data: "{}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

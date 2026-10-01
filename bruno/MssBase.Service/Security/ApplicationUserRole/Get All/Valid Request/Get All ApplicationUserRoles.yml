@@ -1,0 +1,32 @@
+info:
+  name: Get All ApplicationUserRoles
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{BaseUrl}}/Security/ApplicationUserRole"
+  params:
+    - name: deleteCache
+      value: "true"
+      type: query
+      disabled: true
+    - name: includeInactive
+      value: "true"
+      type: query
+      disabled: true
+    - name: includeRelated
+      value: "true"
+      type: query
+      disabled: true
+    - name: includeReadOnly
+      value: "true"
+      type: query
+      disabled: true
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

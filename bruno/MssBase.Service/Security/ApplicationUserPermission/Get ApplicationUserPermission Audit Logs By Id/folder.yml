@@ -1,0 +1,7 @@
+info:
+  name: Get ApplicationUserPermission Audit Logs By Id
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit

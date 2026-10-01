@@ -1,0 +1,30 @@
+info:
+  name: Max Length Errors
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{BaseUrl}}/Security/ApplicationUserPermission"
+  body:
+    type: json
+    data: |-
+      {
+        "active": true,
+        "applicationId": 1,
+        "applicationUserId": 1,
+        "permissionId": 1,
+        "currentUser": "{{CurrentUser}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: CurrentUser
+      value: CurrentUserValueThatExceedsTheMaximumAllowedLengthOfSixtyFourCharacters
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
