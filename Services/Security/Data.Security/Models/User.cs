@@ -24,6 +24,7 @@ public partial class User : AuditableEntity, IPerson
     public string? AlternateEmailJson { get; set; }
     public string? GenderPronounJson { get; set; }
     public string? ImportantDateJson { get; set; }
+    public virtual ICollection<UserNote> Notes { get; set; } = new List<UserNote>();
     
     public virtual UserLogin UserLogin { get; set; } = null!;
     public virtual ICollection<UserRefreshToken> UserRefreshTokens { get; set; } = new List<UserRefreshToken>();

@@ -199,16 +199,18 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.Gender == req.Gender);
                 }
 
+                query = query.Include(user => user.Notes);
+
                 var ret = await query.ToDtosWithoutPassword(cancellationToken);
 
-                foreach (var record in ret)
-                {
-                    var commonNotes = await _getCommonNotesForUser(record.UserId, dbContext);
-                    if (commonNotes != null && commonNotes.Count > 0)
-                    {
-                        record.CommonNotes = commonNotes;
-                    }
-                }
+                // foreach (var record in ret)
+                // {
+                //     var commonNotes = await _getCommonNotesForUser(record.UserId, dbContext);
+                //     if (commonNotes != null && commonNotes.Count > 0)
+                //     {
+                //         record.CommonNotes = commonNotes;
+                //     }
+                // }
 
                 return new ErrorValidationResult<IEnumerable<UserDto>> { Response = ret };
             }
@@ -249,15 +251,16 @@ namespace Logic.Security.Logic
                 // UserId is identity-generated, so save first to get the real id for the notes.
                 await dbContext.SaveChangesAsync();
 
-                await LogicUtilities.CommonNoteUtilities.InsertUpdateCommonNotes(req.CommonNotes, EntityFieldNames.User, entity.UserId, req.CurrentUser, dbContext);
+                //await LogicUtilities.CommonNoteUtilities.InsertUpdateCommonNotes(req.CommonNotes, EntityFieldNames.User, entity.UserId, req.CurrentUser, dbContext);
 
                 await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 entity.UserLogin.Password = randomPassword;
 
-                var commonNotes = await _getCommonNotesForUser(entity.UserId, dbContext);
-                var ret = entity.ToDto(commonNotes);
+                // var commonNotes = await _getCommonNotesForUser(entity.UserId, dbContext);
+                // var ret = entity.ToDto(commonNotes);
+                var ret = entity.ToDtoWithoutPassword();
                 
                 return new ErrorValidationResult<UserDto> { Response = ret };
             }
@@ -301,12 +304,13 @@ namespace Logic.Security.Logic
                 
                 userLoginEntity.UserId = entity.UserId;
 
-                await LogicUtilities.CommonNoteUtilities.InsertUpdateCommonNotes(req.CommonNotes, EntityFieldNames.User, entity.UserId, req.CurrentUser, dbContext);
+                //await LogicUtilities.CommonNoteUtilities.InsertUpdateCommonNotes(req.CommonNotes, EntityFieldNames.User, entity.UserId, req.CurrentUser, dbContext);
 
                 await dbContext.SaveChangesAsync();
 
-                var commonNotes = await _getCommonNotesForUser(entity.UserId, dbContext);
-                var ret = entity.ToDtoWithoutPassword(commonNotes);
+                //var commonNotes = await _getCommonNotesForUser(entity.UserId, dbContext);
+                //var ret = entity.ToDtoWithoutPassword(commonNotes);
+                var ret = entity.ToDtoWithoutPassword();
 
                 return new ErrorValidationResult<UserDto> { Response = ret };
             }
@@ -343,7 +347,7 @@ namespace Logic.Security.Logic
                     dbContext.Users.Remove(entity);
 
                     //delete all common notes associated with user
-                    LogicUtilities.CommonNoteUtilities.DeleteAllCommonNotes(EntityFieldNames.User, userId, currentUser, dbContext);
+                    //LogicUtilities.CommonNoteUtilities.DeleteAllCommonNotes(EntityFieldNames.User, userId, currentUser, dbContext);
                     
                     await dbContext.SaveChangesAsync();
                     
@@ -500,11 +504,11 @@ namespace Logic.Security.Logic
             return randomPassword;
         }
 
-        private async Task<List<CommonNoteDto>> _getCommonNotesForUser(int userId, ICommonNoteDbContext dbContext)
-        {
-            var commonNotes = await LogicUtilities.CommonNoteUtilities.GetAllCommonNotesByReferenceAsync(EntityFieldNames.User, userId, dbContext);
-            return commonNotes;
-        }
+        // private async Task<List<CommonNoteDto>> _getCommonNotesForUser(int userId, ICommonNoteDbContext dbContext)
+        // {
+        //     var commonNotes = await LogicUtilities.CommonNoteUtilities.GetAllCommonNotesByReferenceAsync(EntityFieldNames.User, userId, dbContext);
+        //     return commonNotes;
+        // }
 
         #endregion
 

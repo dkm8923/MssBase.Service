@@ -5,6 +5,8 @@ using Dto.Security.User;
 using System.Text.Json;
 using Shared.Models.Dtos;
 using Shared.Models.Dtos.CommonNote;
+using Shared.Data.Converters;
+using Shared.Data.Models;
 
 namespace Data.Security.Converters
 {
@@ -105,6 +107,15 @@ namespace Data.Security.Converters
                 return null;
             }
 
+            // var notes = new List<UserNote>();
+            // if (source.CommonNotes?.Count() > 0)
+            // {
+            //     foreach (var noteReq in source.CommonNotes)
+            //     {
+            //         notes.Add(noteReq.ToEntityOnInsert(0, source.CurrentUser));
+            //     }
+            // }
+
             var target = new User
             {
                 Active = source.Active,
@@ -126,6 +137,7 @@ namespace Data.Security.Converters
                 AlternateEmailJson = JsonSerializer.Serialize(source.AlternateEmails),
                 GenderPronounJson = JsonSerializer.Serialize(source.GenderPronouns),
                 ImportantDateJson = JsonSerializer.Serialize(source.ImportantDates),
+                //Notes = notes,
                 CurrentUser = source.CurrentUser
             };
 

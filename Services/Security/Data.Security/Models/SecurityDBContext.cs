@@ -16,6 +16,7 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext, ICommon
 
     public virtual DbSet<Application> Applications { get; set; }
     public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<CommonNote> UserNotes { get; set; }
     public virtual DbSet<UserLogin> UserLogins { get; set; }
     public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
     public virtual DbSet<ApplicationUser> ApplicationUsers { get; set; }

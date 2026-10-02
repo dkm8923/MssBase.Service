@@ -40,7 +40,27 @@ public static class CommonNoteConverters
         return target;
     }
 
-    public static CommonNote ToEntityOnInsert(this InsertUpdateCommonNoteRequest source, string referenceType, int referenceId, string currentUser)
+    // public static CommonNote ToEntityOnInsert(this InsertUpdateCommonNoteRequest source, string referenceType, int referenceId, string currentUser)
+    // {
+    //     if (source == null)
+    //     {
+    //         return null;
+    //     }
+
+    //     var target = new CommonNote
+    //     {
+    //         ReferenceType = referenceType,
+    //         ReferenceId = referenceId,
+    //         NoteType = source.NoteType,
+    //         Subject = source.Subject,
+    //         Text = source.Text,
+    //         CurrentUser = currentUser
+    //     };
+
+    //     return target;
+    // }
+
+    public static CommonNote ToEntityOnInsert(this InsertUpdateCommonNoteRequest source, int referenceId, string currentUser)
     {
         if (source == null)
         {
@@ -49,7 +69,6 @@ public static class CommonNoteConverters
 
         var target = new CommonNote
         {
-            ReferenceType = referenceType,
             ReferenceId = referenceId,
             NoteType = source.NoteType,
             Subject = source.Subject,
@@ -58,18 +77,5 @@ public static class CommonNoteConverters
         };
 
         return target;
-    }
-
-    public static CommonNote ToEntityOnUpdate(this InsertUpdateCommonNoteRequest source, string referenceType, int referenceId, string currentUser)
-    {
-        if (source == null || source.CommonNoteId == null)
-        {
-            return null;
-        }
-
-        var ent = source.ToEntityOnInsert(referenceType, referenceId, currentUser);
-        ent.CommonNoteId = (int)source.CommonNoteId;
-
-        return ent;
     }
 }

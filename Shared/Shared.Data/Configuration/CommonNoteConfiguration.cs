@@ -12,8 +12,6 @@ public class CommonNoteConfiguration : IEntityTypeConfiguration<CommonNote>
         SetTableName(builder);
 
         builder.Property(t => t.CommonNoteId).IsRequired();
-        builder.Property(t => t.ReferenceType).HasMaxLength(128).IsRequired();
-        builder.Property(t => t.ReferenceId).IsRequired();
         builder.Property(t => t.ReferenceId).IsRequired();
         builder.Property(t => t.NoteType).HasMaxLength(32).IsRequired();
         builder.Property(t => t.Subject).HasMaxLength(512).IsRequired();
