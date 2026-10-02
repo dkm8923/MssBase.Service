@@ -218,19 +218,6 @@ namespace Logic.Security.Logic
 
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                // //format common note(s) on insert
-                // if (req.CommonNotes != null)
-                // {
-                //     var idx = 1;
-                //     foreach (var commonNote in req.CommonNotes)
-                //     {
-                //         commonNote.CommonNoteId = idx;
-                //         commonNote.CreatedBy = req.CurrentUser;
-                //         commonNote.CreatedOn = DateTime.UtcNow;
-                //         idx++;
-                //     }
-                // }
-
                 var entity = req.ToEntityOnInsert();
 
                 var randomPassword = _generateRandomPassword();
@@ -242,9 +229,26 @@ namespace Logic.Security.Logic
                     PasswordResetRequired = true
                 };
 
+                await using var transaction = await dbContext.Database.BeginTransactionAsync();
+
                 await dbContext.Users.AddAsync(entity);
 
+                // UserId is identity-generated, so save first to get the real id for the notes.
                 await dbContext.SaveChangesAsync();
+
+                if (req.CommonNotes != null)
+                {
+                    var commonNotes = new List<CommonNote>();
+                    foreach (var commonNote in req.CommonNotes)
+                    {
+                        commonNotes.Add(commonNote.ToEntityOnInsert("User", entity.UserId, req.CurrentUser));
+                    }
+                    
+                    await dbContext.CommonNotes.AddRangeAsync(commonNotes);
+                }
+
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 entity.UserLogin.Password = randomPassword;
 
@@ -289,6 +293,25 @@ namespace Logic.Security.Logic
                 entity = entity.UpdateEntityFromRequest(req);
                 
                 userLoginEntity.UserId = entity.UserId;
+
+                if (req.CommonNotes != null)
+                {
+                    var commonNotes = new List<CommonNote>();
+                    foreach (var commonNote in req.CommonNotes)
+                    {
+                        if (commonNote.CommonNoteId == null)
+                        {
+                            commonNotes.Add(commonNote.ToEntityOnInsert("User", entity.UserId, req.CurrentUser));
+                        }
+                        else
+                        {
+                            // Handle update for existing common note if needed
+                            commonNotes.Add(commonNote.ToEntityOnUpdate("User", entity.UserId, req.CurrentUser));
+                        }
+                    }
+                    
+                    await dbContext.CommonNotes.AddRangeAsync(commonNotes);
+                }
 
                 await dbContext.SaveChangesAsync();
                 return new ErrorValidationResult<UserDto> { Response = entity.ToDtoWithoutPassword() };

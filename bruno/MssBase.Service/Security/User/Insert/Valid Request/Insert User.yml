@@ -30,15 +30,21 @@ http:
         "importantDates": null,
         "commonNotes": [
         {
-          "noteType": "test1", 
-          "subject": "Test Note 1 Subject", 
-          "text": "Hello World Test Note 1",
+          "noteType": "General", 
+          "subject": "Routine Maintenace", 
+          "text": "Just a friendly reminder, this user had routine maintenance today! :)",
           "active": true
         }
         ,{
-          "noteType": "test2", 
-          "subject": "Test Note 2 Subject", 
-          "text": "Hello World Test Note 2",
+          "noteType": "Warning", 
+          "subject": "Spicy Burritos in Break Room", 
+          "text": "Do not eat these, gave me food poisoning.",
+          "active": true
+        }
+        ,{
+          "noteType": "Danger", 
+          "subject": "Be Careful, this person is crazy", 
+          "text": "They are not normal, something is going on...",
           "active": true
         }],
         "active": true,

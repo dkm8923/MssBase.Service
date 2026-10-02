@@ -106,21 +106,21 @@ namespace Data.Security.Converters
             }
 
             //format common note(s) on insert
-            var commonNoteJson = null;
+            string commonNoteJson = null;
             
-            if (req.CommonNotes != null)
+            if (source.CommonNotes != null)
             {
                 var commonNotes = new List<CommonNoteDto>();
                 var idx = 1;
-                foreach (var commonNote in req.CommonNotes)
+                foreach (var commonNote in source.CommonNotes)
                 {
                     commonNotes.Add(new CommonNoteDto {
                         CommonNoteId = idx,
                         NoteType = commonNote.NoteType,
                         Subject = commonNote.Subject,
                         Text = commonNote.Text,
-                        commonNote.CreatedBy = req.CurrentUser,
-                        commonNote.CreatedOn = DateTime.UtcNow
+                        CreatedBy = source.CurrentUser,
+                        CreatedOn = DateTime.UtcNow
                     });
                     
                     idx++;

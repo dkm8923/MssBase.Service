@@ -27,6 +27,7 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext
     public virtual DbSet<UserLogChangePassword> UserLogChangePasswords { get; set; }
     public virtual DbSet<UserLogLogin> UserLogLogins { get; set; }
 
+    public virtual DbSet<CommonNote> CommonNotes { get; set; }
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -61,6 +62,7 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext
         modelBuilder.ApplyConfiguration(new ApplicationUserRoleConfiguration());
         modelBuilder.ApplyConfiguration(new UserLogChangePasswordConfiguration());
         modelBuilder.ApplyConfiguration(new UserLogLoginConfiguration());
+        modelBuilder.ApplyConfiguration(new CommonNoteConfiguration());
         modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
     }
 }
