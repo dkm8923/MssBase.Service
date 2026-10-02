@@ -20,6 +20,8 @@ using System.Text.Json;
 using Shared.Data.Models;
 using Contract.Security.User;
 using Dto.Common.CommonRelationalData;
+using Shared.Models.Dtos.CommonNote;
+using Shared.Data;
 
 namespace Logic.Security.Logic
 {
@@ -197,7 +199,18 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.Gender == req.Gender);
                 }
 
-                return new ErrorValidationResult<IEnumerable<UserDto>> { Response = await query.ToDtosWithoutPassword(cancellationToken) };
+                var ret = await query.ToDtosWithoutPassword(cancellationToken);
+
+                foreach (var record in ret)
+                {
+                    var commonNotes = await _getCommonNotesForUser(record.UserId, dbContext);
+                    if (commonNotes != null && commonNotes.Count > 0)
+                    {
+                        record.CommonNotes = commonNotes;
+                    }
+                }
+
+                return new ErrorValidationResult<IEnumerable<UserDto>> { Response = ret };
             }
         }
 
@@ -236,23 +249,17 @@ namespace Logic.Security.Logic
                 // UserId is identity-generated, so save first to get the real id for the notes.
                 await dbContext.SaveChangesAsync();
 
-                if (req.CommonNotes != null)
-                {
-                    var commonNotes = new List<CommonNote>();
-                    foreach (var commonNote in req.CommonNotes)
-                    {
-                        commonNotes.Add(commonNote.ToEntityOnInsert("User", entity.UserId, req.CurrentUser));
-                    }
-                    
-                    await dbContext.CommonNotes.AddRangeAsync(commonNotes);
-                }
+                await LogicUtilities.CommonNoteUtilities.InsertUpdateCommonNotes(req.CommonNotes, EntityFieldNames.User, entity.UserId, req.CurrentUser, dbContext);
 
                 await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 entity.UserLogin.Password = randomPassword;
 
-                return new ErrorValidationResult<UserDto> { Response = entity.ToDto() };
+                var commonNotes = await _getCommonNotesForUser(entity.UserId, dbContext);
+                var ret = entity.ToDto(commonNotes);
+                
+                return new ErrorValidationResult<UserDto> { Response = ret };
             }
         }
 
@@ -294,27 +301,14 @@ namespace Logic.Security.Logic
                 
                 userLoginEntity.UserId = entity.UserId;
 
-                if (req.CommonNotes != null)
-                {
-                    var commonNotes = new List<CommonNote>();
-                    foreach (var commonNote in req.CommonNotes)
-                    {
-                        if (commonNote.CommonNoteId == null)
-                        {
-                            commonNotes.Add(commonNote.ToEntityOnInsert("User", entity.UserId, req.CurrentUser));
-                        }
-                        else
-                        {
-                            // Handle update for existing common note if needed
-                            commonNotes.Add(commonNote.ToEntityOnUpdate("User", entity.UserId, req.CurrentUser));
-                        }
-                    }
-                    
-                    await dbContext.CommonNotes.AddRangeAsync(commonNotes);
-                }
+                await LogicUtilities.CommonNoteUtilities.InsertUpdateCommonNotes(req.CommonNotes, EntityFieldNames.User, entity.UserId, req.CurrentUser, dbContext);
 
                 await dbContext.SaveChangesAsync();
-                return new ErrorValidationResult<UserDto> { Response = entity.ToDtoWithoutPassword() };
+
+                var commonNotes = await _getCommonNotesForUser(entity.UserId, dbContext);
+                var ret = entity.ToDtoWithoutPassword(commonNotes);
+
+                return new ErrorValidationResult<UserDto> { Response = ret };
             }
         }
 
@@ -348,6 +342,9 @@ namespace Logic.Security.Logic
 
                     dbContext.Users.Remove(entity);
 
+                    //delete all common notes associated with user
+                    LogicUtilities.CommonNoteUtilities.DeleteAllCommonNotes(EntityFieldNames.User, userId, currentUser, dbContext);
+                    
                     await dbContext.SaveChangesAsync();
                     
                     return new ErrorValidationResult();
@@ -501,6 +498,12 @@ namespace Logic.Security.Logic
         {
             var randomPassword = CommonUtilities.GenerateRandomAlphaNumericString(16, true);
             return randomPassword;
+        }
+
+        private async Task<List<CommonNoteDto>> _getCommonNotesForUser(int userId, ICommonNoteDbContext dbContext)
+        {
+            var commonNotes = await LogicUtilities.CommonNoteUtilities.GetAllCommonNotesByReferenceAsync(EntityFieldNames.User, userId, dbContext);
+            return commonNotes;
         }
 
         #endregion

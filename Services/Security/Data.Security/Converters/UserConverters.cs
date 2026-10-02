@@ -10,7 +10,7 @@ namespace Data.Security.Converters
 {
     public static class UserConverters
     {
-        public static UserDto ToDto(this User source)
+        public static UserDto ToDto(this User source, List<CommonNoteDto> commonNotes = null)
         {
             if (source == null)
             {
@@ -46,7 +46,7 @@ namespace Data.Security.Converters
                 AlternateEmails = source.AlternateEmailJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.AlternateEmailJson),
                 GenderPronouns = source.GenderPronounJson == null ? null : JsonSerializer.Deserialize<List<string>>(source.GenderPronounJson),
                 ImportantDates = source.ImportantDateJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.ImportantDateJson),
-                CommonNotes = source.CommonNoteJson == null ? null : JsonSerializer.Deserialize<List<CommonNoteDto>>(source.CommonNoteJson),
+                CommonNotes = commonNotes?.Count > 0 ? commonNotes : null,
                 Password = applicationUserLogin.Password,
                 PasswordResetRequired = applicationUserLogin.PasswordResetRequired,
                 LastLoginDateTime = applicationUserLogin.LastLoginDateTime,
@@ -63,7 +63,7 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static UserDto ToDtoWithoutPassword(this User source)
+        public static UserDto ToDtoWithoutPassword(this User source, List<CommonNoteDto> commonNotes = null)
         {
             if (source == null)
             {
@@ -71,7 +71,7 @@ namespace Data.Security.Converters
             }
 
             source.UserLogin.Password = null;
-            return source.ToDto();
+            return source.ToDto(commonNotes);
         }
 
         public static async Task<List<UserDto>> ToDtos(this IQueryable<User> source, CancellationToken cancellationToken = default)
@@ -105,30 +105,6 @@ namespace Data.Security.Converters
                 return null;
             }
 
-            //format common note(s) on insert
-            string commonNoteJson = null;
-            
-            if (source.CommonNotes != null)
-            {
-                var commonNotes = new List<CommonNoteDto>();
-                var idx = 1;
-                foreach (var commonNote in source.CommonNotes)
-                {
-                    commonNotes.Add(new CommonNoteDto {
-                        CommonNoteId = idx,
-                        NoteType = commonNote.NoteType,
-                        Subject = commonNote.Subject,
-                        Text = commonNote.Text,
-                        CreatedBy = source.CurrentUser,
-                        CreatedOn = DateTime.UtcNow
-                    });
-                    
-                    idx++;
-                }
-
-                commonNoteJson = commonNotes.Count() > 0 ? JsonSerializer.Serialize(commonNotes) : null;
-            }
-
             var target = new User
             {
                 Active = source.Active,
@@ -150,7 +126,6 @@ namespace Data.Security.Converters
                 AlternateEmailJson = JsonSerializer.Serialize(source.AlternateEmails),
                 GenderPronounJson = JsonSerializer.Serialize(source.GenderPronouns),
                 ImportantDateJson = JsonSerializer.Serialize(source.ImportantDates),
-                CommonNoteJson = commonNoteJson,
                 CurrentUser = source.CurrentUser
             };
 

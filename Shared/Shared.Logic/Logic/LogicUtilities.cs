@@ -4,6 +4,10 @@ using Shared.Models.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Shared.Logic.Validators;
 using System.Text.Json;
+using Shared.Models.Dtos.CommonNote;
+using Shared.Data;
+using Shared.Data.Converters;
+using Microsoft.EntityFrameworkCore;
 
 namespace Shared.Logic
 {
@@ -108,6 +112,65 @@ namespace Shared.Logic
         public static object? ParseJsonOrNull(string? json)
         {
             return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<object>(json);
+        }
+
+        public static class CommonNoteUtilities
+        {
+            public static async Task<List<CommonNoteDto>> GetAllCommonNotesByReferenceAsync(string referenceType, int referenceId, ICommonNoteDbContext dbContext)
+            {
+                var commonNotes = await dbContext.CommonNotes
+                    .Where(n => n.ReferenceType == referenceType && n.ReferenceId == referenceId)
+                    .ToListAsync();
+
+                return commonNotes.Select(n => n.ToDto()).ToList();
+            }
+            
+            public static async Task InsertUpdateCommonNotes(List<InsertUpdateCommonNoteRequest>? commonNotes, 
+                                                             string referenceType, 
+                                                             int referenceId,
+                                                             string currentUser, 
+                                                             ICommonNoteDbContext dbContext
+                                                            )
+            {
+                if (commonNotes != null)
+                {
+                    var commonNotesEntities = new List<CommonNote>();
+                    var existingNotes = await dbContext.CommonNotes
+                        .Where(n => n.ReferenceType == referenceType && n.ReferenceId == referenceId)
+                        .ToDictionaryAsync(n => n.CommonNoteId);
+
+                    foreach (var commonNote in commonNotes)
+                    {
+                        if (commonNote.CommonNoteId == null)
+                        {
+                            commonNotesEntities.Add(commonNote.ToEntityOnInsert(referenceType, referenceId, currentUser));
+                        }
+                        else
+                        {
+                            if (existingNotes.TryGetValue(commonNote.CommonNoteId.Value, out var existing))
+                            {
+                                existing.NoteType = commonNote.NoteType;
+                                existing.Subject = commonNote.Subject;
+                                existing.Text = commonNote.Text;
+                                existing.CurrentUser = currentUser;
+                            }
+                        }
+                    }
+                    
+                    await dbContext.CommonNotes.AddRangeAsync(commonNotesEntities);
+                }
+            }
+
+            public static void DeleteAllCommonNotes(string referenceType, 
+                                                    int referenceId,
+                                                    string currentUser, 
+                                                    ICommonNoteDbContext dbContext
+                                                    )
+            {
+                dbContext.CommonNotes.RemoveRange(dbContext.CommonNotes.Where(note => note.ReferenceType == referenceType && note.ReferenceId == referenceId));
+
+                //Todo: Delete log for common note?
+            }
         }
     }
 }

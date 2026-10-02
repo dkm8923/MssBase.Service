@@ -7,7 +7,7 @@ using Shared.Data.Models;
 
 namespace Data.Security.Models;
 
-public partial class SecurityDBContext : DbContext, IAuditableDbContext
+public partial class SecurityDBContext : DbContext, IAuditableDbContext, ICommonNoteDbContext
 {
     public SecurityDBContext(DbContextOptions<SecurityDBContext> options)
         : base(options)
