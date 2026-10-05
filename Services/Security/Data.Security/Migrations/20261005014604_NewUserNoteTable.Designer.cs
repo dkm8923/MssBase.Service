@@ -4,6 +4,7 @@ using Data.Security.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Security.Migrations
 {
     [DbContext(typeof(SecurityDBContext))]
-    partial class SecurityDBContextModelSnapshot : ModelSnapshot
+    [Migration("20261005014604_NewUserNoteTable")]
+    partial class NewUserNoteTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -676,11 +679,11 @@ namespace Data.Security.Migrations
 
             modelBuilder.Entity("Data.Security.Models.UserNote", b =>
                 {
-                    b.Property<int>("NoteId")
+                    b.Property<int>("CommonNoteId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NoteId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CommonNoteId"));
 
                     b.Property<bool>("Active")
                         .HasColumnType("bit");
@@ -724,7 +727,7 @@ namespace Data.Security.Migrations
                     b.Property<DateTime?>("UpdatedOn")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("NoteId");
+                    b.HasKey("CommonNoteId");
 
                     b.HasIndex("ReferenceId");
 

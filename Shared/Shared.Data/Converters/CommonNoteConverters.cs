@@ -15,10 +15,11 @@ public static class CommonNoteConverters
 
         var target = new CommonNoteDto
         {
-            CommonNoteId = source.CommonNoteId,
+            NoteId = source.NoteId,
             NoteType = source.NoteType,
             Subject = source.Subject,
             Text = source.Text,
+            Active = source.Active,
             CreatedOn = source.CreatedOn,
             CreatedBy = source.CreatedBy,
             UpdatedOn = source.UpdatedOn,
@@ -40,39 +41,21 @@ public static class CommonNoteConverters
         return target;
     }
 
-    // public static CommonNote ToEntityOnInsert(this InsertUpdateCommonNoteRequest source, string referenceType, int referenceId, string currentUser)
-    // {
-    //     if (source == null)
-    //     {
-    //         return null;
-    //     }
-
-    //     var target = new CommonNote
-    //     {
-    //         ReferenceType = referenceType,
-    //         ReferenceId = referenceId,
-    //         NoteType = source.NoteType,
-    //         Subject = source.Subject,
-    //         Text = source.Text,
-    //         CurrentUser = currentUser
-    //     };
-
-    //     return target;
-    // }
-
-    public static CommonNote ToEntityOnInsert(this InsertUpdateCommonNoteRequest source, int referenceId, string currentUser)
+    public static T ToEntityOnInsert<T>(this InsertUpdateCommonNoteRequest source, int referenceId, string currentUser)
+        where T : CommonNote, new()
     {
         if (source == null)
         {
             return null;
         }
 
-        var target = new CommonNote
+        var target = new T
         {
             ReferenceId = referenceId,
             NoteType = source.NoteType,
             Subject = source.Subject,
             Text = source.Text,
+            Active = source.Active,
             CurrentUser = currentUser
         };
 

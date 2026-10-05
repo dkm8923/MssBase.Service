@@ -12,6 +12,7 @@
         {
             public const string User = "User";
             public const string UserId = "UserId";
+            public const string UserNote = "UserNote";
             public const string Application = "Application";
             public const string ApplicationId = "ApplicationId";
             public const string ApplicationName = "ApplicationName";
@@ -51,9 +52,11 @@
             public const string RefreshToken = "RefreshToken";
             public const string Authentication = "Authentication";
             public const string SpokenLanguages = "SpokenLanguages";
+            public const string CommonNotes = "CommonNotes";
             public const string PhoneNumbers = "PhoneNumbers";
             public const string SocialMediaProfiles = "SocialMediaProfiles";
             public const string AlternateEmails = "AlternateEmails";
+            public const string NoteId = "NoteId";
             public const string CurrentUser = "CurrentUser";
         }
 
@@ -82,6 +85,7 @@
             public const string UsaTimeZone = "UsaTimeZone";
             public const string Country = "Country";
             public const string DaysOfWeek = "DaysOfWeek";
+            public const string CommonNoteType = "CommonNoteType";
         }
     }
 }

@@ -7,6 +7,8 @@ namespace Shared.Logic.Validators
 {
     public static class ValidatorUtilities
     {
+        #region Error Messages
+
         public static string CreateRequiredFieldErrorMessage(string fieldName)
         {
             return $"{fieldName} is a required field!";
@@ -47,10 +49,30 @@ namespace Shared.Logic.Validators
             return $"Record is read only and cannot be modified! (IE: ReadOnly property is set to true)";
         }
 
+        public static string CreateDependencyExistsValidationErrorMessage(string dependencyName)
+        {
+            return $"Record still contains child dependencies! IE: {dependencyName}";
+        }
+
+        public static string CreateInvalidEmailErrorMessage()
+        {
+            return $"Invalid email address!";
+        }
+
+        public static string CreateInvalidCommonRelationalDataValueValidationErrorMessage(string fieldName, string dataTypeName)
+        {
+            return $"{fieldName} value is invalid! Value must come from CommonRelationalData.{dataTypeName} List!";
+        }
+
+        #endregion
+        
+
         public static string SetPropertyNameOnFilterRequestValidation() 
         {
             return "FilterRequest";
         }
+
+        #region Validation Response Utilities
 
         public static ErrorValidationResult<TResponse> CreateDefaultValidationResponse<TResponse>(ValidationResult result)
         {
@@ -71,21 +93,23 @@ namespace Shared.Logic.Validators
             return validationResult;
         }
 
-        public static string CreateDependencyExistsValidationErrorMessage(string dependencyName)
+        public static ErrorValidationResult<T> ReturnReadOnlyRecordErrorValidationResult<T>(string entityName)
         {
-            return $"Record still contains child dependencies! IE: {dependencyName}";
+            var errorValidationResult = new ErrorValidationResult<T>();
+            errorValidationResult.Errors.Add(entityName, new List<string> { CreateRecordIsReadOnlyValidationErrorMessage() });
+            return errorValidationResult;
         }
 
-        public static string CreateInvalidEmailErrorMessage()
+        public static ErrorValidationResult<T> ReturnRecordNotFoundErrorValidationResult<T>(string entityName, string idName)
         {
-            return $"Invalid email address!";
+            var errorValidationResult = new ErrorValidationResult<T>();
+            errorValidationResult.Errors.Add(entityName, new List<string> { CreateRecordDoesNotExistValidationErrorMessage(idName) });
+            return errorValidationResult;
         }
 
-        public static string CreateInvalidCommonRelationalDataValueValidationErrorMessage(string fieldName, string dataTypeName)
-        {
-            return $"{fieldName} value is invalid! Value must come from CommonRelationalData.{dataTypeName} List!";
-        }
+        #endregion
 
+        
         /// <summary>
         /// Validate CurrentUser Max Length and NotEmpty. Default Values: FieldName = "CurrentUser", MaxLength = 64
         /// </summary>

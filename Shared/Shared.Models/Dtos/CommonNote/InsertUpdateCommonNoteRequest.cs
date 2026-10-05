@@ -2,7 +2,7 @@ namespace Shared.Models.Dtos.CommonNote;
 
 public record InsertUpdateCommonNoteRequest
 {
-    public int? CommonNoteId { get; set; }
+    public int? NoteId { get; set; }
     public required string NoteType { get; set; }
     public required string Subject { get; set; }
     public required string Text { get; set; }

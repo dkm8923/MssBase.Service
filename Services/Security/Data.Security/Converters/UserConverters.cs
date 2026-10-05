@@ -12,7 +12,7 @@ namespace Data.Security.Converters
 {
     public static class UserConverters
     {
-        public static UserDto ToDto(this User source, List<CommonNoteDto> commonNotes = null)
+        public static UserDto ToDto(this User source)
         {
             if (source == null)
             {
@@ -48,7 +48,7 @@ namespace Data.Security.Converters
                 AlternateEmails = source.AlternateEmailJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.AlternateEmailJson),
                 GenderPronouns = source.GenderPronounJson == null ? null : JsonSerializer.Deserialize<List<string>>(source.GenderPronounJson),
                 ImportantDates = source.ImportantDateJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.ImportantDateJson),
-                CommonNotes = commonNotes?.Count > 0 ? commonNotes : null,
+                CommonNotes = source.Notes?.Count > 0 ? source.Notes.Select(n => n.ToDto()).ToList() : null,
                 Password = applicationUserLogin.Password,
                 PasswordResetRequired = applicationUserLogin.PasswordResetRequired,
                 LastLoginDateTime = applicationUserLogin.LastLoginDateTime,
@@ -65,7 +65,7 @@ namespace Data.Security.Converters
             return target;
         }
 
-        public static UserDto ToDtoWithoutPassword(this User source, List<CommonNoteDto> commonNotes = null)
+        public static UserDto ToDtoWithoutPassword(this User source)
         {
             if (source == null)
             {
@@ -73,7 +73,7 @@ namespace Data.Security.Converters
             }
 
             source.UserLogin.Password = null;
-            return source.ToDto(commonNotes);
+            return source.ToDto();
         }
 
         public static async Task<List<UserDto>> ToDtos(this IQueryable<User> source, CancellationToken cancellationToken = default)
@@ -107,14 +107,14 @@ namespace Data.Security.Converters
                 return null;
             }
 
-            // var notes = new List<UserNote>();
-            // if (source.CommonNotes?.Count() > 0)
-            // {
-            //     foreach (var noteReq in source.CommonNotes)
-            //     {
-            //         notes.Add(noteReq.ToEntityOnInsert(0, source.CurrentUser));
-            //     }
-            // }
+            var notes = new List<UserNote>();
+            if (source.CommonNotes?.Count() > 0)
+            {
+                foreach (var noteReq in source.CommonNotes)
+                {
+                    notes.Add(noteReq.ToEntityOnInsert<UserNote>(0, source.CurrentUser));
+                }
+            }
 
             var target = new User
             {
@@ -137,7 +137,7 @@ namespace Data.Security.Converters
                 AlternateEmailJson = JsonSerializer.Serialize(source.AlternateEmails),
                 GenderPronounJson = JsonSerializer.Serialize(source.GenderPronouns),
                 ImportantDateJson = JsonSerializer.Serialize(source.ImportantDates),
-                //Notes = notes,
+                Notes = notes,
                 CurrentUser = source.CurrentUser
             };
 
@@ -162,6 +162,25 @@ namespace Data.Security.Converters
             entity.DateOfBirth = source.DateOfBirth;
             entity.TimeZone = source.TimeZone;
             entity.CurrentUser = source.CurrentUser;
+
+            // Merge by NoteId: update matches, add new (no id), leave unlisted notes untouched.
+            foreach (var noteReq in source.CommonNotes ?? new())
+            {
+                var existing = noteReq.NoteId.HasValue
+                    ? entity.Notes.FirstOrDefault(n => n.NoteId == noteReq.NoteId.Value)
+                    : null;
+
+                if (existing == null)
+                {
+                    entity.Notes.Add(noteReq.ToEntityOnInsert<UserNote>(entity.UserId, source.CurrentUser));
+                    continue;
+                }
+
+                existing.NoteType = noteReq.NoteType;
+                existing.Subject = noteReq.Subject;
+                existing.Text = noteReq.Text;
+                existing.CurrentUser = source.CurrentUser;
+            }
 
             return entity;
         }

@@ -7,7 +7,7 @@ using Shared.Data.Models;
 
 namespace Data.Security.Models;
 
-public partial class SecurityDBContext : DbContext, IAuditableDbContext, ICommonNoteDbContext
+public partial class SecurityDBContext : DbContext, IAuditableDbContext
 {
     public SecurityDBContext(DbContextOptions<SecurityDBContext> options)
         : base(options)
@@ -16,7 +16,7 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext, ICommon
 
     public virtual DbSet<Application> Applications { get; set; }
     public virtual DbSet<User> Users { get; set; }
-    public virtual DbSet<CommonNote> UserNotes { get; set; }
+    public virtual DbSet<UserNote> UserNotes { get; set; }
     public virtual DbSet<UserLogin> UserLogins { get; set; }
     public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
     public virtual DbSet<ApplicationUser> ApplicationUsers { get; set; }
@@ -28,7 +28,6 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext, ICommon
     public virtual DbSet<UserLogChangePassword> UserLogChangePasswords { get; set; }
     public virtual DbSet<UserLogLogin> UserLogLogins { get; set; }
 
-    public virtual DbSet<CommonNote> CommonNotes { get; set; }
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -53,6 +52,7 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext, ICommon
     {
         modelBuilder.ApplyConfiguration(new ApplicationConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new UserNoteConfiguration());
         modelBuilder.ApplyConfiguration(new UserLoginConfiguration());
         modelBuilder.ApplyConfiguration(new UserRefreshTokenConfiguration());
         modelBuilder.ApplyConfiguration(new ApplicationUserConfiguration());
@@ -63,7 +63,6 @@ public partial class SecurityDBContext : DbContext, IAuditableDbContext, ICommon
         modelBuilder.ApplyConfiguration(new ApplicationUserRoleConfiguration());
         modelBuilder.ApplyConfiguration(new UserLogChangePasswordConfiguration());
         modelBuilder.ApplyConfiguration(new UserLogLoginConfiguration());
-        modelBuilder.ApplyConfiguration(new CommonNoteConfiguration());
         modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
     }
 }

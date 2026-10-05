@@ -34,7 +34,7 @@ namespace Logic.Security.Logic
         private IValidator<InsertUpdateUserRequest> _insertUpdateUserRequestValidator;
         private IValidator<ChangePasswordRequest> _changePasswordRequestValidator;
         private IOptions<PasswordValidationConfig> _passwordValidationConfig;
-        
+
         public UserLogic(
                             ISecurityConnectionStrings connectionStrings,
                             IValidator<FilterUserLogicRequest> filterUserLogicRequestValidator,
@@ -78,6 +78,22 @@ namespace Logic.Security.Logic
 
         #endregion
 
+        #region GetUserNoteById
+
+        /// <summary>
+        /// Retrieves a user note by its unique identifier.
+        /// </summary>
+        public async Task<ErrorValidationResult<CommonNoteDto>> GetUserNoteById(int noteId, BaseLogicGet req, CancellationToken cancellationToken = default)
+        {
+            using (var dbContext = _dbContextFactory.CreateContextReadOnly())
+            {
+                var query = dbContext.UserNotes.AsQueryable().AsNoTracking().Where(cn => cn.NoteId == noteId);
+                return new ErrorValidationResult<CommonNoteDto> { Response = (await query.ToDtos(cancellationToken)).FirstOrDefault() };
+            }
+        }
+
+        #endregion
+
         #region GetAuditLogsByUserId
 
         /// <summary>
@@ -110,7 +126,7 @@ namespace Logic.Security.Logic
             using (var dbContext = _dbContextFactory.CreateContextReadOnly())
             {
                 var query = dbContext.Users.AsQueryable().AsNoTracking();
-                
+
                 query = query.Include(aul => aul.UserLogin);
                 query = query.ApplyIncludeInactiveFilter(req);
                 query = query.ApplyIncludeReadOnlyFilter(req);
@@ -123,7 +139,7 @@ namespace Logic.Security.Logic
                                  .ThenInclude(applicationUser => applicationUser.ApplicationUserPermissions
                                      .Where(permission => (req.IncludeInactive || permission.Active) && (req.IncludeReadOnly || !permission.ReadOnly)))
                                  .ThenInclude(permission => permission.Permission);
-                    
+
                     query = query.Include(user => user.ApplicationUsers
                                        .Where(applicationUser => (req.IncludeInactive || applicationUser.Active) && (req.IncludeReadOnly || !applicationUser.ReadOnly)))
                                  .ThenInclude(applicationUser => applicationUser.ApplicationUserRoles
@@ -138,7 +154,7 @@ namespace Logic.Security.Logic
                 {
                     query = query.Where(x => req.UserIds.Contains(x.UserId));
                 }
-                
+
                 if (req.Email != null)
                 {
                     query = query.Where(x => x.Email == req.Email);
@@ -203,15 +219,6 @@ namespace Logic.Security.Logic
 
                 var ret = await query.ToDtosWithoutPassword(cancellationToken);
 
-                // foreach (var record in ret)
-                // {
-                //     var commonNotes = await _getCommonNotesForUser(record.UserId, dbContext);
-                //     if (commonNotes != null && commonNotes.Count > 0)
-                //     {
-                //         record.CommonNotes = commonNotes;
-                //     }
-                // }
-
                 return new ErrorValidationResult<IEnumerable<UserDto>> { Response = ret };
             }
         }
@@ -244,24 +251,13 @@ namespace Logic.Security.Logic
                     PasswordResetRequired = true
                 };
 
-                await using var transaction = await dbContext.Database.BeginTransactionAsync();
-
                 await dbContext.Users.AddAsync(entity);
-
-                // UserId is identity-generated, so save first to get the real id for the notes.
                 await dbContext.SaveChangesAsync();
-
-                //await LogicUtilities.CommonNoteUtilities.InsertUpdateCommonNotes(req.CommonNotes, EntityFieldNames.User, entity.UserId, req.CurrentUser, dbContext);
-
-                await dbContext.SaveChangesAsync();
-                await transaction.CommitAsync();
 
                 entity.UserLogin.Password = randomPassword;
 
-                // var commonNotes = await _getCommonNotesForUser(entity.UserId, dbContext);
-                // var ret = entity.ToDto(commonNotes);
                 var ret = entity.ToDtoWithoutPassword();
-                
+
                 return new ErrorValidationResult<UserDto> { Response = ret };
             }
         }
@@ -283,11 +279,11 @@ namespace Logic.Security.Logic
 
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
-                var entity = await dbContext.Users.FirstOrDefaultAsync(ent => ent.UserId == userId);
-                
+                var entity = await dbContext.Users.Include(ent => ent.Notes).FirstOrDefaultAsync(ent => ent.UserId == userId);
+
                 if (entity == null)
                 {
-                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors); 
+                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
                     return errorValidationResult;
                 }
 
@@ -296,20 +292,27 @@ namespace Logic.Security.Logic
                     return await _returnReadOnlyRecordErrorValidationResult();
                 }
 
+                var unknownNoteIds = (req.CommonNotes ?? new())
+                    .Where(n => n.NoteId.HasValue && !entity.Notes.Any(en => en.NoteId == n.NoteId.Value))
+                    .Select(n => n.NoteId.Value)
+                    .ToList();
+
+                if (unknownNoteIds.Count > 0)
+                {
+                    errorValidationResult.Errors.Add(EntityFieldNames.CommonNotes, new List<string> { $"NoteId(s) not found for this user: {string.Join(", ", unknownNoteIds)}" });
+                    return errorValidationResult;
+                }
+
                 await LogChange(dbContext, entity, req);
 
                 var userLoginEntity = await dbContext.UserLogins.FirstOrDefaultAsync(ent => ent.UserId == userId);
-                
-                entity = entity.UpdateEntityFromRequest(req);
-                
-                userLoginEntity.UserId = entity.UserId;
 
-                //await LogicUtilities.CommonNoteUtilities.InsertUpdateCommonNotes(req.CommonNotes, EntityFieldNames.User, entity.UserId, req.CurrentUser, dbContext);
+                entity = entity.UpdateEntityFromRequest(req);
+
+                userLoginEntity.UserId = entity.UserId;
 
                 await dbContext.SaveChangesAsync();
 
-                //var commonNotes = await _getCommonNotesForUser(entity.UserId, dbContext);
-                //var ret = entity.ToDtoWithoutPassword(commonNotes);
                 var ret = entity.ToDtoWithoutPassword();
 
                 return new ErrorValidationResult<UserDto> { Response = ret };
@@ -334,28 +337,60 @@ namespace Logic.Security.Logic
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
                 var entity = await dbContext.Users.FirstOrDefaultAsync(ent => ent.UserId == userId && !ent.ReadOnly);
-                
+
                 if (entity != null)
                 {
                     dbContext.UserLogChangePasswords.RemoveRange(dbContext.UserLogChangePasswords.Where(log => log.UserId == userId));
                     dbContext.UserLogLogins.RemoveRange(dbContext.UserLogLogins.Where(log => log.UserId == userId));
                     dbContext.UserRefreshTokens.RemoveRange(dbContext.UserRefreshTokens.Where(token => token.UserId == userId));
                     dbContext.UserLogins.RemoveRange(dbContext.UserLogins.Where(login => login.UserId == userId));
+                    dbContext.UserNotes.RemoveRange(dbContext.UserNotes.Where(note => note.ReferenceId == userId));
 
                     await LogDelete(dbContext, entity, currentUser);
 
                     dbContext.Users.Remove(entity);
 
-                    //delete all common notes associated with user
-                    //LogicUtilities.CommonNoteUtilities.DeleteAllCommonNotes(EntityFieldNames.User, userId, currentUser, dbContext);
-                    
                     await dbContext.SaveChangesAsync();
-                    
+
                     return new ErrorValidationResult();
                 }
                 else
                 {
                     return _createUserNotFoundError<object?>();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deletes the user note with the specified identifier.
+        /// </summary>
+        public async Task<ErrorValidationResult> DeleteNote(int noteId, string currentUser)
+        {
+            var errorValidationResult = await _validateUserNoteOnDelete(noteId);
+            if (errorValidationResult.Errors.Count > 0)
+            {
+                return errorValidationResult;
+            }
+
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                var entity = await dbContext.UserNotes.FirstOrDefaultAsync(ent => ent.NoteId == noteId && !ent.ReadOnly);
+
+                if (entity != null)
+                {
+                    dbContext.UserNotes.RemoveRange(dbContext.UserNotes.Where(note => note.NoteId == noteId));
+
+                    await LogNoteDelete(dbContext, entity, currentUser);
+
+                    dbContext.UserNotes.Remove(entity);
+
+                    await dbContext.SaveChangesAsync();
+
+                    return new ErrorValidationResult();
+                }
+                else
+                {
+                    return _createUserNoteNotFoundError<object?>();
                 }
             }
         }
@@ -384,11 +419,11 @@ namespace Logic.Security.Logic
             //TODO: Send email to user with new password instead of returning in response
 
             var newPassword = _generateRandomPassword();
-            
+
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
                 var entity = await dbContext.Users.Include(aul => aul.UserLogin).FirstOrDefaultAsync(ent => ent.UserId == userId);
-                
+
                 if (entity != null)
                 {
                     var currentUser = "UserLogic.ResetPassword";
@@ -428,16 +463,16 @@ namespace Logic.Security.Logic
             ValidationResult result = await _changePasswordRequestValidator.ValidateAsync(req);
             var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<object>(result);
 
-            if (errorValidationResult.Errors.Count > 0) 
+            if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
             }
-            
+
             using (var dbContext = _dbContextFactory.CreateContextReadWrite())
             {
                 var userEntity = await dbContext.Users.Include(aul => aul.UserLogin).FirstOrDefaultAsync(ent => ent.UserId == req.UserId);
-                
-                if (userEntity is null) 
+
+                if (userEntity is null)
                 {
                     return _createUserNotFoundError<object?>();
                 }
@@ -463,7 +498,7 @@ namespace Logic.Security.Logic
                         return new ErrorValidationResult { Errors = new Dictionary<string, List<string>> { { EntityFieldNames.ChangePassword, new List<string> { $"New password must be different from the last {_passwordValidationConfig.Value.RequirePasswordHistoryCheckOldPasswordCount} passwords!" } } } };
                     }
                 }
-                
+
                 var utcNow = CommonUtilities.GetDateTimeUtcNow();
 
                 //log password change
@@ -479,7 +514,7 @@ namespace Logic.Security.Logic
                 userEntity.UserLogin.Password = LogicUtilities.HashPassword(req.NewPassword);
                 userEntity.UserLogin.PasswordResetRequired = false;
                 userEntity.UserLogin.LastPasswordChangeDateTime = utcNow;
-                
+
                 //delete any existing refresh tokens when password is changed
                 var userRefreshTokenEntities = await dbContext.UserRefreshTokens.Where(ent => ent.UserId == userEntity.UserId).ToListAsync();
                 dbContext.UserRefreshTokens.RemoveRange(userRefreshTokenEntities);
@@ -503,12 +538,6 @@ namespace Logic.Security.Logic
             var randomPassword = CommonUtilities.GenerateRandomAlphaNumericString(16, true);
             return randomPassword;
         }
-
-        // private async Task<List<CommonNoteDto>> _getCommonNotesForUser(int userId, ICommonNoteDbContext dbContext)
-        // {
-        //     var commonNotes = await LogicUtilities.CommonNoteUtilities.GetAllCommonNotesByReferenceAsync(EntityFieldNames.User, userId, dbContext);
-        //     return commonNotes;
-        // }
 
         #endregion
 
@@ -535,21 +564,21 @@ namespace Logic.Security.Logic
                 errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonMaritalStatus, req.MaritalStatus, EntityFieldNames.MaritalStatus, CommonRelationalDataReferenceTypes.PersonMaritalStatus, errorValidationResult);
                 errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonReligion, req.Religion, EntityFieldNames.Religion, CommonRelationalDataReferenceTypes.PersonReligion, errorValidationResult);
                 errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonGender, req.Gender, EntityFieldNames.Gender, CommonRelationalDataReferenceTypes.PersonGender, errorValidationResult);
-                
+
                 //validate Spoken Languages
                 if (req.SpokenLanguages != null && req.SpokenLanguages.Count > 0)
                 {
-                    if (req.SpokenLanguages.Count > 15) 
+                    if (req.SpokenLanguages.Count > 15)
                     {
                         errorValidationResult.Errors.Add(EntityFieldNames.SpokenLanguages, new List<string> { "SpokenLanguages cannot have more than 15 entries!" });
                     }
 
                     foreach (var spokenLanguage in req.SpokenLanguages)
                     {
-                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonLanguage, 
-                                                                                                         spokenLanguage, 
-                                                                                                         EntityFieldNames.SpokenLanguages, 
-                                                                                                         CommonRelationalDataReferenceTypes.PersonLanguage, 
+                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PersonLanguage,
+                                                                                                         spokenLanguage,
+                                                                                                         EntityFieldNames.SpokenLanguages,
+                                                                                                         CommonRelationalDataReferenceTypes.PersonLanguage,
                                                                                                          errorValidationResult);
 
                         if (spokenLanguage?.Length == 0)
@@ -562,17 +591,17 @@ namespace Logic.Security.Logic
                 //validate Phone Numbers
                 if (req.PhoneNumbers != null && req.PhoneNumbers.Count > 0)
                 {
-                    if (req.PhoneNumbers.Count > 10) 
+                    if (req.PhoneNumbers.Count > 10)
                     {
                         errorValidationResult.Errors.Add(EntityFieldNames.PhoneNumbers, new List<string> { "PhoneNumbers cannot have more than 15 entries!" });
                     }
 
                     foreach (var phoneNumber in req.PhoneNumbers)
                     {
-                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PhoneNumberType, 
-                                                                                                         phoneNumber.Type, 
-                                                                                                         EntityFieldNames.PhoneNumbers, 
-                                                                                                         CommonRelationalDataReferenceTypes.PhoneNumberType, 
+                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.PhoneNumberType,
+                                                                                                         phoneNumber.Type,
+                                                                                                         EntityFieldNames.PhoneNumbers,
+                                                                                                         CommonRelationalDataReferenceTypes.PhoneNumberType,
                                                                                                          errorValidationResult);
 
                         if (phoneNumber.Value?.Length == 0)
@@ -587,10 +616,10 @@ namespace Logic.Security.Logic
                 {
                     foreach (var socialMediaProfile in req.SocialMediaProfiles)
                     {
-                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.SocialMediaProfileType, 
+                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.SocialMediaProfileType,
                                                                                                          socialMediaProfile.Platform,
-                                                                                                         "SocialMediaProfiles.Platform", 
-                                                                                                         CommonRelationalDataReferenceTypes.SocialMediaProfileType, 
+                                                                                                         "SocialMediaProfiles.Platform",
+                                                                                                         CommonRelationalDataReferenceTypes.SocialMediaProfileType,
                                                                                                          errorValidationResult);
 
                         if (socialMediaProfile.Url?.Length == 0 && socialMediaProfile.UserName?.Length == 0)
@@ -603,17 +632,17 @@ namespace Logic.Security.Logic
                 //validate Alternate Emails
                 if (req.AlternateEmails != null && req.AlternateEmails.Count > 0)
                 {
-                    if (req.AlternateEmails.Count > 5) 
+                    if (req.AlternateEmails.Count > 5)
                     {
                         errorValidationResult.Errors.Add(EntityFieldNames.AlternateEmails, new List<string> { "AlternateEmails cannot have more than 5 entries!" });
                     }
 
                     foreach (var alternateEmail in req.AlternateEmails)
                     {
-                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.EmailType, 
-                                                                                                         alternateEmail.Type, 
-                                                                                                         EntityFieldNames.AlternateEmails, 
-                                                                                                         CommonRelationalDataReferenceTypes.EmailType, 
+                        errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.EmailType,
+                                                                                                         alternateEmail.Type,
+                                                                                                         EntityFieldNames.AlternateEmails,
+                                                                                                         CommonRelationalDataReferenceTypes.EmailType,
                                                                                                          errorValidationResult);
 
                         if (alternateEmail.Value?.Length == 0)
@@ -662,16 +691,32 @@ namespace Logic.Security.Logic
             return userErrorValidationResult;
         }
 
+        private async Task<ErrorValidationResult<CommonNoteDto>> _validateUserNoteOnDelete(int noteId)
+        {
+            var userNoteErrorValidationResult = await GetUserNoteById(noteId, new BaseLogicGet());
+
+            if (userNoteErrorValidationResult.Response == null)
+            {
+                //user note for given id does not exist
+                return _createUserNoteNotFoundError<CommonNoteDto>();
+            }
+
+            if (userNoteErrorValidationResult.Response.ReadOnly)
+            {
+                return ValidatorUtilities.ReturnReadOnlyRecordErrorValidationResult<CommonNoteDto>(EntityFieldNames.CommonNotes);
+            }
+
+            return userNoteErrorValidationResult;
+        }
+
         private ErrorValidationResult<T> _createUserNotFoundError<T>(T? response = default)
         {
-            return new ErrorValidationResult<T>
-            {
-                Response = response,
-                Errors = new Dictionary<string, List<string>>
-                {
-                    { EntityFieldNames.User, new List<string> { ValidatorUtilities.CreateRecordDoesNotExistValidationErrorMessage(EntityFieldNames.UserId) } }
-                }
-            };
+            return ValidatorUtilities.ReturnRecordNotFoundErrorValidationResult<T>(EntityFieldNames.User, EntityFieldNames.UserId);
+        }
+
+        private ErrorValidationResult<T> _createUserNoteNotFoundError<T>(T? response = default)
+        {
+            return ValidatorUtilities.ReturnRecordNotFoundErrorValidationResult<T>(EntityFieldNames.UserNote, EntityFieldNames.NoteId);
         }
 
         private Dictionary<string, List<string>> AddRecordNotFoundErrorToErrorValidationResult(Dictionary<string, List<string>> errors)
@@ -681,19 +726,17 @@ namespace Logic.Security.Logic
 
         private async Task<ErrorValidationResult<UserDto>> _returnReadOnlyRecordErrorValidationResult()
         {
-            var errorValidationResult = new ErrorValidationResult<UserDto>();
-            errorValidationResult.Errors.Add(EntityFieldNames.User, new List<string> { ValidatorUtilities.CreateRecordIsReadOnlyValidationErrorMessage() });
-            return errorValidationResult;
+            return ValidatorUtilities.ReturnReadOnlyRecordErrorValidationResult<UserDto>(EntityFieldNames.User);
         }
 
         #endregion
 
         #region Audit Log
 
-        private async Task LogChange(SecurityDBContext dbContext, User oldRecord, InsertUpdateUserRequest req) 
+        private async Task LogChange(SecurityDBContext dbContext, User oldRecord, InsertUpdateUserRequest req)
         {
             var newRecord = req.ToEntityOnInsert();
-            
+
             // Only capture fields that actually changed, not the full entity graph
             var changeLog = new Dictionary<string, object?>();
 
@@ -706,7 +749,7 @@ namespace Logic.Security.Logic
             {
                 changeLog[nameof(User.Title)] = newRecord.Title;
             }
-            
+
             if (oldRecord.FirstName != newRecord.FirstName)
             {
                 changeLog[nameof(User.FirstName)] = newRecord.FirstName;
@@ -716,7 +759,7 @@ namespace Logic.Security.Logic
             {
                 changeLog[nameof(User.MiddleName)] = newRecord.MiddleName;
             }
-            
+
             if (oldRecord.LastName != newRecord.LastName)
             {
                 changeLog[nameof(User.LastName)] = newRecord.LastName;
@@ -790,14 +833,14 @@ namespace Logic.Security.Logic
             {
                 changeLog[nameof(User.Active)] = newRecord.Active;
             }
-            
+
             if (oldRecord.UpdatedBy != req.CurrentUser)
             {
                 changeLog[nameof(User.UpdatedBy)] = req.CurrentUser;
             }
-            
+
             changeLog[nameof(User.UpdatedOn)] = oldRecord.UpdatedOn;
-            
+
             await dbContext.AuditLogs.AddAsync(new AuditLog {
                 LogType = AuditLogLogTypes.Update,
                 ReferenceType = EntityFieldNames.User,
@@ -809,7 +852,7 @@ namespace Logic.Security.Logic
             });
         }
 
-        private async Task LogDelete(SecurityDBContext dbContext, User record, string currentUser) 
+        private async Task LogDelete(SecurityDBContext dbContext, User record, string currentUser)
         {
             await dbContext.AuditLogs.AddAsync(new AuditLog {
                 LogType = AuditLogLogTypes.Delete,
@@ -820,6 +863,33 @@ namespace Logic.Security.Logic
                 CreatedBy = currentUser,
                 CreatedOn = CommonUtilities.GetDateTimeUtcNow()
             });
+        }
+
+        private async Task LogNoteDelete(SecurityDBContext dbContext, UserNote record, string currentUser)
+        {
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Delete,
+                ReferenceType = EntityFieldNames.UserNote,
+                ReferenceId = record.NoteId,
+                ChangeLogJson = JsonSerializer.Serialize(new {}),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(record),
+                CreatedBy = currentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private string GetRecordStateBeforeChangeJson(UserNote record)
+        {
+            var log = new Dictionary<string, object?>();
+            log[nameof(UserNote.NoteId)] = record.NoteId;
+            log[nameof(UserNote.ReferenceId)] = record.ReferenceId;
+            log[nameof(UserNote.NoteType)] = record.NoteType;
+            log[nameof(UserNote.Subject)] = record.Subject;
+            log[nameof(UserNote.Text)] = record.Text;
+            log[nameof(UserNote.CreatedBy)] = record.CreatedBy;
+            log[nameof(UserNote.CreatedOn)] = record.CreatedOn;
+
+            return JsonSerializer.Serialize(log);
         }
 
         private string GetRecordStateBeforeChangeJson(User record)
@@ -837,7 +907,7 @@ namespace Logic.Security.Logic
             log[nameof(User.MaritalStatus)] = record.MaritalStatus;
             log[nameof(User.Religion)] = record.Religion;
             log[nameof(User.Gender)] = record.Gender;
-            
+
             // Keep these as raw strings (not parsed JSON) so RecordStateBeforeChangeJson deserializes back into User correctly.
             log[nameof(User.SpokenLanguageJson)] = record.SpokenLanguageJson;
             log[nameof(User.PhoneNumberJson)] = record.PhoneNumberJson;
@@ -852,7 +922,24 @@ namespace Logic.Security.Logic
             log[nameof(User.CreatedOn)] = record.CreatedOn;
             log[nameof(User.UpdatedBy)] = record.UpdatedBy;
             log[nameof(User.UpdatedOn)] = record.UpdatedOn;
-            
+
+            return JsonSerializer.Serialize(log);
+        }
+
+        private string GetNoteRecordStateBeforeChangeJson(UserNote record)
+        {
+            var log = new Dictionary<string, object?>();
+            log[nameof(UserNote.NoteId)] = record.NoteId;
+            log[nameof(UserNote.NoteType)] = record.NoteType;
+            log[nameof(UserNote.Subject)] = record.Subject;
+            log[nameof(UserNote.Text)] = record.Text;
+            log[nameof(UserNote.Active)] = record.Active;
+            log[nameof(UserNote.ReadOnly)] = record.ReadOnly;
+            log[nameof(UserNote.CreatedBy)] = record.CreatedBy;
+            log[nameof(UserNote.CreatedOn)] = record.CreatedOn;
+            log[nameof(UserNote.UpdatedBy)] = record.UpdatedBy;
+            log[nameof(UserNote.UpdatedOn)] = record.UpdatedOn;
+
             return JsonSerializer.Serialize(log);
         }
 
