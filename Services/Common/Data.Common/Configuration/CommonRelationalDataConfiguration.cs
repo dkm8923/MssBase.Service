@@ -61,6 +61,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         records.Add(_configureCountry(builder));
         records.Add(_configureTimeZone(builder));
         records.Add(_configureDaysOfWeek(builder));
+        records.Add(_configureCommonNoteType(builder)); 
 
         var idx = 1;
 
@@ -783,6 +784,26 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetAuditFields(relationalRecords);
 
         var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.DaysOfWeek, Description = "List of all Days of the Week and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
+
+        return ret;
+    }
+    
+    #endregion
+
+    #region Common Note Type
+
+    private CommonRelationalData _configureCommonNoteType(EntityTypeBuilder<CommonRelationalData> builder)
+    {
+        var relationalRecords = new List<CommonRelationalDataDto>();
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Information", Value = "Information", SortOrder = 1 });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Warning", Value = "Warning", SortOrder = 2 });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Danger", Value = "Danger", SortOrder = 3 });
+        relationalRecords.Add(new CommonRelationalDataDto { Name = "Success", Value = "Success", SortOrder = 4 });
+        
+        DataUtilities.SetActiveFieldToTrue(relationalRecords);
+        DataUtilities.SetAuditFields(relationalRecords);
+
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.CommonNoteType, Description = "List of all Common Note Types and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
 
         return ret;
     }
