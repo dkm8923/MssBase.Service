@@ -61,7 +61,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         records.Add(_configureCountry(builder));
         records.Add(_configureTimeZone(builder));
         records.Add(_configureDaysOfWeek(builder));
-        records.Add(_configureCommonNoteType(builder)); 
+        records.Add(_configureNoteType(builder)); 
 
         var idx = 1;
 
@@ -792,7 +792,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
 
     #region Common Note Type
 
-    private CommonRelationalData _configureCommonNoteType(EntityTypeBuilder<CommonRelationalData> builder)
+    private CommonRelationalData _configureNoteType(EntityTypeBuilder<CommonRelationalData> builder)
     {
         var relationalRecords = new List<CommonRelationalDataDto>();
         relationalRecords.Add(new CommonRelationalDataDto { Name = "Information", Value = "Information", SortOrder = 1 });
@@ -803,7 +803,7 @@ public class CommonRelationalDataConfiguration : IEntityTypeConfiguration<Common
         DataUtilities.SetActiveFieldToTrue(relationalRecords);
         DataUtilities.SetAuditFields(relationalRecords);
 
-        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.CommonNoteType, Description = "List of all Common Note Types and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
+        var ret = new CommonRelationalData { ReferenceType = CommonRelationalDataReferenceTypes.NoteType, Description = "List of all Note Types and their Value", Json = JsonSerializer.Serialize(relationalRecords) };
 
         return ret;
     }

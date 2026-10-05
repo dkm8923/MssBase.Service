@@ -41,6 +41,7 @@ try
 
     builder.Services.ConfigureCommonService(builder);
     builder.Services.ConfigureSecurityService(builder);
+    builder.Services.ConfigureSharedServiceDependencies(builder);
 
     builder.Services.ConfigureFluentValidationAutoValidation(builder);
 

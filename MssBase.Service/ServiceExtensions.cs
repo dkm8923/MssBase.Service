@@ -66,6 +66,8 @@ using Contract.Security.User;
 using Dto.Security.User.Logic;
 using Dto.Security.User;
 using Logic.Security.Validators.User;
+using Shared.Models.Dtos.CommonNote;
+using Shared.Logic.Validators;
 
 namespace MssBase.Service
 {
@@ -328,6 +330,15 @@ namespace MssBase.Service
             //Configure Fluent Validation Validators
             services.AddTransient<IValidator<FilterRolePermissionLogicRequest>, FilterRolePermissionLogicRequestValidator>();
             services.AddTransient<IValidator<InsertUpdateRolePermissionRequest>, InsertUpdateRolePermissionRequestValidator>();
+
+            #endregion
+        }
+
+        public static void ConfigureSharedServiceDependencies(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            #region Note
+
+            services.AddTransient<IValidator<InsertUpdateCommonNoteRequest>, InsertUpdateCommonNoteRequestValidator>();
 
             #endregion
         }
