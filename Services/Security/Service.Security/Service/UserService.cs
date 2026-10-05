@@ -11,6 +11,7 @@ using Contract.Common.CommonRelationalData;
 using Dto.Common.CommonRelationalData.Service;
 using Dto.Common.CommonRelationalData;
 using static Shared.Logic.Common.Constants;
+using Shared.Models.Dtos.CommonNote;
 
 namespace Service.Security.Service
 {
@@ -120,6 +121,13 @@ namespace Service.Security.Service
             return await _userLogic.Insert(req, commonData); 
         }
 
+        public async Task<ErrorValidationResult<CommonNoteDto>> InsertNote(int userId, InsertUpdateCommonNoteRequest req)
+        {
+            await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
+            var commonData = await _getCommonRelationalDataForNoteInsertUpdateValidation();
+            return await _userLogic.InsertNote(userId, req, commonData); 
+        }
+
         #endregion
 
         #region Update
@@ -131,6 +139,13 @@ namespace Service.Security.Service
             return await _userLogic.Update(userId, req, commonData);
         }
 
+        public async Task<ErrorValidationResult<CommonNoteDto>> UpdateNote(int userId, InsertUpdateCommonNoteRequest req)
+        {
+            await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
+            var commonData = await _getCommonRelationalDataForNoteInsertUpdateValidation();
+            return await _userLogic.UpdateNote(userId, req, commonData); 
+        }
+
         #endregion
 
         #region Delete
@@ -140,6 +155,13 @@ namespace Service.Security.Service
             await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
 
             return await _userLogic.Delete(userId, currentUser);
+        }
+
+        public async Task<ErrorValidationResult> DeleteNote(int userId, int noteId, string currentUser)
+        {
+            await _cacheService.RemoveKeysByPatternAsync(cacheKeySectionName);
+
+            return await _userLogic.DeleteNote(userId, noteId, currentUser);
         }
 
         #endregion
@@ -172,6 +194,19 @@ namespace Service.Security.Service
                     CommonRelationalDataReferenceTypes.PhoneNumberType,
                     CommonRelationalDataReferenceTypes.SocialMediaProfileType,
                     CommonRelationalDataReferenceTypes.EmailType
+                }
+            });
+
+            return commonDataRes.Response;
+        }
+
+        private async Task<FilterCommonRelationalDataDto> _getCommonRelationalDataForNoteInsertUpdateValidation()
+        {
+            var commonDataRes = await _commonRelationalDataService.Filter(new FilterCommonRelationalDataServiceRequest
+            {
+                ReferenceTypes = new List<string>
+                {
+                    CommonRelationalDataReferenceTypes.NoteType
                 }
             });
 

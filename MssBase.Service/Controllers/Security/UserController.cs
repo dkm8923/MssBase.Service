@@ -7,6 +7,7 @@ using MssBase.Service.Controllers.Shared;
 using MssBase.Service.Shared.Authorization;
 using Shared.Logic.Common;
 using Shared.Models;
+using Shared.Models.Dtos.CommonNote;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Attributes;
 
 namespace MssBase.Service.Controllers.Security
@@ -150,6 +151,27 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        [HttpPost()]
+        [RequiredPermission(UserApiPermissions.UserInsert)]
+        public async Task<IActionResult> InsertNote(int userId, InsertUpdateCommonNoteRequest req)
+        {
+            try
+            {
+                var result = await _userSvc.InsertNote(userId, req);
+
+                if (result.Errors.Count > 0)
+                {
+                    return BadRequest(result);
+                }
+
+                return CreatedAtRoute("GetUserById", new { userId = userId }, result);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
         #endregion
 
         #region Update
@@ -169,6 +191,21 @@ namespace MssBase.Service.Controllers.Security
             }
         }
 
+        [HttpPut("{userId}/Notes/{noteId}")]
+        [RequiredPermission(UserApiPermissions.UserUpdate)]
+        public async Task<IActionResult> UpdateNote(int userId, int noteId, InsertUpdateCommonNoteRequest req)
+        {
+            try
+            {
+                var result = await _userSvc.UpdateNote(userId, req);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
         #endregion
 
         #region Delete
@@ -180,6 +217,26 @@ namespace MssBase.Service.Controllers.Security
             try
             {
                 var result = await _userSvc.Delete(userId, currentUser);
+                if (result.Errors.Count > 0)
+                {
+                    return BadRequest(result);
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return HandleControllerException(HttpContext, ex);
+            }
+        }
+
+        [HttpDelete("{userId}/Notes/{noteId}")]
+        [RequiredPermission(UserApiPermissions.UserDelete)]
+        public async Task<IActionResult> DeleteUserNote(int userId, int noteId, [FromQuery] string currentUser = Constants.ApplicationName)
+        {
+            try
+            {
+                var result = await _userSvc.DeleteNote(userId, noteId, currentUser);
                 if (result.Errors.Count > 0)
                 {
                     return BadRequest(result);

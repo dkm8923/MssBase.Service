@@ -32,6 +32,7 @@ namespace Logic.Security.Logic
 
         private IValidator<FilterUserLogicRequest> _filterUserLogicRequestValidator;
         private IValidator<InsertUpdateUserRequest> _insertUpdateUserRequestValidator;
+        private IValidator<InsertUpdateCommonNoteRequest> _insertUpdateUserNoteRequestValidator;
         private IValidator<ChangePasswordRequest> _changePasswordRequestValidator;
         private IOptions<PasswordValidationConfig> _passwordValidationConfig;
 
@@ -39,6 +40,7 @@ namespace Logic.Security.Logic
                             ISecurityConnectionStrings connectionStrings,
                             IValidator<FilterUserLogicRequest> filterUserLogicRequestValidator,
                             IValidator<InsertUpdateUserRequest> insertUpdateUserRequestValidator,
+                            IValidator<InsertUpdateCommonNoteRequest> insertUpdateUserNoteRequestValidator,
                             IValidator<ChangePasswordRequest> changePasswordRequestValidator,
                             IOptions<PasswordValidationConfig> passwordValidationConfig
         )
@@ -47,6 +49,7 @@ namespace Logic.Security.Logic
             _dbContextFactory = new SecurityDBContextFactory(_connectionStrings);
             _filterUserLogicRequestValidator = filterUserLogicRequestValidator;
             _insertUpdateUserRequestValidator = insertUpdateUserRequestValidator;
+            _insertUpdateUserNoteRequestValidator = insertUpdateUserNoteRequestValidator;
             _changePasswordRequestValidator = changePasswordRequestValidator;
             _passwordValidationConfig = passwordValidationConfig;
         }
@@ -81,13 +84,13 @@ namespace Logic.Security.Logic
         #region GetUserNoteById
 
         /// <summary>
-        /// Retrieves a user note by its unique identifier.
+        /// Retrieves a user note by the unique identifier of the user and the note.
         /// </summary>
-        public async Task<ErrorValidationResult<CommonNoteDto>> GetUserNoteById(int noteId, BaseLogicGet req, CancellationToken cancellationToken = default)
+        public async Task<ErrorValidationResult<CommonNoteDto>> GetUserNoteById(int userId, int noteId, BaseLogicGet req, CancellationToken cancellationToken = default)
         {
             using (var dbContext = _dbContextFactory.CreateContextReadOnly())
             {
-                var query = dbContext.UserNotes.AsQueryable().AsNoTracking().Where(cn => cn.NoteId == noteId);
+                var query = dbContext.UserNotes.AsQueryable().AsNoTracking().Where(cn => cn.ReferenceId == userId && cn.NoteId == noteId);
                 return new ErrorValidationResult<CommonNoteDto> { Response = (await query.ToDtos(cancellationToken)).FirstOrDefault() };
             }
         }
@@ -215,7 +218,7 @@ namespace Logic.Security.Logic
                     query = query.Where(x => x.Gender == req.Gender);
                 }
 
-                query = query.Include(user => user.Notes);
+                query = query.Include(user => user.Notes).Where(note => (req.IncludeInactive || note.Active) && (req.IncludeReadOnly || !note.ReadOnly));
 
                 var ret = await query.ToDtosWithoutPassword(cancellationToken);
 
@@ -262,6 +265,28 @@ namespace Logic.Security.Logic
             }
         }
 
+        /// <summary>
+        /// Inserts a new user note into the data store.
+        /// </summary>
+        public async Task<ErrorValidationResult<CommonNoteDto>> InsertNote(int userId, InsertUpdateCommonNoteRequest req, FilterCommonRelationalDataDto commonRelationalData)
+        {
+            var errorValidationResult = await _validateUserNoteOnInsertUpdate(userId, req, commonRelationalData);
+            if (errorValidationResult.Errors.Count > 0)
+            {
+                return errorValidationResult;
+            }
+
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                var entity = req.ToEntityOnInsert<UserNote>(userId, req.CurrentUser);
+
+                await dbContext.UserNotes.AddAsync(entity);
+                await dbContext.SaveChangesAsync();
+
+                return new ErrorValidationResult<CommonNoteDto> { Response = entity.ToDto() };
+            }
+        }
+
         #endregion
 
         #region Update
@@ -292,14 +317,14 @@ namespace Logic.Security.Logic
                     return await _returnReadOnlyRecordErrorValidationResult();
                 }
 
-                var unknownNoteIds = (req.CommonNotes ?? new())
+                var unknownNoteIds = (req.Notes ?? new())
                     .Where(n => n.NoteId.HasValue && !entity.Notes.Any(en => en.NoteId == n.NoteId.Value))
                     .Select(n => n.NoteId.Value)
                     .ToList();
 
                 if (unknownNoteIds.Count > 0)
                 {
-                    errorValidationResult.Errors.Add(EntityFieldNames.CommonNotes, new List<string> { $"NoteId(s) not found for this user: {string.Join(", ", unknownNoteIds)}" });
+                    errorValidationResult.Errors.Add(EntityFieldNames.Notes, new List<string> { $"NoteId(s) not found for this user: {string.Join(", ", unknownNoteIds)}" });
                     return errorValidationResult;
                 }
 
@@ -316,6 +341,44 @@ namespace Logic.Security.Logic
                 var ret = entity.ToDtoWithoutPassword();
 
                 return new ErrorValidationResult<UserDto> { Response = ret };
+            }
+        }
+
+        /// <summary>
+        /// Updates the details of an existing User Note.
+        /// </summary>
+        public async Task<ErrorValidationResult<CommonNoteDto>> UpdateNote(int userId, InsertUpdateCommonNoteRequest req, FilterCommonRelationalDataDto commonRelationalData)
+        {
+            var errorValidationResult = await _validateUserNoteOnInsertUpdate(userId, req, commonRelationalData);
+            if (errorValidationResult.Errors.Count > 0)
+            {
+                return errorValidationResult;
+            }
+
+            using (var dbContext = _dbContextFactory.CreateContextReadWrite())
+            {
+                var entity = await dbContext.UserNotes.Where(n => n.NoteId == req.NoteId).FirstOrDefaultAsync();
+
+                if (entity == null)
+                {
+                    errorValidationResult.Errors = AddRecordNotFoundErrorToErrorValidationResult(errorValidationResult.Errors);
+                    return errorValidationResult;
+                }
+
+                if (entity.ReadOnly)
+                {
+                    return ValidatorUtilities.ReturnReadOnlyRecordErrorValidationResult<CommonNoteDto>(EntityFieldNames.UserNote);
+                }
+
+                await LogNoteChange(dbContext, userId, entity, req);
+
+                var commonNoteEntity = entity.UpdateEntityFromRequest(req);
+                
+                await dbContext.SaveChangesAsync();
+
+                var ret = commonNoteEntity.ToDto();
+
+                return new ErrorValidationResult<CommonNoteDto> { Response = ret };
             }
         }
 
@@ -364,9 +427,9 @@ namespace Logic.Security.Logic
         /// <summary>
         /// Deletes the user note with the specified identifier.
         /// </summary>
-        public async Task<ErrorValidationResult> DeleteNote(int noteId, string currentUser)
+        public async Task<ErrorValidationResult> DeleteNote(int userId, int noteId, string currentUser)
         {
-            var errorValidationResult = await _validateUserNoteOnDelete(noteId);
+            var errorValidationResult = await _validateUserNoteOnDelete(userId, noteId);
             if (errorValidationResult.Errors.Count > 0)
             {
                 return errorValidationResult;
@@ -378,7 +441,7 @@ namespace Logic.Security.Logic
 
                 if (entity != null)
                 {
-                    dbContext.UserNotes.RemoveRange(dbContext.UserNotes.Where(note => note.NoteId == noteId));
+                    dbContext.UserNotes.RemoveRange(dbContext.UserNotes.Where(note => note.NoteId == noteId && note.ReferenceId == userId));
 
                     await LogNoteDelete(dbContext, entity, currentUser);
 
@@ -667,6 +730,37 @@ namespace Logic.Security.Logic
             return errorValidationResult;
         }
 
+        private async Task<ErrorValidationResult<CommonNoteDto>> _validateUserNoteOnInsertUpdate(int userId, InsertUpdateCommonNoteRequest req, FilterCommonRelationalDataDto commonRelationalData)
+        {
+            ValidationResult result = await _insertUpdateUserNoteRequestValidator.ValidateAsync(req);
+            var errorValidationResult = ValidatorUtilities.CreateDefaultValidationResponse<CommonNoteDto>(result);
+
+            //validate user exists
+            var userErrorValidationResult = await GetById(userId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true, IncludeReadOnly = true });
+            if (userErrorValidationResult.Response == null)
+            {
+                return _createUserNotFoundError<CommonNoteDto>();
+            }
+
+            if (req.NoteId != null) 
+            {
+                //validate note exists on update
+                var noteErrorValidationResult = await GetUserNoteById(userId, (int)req.NoteId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true, IncludeReadOnly = true });
+                if (noteErrorValidationResult.Response == null)
+                {
+                    return _createUserNoteNotFoundError<CommonNoteDto>();
+                }
+            }
+            
+            if (errorValidationResult.Errors.Count == 0)
+            {
+                //validate Note Type is valid
+                errorValidationResult = CommonLogicUtilities.ValidateCommonRelationalDataNameIsValid(commonRelationalData.NoteType, req.NoteType, EntityFieldNames.NoteType, CommonRelationalDataReferenceTypes.NoteType, errorValidationResult);
+            }
+
+            return errorValidationResult;
+        }
+
         private async Task<ErrorValidationResult<UserDto>> _validateUserOnDelete(int userId)
         {
             var userErrorValidationResult = await GetById(userId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true, IncludeReadOnly = true });
@@ -691,9 +785,16 @@ namespace Logic.Security.Logic
             return userErrorValidationResult;
         }
 
-        private async Task<ErrorValidationResult<CommonNoteDto>> _validateUserNoteOnDelete(int noteId)
+        private async Task<ErrorValidationResult<CommonNoteDto>> _validateUserNoteOnDelete(int userId, int noteId)
         {
-            var userNoteErrorValidationResult = await GetUserNoteById(noteId, new BaseLogicGet());
+            var userErrorValidationResult = await GetById(userId, new BaseLogicGet { IncludeInactive = true, IncludeRelated = true, IncludeReadOnly = true });
+            if (userErrorValidationResult.Response == null)
+            {
+                //user for given id does not exist
+                return _createUserNotFoundError<CommonNoteDto>();
+            }
+
+            var userNoteErrorValidationResult = await GetUserNoteById(userId, noteId, new BaseLogicGet());
 
             if (userNoteErrorValidationResult.Response == null)
             {
@@ -703,7 +804,7 @@ namespace Logic.Security.Logic
 
             if (userNoteErrorValidationResult.Response.ReadOnly)
             {
-                return ValidatorUtilities.ReturnReadOnlyRecordErrorValidationResult<CommonNoteDto>(EntityFieldNames.CommonNotes);
+                return ValidatorUtilities.ReturnReadOnlyRecordErrorValidationResult<CommonNoteDto>(EntityFieldNames.Notes);
             }
 
             return userNoteErrorValidationResult;
@@ -865,7 +966,52 @@ namespace Logic.Security.Logic
             });
         }
 
-        private async Task LogNoteDelete(SecurityDBContext dbContext, UserNote record, string currentUser)
+        private async Task LogNoteChange(SecurityDBContext dbContext, int referenceId, CommonNote oldRecord, InsertUpdateCommonNoteRequest req)
+        {
+            var newRecord = req.ToEntityOnInsert<CommonNote>(referenceId, req.CurrentUser);
+
+            // Only capture fields that actually changed, not the full entity graph
+            var changeLog = new Dictionary<string, object?>();
+
+            if (oldRecord.NoteType != newRecord.NoteType)
+            {
+                changeLog[nameof(CommonNote.NoteType)] = newRecord.NoteType;
+            }
+
+            if (oldRecord.Subject != newRecord.Subject)
+            {
+                changeLog[nameof(CommonNote.Subject)] = newRecord.Subject;
+            }
+
+            if (oldRecord.Text != newRecord.Text)
+            {
+                changeLog[nameof(CommonNote.Text)] = newRecord.Text;
+            }
+
+            if (oldRecord.Active != newRecord.Active)
+            {
+                changeLog[nameof(CommonNote.Active)] = newRecord.Active;
+            }
+
+            if (oldRecord.UpdatedBy != req.CurrentUser)
+            {
+                changeLog[nameof(CommonNote.UpdatedBy)] = req.CurrentUser;
+            }
+
+            changeLog[nameof(CommonNote.UpdatedOn)] = oldRecord.UpdatedOn;
+
+            await dbContext.AuditLogs.AddAsync(new AuditLog {
+                LogType = AuditLogLogTypes.Update,
+                ReferenceType = EntityFieldNames.UserNote,
+                ReferenceId = referenceId,
+                ChangeLogJson = JsonSerializer.Serialize(changeLog),
+                RecordStateBeforeChangeJson = GetRecordStateBeforeChangeJson(oldRecord),
+                CreatedBy = req.CurrentUser,
+                CreatedOn = CommonUtilities.GetDateTimeUtcNow()
+            });
+        }
+
+        private async Task LogNoteDelete(SecurityDBContext dbContext, CommonNote record, string currentUser)
         {
             await dbContext.AuditLogs.AddAsync(new AuditLog {
                 LogType = AuditLogLogTypes.Delete,
@@ -878,16 +1024,16 @@ namespace Logic.Security.Logic
             });
         }
 
-        private string GetRecordStateBeforeChangeJson(UserNote record)
+        private string GetRecordStateBeforeChangeJson(CommonNote record)
         {
             var log = new Dictionary<string, object?>();
-            log[nameof(UserNote.NoteId)] = record.NoteId;
-            log[nameof(UserNote.ReferenceId)] = record.ReferenceId;
-            log[nameof(UserNote.NoteType)] = record.NoteType;
-            log[nameof(UserNote.Subject)] = record.Subject;
-            log[nameof(UserNote.Text)] = record.Text;
-            log[nameof(UserNote.CreatedBy)] = record.CreatedBy;
-            log[nameof(UserNote.CreatedOn)] = record.CreatedOn;
+            log[nameof(CommonNote.NoteId)] = record.NoteId;
+            log[nameof(CommonNote.ReferenceId)] = record.ReferenceId;
+            log[nameof(CommonNote.NoteType)] = record.NoteType;
+            log[nameof(CommonNote.Subject)] = record.Subject;
+            log[nameof(CommonNote.Text)] = record.Text;
+            log[nameof(CommonNote.CreatedBy)] = record.CreatedBy;
+            log[nameof(CommonNote.CreatedOn)] = record.CreatedOn;
 
             return JsonSerializer.Serialize(log);
         }
@@ -926,19 +1072,19 @@ namespace Logic.Security.Logic
             return JsonSerializer.Serialize(log);
         }
 
-        private string GetNoteRecordStateBeforeChangeJson(UserNote record)
+        private string GetNoteRecordStateBeforeChangeJson(CommonNote record)
         {
             var log = new Dictionary<string, object?>();
-            log[nameof(UserNote.NoteId)] = record.NoteId;
-            log[nameof(UserNote.NoteType)] = record.NoteType;
-            log[nameof(UserNote.Subject)] = record.Subject;
-            log[nameof(UserNote.Text)] = record.Text;
-            log[nameof(UserNote.Active)] = record.Active;
-            log[nameof(UserNote.ReadOnly)] = record.ReadOnly;
-            log[nameof(UserNote.CreatedBy)] = record.CreatedBy;
-            log[nameof(UserNote.CreatedOn)] = record.CreatedOn;
-            log[nameof(UserNote.UpdatedBy)] = record.UpdatedBy;
-            log[nameof(UserNote.UpdatedOn)] = record.UpdatedOn;
+            log[nameof(CommonNote.NoteId)] = record.NoteId;
+            log[nameof(CommonNote.NoteType)] = record.NoteType;
+            log[nameof(CommonNote.Subject)] = record.Subject;
+            log[nameof(CommonNote.Text)] = record.Text;
+            log[nameof(CommonNote.Active)] = record.Active;
+            log[nameof(CommonNote.ReadOnly)] = record.ReadOnly;
+            log[nameof(CommonNote.CreatedBy)] = record.CreatedBy;
+            log[nameof(CommonNote.CreatedOn)] = record.CreatedOn;
+            log[nameof(CommonNote.UpdatedBy)] = record.UpdatedBy;
+            log[nameof(CommonNote.UpdatedOn)] = record.UpdatedOn;
 
             return JsonSerializer.Serialize(log);
         }

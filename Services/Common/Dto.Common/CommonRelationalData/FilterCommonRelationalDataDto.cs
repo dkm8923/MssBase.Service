@@ -50,5 +50,7 @@ namespace Dto.Common.CommonRelationalData
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<CommonRelationalDataDto>? Country { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<CommonRelationalDataDto>? NoteType { get; set; }
     }
 }

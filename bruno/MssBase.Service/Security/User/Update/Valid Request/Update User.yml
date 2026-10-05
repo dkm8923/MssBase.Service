@@ -15,14 +15,14 @@ http:
     data: |-
       {
         "email": "bruno.user.update@example.test",
-        "title": "Dr.",
+        "title": "Mr.",
         "firstName": "BrunoTestFirstNameUpdate",
         "middleName": "BrunoTestMiddleName",
         "lastName": "BrunoTestLastNameUpdate",
         "preferredName": "BrunoTestUpdate",
         "suffix": "Jr.",
         "dateOfBirth": "1989-06-15",
-        "timeZone": "UTC",
+        "timeZone": "EST",
         "active": true,
         "currentUser": "{{DefaultCurrentUser}}"
       }

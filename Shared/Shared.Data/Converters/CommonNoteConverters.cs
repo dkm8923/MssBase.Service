@@ -61,4 +61,20 @@ public static class CommonNoteConverters
 
         return target;
     }
+
+    public static CommonNote UpdateEntityFromRequest(this CommonNote entity, InsertUpdateCommonNoteRequest source)
+    {
+        if (source == null || entity == null)
+        {
+            return null;
+        }
+
+        entity.Active = source.Active;
+        entity.NoteType = source.NoteType;
+        entity.Subject = source.Subject;
+        entity.Text = source.Text;
+        entity.CurrentUser = source.CurrentUser;
+
+        return entity;
+    }
 }

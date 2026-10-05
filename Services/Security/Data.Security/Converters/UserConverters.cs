@@ -48,7 +48,7 @@ namespace Data.Security.Converters
                 AlternateEmails = source.AlternateEmailJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.AlternateEmailJson),
                 GenderPronouns = source.GenderPronounJson == null ? null : JsonSerializer.Deserialize<List<string>>(source.GenderPronounJson),
                 ImportantDates = source.ImportantDateJson == null ? null : JsonSerializer.Deserialize<List<TypedValueDto>>(source.ImportantDateJson),
-                CommonNotes = source.Notes?.Count > 0 ? source.Notes.Select(n => n.ToDto()).ToList() : null,
+                Notes = source.Notes?.Count > 0 ? source.Notes.Select(n => n.ToDto()).ToList() : null,
                 Password = applicationUserLogin.Password,
                 PasswordResetRequired = applicationUserLogin.PasswordResetRequired,
                 LastLoginDateTime = applicationUserLogin.LastLoginDateTime,
@@ -108,9 +108,9 @@ namespace Data.Security.Converters
             }
 
             var notes = new List<UserNote>();
-            if (source.CommonNotes?.Count() > 0)
+            if (source.Notes?.Count() > 0)
             {
-                foreach (var noteReq in source.CommonNotes)
+                foreach (var noteReq in source.Notes)
                 {
                     notes.Add(noteReq.ToEntityOnInsert<UserNote>(0, source.CurrentUser));
                 }
@@ -164,7 +164,7 @@ namespace Data.Security.Converters
             entity.CurrentUser = source.CurrentUser;
 
             // Merge by NoteId: update matches, add new (no id), leave unlisted notes untouched.
-            foreach (var noteReq in source.CommonNotes ?? new())
+            foreach (var noteReq in source.Notes ?? new())
             {
                 var existing = noteReq.NoteId.HasValue
                     ? entity.Notes.FirstOrDefault(n => n.NoteId == noteReq.NoteId.Value)
