@@ -1,32 +1,32 @@
-using System.Net;
 using Contract.Security.Permission;
-using Dto.Security.Permission;
-using Dto.Security.Permission.Service;
-using MssBase.UI.Configuration;
 using Microsoft.Extensions.Options;
+using MssBase.UI.Configuration;
 using Shared.Models;
 using Shared.Models.Dtos;
+using Dto.Security.Permission;
+using Dto.Security.Permission.Service;
+using System.Net;
+using MssBase.UI.HttpClients.Shared;
 
-namespace MssBase.UI.HttpClients
+namespace MssBase.UI.HttpClients.Security
 {
-    public class SecurityHttpClient : IPermissionService
+    public class PermissionHttpC
     {
         private readonly HttpClient _httpClient;
 
-        public SecurityHttpClient(HttpClient httpClient, IOptions<SecurityApiOptions> options)
+        public PermissionHttpClient(HttpClient httpClient, IOptions<SecurityApiOptions> options)
         {
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(options.Value.BaseAddress, UriKind.Absolute);
         }
 
-        #region Permission
-
         public Task<ErrorValidationResult<IEnumerable<PermissionDto>>> GetAll(
             BaseServiceGet req,
             CancellationToken cancellationToken = default)
         {
-            return GetResultAsync<IEnumerable<PermissionDto>>(
-                $"Permission{BuildQuery(req)}",
+            return HttpClientUtils.GetResultAsync<IEnumerable<PermissionDto>>(
+                _httpClient,
+                $"Permission{HttpClientUtils.BuildQuery(req)}",
                 cancellationToken);
         }
 
@@ -35,8 +35,9 @@ namespace MssBase.UI.HttpClients
             BaseServiceGet req,
             CancellationToken cancellationToken = default)
         {
-            return GetResultAsync<PermissionDto>(
-                $"Permission/{permissionId}{BuildQuery(req)}",
+            return HttpClientUtils.GetResultAsync<PermissionDto>(
+                _httpClient,
+                $"Permission/{permissionId}{HttpClientUtils.BuildQuery(req)}",
                 cancellationToken);
         }
 
@@ -45,8 +46,9 @@ namespace MssBase.UI.HttpClients
             BaseServiceGet req,
             CancellationToken cancellationToken = default)
         {
-            return GetResultAsync<IEnumerable<AuditLogDto>>(
-                $"Permission/{permissionId}/AuditLogs?deleteCache={req.DeleteCache}",
+            return HttpClientUtils.GetResultAsync<IEnumerable<AuditLogDto>>(
+                _httpClient,
+                $"Permission/{permissionId}/AuditLogs{HttpClientUtils.BuildQuery(req)}",
                 cancellationToken);
         }
 
@@ -59,13 +61,13 @@ namespace MssBase.UI.HttpClients
                 req,
                 cancellationToken);
 
-            return await ReadResultAsync<IEnumerable<PermissionDto>>(response, cancellationToken);
+            return await HttpClientUtils.ReadResultAsync<IEnumerable<PermissionDto>>(response, cancellationToken);
         }
 
         public async Task<ErrorValidationResult<PermissionDto>> Insert(InsertUpdatePermissionRequest req)
         {
             using var response = await _httpClient.PostAsJsonAsync("Permission", req);
-            return await ReadResultAsync<PermissionDto>(response);
+            return await HttpClientUtils.ReadResultAsync<PermissionDto>(response);
         }
 
         public async Task<ErrorValidationResult<PermissionDto>> Update(
@@ -73,7 +75,7 @@ namespace MssBase.UI.HttpClients
             InsertUpdatePermissionRequest req)
         {
             using var response = await _httpClient.PutAsJsonAsync($"Permission/{permissionId}", req);
-            return await ReadResultAsync<PermissionDto>(response);
+            return await HttpClientUtils.ReadResultAsync<PermissionDto>(response);
         }
 
         public async Task<ErrorValidationResult> Delete(int permissionId, string currentUser)
@@ -91,41 +93,5 @@ namespace MssBase.UI.HttpClients
             response.EnsureSuccessStatusCode();
             return new ErrorValidationResult();
         }
-
-        #endregion
-
-        #region Utils
-
-        private async Task<ErrorValidationResult<T>> GetResultAsync<T>(
-            string requestUri,
-            CancellationToken cancellationToken)
-        {
-            using var response = await _httpClient.GetAsync(requestUri, cancellationToken);
-            return await ReadResultAsync<T>(response, cancellationToken);
-        }
-
-        private static async Task<ErrorValidationResult<T>> ReadResultAsync<T>(
-            HttpResponseMessage response,
-            CancellationToken cancellationToken = default)
-        {
-            var result = await response.Content.ReadFromJsonAsync<ErrorValidationResult<T>>(
-                cancellationToken: cancellationToken);
-
-            if (response.StatusCode == HttpStatusCode.BadRequest && result is not null)
-            {
-                return result;
-            }
-
-            response.EnsureSuccessStatusCode();
-            return result ?? new ErrorValidationResult<T>();
-        }
-
-        private static string BuildQuery(BaseServiceGet req)
-        {
-            return $"?deleteCache={req.DeleteCache}&includeInactive={req.IncludeInactive}&includeReadOnly={req.IncludeReadOnly}";
-        }
-
-        #endregion
-    
     }
 }
