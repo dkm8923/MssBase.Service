@@ -10,7 +10,7 @@ using MssBase.UI.HttpClients.Shared;
 
 namespace MssBase.UI.HttpClients.Security
 {
-    public class PermissionHttpC
+    public class PermissionHttpClient : IPermissionService
     {
         private readonly HttpClient _httpClient;
 
