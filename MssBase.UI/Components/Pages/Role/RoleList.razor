@@ -1,0 +1,61 @@
+@page "/RoleList"
+@using Contract.Security.Role
+@using Dto.Security.Role
+
+<PageTitle>Role List</PageTitle>
+
+<MudTable Items="Roles" Hover="true" SortLabel="Sort By" Elevation="0" AllowUnsorted="false">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<RoleDto, object>(x => x.RoleId)">ID</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<RoleDto, object>(x => x.Name)">Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<RoleDto, object>(x => x.Description)">Description</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<RoleDto, object>(x => x.Active)">Active</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<RoleDto, object>(x => x.CreatedOn)">Created On</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<RoleDto, object>(x => x.CreatedBy)">Created By</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<RoleDto, object>(x => x.UpdatedOn)">Updated On</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<RoleDto, object>(x => x.UpdatedBy)">Updated By</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.RoleId</MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Description">@context.Description</MudTd>
+        <MudTd DataLabel="Active">@context.Active</MudTd>
+        <MudTd DataLabel="Created On">@context.CreatedOn</MudTd>
+        <MudTd DataLabel="Created By">@context.CreatedBy</MudTd>
+        <MudTd DataLabel="Updated On">@context.UpdatedOn</MudTd>
+        <MudTd DataLabel="Updated By">@context.UpdatedBy</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[]{50, 100}" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    public List<RoleDto> Roles { get; set; }
+
+    #region Injected Services
+    
+    [Inject]
+    public required IRoleService RoleService { get; set; }
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var res = await RoleService.GetAll(new Shared.Models.BaseServiceGet());
+        Roles = res.Response?.ToList();
+
+        //UseTestData();
+    }
+
+    private void UseTestData()
+    {
+        Roles = new List<RoleDto>();
+        // Example data for testing
+
+        Roles.Add(new RoleDto { RoleId = 1, Name = "Role 1", Description = "Description 1", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 1", UpdatedOn = DateTime.Now, UpdatedBy = "User 1" });
+        Roles.Add(new RoleDto { RoleId = 2, Name = "Role 2", Description = "Description 2", Active = false, CreatedOn = DateTime.Now, CreatedBy = "User 2", UpdatedOn = DateTime.Now, UpdatedBy = "User 2" });
+        Roles.Add(new RoleDto { RoleId = 3, Name = "Role 3", Description = "Description 3", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 3", UpdatedOn = DateTime.Now, UpdatedBy = "User 3" });
+    }
+}
