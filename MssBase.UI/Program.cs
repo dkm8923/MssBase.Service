@@ -1,5 +1,6 @@
 using MudBlazor.Services;
 using Contract.Security.Permission;
+using MssBase.UI.Configuration;
 using MssBase.UI.HttpClients;
 using MssBase.UI.Components;
 
@@ -7,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add MudBlazor services
 builder.Services.AddMudServices();
+builder.Services.Configure<SecurityApiOptions>(
+    builder.Configuration.GetSection(SecurityApiOptions.SectionName));
 
 builder.Services.AddTransient<BearerTokenHandler>();
 

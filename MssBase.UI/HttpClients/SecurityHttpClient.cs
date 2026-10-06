@@ -1,9 +1,9 @@
-using System.Net.Http;
-using System.Net.Http.Json;
 using System.Net;
 using Contract.Security.Permission;
 using Dto.Security.Permission;
 using Dto.Security.Permission.Service;
+using MssBase.UI.Configuration;
+using Microsoft.Extensions.Options;
 using Shared.Models;
 using Shared.Models.Dtos;
 
@@ -13,11 +13,13 @@ namespace MssBase.UI.HttpClients
     {
         private readonly HttpClient _httpClient;
 
-        public SecurityHttpClient(HttpClient httpClient)
+        public SecurityHttpClient(HttpClient httpClient, IOptions<SecurityApiOptions> options)
         {
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri("http://localhost:5217/api/Security/");
+            _httpClient.BaseAddress = new Uri(options.Value.BaseAddress, UriKind.Absolute);
         }
+
+        #region Permission
 
         public Task<ErrorValidationResult<IEnumerable<PermissionDto>>> GetAll(
             BaseServiceGet req,
@@ -90,6 +92,10 @@ namespace MssBase.UI.HttpClients
             return new ErrorValidationResult();
         }
 
+        #endregion
+
+        #region Utils
+
         private async Task<ErrorValidationResult<T>> GetResultAsync<T>(
             string requestUri,
             CancellationToken cancellationToken)
@@ -118,5 +124,8 @@ namespace MssBase.UI.HttpClients
         {
             return $"?deleteCache={req.DeleteCache}&includeInactive={req.IncludeInactive}&includeReadOnly={req.IncludeReadOnly}";
         }
+
+        #endregion
+    
     }
 }
