@@ -59,6 +59,8 @@ using Service.Common.Service;
 using Logic.Common.Logic;
 using Contract.Common;
 using Shared.Models.Dtos;
+using Shared.Models.Dtos.CommonNote;
+using Shared.Logic.Validators;
 
 namespace IntegrationTests.Security.Shared;
 
@@ -1385,6 +1387,7 @@ public class SecurityTestBase
 
         services = ConfigureBaseDependencies(services);
         services = ConfigureSecurityService(services);
+        services = ConfigureSharedServiceDependencies(services);
         services = ConfigureCommonService(services);
 
         return services.BuildServiceProvider();
@@ -1529,6 +1532,17 @@ public class SecurityTestBase
         //Configure Fluent Validation Validators
         services.AddTransient<IValidator<FilterRolePermissionLogicRequest>, FilterRolePermissionLogicRequestValidator>();
         services.AddTransient<IValidator<InsertUpdateRolePermissionRequest>, InsertUpdateRolePermissionRequestValidator>();
+
+        #endregion
+
+        return services;
+    }
+
+    private ServiceCollection  ConfigureSharedServiceDependencies(ServiceCollection services)
+    {
+        #region Note
+
+        services.AddTransient<IValidator<InsertUpdateCommonNoteRequest>, InsertUpdateCommonNoteRequestValidator>();
 
         #endregion
 
