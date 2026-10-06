@@ -1,10 +1,17 @@
 using MudBlazor.Services;
+using Contract.Security.Permission;
+using MssBase.UI.HttpClients;
 using MssBase.UI.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add MudBlazor services
 builder.Services.AddMudServices();
+
+builder.Services.AddTransient<BearerTokenHandler>();
+
+builder.Services.AddHttpClient<IPermissionService, SecurityHttpClient>()
+    .AddHttpMessageHandler<BearerTokenHandler>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

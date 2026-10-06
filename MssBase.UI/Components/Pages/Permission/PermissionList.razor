@@ -1,0 +1,61 @@
+@page "/PermissionList"
+@using Contract.Security.Permission
+@using Dto.Security.Permission
+
+<PageTitle>Permission List</PageTitle>
+
+<MudTable Items="Permissions" Hover="true" SortLabel="Sort By" Elevation="0" AllowUnsorted="false">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<PermissionDto, object>(x => x.PermissionId)">ID</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Name)">Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Description)">Description</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Active)">Active</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.CreatedOn)">Created On</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.CreatedBy)">Created By</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.UpdatedOn)">Updated On</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.UpdatedBy)">Updated By</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.PermissionId</MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Description">@context.Description</MudTd>
+        <MudTd DataLabel="Active">@context.Active</MudTd>
+        <MudTd DataLabel="Created On">@context.CreatedOn</MudTd>
+        <MudTd DataLabel="Created By">@context.CreatedBy</MudTd>
+        <MudTd DataLabel="Updated On">@context.UpdatedOn</MudTd>
+        <MudTd DataLabel="Updated By">@context.UpdatedBy</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[]{50, 100}" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    public List<PermissionDto> Permissions { get; set; }
+
+    #region Injected Services
+    
+    [Inject]
+    public required IPermissionService PermissionService { get; set; }
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var res = await PermissionService.GetAll(new Shared.Models.BaseServiceGet());
+        Permissions = res.Response?.ToList();
+
+        //UseTestData();
+    }
+
+    private void UseTestData()
+    {
+        Permissions = new List<PermissionDto>();
+        // Example data for testing
+
+        Permissions.Add(new PermissionDto { PermissionId = 1, Name = "Permission 1", Description = "Description 1", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 1", UpdatedOn = DateTime.Now, UpdatedBy = "User 1" });
+        Permissions.Add(new PermissionDto { PermissionId = 2, Name = "Permission 2", Description = "Description 2", Active = false, CreatedOn = DateTime.Now, CreatedBy = "User 2", UpdatedOn = DateTime.Now, UpdatedBy = "User 2" });
+        Permissions.Add(new PermissionDto { PermissionId = 3, Name = "Permission 3", Description = "Description 3", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 3", UpdatedOn = DateTime.Now, UpdatedBy = "User 3" });
+    }
+}

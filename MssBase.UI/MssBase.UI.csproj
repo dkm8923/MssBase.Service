@@ -11,4 +11,11 @@
   <ItemGroup>
     <PackageReference Include="MudBlazor" Version="9.*" />
   </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="../Services/Security/Data.Security/Data.Security.csproj" />
+    <ProjectReference Include="../Services/Security/Dto.Security/Dto.Security.csproj" />
+    <ProjectReference Include="../Services/Security/Service.Security/Service.Security.csproj" />
+  </ItemGroup>
 </Project>
