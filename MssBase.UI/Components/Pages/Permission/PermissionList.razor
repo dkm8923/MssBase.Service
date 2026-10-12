@@ -1,61 +1,378 @@
 @page "/PermissionList"
 @using Contract.Security.Permission
 @using Dto.Security.Permission
+@using Dto.Security.Permission.Service
+@using MssBase.UI.Components.Services
+@using global::Shared.Models
+
 
 <PageTitle>Permission List</PageTitle>
 
-<MudTable Items="Permissions" Hover="true" SortLabel="Sort By" Elevation="0" AllowUnsorted="false">
-    <HeaderContent>
-        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<PermissionDto, object>(x => x.PermissionId)">ID</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Name)">Name</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Description)">Description</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Active)">Active</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.CreatedOn)">Created On</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.CreatedBy)">Created By</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.UpdatedOn)">Updated On</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.UpdatedBy)">Updated By</MudTableSortLabel></MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Id">@context.PermissionId</MudTd>
-        <MudTd DataLabel="Name">@context.Name</MudTd>
-        <MudTd DataLabel="Description">@context.Description</MudTd>
-        <MudTd DataLabel="Active">@context.Active</MudTd>
-        <MudTd DataLabel="Created On">@context.CreatedOn</MudTd>
-        <MudTd DataLabel="Created By">@context.CreatedBy</MudTd>
-        <MudTd DataLabel="Updated On">@context.UpdatedOn</MudTd>
-        <MudTd DataLabel="Updated By">@context.UpdatedBy</MudTd>
-    </RowTemplate>
-    <PagerContent>
-        <MudTablePager PageSizeOptions="new int[]{50, 100}" />
-    </PagerContent>
-</MudTable>
+<MudPaper class="mud-paper-outlined what-is-this" Outlined="true">
+    
+    @if (_showAdvancedSearch) 
+    {
+        <MudCard Outlined="true">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Advanced Search Filters:</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" @onclick="HandleHideAdvancedSearchFilters">Use Simple Search</MudButton>
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Secondary" @onclick="HandleCancelFilterGridData">Clear</MudButton>
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Search" Color="Color.Primary" @onclick="HandleFilterGridData">Search</MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="6" sm="3">
+                        <MudSelect @bind-Value="_filterRequest.CreatedBy" 
+                                Label="Created By" 
+                                Margin="Margin.Dense"
+                                Dense="true"
+                                Placeholder="Select a User" 
+                                AdornmentIcon="@Icons.Material.Filled.Person" 
+                                AdornmentColor="Color.Primary"
+                                Variant="Variant.Outlined"
+                                Clearable="true">
+                            @foreach (var user in _createdByList)
+                            {
+                                <MudSelectItem Value="user">@user</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="6" sm="3">
+                        <MudDatePicker @bind-Date="CreatedOnDateFilter"
+                                    Label="Created On"
+                                    Margin="Margin.Dense"
+                                    Dense="true"
+                                    Placeholder="Select a Date" 
+                                    Clearable="true"
+                                    Variant="Variant.Outlined"
+                                    ShowToolbar="false" />
+                    </MudItem>
+                    <MudItem xs="6" sm="3">
+                        <MudSelect @bind-Value="_filterRequest.UpdatedBy" 
+                                Label="Updated By" 
+                                Margin="Margin.Dense"
+                                Dense="true"
+                                Placeholder="Select a User" 
+                                AdornmentIcon="@Icons.Material.Filled.Person" 
+                                AdornmentColor="Color.Primary"
+                                Variant="Variant.Outlined"
+                                Clearable="true">
+                                    @foreach (var user in _updatedByList)
+                                    {
+                                        <MudSelectItem Value="user">@user</MudSelectItem>
+                                    }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="6" sm="3">
+                        <MudDatePicker @bind-Date="UpdatedOnDateFilter"
+                                    Label="Updated On"
+                                    Margin="Margin.Dense"
+                                    Dense="true"
+                                    Placeholder="Select a Date" 
+                                    Clearable="true"
+                                    Variant="Variant.Outlined"
+                                    ShowToolbar="false" />
+                    </MudItem>
+                    <MudItem xs="3" sm="6">
+                        <MudCheckBox T="bool" 
+                            @bind-Value="_filterRequest.IncludeInactive"
+                            Label="Include Inactive"
+                            Margin="Margin.Dense"
+                            Dense="true"
+                            Color="Color.Primary"
+                            Size="Size.Small" />
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    }
+    else 
+    {
+        <MudCard Outlined="true">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Search:</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="9" sm="9">
+                        <MudTextField @bind-Value="_filterRequest.Name"
+                                    Label="Search By Name"
+                                    Margin="Margin.Dense"
+                                    Dense="true"
+                                    Clearable="true"
+                                    OnClearButtonClick="HandleClearSearch"
+                                    Variant="Variant.Outlined"
+                                    Adornment="Adornment.Start" 
+                                    AdornmentIcon="@Icons.Material.Filled.Search" 
+                                    AdornmentColor="Color.Primary"
+                                    Immediate="true"
+                                    OnKeyDown="HandleSearchKeyDown" />
+                    </MudItem>
+                    <MudItem xs="3" sm="3">
+                        <MudIconButton @onclick="HandleShowAdvancedSearchFilters" Icon="@Icons.Material.Filled.FilterAlt" Color="Color.Primary" Title="Advanced Search Filter(s)" />
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    }
+
+ <MudCard Outlined="true">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Permissions: (@_gridData.Count)</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="HandleCreateNewRecord">Add New Permission</MudButton>
+            @* <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" /> *@
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudTable Items="_gridData" 
+                  Hover="true" 
+                  SortLabel="Sort By" 
+                  Elevation="0" 
+                  AllowUnsorted="false"
+                  FixedHeader="true"
+                  FixedFooter="true"
+                  HorizontalScrollbar="true"
+                  Height="400px">
+            <HeaderContent>
+                <MudTh>Action(s)</MudTh>
+                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<PermissionDto, object>(x => x.PermissionId)">ID</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Name)">Name</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Description)">Description</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Active)">Active</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.CreatedOn)">Created On</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.CreatedBy)">Created By</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.UpdatedOn)">Updated On</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.UpdatedBy)">Updated By</MudTableSortLabel></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Action(s)">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="() => HandleEditRecord(context.PermissionId)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" />
+                </MudTd>
+                <MudTd DataLabel="Id">@context.PermissionId</MudTd>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Description">@context.Description</MudTd>
+                <MudTd DataLabel="Active">@context.Active</MudTd>
+                <MudTd DataLabel="Created On">@context.CreatedOn</MudTd>
+                <MudTd DataLabel="Created By">@context.CreatedBy</MudTd>
+                <MudTd DataLabel="Updated On">@context.UpdatedOn</MudTd>
+                <MudTd DataLabel="Updated By">@context.UpdatedBy</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
+            </PagerContent>
+        </MudTable>
+    </MudCardContent>
+ </MudCard>
+
+</MudPaper>
+
+
 
 @code {
-    public List<PermissionDto> Permissions { get; set; }
-
+    
     #region Injected Services
     
-    [Inject]
-    public required IPermissionService PermissionService { get; set; }
+    [Inject] public required IPermissionService _permissionService { get; set; }
+    [Inject] public required PermissionStateService _permissionStateService { get; set; }
+    @* [Inject] public required ToastService _toastService { get; set; } *@
+    [Inject] public required NavigationManager _navigationManager { get; set; }
+    [Inject] public required LoadingService _loadingService { get; set; } 
 
     #endregion
+
+    private List<PermissionDto> _gridData { get; set; } = new List<PermissionDto>();
+    private List<string> _createdByList { get; set; } = new List<string>();
+    private List<string> _updatedByList { get; set; } = new List<string>();
+
+    private bool _showAdvancedSearch { get; set; } = false;
+
+    private FilterPermissionServiceRequest _filterRequest { get; set; } = new FilterPermissionServiceRequest();
+
+    private string editRecordUrl = "/permission-create-edit";
+
+    // MudDatePicker binds to DateTime?, but the filter's CreatedOnDate is DateOnly?
+    private DateTime? CreatedOnDateFilter
+    {
+        get => _filterRequest.CreatedOnDate is { } date ? date.ToDateTime(TimeOnly.MinValue) : null;
+        set => _filterRequest.CreatedOnDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+    }
+
+    private DateTime? UpdatedOnDateFilter
+    {
+        get => _filterRequest.UpdatedOnDate is { } date ? date.ToDateTime(TimeOnly.MinValue) : null;
+        set => _filterRequest.UpdatedOnDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+    }
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        var res = await PermissionService.GetAll(new Shared.Models.BaseServiceGet());
-        Permissions = res.Response?.ToList();
+        await _loadingService.Show();
 
-        //UseTestData();
+        await Task.Delay(3000);
+
+        try
+        {
+            var res = await _permissionService.GetAll(new BaseServiceGet());
+            _gridData = res.Response?.ToList() ?? new List<PermissionDto>();
+
+            //UseTestData();
+
+            // Exclude null/empty entries so MudSelect doesn't match the unset bound value to a blank item and hide the placeholder
+            if (_gridData != null)
+            {
+                _createdByList = _gridData.Select(x => x.CreatedBy).Where(x => !string.IsNullOrEmpty(x)).Distinct().ToList();
+                _updatedByList = _gridData.Select(x => x.UpdatedBy).Where(x => !string.IsNullOrEmpty(x)).Distinct().ToList();
+            }
+        }
+        finally
+        {
+            await _loadingService.Hide();
+        }
     }
+
+    private async Task HandleShowAdvancedSearchFilters() 
+    {
+        _showAdvancedSearch = true;
+    }
+
+    private async Task HandleHideAdvancedSearchFilters() 
+    {
+        _showAdvancedSearch = false;
+    }
+
+    private async Task HandleCancelFilterGridData() 
+    {
+        await _loadingService.Show();
+        try
+        {
+            _filterRequest = new FilterPermissionServiceRequest();
+            _gridData = (await _permissionService.GetAll(new BaseServiceGet())).Response?.ToList() ?? new List<PermissionDto>();
+        }
+        finally
+        {
+            await _loadingService.Hide();
+        }
+    }
+
+    private async Task HandleClearSearch()
+    {
+        await _loadingService.Show();
+        try
+        {
+            _filterRequest.Name = null;
+            var res = await _permissionService.GetAll(new BaseServiceGet());
+            _gridData = res.Response?.ToList() ?? new List<PermissionDto>();
+        }
+        finally
+        {
+            await _loadingService.Hide();
+        }
+    }
+
+    private async Task HandleSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleFilterGridDataByName(_filterRequest.Name ?? string.Empty);
+        }
+    }
+
+    private async Task HandleFilterGridDataByName(string name)
+    {
+        await _loadingService.Show();
+
+        try
+        {
+            var res = await _permissionService.Filter(new FilterPermissionServiceRequest { Name = name });
+            _gridData = res.Response?.ToList() ?? new List<PermissionDto>();
+        }
+        finally
+        {
+            await _loadingService.Hide();
+        }
+    }
+
+    private async Task HandleFilterGridData()
+    {
+        await _loadingService.Show();
+
+        try
+        {
+            var res = await _permissionService.Filter(_filterRequest);
+            _gridData = res.Response?.ToList() ?? new List<PermissionDto>();
+        }
+        finally
+        {
+            await _loadingService.Hide();
+        }
+    }
+
+    private void HandleCreateNewRecord()
+    {
+        //_appStateService.ClearCurrentApplication();
+        _navigationManager.NavigateTo(editRecordUrl);
+    }
+
+    private async Task HandleEditRecord(int id)
+    {
+        await _loadingService.Show();
+
+        var record = (await _permissionService.GetById(id, new BaseServiceGet())).Response;
+        
+        if (record != null)
+        {
+            _permissionStateService.SetPermissionForEdit(record);
+            _navigationManager.NavigateTo(editRecordUrl);
+        }
+        else
+        {
+            //_toastService.ShowError("Permission not found", 3);
+        }
+
+        await _loadingService.Hide();
+    }
+
+    @* private void HandleDeleteApplication(ApplicationDto app)
+        {
+            _selectedApplication = app;
+            _showDeleteModal = true;
+        }
+
+        private void HandleCloseDeleteModal()
+        {
+            _showDeleteModal = false;
+            _selectedApplication = null;
+        } *@
+
+        @* private async Task HandleConfirmDelete()
+        {
+            if (_selectedApplication != null)
+            {
+                await _loadingService.Show();
+                _applicationRepository.DeleteApplication(_selectedApplication.Id);
+                _toastService.ShowSuccess("Application Deleted Successfully!", 5);
+                _applications = await _applicationRepository.GetAllApplications();
+                await _loadingService.Hide();
+            }
+        } *@
 
     private void UseTestData()
     {
-        Permissions = new List<PermissionDto>();
+        _gridData = new List<PermissionDto>();
         // Example data for testing
 
-        Permissions.Add(new PermissionDto { PermissionId = 1, Name = "Permission 1", Description = "Description 1", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 1", UpdatedOn = DateTime.Now, UpdatedBy = "User 1" });
-        Permissions.Add(new PermissionDto { PermissionId = 2, Name = "Permission 2", Description = "Description 2", Active = false, CreatedOn = DateTime.Now, CreatedBy = "User 2", UpdatedOn = DateTime.Now, UpdatedBy = "User 2" });
-        Permissions.Add(new PermissionDto { PermissionId = 3, Name = "Permission 3", Description = "Description 3", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 3", UpdatedOn = DateTime.Now, UpdatedBy = "User 3" });
+        _gridData.Add(new PermissionDto { PermissionId = 1, Name = "Permission 1", Description = "Description 1", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 1", UpdatedOn = DateTime.Now, UpdatedBy = "User 1" });
+        _gridData.Add(new PermissionDto { PermissionId = 2, Name = "Permission 2", Description = "Description 2", Active = false, CreatedOn = DateTime.Now, CreatedBy = "User 2", UpdatedOn = DateTime.Now, UpdatedBy = "User 2" });
+        _gridData.Add(new PermissionDto { PermissionId = 3, Name = "Permission 3", Description = "Description 3", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 3", UpdatedOn = DateTime.Now, UpdatedBy = "User 3" });
     }
 }

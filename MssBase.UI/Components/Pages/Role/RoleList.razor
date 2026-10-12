@@ -1,6 +1,7 @@
 @page "/RoleList"
 @using Contract.Security.Role
 @using Dto.Security.Role
+@using global::Shared.Models
 
 <PageTitle>Role List</PageTitle>
 
@@ -43,7 +44,7 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        var res = await RoleService.GetAll(new Shared.Models.BaseServiceGet());
+        var res = await RoleService.GetAll(new BaseServiceGet());
         Roles = res.Response?.ToList();
 
         //UseTestData();

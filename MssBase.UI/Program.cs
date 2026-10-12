@@ -5,6 +5,7 @@ using MssBase.UI.HttpClients.Shared;
 using MssBase.UI.Components;
 using MssBase.UI.HttpClients.Security;
 using Contract.Security.Role;
+using MssBase.UI.Components.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,10 @@ builder.Services.AddHttpClient<IRoleService, RoleHttpClient>()
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// builder.Services.AddSingleton<ToastService>();
+builder.Services.AddScoped<PermissionStateService>();
+builder.Services.AddScoped<LoadingService>();
 
 var app = builder.Build();
 

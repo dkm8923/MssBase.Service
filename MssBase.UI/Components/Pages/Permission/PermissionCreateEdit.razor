@@ -1,0 +1,22 @@
+@page "/permission-create-edit"
+@using Contract.Security.Permission
+@rendermode InteractiveServer
+
+<div>Add Form Here...</div>
+
+@code {
+    
+    #region Injected Services
+    
+    [Inject]
+    public required IPermissionService _permissionService { get; set; }
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+    }
+
+}
