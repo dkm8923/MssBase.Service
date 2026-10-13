@@ -133,44 +133,7 @@
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
-        <MudTable Items="_gridData" 
-                  Hover="true" 
-                  SortLabel="Sort By" 
-                  Elevation="0" 
-                  AllowUnsorted="false"
-                  FixedHeader="true"
-                  FixedFooter="true"
-                  HorizontalScrollbar="true"
-                  Height="400px">
-            <HeaderContent>
-                <MudTh>Action(s)</MudTh>
-                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<PermissionDto, object>(x => x.PermissionId)">ID</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Name)">Name</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Description)">Description</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.Active)">Active</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.CreatedOn)">Created On</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.CreatedBy)">Created By</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.UpdatedOn)">Updated On</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<PermissionDto, object>(x => x.UpdatedBy)">Updated By</MudTableSortLabel></MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Action(s)">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="() => HandleEditRecord(context.PermissionId)" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" />
-                </MudTd>
-                <MudTd DataLabel="Id">@context.PermissionId</MudTd>
-                <MudTd DataLabel="Name">@context.Name</MudTd>
-                <MudTd DataLabel="Description">@context.Description</MudTd>
-                <MudTd DataLabel="Active">@context.Active</MudTd>
-                <MudTd DataLabel="Created On">@context.CreatedOn</MudTd>
-                <MudTd DataLabel="Created By">@context.CreatedBy</MudTd>
-                <MudTd DataLabel="Updated On">@context.UpdatedOn</MudTd>
-                <MudTd DataLabel="Updated By">@context.UpdatedBy</MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
-            </PagerContent>
-        </MudTable>
+        <PermissionGrid GridData="_gridData" OnEdit="HandleEditRecord" />
     </MudCardContent>
  </MudCard>
 
@@ -317,18 +280,12 @@
         }
     }
 
-    private void HandleCreateNewRecord()
-    {
-        //_appStateService.ClearCurrentApplication();
-        _navigationManager.NavigateTo(editRecordUrl);
-    }
-
-    private async Task HandleEditRecord(int id)
+    private async Task HandleEditRecord(PermissionDto item)
     {
         await _loadingService.Show();
 
-        var record = (await _permissionService.GetById(id, new BaseServiceGet())).Response;
-        
+        var record = (await _permissionService.GetById(item.PermissionId, new BaseServiceGet())).Response;
+
         if (record != null)
         {
             _permissionStateService.SetPermissionForEdit(record);
@@ -340,6 +297,12 @@
         }
 
         await _loadingService.Hide();
+    }
+
+    private void HandleCreateNewRecord()
+    {
+        //_appStateService.ClearCurrentApplication();
+        _navigationManager.NavigateTo(editRecordUrl);
     }
 
     @* private void HandleDeleteApplication(ApplicationDto app)
