@@ -1,0 +1,80 @@
+@using MssBase.UI.Components.Shared.DataTable.Models
+@typeparam TItem
+
+<MudTable T="TItem"
+          Items="GridData"
+          Hover="true"
+          SortLabel="Sort By"
+          Elevation="0"
+          AllowUnsorted="false"
+          FixedHeader="true"
+          FixedFooter="true"
+          HorizontalScrollbar="true"
+          ColumnResizeMode="ResizeMode.Column"
+          Height="@Height">
+    <HeaderContent>
+        @foreach (var column in GridColumns)
+        {
+            <MudTh Style="@GetWidthStyle(column)">
+                @if (column.Sortable && column.Value is not null)
+                {
+                    var value = column.Value;
+                    <MudTableSortLabel T="TItem"
+                                       InitialDirection="column.InitialSortDirection"
+                                       SortBy="new Func<TItem, object>(x => value(x) ?? string.Empty)">
+                        @column.Header
+                    </MudTableSortLabel>
+                }
+                else
+                {
+                    @column.Header
+                }
+            </MudTh>
+        }
+    </HeaderContent>
+    <RowTemplate>
+        @foreach (var column in GridColumns)
+        {
+            <MudTd DataLabel="@column.Header">
+                @if (column.CellTemplate is not null)
+                {
+                    @column.CellTemplate(context)
+                }
+                else
+                {
+                    @FormatValue(column, context)
+                }
+            </MudTd>
+        }
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="PageSizeOptions" />
+    </PagerContent>
+</MudTable>
+
+@code {
+
+    [Parameter, EditorRequired]
+    public IEnumerable<TItem> GridData { get; set; } = Array.Empty<TItem>();
+
+    [Parameter, EditorRequired]
+    public IEnumerable<DataTableColumn<TItem>> GridColumns { get; set; } = Array.Empty<DataTableColumn<TItem>>();
+
+    [Parameter]
+    public string Height { get; set; } = "400px";
+
+    [Parameter]
+    public int[] PageSizeOptions { get; set; } = new[] { 10, 25, 50, 100 };
+
+    private static string? GetWidthStyle(DataTableColumn<TItem> column) =>
+        column.Width is { } w ? $"width:{w}px; min-width:{w}px;" : null;
+
+    private static string? FormatValue(DataTableColumn<TItem> column, TItem item)
+    {
+        var value = column.Value?.Invoke(item);
+
+        return value is IFormattable formattable && column.Format is not null
+            ? formattable.ToString(column.Format, null)
+            : value?.ToString();
+    }
+}

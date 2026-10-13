@@ -1,0 +1,39 @@
+@using MssBase.UI.Components.Shared.DataTable.Models
+@typeparam TItem
+
+@foreach (var action in Actions)
+{
+    var current = action;
+    <MudIconButton Icon="@GetIcon(current.Type)"
+                   Title="@current.Type.ToString()"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   Class="mr-1"
+                   OnClick="() => HandleClick(current)" />
+}
+
+@code {
+
+    [Parameter, EditorRequired]
+    public TItem Item { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public IEnumerable<DataTableAction<TItem>> Actions { get; set; } = Array.Empty<DataTableAction<TItem>>();
+
+    private static string GetIcon(DataTableActionType type) => type switch
+    {
+        DataTableActionType.Edit => Icons.Material.Filled.Edit,
+        DataTableActionType.Delete => Icons.Material.Filled.Delete,
+        DataTableActionType.View => Icons.Material.Filled.Visibility,
+        _ => Icons.Material.Filled.MoreVert
+    };
+
+    private async Task HandleClick(DataTableAction<TItem> action)
+    {
+        if (action.OnClick is not null)
+        {
+            await action.OnClick(Item);
+        }
+    }
+}
