@@ -1,6 +1,7 @@
 @using MssBase.UI.Components.Shared.DataTable.Models
 @typeparam TItem
 
+<div>
 @foreach (var action in Actions)
 {
     var current = action;
@@ -12,6 +13,7 @@
                    Class="mr-1"
                    OnClick="() => HandleClick(current)" />
 }
+</div>
 
 @code {
 
