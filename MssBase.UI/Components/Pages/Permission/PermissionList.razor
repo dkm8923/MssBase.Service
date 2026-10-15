@@ -1,136 +1,59 @@
 @page "/PermissionList"
+
 @using Contract.Security.Permission
 @using Dto.Security.Permission
 @using Dto.Security.Permission.Service
 @using MssBase.UI.Components.Services
+@using MssBase.UI.Components.Shared.AdvancedSearchFilterDialog
 @using global::Shared.Models
 
+@inject IDialogService DialogService
 
 <PageTitle>Permission List</PageTitle>
 
-<MudPaper class="mud-paper-outlined what-is-this" Outlined="true">
-    
-    @if (_showAdvancedSearch) 
-    {
-        <MudCard Outlined="true">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Advanced Search Filters:</MudText>
-                </CardHeaderContent>
-                <CardHeaderActions>
-                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" @onclick="HandleHideAdvancedSearchFilters">Use Simple Search</MudButton>
-                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Secondary" @onclick="HandleCancelFilterGridData">Clear</MudButton>
-                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Search" Color="Color.Primary" @onclick="HandleFilterGridData">Search</MudButton>
-                </CardHeaderActions>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudGrid>
-                    <MudItem xs="6" sm="3">
-                        <MudSelect @bind-Value="_filterRequest.CreatedBy" 
-                                Label="Created By" 
-                                Margin="Margin.Dense"
-                                Dense="true"
-                                Placeholder="Select a User" 
-                                AdornmentIcon="@Icons.Material.Filled.Person" 
-                                AdornmentColor="Color.Primary"
-                                Variant="Variant.Outlined"
-                                Clearable="true">
-                            @foreach (var user in _createdByList)
-                            {
-                                <MudSelectItem Value="user">@user</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="6" sm="3">
-                        <MudDatePicker @bind-Date="CreatedOnDateFilter"
-                                    Label="Created On"
-                                    Margin="Margin.Dense"
-                                    Dense="true"
-                                    Placeholder="Select a Date" 
-                                    Clearable="true"
-                                    Variant="Variant.Outlined"
-                                    ShowToolbar="false" />
-                    </MudItem>
-                    <MudItem xs="6" sm="3">
-                        <MudSelect @bind-Value="_filterRequest.UpdatedBy" 
-                                Label="Updated By" 
-                                Margin="Margin.Dense"
-                                Dense="true"
-                                Placeholder="Select a User" 
-                                AdornmentIcon="@Icons.Material.Filled.Person" 
-                                AdornmentColor="Color.Primary"
-                                Variant="Variant.Outlined"
-                                Clearable="true">
-                                    @foreach (var user in _updatedByList)
-                                    {
-                                        <MudSelectItem Value="user">@user</MudSelectItem>
-                                    }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="6" sm="3">
-                        <MudDatePicker @bind-Date="UpdatedOnDateFilter"
-                                    Label="Updated On"
-                                    Margin="Margin.Dense"
-                                    Dense="true"
-                                    Placeholder="Select a Date" 
-                                    Clearable="true"
-                                    Variant="Variant.Outlined"
-                                    ShowToolbar="false" />
-                    </MudItem>
-                    <MudItem xs="3" sm="6">
-                        <MudCheckBox T="bool" 
-                            @bind-Value="_filterRequest.IncludeInactive"
-                            Label="Include Inactive"
-                            Margin="Margin.Dense"
-                            Dense="true"
-                            Color="Color.Primary"
-                            Size="Size.Small" />
-                    </MudItem>
-                </MudGrid>
-            </MudCardContent>
-        </MudCard>
-    }
-    else 
-    {
-        <MudCard Outlined="true">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Search:</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudGrid>
-                    <MudItem xs="9" sm="9">
-                        <MudTextField @bind-Value="_filterRequest.Name"
-                                    Label="Search By Name"
-                                    Margin="Margin.Dense"
-                                    Dense="true"
-                                    Clearable="true"
-                                    OnClearButtonClick="HandleClearSearch"
-                                    Variant="Variant.Outlined"
-                                    Adornment="Adornment.Start" 
-                                    AdornmentIcon="@Icons.Material.Filled.Search" 
-                                    AdornmentColor="Color.Primary"
-                                    Immediate="true"
-                                    OnKeyDown="HandleSearchKeyDown" />
-                    </MudItem>
-                    <MudItem xs="3" sm="3">
-                        <MudIconButton @onclick="HandleShowAdvancedSearchFilters" Icon="@Icons.Material.Filled.FilterAlt" Color="Color.Primary" Title="Advanced Search Filter(s)" />
-                    </MudItem>
-                </MudGrid>
-            </MudCardContent>
-        </MudCard>
-    }
-
+<MudPaper class="mud-paper-outlined" Outlined="true">
  <MudCard Outlined="true">
     <MudCardHeader>
         <CardHeaderContent>
-            <MudText Typo="Typo.h6">Permissions: (@_gridData.Count)</MudText>
+            @* <MudText Typo="Typo.h6" Class="d-inline-block mr-2">Permissions: (@_gridData.Count)</MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="HandleCreateNewRecord" Title="Create New Permission" /> *@
+            <MudGrid>
+                <MudItem xs="12" sm="12" md="5" lg="4" xl="3" xxl="3">
+                    <MudText Typo="Typo.h6" Class="d-inline-block mr-2">Permissions: (@_gridData.Count)</MudText>
+                    <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="HandleCreateNewRecord" Title="Create New Permission" />
+                </MudItem>
+                <MudItem xs="12" sm="12" md="7" lg="8" xl="9" xxl="9">
+                    @* <MudTextField @bind-Value="_filterRequest.Name"
+                                Label="Search By Name"
+                                Margin="Margin.Dense"
+                                Dense="true"
+                                Clearable="true"
+                                OnClearButtonClick="HandleClearSearch"
+                                Variant="Variant.Outlined"
+                                Adornment="Adornment.Start" 
+                                AdornmentIcon="@Icons.Material.Filled.Search" 
+                                AdornmentColor="Color.Primary"
+                                Immediate="true"
+                                OnKeyDown="HandleSearchKeyDown" /> *@
+                        <MudTextField @bind-Value="_filterRequest.Name"
+                                Label="Search By Name"
+                                Margin="Margin.Dense"
+                                Dense="true"
+                                Clearable="true"
+                                OnClearButtonClick="HandleClearSearch"
+                                Variant="Variant.Outlined"
+                                Adornment="Adornment.End" 
+                                AdornmentIcon="@Icons.Material.Filled.FilterAlt" 
+                                AdornmentColor="Color.Primary"
+                                OnAdornmentClick="OpenAdvancedSearchDialogAsync"
+                                Immediate="true"
+                                OnKeyDown="HandleSearchKeyDown" />
+                </MudItem>
+            </MudGrid>
         </CardHeaderContent>
-        <CardHeaderActions>
+        @* <CardHeaderActions>
             <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="HandleCreateNewRecord">Add New Permission</MudButton>
-            @* <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" /> *@
-        </CardHeaderActions>
+        </CardHeaderActions> *@
     </MudCardHeader>
     <MudCardContent>
         <PermissionGrid GridData="_gridData" OnEdit="HandleEditRecord" />
@@ -138,8 +61,6 @@
  </MudCard>
 
 </MudPaper>
-
-
 
 @code {
     
@@ -150,14 +71,12 @@
     @* [Inject] public required ToastService _toastService { get; set; } *@
     [Inject] public required NavigationManager _navigationManager { get; set; }
     [Inject] public required LoadingService _loadingService { get; set; } 
-
+    
     #endregion
 
     private List<PermissionDto> _gridData { get; set; } = new List<PermissionDto>();
     private List<string> _createdByList { get; set; } = new List<string>();
     private List<string> _updatedByList { get; set; } = new List<string>();
-
-    private bool _showAdvancedSearch { get; set; } = false;
 
     private FilterPermissionServiceRequest _filterRequest { get; set; } = new FilterPermissionServiceRequest();
 
@@ -181,7 +100,7 @@
         await base.OnInitializedAsync();
         await _loadingService.Show();
 
-        await Task.Delay(3000);
+        await Task.Delay(1000);
 
         try
         {
@@ -202,17 +121,7 @@
             await _loadingService.Hide();
         }
     }
-
-    private async Task HandleShowAdvancedSearchFilters() 
-    {
-        _showAdvancedSearch = true;
-    }
-
-    private async Task HandleHideAdvancedSearchFilters() 
-    {
-        _showAdvancedSearch = false;
-    }
-
+    
     private async Task HandleCancelFilterGridData() 
     {
         await _loadingService.Show();
@@ -337,5 +246,31 @@
         _gridData.Add(new PermissionDto { PermissionId = 1, Name = "Permission 1", Description = "Description 1", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 1", UpdatedOn = DateTime.Now, UpdatedBy = "User 1" });
         _gridData.Add(new PermissionDto { PermissionId = 2, Name = "Permission 2", Description = "Description 2", Active = false, CreatedOn = DateTime.Now, CreatedBy = "User 2", UpdatedOn = DateTime.Now, UpdatedBy = "User 2" });
         _gridData.Add(new PermissionDto { PermissionId = 3, Name = "Permission 3", Description = "Description 3", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 3", UpdatedOn = DateTime.Now, UpdatedBy = "User 3" });
+    }
+
+    private Task OpenAdvancedSearchDialogAsync()
+    {
+        var options = new DialogOptions { 
+            CloseOnEscapeKey = true, //Allows closing the dialog by pressing the Escape key
+            MaxWidth = MaxWidth.Medium, //The maximum allowed width of the dialog
+            FullWidth = true, //Sets the width of the dialog to the width of the screen
+            Position = DialogPosition.TopCenter 
+        };
+
+        var parameters = new DialogParameters<AdvancedSearchFilterDialog>
+        {
+            { x => x.CreatedByList, _createdByList },
+            { x => x.UpdatedByList, _updatedByList },
+            { x => x.OnFilter, EventCallback.Factory.Create<FilterPermissionServiceRequest>(this, HandleAdvancedFilter) },
+            { x => x.OnClear, EventCallback.Factory.Create(this, HandleCancelFilterGridData) }
+        };
+
+        return DialogService.ShowAsync<AdvancedSearchFilterDialog>("Advanced Search Filters", parameters, options);
+    }
+
+    private async Task HandleAdvancedFilter(FilterPermissionServiceRequest request)
+    {
+        _filterRequest = request;
+        await HandleFilterGridData();
     }
 }

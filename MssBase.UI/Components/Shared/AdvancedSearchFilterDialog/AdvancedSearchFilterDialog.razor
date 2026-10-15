@@ -1,0 +1,121 @@
+@using Dto.Security.Permission.Service
+<MudDialog>
+    <TitleContent>
+        Advanced Search Filters:
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="6" sm="3">
+                <MudSelect @bind-Value="_filterRequest.CreatedBy" 
+                        Label="Created By" 
+                        Margin="Margin.Dense"
+                        Dense="true"
+                        Placeholder="Select a User" 
+                        AdornmentIcon="@Icons.Material.Filled.Person" 
+                        AdornmentColor="Color.Primary"
+                        Variant="Variant.Outlined"
+                        Clearable="true">
+                    @foreach (var user in CreatedByList)
+                    {
+                        <MudSelectItem Value="user">@user</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudDatePicker @bind-Date="CreatedOnDateFilter"
+                            Label="Created On"
+                            Margin="Margin.Dense"
+                            Dense="true"
+                            Placeholder="Select a Date" 
+                            Clearable="true"
+                            Variant="Variant.Outlined"
+                            ShowToolbar="false" />
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudSelect @bind-Value="_filterRequest.UpdatedBy" 
+                        Label="Updated By" 
+                        Margin="Margin.Dense"
+                        Dense="true"
+                        Placeholder="Select a User" 
+                        AdornmentIcon="@Icons.Material.Filled.Person" 
+                        AdornmentColor="Color.Primary"
+                        Variant="Variant.Outlined"
+                        Clearable="true">
+                            @foreach (var user in UpdatedByList)
+                            {
+                                <MudSelectItem Value="user">@user</MudSelectItem>
+                            }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudDatePicker @bind-Date="UpdatedOnDateFilter"
+                            Label="Updated On"
+                            Margin="Margin.Dense"
+                            Dense="true"
+                            Placeholder="Select a Date" 
+                            Clearable="true"
+                            Variant="Variant.Outlined"
+                            ShowToolbar="false" />
+            </MudItem>
+            <MudItem xs="3" sm="6">
+                <MudCheckBox T="bool" 
+                    @bind-Value="_filterRequest.IncludeInactive"
+                    Label="Include Inactive"
+                    Margin="Margin.Dense"
+                    Dense="true"
+                    Color="Color.Primary"
+                    Size="Size.Small" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        @* <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">OK</MudButton> *@
+        <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" @onclick="Cancel">Use Simple Search</MudButton>
+        <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Secondary" @onclick="HandleCancelFilterGridData">Clear</MudButton>
+        <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Search" Color="Color.Primary" @onclick="HandleFilterGridData">Search</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+    private FilterPermissionServiceRequest _filterRequest { get; set; } = new FilterPermissionServiceRequest();
+    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    private void Cancel() => MudDialog.Cancel();
+    [Parameter]
+    public List<string> CreatedByList { get; set; } = new();
+
+    [Parameter]
+    public List<string> UpdatedByList { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<FilterPermissionServiceRequest> OnFilter { get; set; }
+
+    [Parameter]
+    public EventCallback OnClear { get; set; }
+
+    private DateTime? CreatedOnDateFilter
+    {
+        get => _filterRequest.CreatedOnDate is { } date ? date.ToDateTime(TimeOnly.MinValue) : null;
+        set => _filterRequest.CreatedOnDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+    }
+
+    private DateTime? UpdatedOnDateFilter
+    {
+        get => _filterRequest.UpdatedOnDate is { } date ? date.ToDateTime(TimeOnly.MinValue) : null;
+        set => _filterRequest.UpdatedOnDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+    }
+    
+    private async Task HandleCancelFilterGridData() 
+    {
+        _filterRequest = new FilterPermissionServiceRequest();
+        await OnClear.InvokeAsync();
+    }
+
+    private async Task HandleFilterGridData()
+    {
+        await OnFilter.InvokeAsync(_filterRequest);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}
