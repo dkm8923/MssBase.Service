@@ -95,6 +95,15 @@
     [Parameter]
     public EventCallback OnClear { get; set; }
 
+    // Invoked on open with the dialog's filter request so the caller can pre-populate it.
+    [Parameter]
+    public EventCallback<FilterPermissionServiceRequest> OnModalOpen { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await OnModalOpen.InvokeAsync(_filterRequest);
+    }
+
     private DateTime? CreatedOnDateFilter
     {
         get => _filterRequest.CreatedOnDate is { } date ? date.ToDateTime(TimeOnly.MinValue) : null;
