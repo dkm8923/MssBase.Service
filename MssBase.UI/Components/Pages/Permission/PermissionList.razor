@@ -43,7 +43,7 @@
                                 Adornment="Adornment.End" 
                                 AdornmentIcon="@Icons.Material.Filled.FilterAlt" 
                                 AdornmentColor="Color.Primary"
-                                OnAdornmentClick="OpenAdvancedSearchDialogAsync"
+                                OnAdornmentClick="() => OpenAdvancedSearchDialogAsync()"
                                 Immediate="true"
                                 OnKeyDown="HandleGridSearchKeyDown" />
                 </MudItem>
@@ -54,10 +54,10 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Clear" Color="Color.Secondary" OnClick="HandleCancelFilterGridData" Title="Clear All Advanced Search Filters" />
                 </MudItem>
                 <MudItem xs="12" sm="12" md="7" lg="8" xl="9" xxl="9">
-                    <MudChipSet T="FilterKey" AllClosable OnClick="HandleAdvancedSearchFilterClick" OnClose="RemoveAdvancedSearchFilterValue">
+                    <MudChipSet T="FilterKey" AllClosable OnClose="RemoveAdvancedSearchFilterValue">
                         @foreach (var filter in _advancedSearchFilterValues)
                         {
-                            <MudChip T="FilterKey" Size="Size.Small" Text="@filter.Text" Value="@filter.Key"></MudChip>
+                            <MudChip T="FilterKey" Size="Size.Small" Text="@filter.Text" Value="@filter.Key" OnClick="() => HandleAdvancedSearchFilterClick(filter.Key)"></MudChip>
                         }
                     </MudChipSet>
                 </MudItem>
@@ -107,17 +107,15 @@
         set => _filterRequest.UpdatedOnDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
     }
 
-    private enum FilterKey { CreatedBy, UpdatedBy, CreatedOn, UpdatedOn, Name, IncludeInactive }
-
     private record FilterChip(FilterKey Key, string Text);
 
     private List<FilterChip> _advancedSearchFilterValues { get; set; } = new List<FilterChip>();
 
     private FilterPermissionServiceRequest _currentAdvancedSearchFilters = new FilterPermissionServiceRequest();
 
-    private void HandleAdvancedSearchFilterClick(MudChip<FilterKey> chip)
+    private Task HandleAdvancedSearchFilterClick(FilterKey key)
     {
-        Console.WriteLine($"Advanced search filter clicked: {chip.Value}");
+        return OpenAdvancedSearchDialogAsync(key);
     }
 
     private async Task RemoveAdvancedSearchFilterValue(MudChip<FilterKey> chip)
@@ -322,7 +320,7 @@
         _allGridData.Add(new PermissionDto { PermissionId = 3, Name = "Permission 3", Description = "Description 3", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 3", UpdatedOn = DateTime.Now, UpdatedBy = "User 3" });
     }
 
-    private Task OpenAdvancedSearchDialogAsync()
+    private Task OpenAdvancedSearchDialogAsync(FilterKey? focusField = null)
     {
         var options = new DialogOptions { 
             CloseOnEscapeKey = true, //Allows closing the dialog by pressing the Escape key
@@ -337,7 +335,8 @@
             { x => x.UpdatedByList, _updatedByList },
             { x => x.OnFilter, EventCallback.Factory.Create<FilterPermissionServiceRequest>(this, HandleAdvancedSearchFilter) },
             { x => x.OnClear, EventCallback.Factory.Create(this, HandleCancelFilterGridData) },
-            { x => x.OnModalOpen, EventCallback.Factory.Create<FilterPermissionServiceRequest>(this, HandleAdvancedSearchModalOpen) }
+            { x => x.OnModalOpen, EventCallback.Factory.Create<FilterPermissionServiceRequest>(this, HandleAdvancedSearchModalOpen) },
+            { x => x.FocusField, focusField }
         };
 
         return DialogService.ShowAsync<AdvancedSearchFilterDialog>("Advanced Search Filters", parameters, options);

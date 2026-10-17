@@ -6,7 +6,7 @@
     <DialogContent>
         <MudGrid>
             <MudItem xs="6" sm="3">
-                <MudSelect @bind-Value="_filterRequest.CreatedBy" 
+                <MudSelect @ref="_createdBySelect" @bind-Value="_filterRequest.CreatedBy" 
                         Label="Created By" 
                         Margin="Margin.Dense"
                         Dense="true"
@@ -22,7 +22,7 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="6" sm="3">
-                <MudDatePicker @bind-Date="CreatedOnDateFilter"
+                <MudDatePicker @ref="_createdOnPicker" @bind-Date="CreatedOnDateFilter"
                             Label="Created On"
                             Margin="Margin.Dense"
                             Dense="true"
@@ -32,7 +32,7 @@
                             ShowToolbar="false" />
             </MudItem>
             <MudItem xs="6" sm="3">
-                <MudSelect @bind-Value="_filterRequest.UpdatedBy" 
+                <MudSelect @ref="_updatedBySelect" @bind-Value="_filterRequest.UpdatedBy" 
                         Label="Updated By" 
                         Margin="Margin.Dense"
                         Dense="true"
@@ -48,7 +48,7 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="6" sm="3">
-                <MudDatePicker @bind-Date="UpdatedOnDateFilter"
+                <MudDatePicker @ref="_updatedOnPicker" @bind-Date="UpdatedOnDateFilter"
                             Label="Updated On"
                             Margin="Margin.Dense"
                             Dense="true"
@@ -99,9 +99,42 @@
     [Parameter]
     public EventCallback<FilterPermissionServiceRequest> OnModalOpen { get; set; }
 
+    // Control to focus and open when the dialog is shown.
+    [Parameter]
+    public FilterKey? FocusField { get; set; }
+
+    private MudSelect<string>? _createdBySelect;
+    private MudSelect<string>? _updatedBySelect;
+    private MudDatePicker? _createdOnPicker;
+    private MudDatePicker? _updatedOnPicker;
+
     protected override async Task OnInitializedAsync()
     {
         await OnModalOpen.InvokeAsync(_filterRequest);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || FocusField is null)
+        {
+            return;
+        }
+
+        switch (FocusField)
+        {
+            case FilterKey.CreatedBy when _createdBySelect is not null:
+                await _createdBySelect.OpenMenu();
+                break;
+            case FilterKey.UpdatedBy when _updatedBySelect is not null:
+                await _updatedBySelect.OpenMenu();
+                break;
+            case FilterKey.CreatedOn when _createdOnPicker is not null:
+                await _createdOnPicker.OpenAsync();
+                break;
+            case FilterKey.UpdatedOn when _updatedOnPicker is not null:
+                await _updatedOnPicker.OpenAsync();
+                break;
+        }
     }
 
     private DateTime? CreatedOnDateFilter
