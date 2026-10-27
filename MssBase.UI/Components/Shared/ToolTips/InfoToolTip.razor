@@ -1,0 +1,31 @@
+<MudTooltip Placement="Placement.Bottom" Color="@ToolTipColor" Style="@_defaultToolTipStyle">
+    <ChildContent>
+        @TriggerContent
+    </ChildContent>
+    <TooltipContent>
+        @if (ChildContent is not null)
+        {
+            @ChildContent
+        }
+        else
+        {
+            @ToolTipText
+        }
+    </TooltipContent>
+</MudTooltip>
+
+@code {
+    [Parameter]
+    public string ToolTipText { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? TriggerContent { get; set; }
+
+    [Parameter]
+    public Color ToolTipColor { get; set; } = Color.Secondary;
+
+    private string _defaultToolTipStyle = "font-size: 13px;";
+}

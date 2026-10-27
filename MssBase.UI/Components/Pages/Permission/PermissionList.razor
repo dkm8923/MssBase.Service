@@ -5,11 +5,14 @@
 @using Dto.Security.Permission.Service
 @using MssBase.UI.Components.Services
 @using MssBase.UI.Components.Shared.AdvancedSearchFilterDialog
+@using MssBase.UI.Components.Shared.Buttons
 @using global::Shared.Models
+@using MssBase.UI.Components.Shared.ToolTips
 
 @inject IDialogService DialogService
 
 <PageTitle>Permission List</PageTitle>
+
 
 <MudPaper class="mud-paper-outlined" Outlined="true">
  <MudCard Outlined="true">
@@ -18,7 +21,8 @@
             <MudGrid>
                 <MudItem xs="12" sm="12" md="5" lg="4" xl="3" xxl="3">
                     <MudText Typo="Typo.h6" Class="d-inline-block mr-2">Permissions: (@_allGridData.Count)</MudText>
-                    <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="HandleCreateNewRecord" Title="Create New Permission" />
+                    <InfoIcon ToolTipText="@_pageSummaryToolTip" />
+                    <AddNewRecordIconButton HandleCreateNewRecord="HandleCreateNewRecord" ToolTipText="Create New Permission" />
                 </MudItem>
                 <MudItem xs="12" sm="12" md="7" lg="8" xl="9" xxl="9">
                     @* <MudTextField @bind-Value="_filterRequest.Name"
@@ -107,6 +111,8 @@
         set => _filterRequest.UpdatedOnDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
     }
 
+    private string _pageSummaryToolTip = "This screen contains all Permission related info. Page returns all records by default. Search box allows searching by any property on the permission. Advanced Search allows for filtering by specific predetermined values.";
+
     private record FilterChip(FilterKey Key, string Text);
 
     private List<FilterChip> _advancedSearchFilterValues { get; set; } = new List<FilterChip>();
@@ -157,11 +163,11 @@
 
         try
         {
-            var res = await _permissionService.GetAll(new BaseServiceGet());
+            @* var res = await _permissionService.GetAll(new BaseServiceGet());
             _allGridData = res.Response?.ToList() ?? new List<PermissionDto>();
-            _filteredGridData = _allGridData.ToList();
+            _filteredGridData = _allGridData.ToList(); *@
 
-            //UseTestData();
+            UseTestData();
 
             // Exclude null/empty entries so MudSelect doesn't match the unset bound value to a blank item and hide the placeholder
             if (_allGridData != null)
@@ -318,10 +324,14 @@
         _allGridData.Add(new PermissionDto { PermissionId = 1, Name = "Permission 1", Description = "Description 1", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 1", UpdatedOn = DateTime.Now, UpdatedBy = "User 1" });
         _allGridData.Add(new PermissionDto { PermissionId = 2, Name = "Permission 2", Description = "Description 2", Active = false, CreatedOn = DateTime.Now, CreatedBy = "User 2", UpdatedOn = DateTime.Now, UpdatedBy = "User 2" });
         _allGridData.Add(new PermissionDto { PermissionId = 3, Name = "Permission 3", Description = "Description 3", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 3", UpdatedOn = DateTime.Now, UpdatedBy = "User 3" });
+
+        _filteredGridData = _allGridData.ToList();
     }
 
     private Task OpenAdvancedSearchDialogAsync(FilterKey? focusField = null)
     {
+
+        
         var options = new DialogOptions { 
             CloseOnEscapeKey = true, //Allows closing the dialog by pressing the Escape key
             MaxWidth = MaxWidth.Medium, //The maximum allowed width of the dialog
