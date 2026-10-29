@@ -7,6 +7,7 @@ using MssBase.UI.HttpClients.Security;
 using Contract.Security.Role;
 using MssBase.UI.Components.Services;
 using MudBlazor;
+using Contract.Security.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,8 +26,8 @@ builder.Services.Configure<SecurityApiOptions>(
 
 builder.Services.AddTransient<BearerTokenHandler>();
 
-builder.Services.AddHttpClient<IPermissionService, PermissionHttpClient>()
-    .AddHttpMessageHandler<BearerTokenHandler>();
+builder.Services.AddHttpClient<IApplicationService, ApplicationHttpClient>().AddHttpMessageHandler<BearerTokenHandler>();
+builder.Services.AddHttpClient<IPermissionService, PermissionHttpClient>().AddHttpMessageHandler<BearerTokenHandler>();
 
 builder.Services.AddHttpClient<IRoleService, RoleHttpClient>()
     .AddHttpMessageHandler<BearerTokenHandler>();

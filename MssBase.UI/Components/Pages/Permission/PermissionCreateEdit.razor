@@ -1,8 +1,11 @@
 @page "/permission-create-edit"
 
+@using Contract.Security.Application
 @using Contract.Security.Permission
+@using Dto.Security.Application
 @using Dto.Security.Permission
 @using MssBase.UI.Components.Services
+@using global::Shared.Models
 
 @rendermode InteractiveServer
 
@@ -32,6 +35,22 @@
                 </MudPaper>
             }
             <MudGrid>
+                <MudItem xs="12">
+                    <MudSelect T="int?" @bind-Value="_selectedApplicationId" 
+                            Label="Application" 
+                            Margin="Margin.Dense"
+                            Dense="true"
+                            Placeholder="Select an Application" 
+                            Variant="Variant.Outlined"
+                            Clearable="true"
+                            Error="@(_validationErrors.Application.Length > 0)"
+                            ErrorText="@_validationErrors.Application">
+                        @foreach (var application in _applications)
+                        {
+                            <MudSelectItem T="int?" Value="@((int?)application.ApplicationId)">@application.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
                 <MudItem xs="12">
                     <MudTextField @bind-Value="_insertUpdateReq.Name" 
                         Label="Name" 
@@ -96,8 +115,8 @@
 
     #region Injected Services
 
-    [Inject]
-    public required IPermissionService _permissionService { get; set; }
+    [Inject] public required IApplicationService _applicationService { get; set; }
+    [Inject] public required IPermissionService _permissionService { get; set; }
     [Inject] public required PermissionStateService _permissionStateService { get; set; }
     [Inject] public required ToastService _toastService { get; set; }
     [Inject] public required NavigationManager _navigationManager { get; set; }
@@ -107,6 +126,9 @@
 
     private ValidationErrors _validationErrors = new ValidationErrors();
 
+    private List<ApplicationDto> _applications = new List<ApplicationDto>();
+     
+    private int? _selectedApplicationId;
     private bool _isEditMode = false;
     private InsertUpdatePermissionRequest _insertUpdateReq = new InsertUpdatePermissionRequest();
 
@@ -116,9 +138,12 @@
     {
         await base.OnInitializedAsync();
 
+        _applications = (await _applicationService.GetAll(new BaseServiceGet())).Response.ToList();
+
         if (_permissionStateService.CurrentPermission is not null)
         {
             _isEditMode = true;
+            _selectedApplicationId = _permissionStateService.CurrentPermission.ApplicationId;
             _insertUpdateReq = new InsertUpdatePermissionRequest
             {
                 Name = _permissionStateService.CurrentPermission.Name,
@@ -136,7 +161,7 @@
     private async Task HandleSave()
     {
         _insertUpdateReq.Active = true;
-        _insertUpdateReq.ApplicationId = 1;
+        _insertUpdateReq.ApplicationId = _selectedApplicationId ?? 0;
         _insertUpdateReq.CurrentUser = "Blazor UI";
 
         if (!_isEditMode)
@@ -210,7 +235,11 @@
         
         foreach (var key in errors.Keys)
         {
-            if (key == "Name")
+            if (key == "ApplicationId")
+            {
+                _validationErrors.Application = string.Join(" ", errors["ApplicationId"]);
+            }
+            else if (key == "Name")
             {
                 _validationErrors.Name = string.Join(" ", errors["Name"]);
             }
@@ -227,6 +256,7 @@
 
     private class ValidationErrors
     {
+        public string Application { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public List<string> OtherErrors { get; set; } = new List<string>();
