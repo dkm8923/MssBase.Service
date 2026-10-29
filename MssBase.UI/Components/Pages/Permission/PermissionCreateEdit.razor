@@ -82,11 +82,10 @@
                     </MudItem>
                 }
                 <MudItem xs="12">
-                    <div class='form-btn-container'>
+                    <MudStack Spacing="4" Row="true" Justify="Justify.FlexEnd">
                         <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Secondary" @onclick="HandleCancelSave">Cancel</MudButton>
                         <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" @onclick="HandleSave">Save</MudButton>
-                    </div>
-                    
+                    </MudStack>
                 </MudItem>
             </MudGrid>
         </MudCardContent>
