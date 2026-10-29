@@ -1,4 +1,4 @@
-@page "/PermissionList"
+@page "/permission-list"
 
 @using Contract.Security.Permission
 @using Dto.Security.Permission
@@ -99,7 +99,7 @@
     private string editRecordUrl = "/permission-create-edit";
 
     // MudDatePicker binds to DateTime?, but the filter's CreatedOnDate is DateOnly?
-    private DateTime? CreatedOnDateFilter
+    @* private DateTime? CreatedOnDateFilter
     {
         get => _filterRequest.CreatedOnDate is { } date ? date.ToDateTime(TimeOnly.MinValue) : null;
         set => _filterRequest.CreatedOnDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
@@ -109,7 +109,7 @@
     {
         get => _filterRequest.UpdatedOnDate is { } date ? date.ToDateTime(TimeOnly.MinValue) : null;
         set => _filterRequest.UpdatedOnDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
-    }
+    } *@
 
     private string _pageSummaryToolTip = "This screen contains all Permission related info. Page returns all records by default. Search box allows searching by any property on the permission. Advanced Search allows for filtering by specific predetermined values.";
     private string _addNewRecordToolTip = "Create New Permission";
@@ -164,11 +164,11 @@
 
         try
         {
-            @* var res = await _permissionService.GetAll(new BaseServiceGet());
+            var res = await _permissionService.GetAll(new BaseServiceGet());
             _allGridData = res.Response?.ToList() ?? new List<PermissionDto>();
-            _filteredGridData = _allGridData.ToList(); *@
+            _filteredGridData = _allGridData.ToList();
 
-            UseTestData();
+            //UseTestData();
 
             // Exclude null/empty entries so MudSelect doesn't match the unset bound value to a blank item and hide the placeholder
             if (_allGridData != null)
@@ -289,7 +289,7 @@
 
     private void HandleCreateNewRecord()
     {
-        //_appStateService.ClearCurrentApplication();
+        _permissionStateService.ClearCurrentPermission();
         _navigationManager.NavigateTo(editRecordUrl);
     }
 

@@ -6,11 +6,19 @@ using MssBase.UI.Components;
 using MssBase.UI.HttpClients.Security;
 using Contract.Security.Role;
 using MssBase.UI.Components.Services;
+using MudBlazor;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add MudBlazor services
-builder.Services.AddMudServices();
+builder.Services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.PreventDuplicates = true;
+    config.SnackbarConfiguration.ShowCloseIcon = true;
+    config.SnackbarConfiguration.VisibleStateDuration = 5000;
+    config.SnackbarConfiguration.PositionClass = MudBlazor.Defaults.Classes.Position.TopRight;
+    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+});
 
 builder.Services.Configure<SecurityApiOptions>(
     builder.Configuration.GetSection(SecurityApiOptions.SectionName));
@@ -27,7 +35,7 @@ builder.Services.AddHttpClient<IRoleService, RoleHttpClient>()
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// builder.Services.AddSingleton<ToastService>();
+builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<PermissionStateService>();
 builder.Services.AddScoped<LoadingService>();
 

@@ -18,15 +18,20 @@ namespace MssBase.UI.HttpClients.Shared
             HttpResponseMessage response,
             CancellationToken cancellationToken = default)
         {
-            var result = await response.Content.ReadFromJsonAsync<ErrorValidationResult<T>>(
-                cancellationToken: cancellationToken);
-
-            if (response.StatusCode == HttpStatusCode.BadRequest && result is not null)
+            if (response.StatusCode == HttpStatusCode.BadRequest)
             {
-                return result;
+                // The 400 body's "response" is a string, so only the errors are read.
+                var errors = await response.Content.ReadFromJsonAsync<ErrorValidationResult>(
+                    cancellationToken: cancellationToken);
+
+                return new ErrorValidationResult<T> { Errors = errors?.Errors ?? new() };
             }
 
             response.EnsureSuccessStatusCode();
+
+            var result = await response.Content.ReadFromJsonAsync<ErrorValidationResult<T>>(
+                cancellationToken: cancellationToken);
+
             return result ?? new ErrorValidationResult<T>();
         }
 

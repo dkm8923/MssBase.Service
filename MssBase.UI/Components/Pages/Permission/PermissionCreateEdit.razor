@@ -1,22 +1,235 @@
 @page "/permission-create-edit"
+
 @using Contract.Security.Permission
+@using Dto.Security.Permission
+@using MssBase.UI.Components.Services
+
 @rendermode InteractiveServer
 
-<div>Add Form Here...</div>
+<MudPaper class="mud-paper-outlined mss-create-edit-form-container" Outlined="true">
+    <MudCard Outlined="true">
+        <MudCardHeader>
+            @if (_isEditMode)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Edit" Class="mr-2" />
+                <MudText Typo="Typo.h6">Edit Permission</MudText>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" />
+                <MudText Typo="Typo.h6">Create Permission</MudText>
+            }
+        </MudCardHeader>
+        <MudCardContent>
+            @if (_validationErrors.OtherErrors.Count > 0)
+            {
+                <MudPaper>
+                    <MudText Typo="Typo.h6" Color="@Color.Error">Validation Error(s):</MudText>
+                    @foreach (var error in _validationErrors.OtherErrors)
+                    {
+                        <MudText Color="@Color.Error">• @error</MudText>
+                    }
+                </MudPaper>
+            }
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_insertUpdateReq.Name" 
+                        Label="Name" 
+                        Variant="Variant.Outlined" 
+                        Margin="Margin.Dense"
+                        Clearable="true" 
+                        Counter="64" 
+                        MaxLength="64" 
+                        Immediate="true" 
+                        HelperText="Characters Remaining: " 
+                        HelperTextOnFocus="true"
+                        Error="@(_validationErrors.Name.Length > 0)"
+                        ErrorText="@_validationErrors.Name">
+                    </MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_insertUpdateReq.Description" 
+                        Label="Description" 
+                        Variant="Variant.Outlined" 
+                        Margin="Margin.Dense"
+                        Clearable="true" 
+                        Counter="256" 
+                        MaxLength="256" 
+                        Immediate="true" 
+                        HelperText="Characters Remaining: " 
+                        HelperTextOnFocus="true"
+                        Error="@(_validationErrors.Description.Length > 0)"
+                        ErrorText="@_validationErrors.Description"
+                        Lines="3">
+                    </MudTextField>
+                </MudItem>
+                @if (_isEditMode)
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h6">Audit Info:</MudText>
+                    </MudItem>
+                    <MudItem xs="3">
+                        <MudText Align="Align.Left"><b>Created By:</b> @_permissionStateService.CurrentPermission.CreatedBy</MudText>
+                    </MudItem>
+                    <MudItem xs="3">
+                        <MudText Align="Align.Left"><b>Created On:</b> @_permissionStateService.CurrentPermission.CreatedOn</MudText>
+                    </MudItem>
+                    <MudItem xs="3">
+                        <MudText Align="Align.Left"><b>Updated By:</b> @_permissionStateService.CurrentPermission.UpdatedBy</MudText>
+                    </MudItem>
+                    <MudItem xs="3">
+                        <MudText Align="Align.Left"><b>Updated On:</b> @_permissionStateService.CurrentPermission.UpdatedOn</MudText>
+                    </MudItem>
+                }
+                <MudItem xs="12">
+                    <div class='form-btn-container'>
+                        <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Secondary" @onclick="HandleCancelSave">Cancel</MudButton>
+                        <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" @onclick="HandleSave">Save</MudButton>
+                    </div>
+                    
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+</MudPaper>
 
 @code {
-    
+
     #region Injected Services
-    
+
     [Inject]
     public required IPermissionService _permissionService { get; set; }
+    [Inject] public required PermissionStateService _permissionStateService { get; set; }
+    [Inject] public required ToastService _toastService { get; set; }
+    [Inject] public required NavigationManager _navigationManager { get; set; }
+    [Inject] public required LoadingService _loadingService { get; set; } 
 
     #endregion
+
+    private ValidationErrors _validationErrors = new ValidationErrors();
+
+    private bool _isEditMode = false;
+    private InsertUpdatePermissionRequest _insertUpdateReq = new InsertUpdatePermissionRequest();
+
+    private string _permissionListUrl = "/permission-list";
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        
+
+        if (_permissionStateService.CurrentPermission is not null)
+        {
+            _isEditMode = true;
+            _insertUpdateReq = new InsertUpdatePermissionRequest
+            {
+                Name = _permissionStateService.CurrentPermission.Name,
+                Description = _permissionStateService.CurrentPermission.Description
+            };
+        }
+
     }
 
+    private void HandleCancelSave()
+    {
+        _navigationManager.NavigateTo(_permissionListUrl);
+    }
+
+    private async Task HandleSave()
+    {
+        _insertUpdateReq.Active = true;
+        _insertUpdateReq.ApplicationId = 1;
+        _insertUpdateReq.CurrentUser = "Blazor UI";
+
+        if (!_isEditMode)
+        {
+            await InsertRecord();
+        }
+        else
+        {
+            await UpdateRecord();
+        }
+    }
+
+    private async Task InsertRecord()
+    {
+        var res = await _permissionService.Insert(_insertUpdateReq);
+        if (res.Errors.Count() > 0)
+        {
+            ShowValidationErrors(res.Errors);
+        }
+        else
+        {
+            _toastService.ShowSuccess("Permission Saved Successfully!"); 
+            _navigationManager.NavigateTo(_permissionListUrl);
+        }
+    }
+
+    private async Task UpdateRecord()
+    {
+        var res = await _permissionService.Update(_permissionStateService.CurrentPermission.PermissionId, _insertUpdateReq);
+        if (res.Errors.Count() > 0)
+        {
+            ShowValidationErrors(res.Errors);
+        }
+        else
+        {
+            _toastService.ShowSuccess("Permission Updated Successfully!"); 
+            _navigationManager.NavigateTo(_permissionListUrl);
+        }
+    }
+
+    private void ResetFormValidation()
+    {
+        _validationErrors = new ValidationErrors();
+        @* _validationErrors.Name = string.Empty;
+        _validationErrors.Description = string.Empty;
+        _validationErrors.OtherErrors.Clear(); *@
+    }
+
+    // Temporary helper for exercising the error UI.
+    private static void AddTestError(Dictionary<string, List<string>> errors, string key, string message)
+    {
+        if (!errors.TryGetValue(key, out var list))
+        {
+            list = new List<string>();
+            errors[key] = list;
+        }
+        list.Add(message);
+    }
+
+    private void ShowValidationErrors(Dictionary<string, List<string>> errors)
+    {
+        ResetFormValidation();
+
+        @* AddTestError(errors, "Name", "Test error to see what 2 errors look like.");
+        AddTestError(errors, "Name", "Test error to see what 3 errors look like.");
+        AddTestError(errors, "Description", "Invalid Description! Please Review.");
+        AddTestError(errors, "Misc", "Something Bad Happened!");
+        AddTestError(errors, "Unique Error", "Something else Bad Happened!"); *@
+
+        _toastService.ShowError($"{errors.Count()} Validation Errors Occurred. Please Review Form and Try Again."); 
+        
+        foreach (var key in errors.Keys)
+        {
+            if (key == "Name")
+            {
+                _validationErrors.Name = string.Join(" ", errors["Name"]);
+            }
+            else if (key == "Description")
+            {
+                _validationErrors.Description = string.Join(" ", errors["Description"]);
+            }
+            else
+            {
+                _validationErrors.OtherErrors.AddRange(errors[key]);
+            }
+        }
+    }
+
+    private class ValidationErrors
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public List<string> OtherErrors { get; set; } = new List<string>();
+    }
 }
