@@ -5,6 +5,16 @@ namespace MssBase.UI.Components.Shared.DataTable.DefaultColumns;
 
 public static class DefaultDataTableColumns
 {
+    public static DataTableColumn<TItem> ApplicationName<TItem>(
+        Func<TItem, int> applicationId,
+        IReadOnlyDictionary<int, string> applicationNames) =>
+        new()
+        {
+            Header = "Application",
+            Width = 180,
+            Value = item => applicationNames.TryGetValue(applicationId(item), out var name) ? name : null
+        };
+
     public static DataTableColumn<TItem> Active<TItem>() where TItem : AuditableDto =>
         new() { Header = "Active", Width = 120, Value = x => x.Active };
 

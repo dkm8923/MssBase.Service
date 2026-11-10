@@ -1,3 +1,4 @@
+@using Dto.Security.Application
 @using Dto.Security.Permission.Service
 
 <MudDialog>
@@ -58,7 +59,21 @@
                             Variant="Variant.Outlined"
                             ShowToolbar="false" />
             </MudItem>
-            <MudItem xs="3" sm="6">
+            <MudItem xs="6" sm="3">
+                <MudSelect T="int?" @ref="_applicationSelect" @bind-Value="_filterRequest.ApplicationId"
+                        Label="Application"
+                        Margin="Margin.Dense"
+                        Dense="true"
+                        Placeholder="Select an Application"
+                        Variant="Variant.Outlined"
+                        Clearable="true">
+                    @foreach (var application in Applications)
+                    {
+                        <MudSelectItem T="int?" Value="@((int?)application.ApplicationId)">@application.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="3">
                 <MudCheckBox T="bool" 
                     @bind-Value="_filterRequest.IncludeInactive"
                     Label="Include Inactive"
@@ -85,6 +100,9 @@
     private void Submit() => MudDialog.Close(DialogResult.Ok(true));
     private void Cancel() => MudDialog.Cancel();
     [Parameter]
+    public List<ApplicationDto> Applications { get; set; } = new();
+
+    [Parameter]
     public List<string> CreatedByList { get; set; } = new();
 
     [Parameter]
@@ -106,6 +124,7 @@
 
     private MudSelect<string>? _createdBySelect;
     private MudSelect<string>? _updatedBySelect;
+    private MudSelect<int?>? _applicationSelect;
     private MudDatePicker? _createdOnPicker;
     private MudDatePicker? _updatedOnPicker;
 
@@ -128,6 +147,9 @@
                 break;
             case FilterKey.UpdatedBy when _updatedBySelect is not null:
                 await _updatedBySelect.OpenMenu();
+                break;
+            case FilterKey.Application when _applicationSelect is not null:
+                await _applicationSelect.OpenMenu();
                 break;
             case FilterKey.CreatedOn when _createdOnPicker is not null:
                 await _createdOnPicker.OpenAsync();

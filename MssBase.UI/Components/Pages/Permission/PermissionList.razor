@@ -71,7 +71,9 @@
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardContent>
-        <PermissionGrid GridData="_filteredGridData" OnEdit="HandleEditRecord" />
+        <PermissionGrid GridData="_filteredGridData"
+                ApplicationNames="_applicationNames"
+                OnEdit="HandleEditRecord" />
     </MudCardContent>
  </MudCard>
 
@@ -91,6 +93,7 @@
     #endregion
 
     private List<ApplicationDto> _applications = new List<ApplicationDto>();
+    private IReadOnlyDictionary<int, string> _applicationNames = new Dictionary<int, string>();
     private List<PermissionDto> _allGridData { get; set; } = new List<PermissionDto>();
     private List<PermissionDto> _filteredGridData { get; set; } = new List<PermissionDto>();
 
@@ -135,6 +138,9 @@
             case FilterKey.Name:
                 _currentAdvancedSearchFilters.Name = null;
                 break;
+            case FilterKey.Application:
+                _currentAdvancedSearchFilters.ApplicationId = null;
+                break;
             case FilterKey.IncludeInactive:
                 _currentAdvancedSearchFilters.IncludeInactive = false;
                 break;
@@ -155,7 +161,9 @@
 
         try
         {
-            _applications = (await _applicationService.GetAll(new BaseServiceGet())).Response.ToList();
+            _applications = (await _applicationService.GetAll(new BaseServiceGet())).Response?.ToList()
+                ?? new List<ApplicationDto>();
+            _applicationNames = _applications.ToDictionary(x => x.ApplicationId, x => x.Name);
 
             var res = await _permissionService.GetAll(new BaseServiceGet());
             _allGridData = res.Response?.ToList() ?? new List<PermissionDto>();
@@ -229,6 +237,7 @@
                 : _allGridData.Where(x =>
                     Matches(x.Name) ||
                     Matches(x.Description) ||
+                    Matches(_applicationNames.TryGetValue(x.ApplicationId, out var applicationName) ? applicationName : null) ||
                     Matches(x.CreatedBy) ||
                     Matches(x.CreatedOn.ToString()) ||
                     Matches(x.UpdatedBy) ||
@@ -335,6 +344,7 @@
 
         var parameters = new DialogParameters<AdvancedSearchFilterDialog>
         {
+            { x => x.Applications, _applications },
             { x => x.CreatedByList, _createdByList },
             { x => x.UpdatedByList, _updatedByList },
             { x => x.OnFilter, EventCallback.Factory.Create<FilterPermissionServiceRequest>(this, HandleAdvancedSearchFilter) },
@@ -353,6 +363,7 @@
         dialogRequest.CreatedOnDate = _currentAdvancedSearchFilters.CreatedOnDate;
         dialogRequest.UpdatedOnDate = _currentAdvancedSearchFilters.UpdatedOnDate;
         dialogRequest.Name = _currentAdvancedSearchFilters.Name;
+        dialogRequest.ApplicationId = _currentAdvancedSearchFilters.ApplicationId;
         dialogRequest.IncludeInactive = _currentAdvancedSearchFilters.IncludeInactive;
     }
 
@@ -380,6 +391,11 @@
         if (request.UpdatedOnDate != null)
         {
             _advancedSearchFilterValues.Add(new FilterChip(FilterKey.UpdatedOn, "Updated On: " + request.UpdatedOnDate));
+        }
+
+        if (request.ApplicationId is int applicationId && _applicationNames.TryGetValue(applicationId, out var applicationName))
+        {
+            _advancedSearchFilterValues.Add(new FilterChip(FilterKey.Application, "Application: " + applicationName));
         }
 
         if (request.IncludeInactive == true)
