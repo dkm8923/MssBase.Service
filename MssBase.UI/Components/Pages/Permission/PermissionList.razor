@@ -1,13 +1,15 @@
 @page "/permission-list"
 
+@using Contract.Security.Application
 @using Contract.Security.Permission
+@using Dto.Security.Application
 @using Dto.Security.Permission
 @using Dto.Security.Permission.Service
 @using MssBase.UI.Components.Services
 @using MssBase.UI.Components.Shared.AdvancedSearchFilterDialog
 @using MssBase.UI.Components.Shared.Buttons
-@using global::Shared.Models
 @using MssBase.UI.Components.Shared.ToolTips
+@using global::Shared.Models
 
 @inject IDialogService DialogService
 
@@ -78,7 +80,8 @@
 @code {
     
     #region Injected Services
-    
+
+    [Inject] public required IApplicationService _applicationService { get; set; }    
     [Inject] public required IPermissionService _permissionService { get; set; }
     [Inject] public required PermissionStateService _permissionStateService { get; set; }
     @* [Inject] public required ToastService _toastService { get; set; } *@
@@ -87,6 +90,7 @@
 
     #endregion
 
+    private List<ApplicationDto> _applications = new List<ApplicationDto>();
     private List<PermissionDto> _allGridData { get; set; } = new List<PermissionDto>();
     private List<PermissionDto> _filteredGridData { get; set; } = new List<PermissionDto>();
 
@@ -97,19 +101,6 @@
     private FilterPermissionServiceRequest _filterRequest { get; set; } = new FilterPermissionServiceRequest();
 
     private string editRecordUrl = "/permission-create-edit";
-
-    // MudDatePicker binds to DateTime?, but the filter's CreatedOnDate is DateOnly?
-    @* private DateTime? CreatedOnDateFilter
-    {
-        get => _filterRequest.CreatedOnDate is { } date ? date.ToDateTime(TimeOnly.MinValue) : null;
-        set => _filterRequest.CreatedOnDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
-    }
-
-    private DateTime? UpdatedOnDateFilter
-    {
-        get => _filterRequest.UpdatedOnDate is { } date ? date.ToDateTime(TimeOnly.MinValue) : null;
-        set => _filterRequest.UpdatedOnDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
-    } *@
 
     private string _pageSummaryToolTip = "This screen contains all Permission related info. Page returns all records by default. Search box allows searching by any property on the permission. Advanced Search allows for filtering by specific predetermined values.";
     private string _addNewRecordToolTip = "Create New Permission";
@@ -164,6 +155,8 @@
 
         try
         {
+            _applications = (await _applicationService.GetAll(new BaseServiceGet())).Response.ToList();
+
             var res = await _permissionService.GetAll(new BaseServiceGet());
             _allGridData = res.Response?.ToList() ?? new List<PermissionDto>();
             _filteredGridData = _allGridData.ToList();
