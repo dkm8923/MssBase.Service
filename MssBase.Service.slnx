@@ -49,4 +49,5 @@
     <Project Path="Tests/SharedServiceTests/UnitTests.Shared.Service/UnitTests.Shared.Service.csproj" />
   </Folder>
   <Project Path="MssBase.Service/MssBase.Service.csproj" />
+  <Project Path="MssBase.UI/MssBase.UI.csproj" />
 </Solution>

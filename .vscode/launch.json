@@ -23,6 +23,24 @@
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/MssBase.Service/MssBase.Service/Views"
             }
+        },
+        {
+            "name": "Blazor UI (MssBase.UI)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-ui",
+            "program": "${workspaceFolder}/MssBase.UI/bin/Debug/net10.0/MssBase.UI.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/MssBase.UI",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5225"
+            }
         }
     ]
 }

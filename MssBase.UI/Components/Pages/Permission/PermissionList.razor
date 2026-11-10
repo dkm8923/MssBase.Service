@@ -1,0 +1,415 @@
+@page "/permission-list"
+
+@using Contract.Security.Application
+@using Contract.Security.Permission
+@using Dto.Security.Application
+@using Dto.Security.Permission
+@using Dto.Security.Permission.Service
+@using MssBase.UI.Components.Services
+@using MssBase.UI.Components.Shared.AdvancedSearchFilterDialog
+@using MssBase.UI.Components.Shared.Buttons
+@using MssBase.UI.Components.Shared.ToolTips
+@using global::Shared.Models
+
+@inject IDialogService DialogService
+
+<PageTitle>Permission List</PageTitle>
+
+
+<MudPaper class="mud-paper-outlined" Outlined="true">
+ <MudCard Outlined="true">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudGrid>
+                <MudItem xs="12" sm="12" md="5" lg="4" xl="3" xxl="3">
+                    <MudText Typo="Typo.h6" Class="d-inline-block mr-2">Permissions: (@_allGridData.Count)</MudText>
+                    <InfoIcon ToolTipText="@_pageSummaryToolTip" />
+                    <AddNewRecordIconButton HandleCreateNewRecord="HandleCreateNewRecord" ToolTipText="@_addNewRecordToolTip" />
+                </MudItem>
+                <MudItem xs="12" sm="12" md="7" lg="8" xl="9" xxl="9">
+                    @* <MudTextField @bind-Value="_filterRequest.Name"
+                                Label="Search By Name"
+                                Margin="Margin.Dense"
+                                Dense="true"
+                                Clearable="true"
+                                OnClearButtonClick="HandleClearSearch"
+                                Variant="Variant.Outlined"
+                                Adornment="Adornment.Start" 
+                                AdornmentIcon="@Icons.Material.Filled.Search" 
+                                AdornmentColor="Color.Primary"
+                                Immediate="true"
+                                OnKeyDown="HandleSearchKeyDown" /> *@
+                        <MudTextField @bind-Value="_searchText"
+                                Label="Search Grid Results By All Parameters"
+                                Margin="Margin.Dense"
+                                Dense="true"
+                                Clearable="true"
+                                OnClearButtonClick="HandleClearSearch"
+                                Variant="Variant.Outlined"
+                                Adornment="Adornment.End" 
+                                AdornmentIcon="@Icons.Material.Filled.FilterAlt" 
+                                AdornmentColor="Color.Primary"
+                                OnAdornmentClick="() => OpenAdvancedSearchDialogAsync()"
+                                Immediate="true"
+                                OnKeyDown="HandleGridSearchKeyDown" />
+                </MudItem>
+            </MudGrid>
+            <MudGrid Style="@(_advancedSearchFilterValues.Count > 0 ? null : "visibility:hidden")">
+                <MudItem xs="12" sm="12" md="5" lg="4" xl="3" xxl="3">
+                    <MudText Typo="Typo.h6" Class="d-inline-block mr-2">Advanced Search Filters:</MudText>
+                    <MudIconButton Icon="@Icons.Material.Filled.Clear" Color="Color.Secondary" OnClick="HandleCancelFilterGridData" Title="Clear All Advanced Search Filters" />
+                </MudItem>
+                <MudItem xs="12" sm="12" md="7" lg="8" xl="9" xxl="9">
+                    <MudChipSet T="FilterKey" AllClosable OnClose="RemoveAdvancedSearchFilterValue">
+                        @foreach (var filter in _advancedSearchFilterValues)
+                        {
+                            <MudChip T="FilterKey" Size="Size.Small" Text="@filter.Text" Value="@filter.Key" OnClick="() => HandleAdvancedSearchFilterClick(filter.Key)"></MudChip>
+                        }
+                    </MudChipSet>
+                </MudItem>
+            </MudGrid>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <PermissionGrid GridData="_filteredGridData"
+                ApplicationNames="_applicationNames"
+                OnEdit="HandleEditRecord" />
+    </MudCardContent>
+ </MudCard>
+
+</MudPaper>
+
+@code {
+    
+    #region Injected Services
+
+    [Inject] public required IApplicationService _applicationService { get; set; }    
+    [Inject] public required IPermissionService _permissionService { get; set; }
+    [Inject] public required PermissionStateService _permissionStateService { get; set; }
+    @* [Inject] public required ToastService _toastService { get; set; } *@
+    [Inject] public required NavigationManager _navigationManager { get; set; }
+    [Inject] public required LoadingService _loadingService { get; set; } 
+
+    #endregion
+
+    private List<ApplicationDto> _applications = new List<ApplicationDto>();
+    private IReadOnlyDictionary<int, string> _applicationNames = new Dictionary<int, string>();
+    private List<PermissionDto> _allGridData { get; set; } = new List<PermissionDto>();
+    private List<PermissionDto> _filteredGridData { get; set; } = new List<PermissionDto>();
+
+    private List<string> _createdByList { get; set; } = new List<string>();
+    private List<string> _updatedByList { get; set; } = new List<string>();
+
+    private string _searchText { get; set; } = string.Empty;
+    private FilterPermissionServiceRequest _filterRequest { get; set; } = new FilterPermissionServiceRequest();
+
+    private string editRecordUrl = "/permission-create-edit";
+
+    private string _pageSummaryToolTip = "This screen contains all Permission related info. Page returns all records by default. Search box allows searching by any property on the permission. Advanced Search allows for filtering by specific predetermined values.";
+    private string _addNewRecordToolTip = "Create New Permission";
+
+    private record FilterChip(FilterKey Key, string Text);
+
+    private List<FilterChip> _advancedSearchFilterValues { get; set; } = new List<FilterChip>();
+
+    private FilterPermissionServiceRequest _currentAdvancedSearchFilters = new FilterPermissionServiceRequest();
+
+    private Task HandleAdvancedSearchFilterClick(FilterKey key)
+    {
+        return OpenAdvancedSearchDialogAsync(key);
+    }
+
+    private async Task RemoveAdvancedSearchFilterValue(MudChip<FilterKey> chip)
+    {
+        switch (chip.Value)
+        {
+            case FilterKey.CreatedBy:
+                _currentAdvancedSearchFilters.CreatedBy = null;
+                break;
+            case FilterKey.UpdatedBy:
+                _currentAdvancedSearchFilters.UpdatedBy = null;
+                break;
+            case FilterKey.CreatedOn:
+                _currentAdvancedSearchFilters.CreatedOnDate = null;
+                break;
+            case FilterKey.UpdatedOn:
+                _currentAdvancedSearchFilters.UpdatedOnDate = null;
+                break;
+            case FilterKey.Name:
+                _currentAdvancedSearchFilters.Name = null;
+                break;
+            case FilterKey.Application:
+                _currentAdvancedSearchFilters.ApplicationId = null;
+                break;
+            case FilterKey.IncludeInactive:
+                _currentAdvancedSearchFilters.IncludeInactive = false;
+                break;
+        }
+
+        _advancedSearchFilterValues.RemoveAll(f => f.Key == chip.Value);
+
+        await HandleFilterGridData(_currentAdvancedSearchFilters);
+        //StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await _loadingService.Show();
+
+        await Task.Delay(1000);
+
+        try
+        {
+            _applications = (await _applicationService.GetAll(new BaseServiceGet())).Response?.ToList()
+                ?? new List<ApplicationDto>();
+            _applicationNames = _applications.ToDictionary(x => x.ApplicationId, x => x.Name);
+
+            var res = await _permissionService.GetAll(new BaseServiceGet());
+            _allGridData = res.Response?.ToList() ?? new List<PermissionDto>();
+            _filteredGridData = _allGridData.ToList();
+
+            //UseTestData();
+
+            // Exclude null/empty entries so MudSelect doesn't match the unset bound value to a blank item and hide the placeholder
+            if (_allGridData != null)
+            {
+                _createdByList = _allGridData.Select(x => x.CreatedBy).Where(x => !string.IsNullOrEmpty(x)).Distinct().ToList();
+                _updatedByList = _allGridData.Select(x => x.UpdatedBy).Where(x => !string.IsNullOrEmpty(x)).Distinct().ToList();
+            }
+
+            _advancedSearchFilterValues = new List<FilterChip>();
+        }
+        finally
+        {
+            await _loadingService.Hide();
+        }
+    }
+    
+    private async Task HandleCancelFilterGridData() 
+    {
+        await _loadingService.Show();
+        try
+        {
+            _currentAdvancedSearchFilters = new FilterPermissionServiceRequest();
+            _advancedSearchFilterValues.Clear();
+            await HandleFilterGridData(_currentAdvancedSearchFilters);
+        }
+        finally
+        {
+            await _loadingService.Hide();
+        }
+    }
+
+    private async Task HandleClearSearch()
+    {
+        await _loadingService.Show();
+        
+        try
+        {
+            _searchText = string.Empty;
+            await HandleFilterGridData(_currentAdvancedSearchFilters);
+        }
+        finally
+        {
+            await _loadingService.Hide();
+        }
+    }
+
+    private async Task HandleGridSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleFilterGridDataBySearchText(_searchText);
+        }
+    }
+
+    private async Task HandleFilterGridDataBySearchText(string searchText)
+    {
+        await _loadingService.Show();
+
+        try
+        {
+            var term = searchText.Trim();
+
+            _filteredGridData = string.IsNullOrWhiteSpace(term)
+                ? _allGridData
+                : _allGridData.Where(x =>
+                    Matches(x.Name) ||
+                    Matches(x.Description) ||
+                    Matches(_applicationNames.TryGetValue(x.ApplicationId, out var applicationName) ? applicationName : null) ||
+                    Matches(x.CreatedBy) ||
+                    Matches(x.CreatedOn.ToString()) ||
+                    Matches(x.UpdatedBy) ||
+                    Matches(x.UpdatedOn?.ToString()) ||
+                    Matches(x.Active.ToString())).ToList();
+
+            bool Matches(string? value) => value?.Contains(term, StringComparison.OrdinalIgnoreCase) == true;
+        }
+        finally
+        {
+            await _loadingService.Hide();
+        }
+    }
+
+    private async Task HandleFilterGridData(FilterPermissionServiceRequest filterRequest)
+    {
+        await _loadingService.Show();
+
+        try
+        {
+            var res = await _permissionService.Filter(filterRequest);
+            _allGridData = res.Response?.ToList() ?? new List<PermissionDto>();
+            _filteredGridData = _allGridData.ToList();
+
+            await HandleFilterGridDataBySearchText(_searchText);
+        }
+        finally
+        {
+            await _loadingService.Hide();
+        }
+    }
+
+    private async Task HandleEditRecord(PermissionDto item)
+    {
+        await _loadingService.Show();
+
+        var record = (await _permissionService.GetById(item.PermissionId, new BaseServiceGet())).Response;
+
+        if (record != null)
+        {
+            _permissionStateService.SetPermissionForEdit(record);
+            _navigationManager.NavigateTo(editRecordUrl);
+        }
+        else
+        {
+            //_toastService.ShowError("Permission not found", 3);
+        }
+
+        await _loadingService.Hide();
+    }
+
+    private void HandleCreateNewRecord()
+    {
+        _permissionStateService.ClearCurrentPermission();
+        _navigationManager.NavigateTo(editRecordUrl);
+    }
+
+    @* private void HandleDeleteApplication(ApplicationDto app)
+        {
+            _selectedApplication = app;
+            _showDeleteModal = true;
+        }
+
+        private void HandleCloseDeleteModal()
+        {
+            _showDeleteModal = false;
+            _selectedApplication = null;
+        } *@
+
+        @* private async Task HandleConfirmDelete()
+        {
+            if (_selectedApplication != null)
+            {
+                await _loadingService.Show();
+                _applicationRepository.DeleteApplication(_selectedApplication.Id);
+                _toastService.ShowSuccess("Application Deleted Successfully!", 5);
+                _applications = await _applicationRepository.GetAllApplications();
+                await _loadingService.Hide();
+            }
+        } *@
+
+    private void UseTestData()
+    {
+        _allGridData = new List<PermissionDto>();
+        // Example data for testing
+
+        _allGridData.Add(new PermissionDto { PermissionId = 1, Name = "Permission 1", Description = "Description 1", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 1", UpdatedOn = DateTime.Now, UpdatedBy = "User 1" });
+        _allGridData.Add(new PermissionDto { PermissionId = 2, Name = "Permission 2", Description = "Description 2", Active = false, CreatedOn = DateTime.Now, CreatedBy = "User 2", UpdatedOn = DateTime.Now, UpdatedBy = "User 2" });
+        _allGridData.Add(new PermissionDto { PermissionId = 3, Name = "Permission 3", Description = "Description 3", Active = true, CreatedOn = DateTime.Now, CreatedBy = "User 3", UpdatedOn = DateTime.Now, UpdatedBy = "User 3" });
+
+        _filteredGridData = _allGridData.ToList();
+    }
+
+    private Task OpenAdvancedSearchDialogAsync(FilterKey? focusField = null)
+    {
+
+        
+        var options = new DialogOptions { 
+            CloseOnEscapeKey = true, //Allows closing the dialog by pressing the Escape key
+            MaxWidth = MaxWidth.Medium, //The maximum allowed width of the dialog
+            FullWidth = true, //Sets the width of the dialog to the width of the screen
+            Position = DialogPosition.TopCenter 
+        };
+
+        var parameters = new DialogParameters<AdvancedSearchFilterDialog>
+        {
+            { x => x.Applications, _applications },
+            { x => x.CreatedByList, _createdByList },
+            { x => x.UpdatedByList, _updatedByList },
+            { x => x.OnFilter, EventCallback.Factory.Create<FilterPermissionServiceRequest>(this, HandleAdvancedSearchFilter) },
+            { x => x.OnClear, EventCallback.Factory.Create(this, HandleCancelFilterGridData) },
+            { x => x.OnModalOpen, EventCallback.Factory.Create<FilterPermissionServiceRequest>(this, HandleAdvancedSearchModalOpen) },
+            { x => x.FocusField, focusField }
+        };
+
+        return DialogService.ShowAsync<AdvancedSearchFilterDialog>("Advanced Search Filters", parameters, options);
+    }
+
+    private void HandleAdvancedSearchModalOpen(FilterPermissionServiceRequest dialogRequest)
+    {
+        dialogRequest.CreatedBy = _currentAdvancedSearchFilters.CreatedBy;
+        dialogRequest.UpdatedBy = _currentAdvancedSearchFilters.UpdatedBy;
+        dialogRequest.CreatedOnDate = _currentAdvancedSearchFilters.CreatedOnDate;
+        dialogRequest.UpdatedOnDate = _currentAdvancedSearchFilters.UpdatedOnDate;
+        dialogRequest.Name = _currentAdvancedSearchFilters.Name;
+        dialogRequest.ApplicationId = _currentAdvancedSearchFilters.ApplicationId;
+        dialogRequest.IncludeInactive = _currentAdvancedSearchFilters.IncludeInactive;
+    }
+
+    private async Task HandleAdvancedSearchFilter(FilterPermissionServiceRequest request)
+    {
+        _currentAdvancedSearchFilters = request;
+
+        _advancedSearchFilterValues.Clear();
+
+        if (request.CreatedBy != null)
+        {
+            _advancedSearchFilterValues.Add(new FilterChip(FilterKey.CreatedBy, "Created By: " + request.CreatedBy));
+        }
+
+        if (request.UpdatedBy != null)
+        {
+            _advancedSearchFilterValues.Add(new FilterChip(FilterKey.UpdatedBy, "Updated By: " + request.UpdatedBy));
+        }
+
+        if (request.CreatedOnDate != null)
+        {
+            _advancedSearchFilterValues.Add(new FilterChip(FilterKey.CreatedOn, "Created On: " + request.CreatedOnDate));
+        }
+
+        if (request.UpdatedOnDate != null)
+        {
+            _advancedSearchFilterValues.Add(new FilterChip(FilterKey.UpdatedOn, "Updated On: " + request.UpdatedOnDate));
+        }
+
+        if (request.ApplicationId is int applicationId && _applicationNames.TryGetValue(applicationId, out var applicationName))
+        {
+            _advancedSearchFilterValues.Add(new FilterChip(FilterKey.Application, "Application: " + applicationName));
+        }
+
+        if (request.IncludeInactive == true)
+        {
+            _advancedSearchFilterValues.Add(new FilterChip(FilterKey.IncludeInactive, "Include Inactive"));
+        }
+
+        if (request.Name != null)
+        {
+            _advancedSearchFilterValues.Add(new FilterChip(FilterKey.Name, "Name: " + request.Name));
+        }
+
+        _filterRequest = request;
+
+        await HandleFilterGridData(_currentAdvancedSearchFilters);
+    }
+}

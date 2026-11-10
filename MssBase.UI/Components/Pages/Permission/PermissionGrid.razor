@@ -1,0 +1,35 @@
+@using Dto.Security.Permission
+@using MssBase.UI.Components.Shared.DataTable.DefaultColumns
+@using MssBase.UI.Components.Shared.DataTable.Models
+
+<DefaultDataTable TItem="PermissionDto" GridData="GridData" GridColumns="_gridColumns" Height="520px" />
+
+@code {
+
+    [Parameter, EditorRequired]
+    public IEnumerable<PermissionDto> GridData { get; set; } = Array.Empty<PermissionDto>();
+
+    [Parameter]
+    public IReadOnlyDictionary<int, string> ApplicationNames { get; set; }
+        = new Dictionary<int, string>();
+
+    [Parameter]
+    public EventCallback<PermissionDto> OnEdit { get; set; }
+
+    private List<DataTableColumn<PermissionDto>> _gridColumns { get; set; } = new();
+
+    protected override void OnParametersSet()
+    {
+        _gridColumns =
+        [
+            DataTableColumn.Actions<PermissionDto>(
+                new(DataTableActionType.Edit, item => OnEdit.InvokeAsync(item)),
+                new(DataTableActionType.Delete)),
+                new() { Header = "ID", Width = 80, Value = x => x.PermissionId, InitialSortDirection = SortDirection.Ascending },
+                DefaultDataTableColumns.ApplicationName<PermissionDto>(x => x.ApplicationId, ApplicationNames),
+                new() { Header = "Name", Width = 200, Value = x => x.Name },
+                DefaultDataTableColumns.Active<PermissionDto>(),
+                .. DefaultDataTableColumns.Audit<PermissionDto>()
+        ];
+    }
+}

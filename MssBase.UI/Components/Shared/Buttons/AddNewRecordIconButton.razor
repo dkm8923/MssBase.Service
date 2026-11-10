@@ -1,0 +1,12 @@
+@using MssBase.UI.Components.Shared.ToolTips
+
+<InfoToolTip ToolTipText="@ToolTipText">
+    <TriggerContent>
+        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="HandleCreateNewRecord" />
+    </TriggerContent>
+</InfoToolTip>
+
+@code {
+    [Parameter] public EventCallback HandleCreateNewRecord { get; set; }
+    [Parameter] public string ToolTipText { get; set; } = "Create New Record";
+}

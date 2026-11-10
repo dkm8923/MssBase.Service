@@ -1,0 +1,27 @@
+@using MssBase.UI.Components.Shared.ToolTips
+
+<InfoToolTip ToolTipText="@ToolTipText">
+    <TriggerContent>
+        <MudIcon Icon="@Icons.Material.Filled.Info" Color="@IconColor" Style="@_defaultIconStyle" Title="@ToolTipText" />
+    </TriggerContent>
+</InfoToolTip>
+
+@* <InfoToolTip ChildContent="@(new RenderFragment(builder => { builder.AddMarkupContent(0, "<div class='mss-tooltip-text-container'>" + ToolTipText + "</div>"); }))" >
+    <TriggerContent>
+        <MudIcon 
+            Icon="@Icons.Material.Filled.Info" 
+            Color="@IconColor" 
+            Style="@_defaultIconStyle"
+        />
+    </TriggerContent>
+</InfoToolTip> *@
+
+@code {
+    [Parameter, EditorRequired]
+    public string ToolTipText { get; set; }
+
+    [Parameter]
+    public Color IconColor { get; set; } = Color.Tertiary;
+
+    private string _defaultIconStyle = "vertical-align: middle; cursor: help;";
+}
