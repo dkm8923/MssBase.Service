@@ -1,0 +1,25 @@
+.login-form {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.login-field {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.login-field input {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.65rem 0.75rem;
+    color: var(--mud-palette-text-primary);
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 4px;
+    font: inherit;
+}
+
+.login-field input:focus {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 1px;
+}

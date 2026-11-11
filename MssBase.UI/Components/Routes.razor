@@ -1,6 +1,17 @@
 ﻿<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+                    <MudAlert Severity="Severity.Warning">
+                        Sign in to access this page. <MudLink Href="/login">Sign in</MudLink>
+                    </MudAlert>
+                </MudContainer>
+            </NotAuthorized>
+            <Authorizing>
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            </Authorizing>
+        </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>

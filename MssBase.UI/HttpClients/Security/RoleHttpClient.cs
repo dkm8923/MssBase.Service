@@ -12,12 +12,15 @@ namespace MssBase.UI.HttpClients.Security
 {
     public class RoleHttpClient : IRoleService
     {
-        private readonly HttpClient _httpClient;
+        private readonly SessionHttpClient _httpClient;
 
-        public RoleHttpClient(HttpClient httpClient, IOptions<SecurityApiOptions> options)
+        public RoleHttpClient(
+            HttpClient httpClient,
+            IOptions<SecurityApiOptions> options,
+            CurrentSessionTokenProvider tokenProvider)
         {
-            _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri(options.Value.BaseAddress, UriKind.Absolute);
+            httpClient.BaseAddress = new Uri(options.Value.BaseAddress, UriKind.Absolute);
+            _httpClient = new SessionHttpClient(httpClient, tokenProvider);
         }
 
         public Task<ErrorValidationResult<IEnumerable<RoleDto>>> GetAll(

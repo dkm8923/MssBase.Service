@@ -5,5 +5,6 @@ namespace MssBase.UI.Configuration
         public const string SectionName = "SecurityApi";
 
         public string BaseAddress { get; set; } = string.Empty;
+        public string ApplicationName { get; set; } = "MSS Security";
     }
 }

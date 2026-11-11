@@ -1,0 +1,50 @@
+@page "/login"
+@layout AuthLayout
+@attribute [AllowAnonymous]
+@using Microsoft.AspNetCore.Components.Forms
+
+<PageTitle>Sign in</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center">
+    <MudPaper Elevation="3" Class="pa-8" Style="width: 100%; max-width: 440px;">
+        <MudText Typo="Typo.h4" GutterBottom="true">Sign in</MudText>
+        <MudText Typo="Typo.body2" Class="mb-6">Use your account credentials to continue.</MudText>
+
+        @if (Error == "1")
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">Sign-in failed. Check your email address and password, then try again.</MudAlert>
+        }
+        else if (Expired == "1")
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-4">Your session has expired. Sign in again to continue.</MudAlert>
+        }
+
+        <form method="post" action="/auth/login" class="login-form">
+            <AntiforgeryToken />
+            <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+
+            <div class="login-field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" autocomplete="username" required autofocus />
+            </div>
+
+            <div class="login-field">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required />
+            </div>
+
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" FullWidth="true">Sign in</MudButton>
+        </form>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    [SupplyParameterFromQuery(Name = "expired")]
+    public string? Expired { get; set; }
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+}

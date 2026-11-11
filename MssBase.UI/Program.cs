@@ -8,6 +8,8 @@ using Contract.Security.Role;
 using MssBase.UI.Components.Services;
 using MudBlazor;
 using Contract.Security.Application;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using MssBase.UI.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,13 +26,32 @@ builder.Services.AddMudServices(config =>
 builder.Services.Configure<SecurityApiOptions>(
     builder.Configuration.GetSection(SecurityApiOptions.SectionName));
 
-builder.Services.AddTransient<BearerTokenHandler>();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ServerSessionStore>();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "__Host-MssBase.Auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.Path = "/";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+        options.SlidingExpiration = true;
+        options.LoginPath = "/login";
+    });
+builder.Services.AddOptions<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme)
+    .Configure<ServerSessionStore>((options, sessionStore) => options.SessionStore = sessionStore);
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddControllersWithViews();
 
-builder.Services.AddHttpClient<IApplicationService, ApplicationHttpClient>().AddHttpMessageHandler<BearerTokenHandler>();
-builder.Services.AddHttpClient<IPermissionService, PermissionHttpClient>().AddHttpMessageHandler<BearerTokenHandler>();
+builder.Services.AddScoped<CurrentSessionTokenProvider>();
 
-builder.Services.AddHttpClient<IRoleService, RoleHttpClient>()
-    .AddHttpMessageHandler<BearerTokenHandler>();
+builder.Services.AddHttpClient<IApplicationService, ApplicationHttpClient>();
+builder.Services.AddHttpClient<IPermissionService, PermissionHttpClient>();
+
+builder.Services.AddHttpClient<IRoleService, RoleHttpClient>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -53,11 +74,16 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseAntiforgery();
 
+app.MapControllers();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+public partial class Program;

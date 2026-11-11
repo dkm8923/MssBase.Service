@@ -6,7 +6,7 @@ namespace MssBase.UI.HttpClients.Shared
     public static class HttpClientUtils
     {
         public static async Task<ErrorValidationResult<T>> GetResultAsync<T>(
-            HttpClient httpClient,
+            SessionHttpClient httpClient,
             string requestUri,
             CancellationToken cancellationToken)
         {

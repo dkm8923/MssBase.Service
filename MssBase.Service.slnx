@@ -48,6 +48,9 @@
   <Folder Name="/Tests/SharedServiceTests/">
     <Project Path="Tests/SharedServiceTests/UnitTests.Shared.Service/UnitTests.Shared.Service.csproj" />
   </Folder>
+  <Folder Name="/Tests/UI/">
+    <Project Path="Tests/BlazorUITests/UnitTests.UI/UnitTests.UI.csproj" />
+  </Folder>
   <Project Path="MssBase.Service/MssBase.Service.csproj" />
   <Project Path="MssBase.UI/MssBase.UI.csproj" />
 </Solution>
