@@ -1,7 +1,9 @@
 .auth-layout {
-    display: grid;
     min-height: 100vh;
-    place-items: center;
-    padding: 1.5rem;
-    background: var(--mud-palette-background);
+    background-color: var(--mud-palette-background);
+}
+
+.auth-layout ::deep .mud-layout {
+    min-height: 100vh;
+    background-color: var(--mud-palette-background);
 }
